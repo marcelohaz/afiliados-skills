@@ -64,13 +64,12 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 5. **Validar `description` é editável**: se a linha `description: "..."` não existe no frontmatter, abortar com:
    > "Campo `description` ausente no frontmatter de {slug}.mdx. Adicione manualmente uma linha `description: \"\"` no frontmatter antes de rodar a skill."
 
-6. **Pergunta no chat** (paridade com modal do painel):
-   > "Quer dar instrução opcional pra meta description? (ex: 'mais conciso', 'enfatize Wi-Fi', 'mencione preço'). Enter pra padrão."
+6. **Detectar instrução opcional no prompt original do user** (não perguntar — paridade com outras skills):
+   - Se a invocação foi inline tipo "escreve a meta description do X mais conciso" ou "... com foco em preço" → eu extraio "mais conciso" / "com foco em preço" como `instruction` e uso no prompt.
+   - Se foi só "escreve a meta description do X" ou `/artigo-meta-escrever <URL>` → modo padrão sem instrução.
+   - Em caso de dúvida ("isso é parte do slug ou é instrução?"), trata como sem instrução e gera no padrão. User pode re-invocar com instrução mais clara se não gostar.
 
-   Se user responder vazio → modo padrão (sem instrução adicional, IA segue o template canônico).
-   Se user responder com texto → trata como `instruction` extra que entra no prompt.
-
-7. **Gerar a nova description** seguindo as regras editoriais (ver seção "Régua de geração" abaixo). Use o contexto coletado: title, description atual (referência do que mudar), lista de produtos, snippet do intro.
+7. **Gerar a nova description** seguindo as regras editoriais (ver seção "Régua de geração" abaixo). Use o contexto coletado: title, description atual (referência do que mudar), lista de produtos, snippet do intro, instrução opcional (se detectada no passo 6).
 
 8. **Validar mentalmente** antes de salvar:
    - Tamanho dentro de 50-160 chars
@@ -194,12 +193,17 @@ Quando Marcelo edita régua editorial (via `agent-config.html` no painel), atual
 
 ## Exemplo de invocação
 
-Exemplos válidos do user:
+Exemplos válidos do user — modo padrão (sem instrução):
 - "escreve a meta description do melhor-impressora-custo-beneficio do melhorimpressora"
 - "meta description do artigo melhor-impressora-custo-beneficio"
 - "https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "meta description")
 
-Args canônico que invoco: `Skill(skill="artigo-meta-escrever", args="melhorimpressora/melhor-impressora-custo-beneficio")`
+Exemplos válidos com instrução inline:
+- "escreve a meta description do melhor-impressora-custo-beneficio mais conciso"
+- "meta description do melhor-impressora-custo-beneficio enfatizando preço"
+- "escreve meta description do X mencionando que é guia 2026"
+
+Args canônico que invoco: `Skill(skill="artigo-meta-escrever", args="melhorimpressora/melhor-impressora-custo-beneficio")` (instrução não vai pro args — ela vive no contexto do prompt natural do user)
 
 ## Limitação intrínseca conhecida
 
