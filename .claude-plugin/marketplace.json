@@ -5,13 +5,13 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "Skills editoriais do ProjetoAfiliados — preencher/criar/escrever e auditar bíblias v2, páginas individuais de produto, reviews em artigos, meta description. Skills aceitam URL do painel como input.",
-    "version": "1.2.0"
+    "description": "Skills editoriais do ProjetoAfiliados — preencher/criar/escrever e auditar bíblias v2, páginas individuais de produto, reviews em artigos, meta description, introdução. Skills aceitam URL do painel como input.",
+    "version": "1.3.0"
   },
   "plugins": [
     {
       "name": "afiliados-skills",
-      "description": "Skills locais pro fluxo editorial do ProjetoAfiliados. 7 skills agrupadas por objeto: biblia-* (preencher/auditar), pagina-produto-* (criar/auditar), artigo-* (review-criar / reviews-auditar / meta-escrever). Cada skill aceita URL do painel (https://painel.melhorserum.com.br/editor-*.html?...) OU args canônicos. Substitui os botões '✨ Preencher / Auditar / Criar com IA / Reescrever' do painel — roda via Claude Code do user em vez de gastar ANTHROPIC_API_KEY da VPS.",
+      "description": "Skills locais pro fluxo editorial do ProjetoAfiliados. 8 skills agrupadas por objeto: biblia-* (preencher/auditar), pagina-produto-* (criar/auditar), artigo-* (review-criar / reviews-auditar / meta-escrever / intro-escrever). Cada skill aceita URL do painel (https://painel.melhorserum.com.br/editor-*.html?...) OU args canônicos. Substitui os botões '✨ Preencher / Auditar / Criar com IA / Reescrever' do painel — roda via Claude Code do user em vez de gastar ANTHROPIC_API_KEY da VPS.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -21,7 +21,8 @@
         "./skills/pagina-produto-auditar",
         "./skills/artigo-review-criar",
         "./skills/artigo-reviews-auditar",
-        "./skills/artigo-meta-escrever"
+        "./skills/artigo-meta-escrever",
+        "./skills/artigo-intro-escrever"
       ]
     }
   ]
