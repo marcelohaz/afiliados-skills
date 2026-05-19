@@ -1,0 +1,27 @@
+{
+  "name": "afiliados-skills",
+  "owner": {
+    "name": "Marcelo Souza",
+    "email": "marcelo.ckx@gmail.com"
+  },
+  "metadata": {
+    "description": "Skills editoriais do ProjetoAfiliados — preencher/auditar bíblias v2, páginas individuais de produto, reviews em artigos",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "afiliados-skills",
+      "description": "Skills locais pro fluxo editorial do ProjetoAfiliados: 3 ações × 2 escopos (preencher/auditar × bíblia/página-individual/produto-em-artigo) + auditoria cross-produto de artigo. Substitui os botões '✨ Preencher / Auditar / Criar com IA' do painel — roda via Claude Code do user em vez de gastar ANTHROPIC_API_KEY da VPS.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/preencher-biblia",
+        "./skills/auditar-biblia",
+        "./skills/preencher-pagina-produto",
+        "./skills/auditar-pagina-produto",
+        "./skills/preencher-produto-em-artigo",
+        "./skills/auditar-reviews-em-artigo"
+      ]
+    }
+  ]
+}
