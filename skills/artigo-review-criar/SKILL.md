@@ -1,7 +1,37 @@
 ---
-name: preencher-produto-em-artigo
-description: Preenche o conteúdo editorial de UM produto dentro de um artigo (sites/{site}/src/content/reviews/{slug}.mdx) e opcionalmente os campos top-level do artigo (title, description, excerpt, keywordPlural, listHeading) quando estão vazios. Equivalente ao botão "🪄 Regenerar produto" do editor-artigo + parte do que o make-reviews/add-products do painel faria, mas roda aqui pra economizar ANTHROPIC_API_KEY (~$0.05-0.10/produto). Granularidade per-produto: você revisa um, ajusta, segue pro próximo.
+name: artigo-review-criar
+description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios no lineup e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Cria backup, commit, push, dispatch VPS pull.
 ---
+
+## Parse de input
+
+Aceita 2 formatos no $ARGUMENTS:
+
+**A) URL do painel** (forma preferida — fluxo natural depois de adicionar produtos via "+ Adicionar produto"):
+- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
+- Extrai `site` e `slug` do artigo
+
+**Comportamento quando URL é fornecida:**
+1. Read .mdx do artigo
+2. Detecta produtos com **stub vazio** (`fullReview: |` seguido de nada antes do próximo campo, OU `fullReview: ""`)
+3. **Cenários:**
+   - **0 stubs vazios**: avisa "todos os produtos já têm review preenchido. Use `artigo-reviews-auditar` se quer revisar."
+   - **1 stub vazio**: preenche aquele direto
+   - **2+ stubs vazios**: **pergunta qual** preencher, listando posição + nome + ASIN. Padrão é **1 por vez** pra controle de qualidade. Exemplo:
+     ```
+     Encontrei 3 produtos com review vazio:
+     1. HP Laser 107W (B07S61ZJCS) — posição 6 no lineup
+     2. Canon Pixma MG3620 (B0XXXXXXXX) — posição 7
+     3. Brother HL-L2350DW (B0YYYYYYYY) — posição 8
+
+     Qual preencher? (responda com 1, 2 ou 3, ou ASIN direto)
+     ```
+
+**B) Args canônicos** (forma direta — power user já sabe ASIN):
+- `melhorimpressora/melhor-impressora-custo-beneficio B07S61ZJCS`
+- Skill preenche só o ASIN indicado, ignora outros stubs.
+
+Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
 # Preencher review de um produto dentro de um artigo
 

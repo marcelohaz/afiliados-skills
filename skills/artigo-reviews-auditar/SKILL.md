@@ -1,7 +1,20 @@
 ---
-name: auditar-reviews-em-artigo
-description: Audita TODOS os reviews de produto dentro de um artigo (sites/{site}/src/content/reviews/{slug}.mdx) como CONJUNTO, identifica incongruências cross-produto (tone-clone, redundância, buyer-reference, comparações factualmente erradas, etc) e propõe correções pra user aprovar. Equivalente ao botão "🔧 Auditar/melhorar reviews" do editor-artigo, mas roda aqui pra economizar ANTHROPIC_API_KEY (~$0.10-0.20/run). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+name: artigo-reviews-auditar
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. Detecta tone-clone, redundância, buyer-reference, claim-vs-lineup-fato (comparações factualmente erradas), links incorretos. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
+
+## Parse de input
+
+Aceita 2 formatos no $ARGUMENTS:
+
+**A) URL do painel** (forma preferida):
+- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
+- Extrai `site` e `slug` do artigo
+
+**B) Args canônicos**:
+- `melhorimpressora/melhor-impressora-custo-beneficio`
+
+Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
 # Auditar/melhorar reviews em artigo (cross-produto)
 

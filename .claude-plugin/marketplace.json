@@ -5,22 +5,22 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "Skills editoriais do ProjetoAfiliados — preencher/auditar bíblias v2, páginas individuais de produto, reviews em artigos",
-    "version": "1.0.0"
+    "description": "Skills editoriais do ProjetoAfiliados — preencher/criar e auditar bíblias v2, páginas individuais de produto, reviews em artigos. Skills aceitam URL do painel como input.",
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "afiliados-skills",
-      "description": "Skills locais pro fluxo editorial do ProjetoAfiliados: 3 ações × 2 escopos (preencher/auditar × bíblia/página-individual/produto-em-artigo) + auditoria cross-produto de artigo. Substitui os botões '✨ Preencher / Auditar / Criar com IA' do painel — roda via Claude Code do user em vez de gastar ANTHROPIC_API_KEY da VPS.",
+      "description": "Skills locais pro fluxo editorial do ProjetoAfiliados. 6 skills agrupadas por objeto: biblia-* (preencher/auditar), pagina-produto-* (criar/auditar), artigo-* (review-criar / reviews-auditar). Cada skill aceita URL do painel (https://painel.melhorserum.com.br/editor-*.html?...) OU args canônicos. Substitui os botões '✨ Preencher / Auditar / Criar com IA' do painel — roda via Claude Code do user em vez de gastar ANTHROPIC_API_KEY da VPS.",
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/preencher-biblia",
-        "./skills/auditar-biblia",
-        "./skills/preencher-pagina-produto",
-        "./skills/auditar-pagina-produto",
-        "./skills/preencher-produto-em-artigo",
-        "./skills/auditar-reviews-em-artigo"
+        "./skills/biblia-preencher",
+        "./skills/biblia-auditar",
+        "./skills/pagina-produto-criar",
+        "./skills/pagina-produto-auditar",
+        "./skills/artigo-review-criar",
+        "./skills/artigo-reviews-auditar"
       ]
     }
   ]

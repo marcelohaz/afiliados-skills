@@ -1,7 +1,20 @@
 ---
-name: auditar-pagina-produto
-description: Audita uma página individual de produto (sites/{site}/src/content/products/{slug}.mdx) read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. Equivalente ao botão "✨ Auditar" do editor-produto, mas roda aqui pra economizar ANTHROPIC_API_KEY (~$0.05/audit). Gera relatório em .audits/products/.
+name: pagina-produto-auditar
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
 ---
+
+## Parse de input
+
+Aceita 2 formatos no $ARGUMENTS:
+
+**A) URL do painel** (forma preferida):
+- `https://painel.melhorserum.com.br/editor-produto.html?site=melhorimpressora&slug=hp-laser-107w`
+- Extrai `site` e `slug` do query string
+
+**B) Args canônicos**:
+- `melhorimpressora/hp-laser-107w` (formato `site/slug`)
+
+Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
 # Auditar página individual de produto
 

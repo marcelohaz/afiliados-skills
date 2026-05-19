@@ -1,7 +1,22 @@
 ---
-name: preencher-biblia
-description: Lê uma bíblia v2 (docs/biblias-v2/<ASIN>.json), analisa todos os dados brutos disponíveis, preenche os 7 campos de curadoria do agente (sentimentoCompradores, angulosConversao, pontosFortes, pontosFracos, dicasAcionaveis, dadosInconsistentes, observacoesAgente) e limpa o ruído do conteudoBrutoFabricante. Cria backup antes de salvar. O usuário abre o editor e clica Salvar para acionar validação, backup e sync R2.
+name: biblia-preencher
+description: Preenche os 7 campos editoriais da bíblia v2 (docs/biblias-v2/<ASIN>.json) a partir dos dados brutos. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Curadoria: sentimentoCompradores, angulosConversao, pontosFortes, pontosFracos, dicasAcionaveis, dadosInconsistentes, observacoesAgente. Limpa ruído do conteudoBrutoFabricante. Cria backup, sync R2.
 ---
+
+## Parse de input
+
+Aceita 2 formatos no $ARGUMENTS:
+
+**A) URL do painel** (forma preferida — copia da barra de endereço):
+- `https://painel.melhorserum.com.br/editor-v2.html?asin=B07S61ZJCS`
+- Extrai ASIN do query string `?asin=...`
+
+**B) Args canônicos** (forma direta):
+- ASIN literal: `B07S61ZJCS` (regex `^[A-Z0-9]{10}$`)
+- Nome do produto: `HP Laser 107W` (fuzzy match contra `identidade.nome` dos arquivos em `docs/biblias-v2/*.json`)
+- "todas" → iterar sobre todas as bíblias que ainda não têm os 7 campos preenchidos
+
+Detecção: se $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
 # Preencher campos de curadoria da bíblia v2
 

@@ -1,7 +1,21 @@
 ---
-name: preencher-pagina-produto
-description: Lê uma página individual de produto stub (sites/{site}/src/content/products/{slug}.mdx criada via "+ Nova página" no painel) e preenche os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) a partir da bíblia do produto. Equivalente ao botão "✨ Criar com IA" do editor-produto, mas roda aqui pra economizar ANTHROPIC_API_KEY do painel (~$0.07/produto). Cria backup, faz commit + push + pull na VPS.
+name: pagina-produto-criar
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Cria backup, commit, push, dispatch VPS pull.
 ---
+
+## Parse de input
+
+Aceita 2 formatos no $ARGUMENTS:
+
+**A) URL do painel** (forma preferida):
+- `https://painel.melhorserum.com.br/editor-produto.html?site=melhorimpressora&slug=hp-laser-107w`
+- Extrai `site` e `slug` do query string
+
+**B) Args canônicos**:
+- `melhorimpressora/hp-laser-107w` (formato `site/slug`)
+- `melhorimpressora hp-laser-107w` (separado por espaço)
+
+Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
 # Preencher página individual de produto
 

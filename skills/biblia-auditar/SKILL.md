@@ -1,7 +1,22 @@
 ---
-name: auditar-biblia
-description: Audita uma bíblia v2 (docs/biblias-v2/<ASIN>.json) procurando inconsistências factuais, contradições internas, claims não verificáveis, frescor de dados e problemas editoriais. Usa as próprias diretrizes editoriais embutidas na bíblia como régua. Pode consultar o site do fabricante e a página Amazon ao vivo pra verificação cruzada. Gera um relatório markdown em docs/biblias-v2/.audits/<ASIN>-<YYYY-MM-DD-HHMM>.md + copia em <ASIN>-last.md (o que o editor do painel lê).
+name: biblia-auditar
+description: Audita bíblia v2 procurando inconsistências factuais, contradições internas, claims não verificáveis, frescor de dados e problemas editoriais. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Usa as diretrizes editoriais embutidas na bíblia como régua. Gera relatório em docs/biblias-v2/.audits/<ASIN>-last.md (o que o painel lê).
 ---
+
+## Parse de input
+
+Aceita 2 formatos no $ARGUMENTS:
+
+**A) URL do painel** (forma preferida):
+- `https://painel.melhorserum.com.br/editor-v2.html?asin=B07S61ZJCS`
+- Extrai ASIN do query string
+
+**B) Args canônicos**:
+- ASIN literal: `B07S61ZJCS`
+- Nome do produto: `HP Laser 107W` (fuzzy match)
+- "todas" → iterar sobre todas as bíblias preenchidas
+
+Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
 # Auditar bíblia v2
 
