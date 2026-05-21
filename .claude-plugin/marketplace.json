@@ -5,13 +5,13 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "Skills editoriais do ProjetoAfiliados — preencher/criar/escrever e auditar bíblias v2, páginas individuais de produto, reviews em artigos, meta description, introdução. Skills aceitam URL do painel como input.",
-    "version": "1.3.0"
+    "description": "Skills editoriais do ProjetoAfiliados — preencher/criar/escrever e auditar bíblias v2, páginas individuais de produto, reviews em artigos, meta description, introdução, guia 'Como escolher', análise final pré-lock, auditoria de artigo, descrição de categoria. Skills aceitam URL do painel como input.",
+    "version": "1.4.0"
   },
   "plugins": [
     {
       "name": "afiliados-skills",
-      "description": "Skills locais pro fluxo editorial do ProjetoAfiliados. 8 skills agrupadas por objeto: biblia-* (preencher/auditar), pagina-produto-* (criar/auditar), artigo-* (review-criar / reviews-auditar / meta-escrever / intro-escrever). Cada skill aceita URL do painel (https://painel.melhorserum.com.br/editor-*.html?...) OU args canônicos. Substitui os botões '✨ Preencher / Auditar / Criar com IA / Reescrever' do painel — roda via Claude Code do user em vez de gastar ANTHROPIC_API_KEY da VPS.",
+      "description": "Skills locais pro fluxo editorial do ProjetoAfiliados. 12 skills agrupadas por objeto: biblia-* (preencher/auditar), pagina-produto-* (criar/auditar), artigo-* (review-criar / reviews-auditar / meta-escrever / intro-escrever / guia-escrever / analise-final / auditar), categoria-descricao-escrever. Cada skill aceita URL do painel (https://painel.melhorserum.com.br/editor-*.html?...) OU args canônicos. Substitui os botões '✨ Preencher / Auditar / Criar com IA / Reescrever' do painel — roda via Claude Code do user em vez de gastar ANTHROPIC_API_KEY da VPS.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -22,7 +22,11 @@
         "./skills/artigo-review-criar",
         "./skills/artigo-reviews-auditar",
         "./skills/artigo-meta-escrever",
-        "./skills/artigo-intro-escrever"
+        "./skills/artigo-intro-escrever",
+        "./skills/artigo-guia-escrever",
+        "./skills/artigo-analise-final",
+        "./skills/artigo-auditar",
+        "./skills/categoria-descricao-escrever"
       ]
     }
   ]

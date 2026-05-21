@@ -1,0 +1,286 @@
+---
+name: categoria-descricao-escrever
+description: Escreve a descrição HTML de uma categoria do site (`/categoria/{slug}/`). Aceita URL do painel (editor-categoria.html?site=X&slug=Y) OU args canônicos site/categorySlug. Régua dura — 2-3 parágrafos `<p>` (sem outras tags de bloco), 100-2000 chars, inline `<strong>`/`<em>`/`<a>`/`<br>` OK, PROIBIDO `<h1>`/`<h2>`/`<h3>`/`<ul>`/`<ol>`/`<table>`/listas/headings. Substitui só a entry da categoria no `categoryDescriptions` do config.ts — resto do config preservado. Backup + commit + push + sync VPS.
+---
+
+## Parse de input
+
+Aceita 2 formatos no $ARGUMENTS:
+
+**A) URL do painel** (forma preferida — fluxo natural depois de abrir o editor):
+- `https://painel.melhorserum.com.br/editor-categoria.html?site=escritoriocasa&slug=impressoras`
+- Extrai `site` e `slug` (= categorySlug) do query string
+
+**B) Args canônicos**:
+- `escritoriocasa/impressoras`
+
+Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B (split por `/`).
+
+**Instrução opcional**: se o prompt natural do user contém algo tipo "mais conciso", "enfatize ergonomia", "tom mais informal" → eu extraio como instrução adicional e uso no prompt. Se for só "escreve a descrição da categoria X" → modo padrão.
+
+# Escrever descrição de categoria
+
+> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:category_description`. O conteúdo essencial está duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+
+Você é o curador editorial das descrições de categoria. Cada site afiliado tem um objeto `categoryDescriptions: Record<string, string>` no `sites/{site}/src/config.ts`, onde cada chave é o slug da categoria (ex: `'impressoras'`) e o valor é HTML em template literal (backtick).
+
+A descrição aparece no **topo da página `/categoria/{slug}/`** do site — função SEO + editorial — apresentando o nicho e orientando o leitor pra navegar pelos artigos da categoria. **NÃO é guide** ("Como escolher") nem **review** (comparativo de produtos). É uma **prosa curta** sobre a categoria em si.
+
+## Pré-requisitos
+
+- O site existe em `sites/{site}/src/config.ts`.
+- O site tem objeto `categoryDescriptions: { ... } as Record<string, string>` no config (todos os 8 sites têm).
+- A categoria tem ≥1 artigo no site (`category` ou `categorySlug` nos `.mdx` de `sites/{site}/src/content/reviews/`) OU é entry "órfã" no `categoryDescriptions` existente.
+
+Se ambos faltam (categoria não existe nos reviews E não tem entry no config), abortar com aviso "Categoria X não tem nenhum artigo nem entry no config. Cria categorias adicionando artigos com `categorySlug: 'X'` primeiro."
+
+## Invariantes
+
+- **Nunca toque em nada além da entry específica do `categoryDescriptions`** no config.ts. Outros campos do siteConfig (name, slug, domain, navItems, etc.) ficam intactos.
+- **HTML em template literal** (backtick `` ` ``) — formato canônico do projeto.
+- **Allowlist de tags**: bloco `<p>` apenas. Inline OK: `<strong>`, `<em>`, `<a>`, `<br>`. (O sanitize do painel tecnicamente também aceita `<b>` e `<i>` como fallback, mas o prompt canônico só permite `<strong>` e `<em>` — uso a allowlist editorial restrita.)
+- **PROIBIDO** tags de bloco: `<h1>`, `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<li>`, `<table>`, `<div>`, `<section>`, `<aside>`, `<img>`, `<script>`, `<iframe>`, `<style>`, `<form>`.
+- **Sem listas de qualquer tipo** (`<ul>`/`<ol>`/`<li>`) — listagem vira frase em prosa.
+- **2 a 3 parágrafos `<p>`.** Ideal: 3 (estrutura canônica). 2 aceitável se o nicho é simples.
+- **100 a 2000 chars** total no HTML.
+- **CRÍTICO — sem backtick `` ` `` literal no HTML.** Quebraria o template literal do config.ts. Se precisar de citação, usar aspas ou itálico.
+- **CRÍTICO — sem `${` literal no HTML.** Seria interpretado como interpolação JS no template literal (corrompe config OU pior, executa código). Sanity-check obrigatório: se a IA gerar `${...}`, regenero.
+- **Sem travessão (—).** Use vírgula ou ponto.
+- **Sem superlativos sem evidência** ("o melhor disponível", "incomparável", "imbatível"). "Excelente", "ótimo" são OK contextualizados.
+- **Sem comentários HTML, sem placeholders `[TODO:...]`.**
+- **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.
+
+## Fluxo
+
+1. **Parse args**: detecta URL vs canônico, extrai `site` e `categorySlug`. Valida `[a-z0-9-]+` em ambos.
+
+2. **Read `config.ts`**: `Read sites/{site}/src/config.ts`. Se 404, abortar.
+
+3. **Extrair `siteName`**: regex `/^\s*name:\s*['"]([^'"]+)['"]/m` no config. Se não achar, fallback pro `site` (slug). Mesmo padrão do handler (`category-desc.ts:426`).
+
+4. **Extrair `categoryDescriptions` atual**: capturar o objeto `categoryDescriptions: { ... } as Record<string, string>` (regex `BLOCK_RE` em `_lib/category-desc.ts:20`). Detectar:
+   - Entry já existe pra esse `categorySlug` (vai substituir) — capturar HTML antigo pra contexto e backup mental.
+   - Entry não existe (vai adicionar nova).
+
+5. **Detectar `categoryName`** (nome bonito da categoria):
+   - Listar `sites/{site}/src/content/reviews/*.mdx`
+   - Pra cada `.mdx`, ler frontmatter e extrair `category` e `categorySlug` (se houver ambos)
+   - Buscar artigo com `categorySlug === {param categorySlug}`; se achar, `categoryName = category`
+   - Se nenhum artigo tem esse `categorySlug` (categoria órfã), fallback: `categoryName = categorySlug` (slug cru, sem capitalizar — paridade com `category-desc.ts:420`: `fromReviews.get(slug)?.name ?? slug`)
+
+6. **Detectar instrução opcional** no prompt do user (paridade com outras skills):
+   - "mais conciso" / "enfatize X" / "sem chamada pra ação" → extrai como instrução
+   - Sem instrução clara → modo padrão
+
+7. **Compor contexto pra geração**:
+   - `siteName` (ex: "Escritório Casa")
+   - `categoryName` (ex: "Impressoras")
+   - `categorySlug` (ex: "impressoras")
+   - URL pública: `/categoria/{categorySlug}/`
+   - Instrução opcional
+
+8. **Gerar o HTML** seguindo a régua editorial (ver seção abaixo). 2-3 parágrafos `<p>` apenas.
+
+9. **Validar mentalmente** antes de salvar:
+   - 100-2000 chars
+   - 2-3 `<p>...</p>` (count das tags de bloco)
+   - ZERO tags proibidas (`<h1>`/`<h2>`/`<ul>`/etc.) — Grep mental
+   - ZERO `` ` `` (backtick) literal
+   - ZERO `${` literal
+   - Sem travessão
+   - Sem comentários HTML `<!-- ... -->`
+   - Sem placeholders `[TODO:...]`
+   - Não começa nem termina com whitespace estranho
+
+10. **Backup** ANTES de sobrescrever (paridade com handler `category-desc.ts:139-147`):
+    ```bash
+    DAY=$(date +%Y-%m-%d); TIME=$(date +%H%M%S); SITE={site}; SLUG={categorySlug}
+    PROJ=$(pwd)
+    mkdir -p "$PROJ/docs/painel/.painel-backups/$DAY"
+    cp "$PROJ/sites/$SITE/src/config.ts" \
+       "$PROJ/docs/painel/.painel-backups/$DAY/config-${SITE}-${TIME}-cat-${SLUG}.ts"
+    ```
+    **Pattern do nome**: `config-{site}-{HHMMSS}-cat-{categorySlug}.ts`. Note que esse nome **NÃO bate** com o regex do `backups.ts:99` (que só aceita `article|guide|page|product` como prefix e `.mdx|.html` como ext), então não aparece no card "Histórico de versões" do painel. Backup é só recovery manual.
+
+11. **Substituir entry via Edit tool** no `config.ts`:
+    
+    **Caso A — entry já existe** (`'{categorySlug}': \`...\`,` OU `"{categorySlug}": \`...\`,`):
+    - `old_string` = entry completa, formato: `<aspa>{categorySlug}<aspa>: \`...HTML antigo completo...\`,` — note que a chave pode estar entre aspas simples OU duplas (ENTRY_RE em `category-desc.ts:43` aceita ambas; verificar o config real antes de montar o `old_string`)
+    - `new_string` = nova entry sempre com aspas simples: `'{categorySlug}': \`{NOVO HTML}\`,` (paridade com `category-desc.ts:89`)
+    
+    **Caso B — entry ainda não existe** (categoria órfã ou nova):
+    - Achar o fim do bloco `categoryDescriptions: { ... }` — geralmente vem fechado com `\n  } as Record<string, string>,`
+    - **Caso B1 — bloco vazio** (`categoryDescriptions: {}`):
+      - `old_string` = `categoryDescriptions: {} as Record<string, string>,`
+      - `new_string` = `categoryDescriptions: {\n    '{categorySlug}': \`{HTML}\`,\n  } as Record<string, string>,`
+    - **Caso B2 — bloco tem entries** (adicionar ao final):
+      - Detectar a última entry (`'{outroSlug}': \`...\`,` ou `'{outroSlug}': \`...\``)
+      - Garantir vírgula final na entry anterior
+      - Adicionar nova linha indentada com 4 espaços: `    '{categorySlug}': \`{HTML}\`,`
+      - Risco: a linha do `as Record<string, string>` precisa ficar intacta
+    
+    **CRÍTICO**: ao colar o HTML novo dentro do template literal, garantir que:
+    - Não tem backtick `` ` `` no HTML (quebra o template)
+    - Não tem `${...}` no HTML (interpola JS)
+    - Indent do template é preservado (4 espaços antes da chave da entry)
+    
+    Em caso de dúvida sobre o `old_string` ambíguo (ex: 2 entries têm HTML quase idêntico), incluir 1-2 linhas de contexto antes/depois.
+
+12. **Git add + commit + push**:
+    ```bash
+    git add sites/{site}/src/config.ts
+    git commit -m "chore({site}): atualiza descrição categoria {categorySlug} via skill" \
+      -m "Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+    git push origin main
+    ```
+    Mensagem é `chore` (não `feat`) — paridade com o handler do painel (`category-desc.ts:288`).
+
+13. **Disparar git pull no painel da VPS**:
+    ```bash
+    bash scripts/painel-vps-pull.sh
+    ```
+    Falha graciosamente se `.env.painel-skills` não existir.
+
+14. **Reportar no chat**: char count do HTML + número de parágrafos + indicação se foi substituição ou inserção nova + path do arquivo.
+
+## Régua editorial — ESTRUTURA SUGERIDA (3 parágrafos)
+
+Não é estrita, mas é o pattern dos exemplos canônicos:
+
+### §1 — Introdução: o desafio + critérios em `<strong>`
+
+Apresenta o nicho e o desafio de escolher na categoria. Lista 3-6 critérios técnicos em `<strong>...</strong>`. Tom de "vou te ajudar a entender".
+
+**Exemplo** (categoria "creatinas"):
+> `<p>Escolher a creatina certa pode parecer simples, mas o mercado brasileiro oferece dezenas de opções com propostas muito diferentes entre si. Aqui você encontra comparativos e guias organizados para facilitar sua decisão, considerando critérios como <strong>tipo de creatina</strong>, <strong>pureza</strong>, <strong>quantidade por dose</strong>, <strong>sabor</strong>, <strong>custo-benefício</strong> e <strong>certificações de qualidade</strong>: os fatores que realmente fazem diferença nos seus resultados.</p>`
+
+### §2 — Perfis de uso: tipos/nichos cobertos pelos artigos
+
+Lista os perfis de comprador/uso que aparecem nos artigos da categoria. Cada perfil em `<strong>...</strong>` (3-5 perfis). Tom de "cobrimos isso".
+
+**Exemplo**:
+> `<p>Cobrimos os principais perfis de uso: desde creatinas para <strong>ganho de massa muscular</strong> e <strong>performance atlética</strong>, até opções voltadas para <strong>veganismo</strong>, <strong>dietas específicas</strong> e <strong>praticantes iniciantes</strong>. Cada perfil tem pontos fortes específicos, e nossas análises ajudam você a entender qual se encaixa melhor na sua rotina de treino.</p>`
+
+### §3 — Convite ao leitor (opcional)
+
+Chama pra navegar pelos artigos. Pode ser omitido se a descrição fica grande demais.
+
+**Exemplo**:
+> `<p>Navegue pelos artigos, leia os prós e contras reais de cada produto e chegue à sua próxima compra com confiança, sabendo exatamente o que esperar antes de o produto chegar na sua casa.</p>`
+
+## Restrições críticas (NÃO QUEBRE)
+
+### 1. Sem tags de bloco além de `<p>`
+
+PROIBIDO: `<h1>`, `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<li>`, `<table>`, `<div>`, `<section>`, `<aside>`, `<img>`, `<script>`, `<iframe>`, `<style>`, `<form>`, `<button>`.
+
+**Por quê**: a página `/categoria/{slug}/` já tem H1/H2 estruturais (do layout Astro). Adicionar mais headings quebra hierarquia. Listas (`<ul>`/`<ol>`) viram prosa com vírgulas.
+
+PERMITIDO inline: `<strong>`, `<em>`, `<a href="...">`, `<br>` (este último com moderação).
+
+### 2. Sem backtick literal `` ` ``
+
+O HTML vai pra dentro de um template literal JavaScript no `config.ts`. Backtick interno quebra o parser. Se precisar destacar texto, usar `<strong>` ou `<em>`.
+
+### 3. Sem `${` literal
+
+Padrão `${expr}` em template literal = interpolação JavaScript. Se o HTML tiver `${algumaCoisa}`, o JS vai tentar avaliar. Em runtime, isso vira `undefined` (corrompe a descrição) ou pior — execução de código se `algumaCoisa` for um nome válido no escopo. Defesa crítica: validar antes de salvar.
+
+**Exemplo problemático**: `<p>Combina com bebidas como suco, água ou shakes do tipo ${ingrediente principal}.</p>` — o `${...}` é interpretado. Reescrever sem `${`.
+
+### 4. Sem listas de qualquer tipo
+
+`<ul>` e `<ol>` são proibidos. Listagem vira prosa com vírgulas + `<strong>`. Padrão dos exemplos canônicos.
+
+### 5. Sem comentários HTML, sem placeholders
+
+Nada de `<!-- TODO -->` ou `[TODO: preencher]`. HTML é o conteúdo final que vai pra produção.
+
+### 6. Sem travessão (—)
+
+Mesma regra editorial de todo o projeto. Vírgula, ponto, dois pontos.
+
+## Voz editorial
+
+- **Tom de "estamos aqui pra ajudar".** Não vende produto específico — apresenta o nicho e orienta navegação.
+- **Linguagem editorial.** Sem gírias, sem anglicismos desnecessários, sem "expert" / "best" / "top".
+- **NÃO mencione produtos/marcas específicas.** Linguagem geral da categoria. Marcas vão nos artigos.
+- **NÃO cite compradores/reviews/avaliações/Amazon.** Padrão da voz editorial do projeto.
+- **Tom de conhecimento, não de vendedor.** "Cobrimos os principais perfis" > "Encontre o melhor X aqui!".
+
+## Filtros editoriais (paridade com outras skills)
+
+- **Specs ambientais** (% reciclado, Energy Star, EPEAT, etc.) → omitir, salvo se for tese central da categoria.
+- **Origem de fabricação** ("fabricado no Brasil") → idem.
+
+## Sincronização painel ↔ skill ↔ prompt canônico
+
+```
+docs/painel/_data/agent-prompts.json:category_description  (SOURCE OF TRUTH editorial)
+    ├── handler do painel (POST /agent/category-desc/:site/:slug/create)
+    └── esta SKILL.md (versão local executável)
+```
+
+Helpers do painel pra leitura/escrita da entry:
+- `docs/painel/_lib/category-desc.ts:parseCategoryDescriptions(configTs)` — parsa o bloco
+- `docs/painel/_lib/category-desc.ts:writeCategoryDescription(configTs, slug, html)` — substitui/adiciona entry preservando o resto
+
+Skill local não importa esses helpers; a lógica equivalente está documentada no passo 11 do fluxo (Edit tool com caso A/B1/B2).
+
+Quando Marcelo edita régua editorial (via `agent-config.html` no painel), atualiza `agent-prompts.json` canônico. Esta SKILL.md pode ficar atrasada — atualizar manualmente quando notar drift.
+
+## Quando NÃO usar essa skill
+
+- **Categoria sem artigos** E **sem entry no config**: skill aborta. Cria categoria adicionando artigos primeiro.
+- **Categoria travada** (`<!-- contentLocked: true -->` no início do HTML atual): o painel rejeita save em HTTP 423 (`category-desc.ts:250-254`). Skill grava direto via Edit tool (não passa pelo painel) — funciona, mas pergunta antes (há razão pra trava).
+- **Quer reescrita iterativa rápida**: skill custa ~$0.01-0.03 cada chamada. Mais barato dos prompts, mas ainda não é zero — não rodar 5x sequencialmente sem ler o output anterior.
+
+## Armadilhas recorrentes
+
+### 1. Tags de bloco proibidas por hábito
+LLMs frequentemente abrem com `<h2>` ou usam `<ul>` pra listar critérios. PROIBIDO. Use só `<p>` como bloco; destacar com `<strong>` inline.
+
+### 2. Backtick `` ` `` no HTML
+Se o conteúdo cita um termo entre backticks ou um exemplo de código, NÃO USE backtick literal. Reescreva com aspas ou itálico.
+
+### 3. `${variavel}` literal no HTML
+Frase tipo "combina com ${produto}" → ${...} vira interpolação JS no template literal do config.ts. Detecta antes de salvar; reescrever sem `${`.
+
+### 4. Listar com `<ul>` por hábito
+"Cobrimos: <ul><li>X</li><li>Y</li></ul>" → quebra a régua. Reescreva como "Cobrimos X, Y e Z" com `<strong>` nos termos.
+
+### 5. Edit tool com `old_string` ambíguo
+Se 2 entries têm HTML quase idêntico (raro mas possível em sites com nichos próximos), incluir 1-2 linhas de contexto antes/depois pra forçar match único. Ex: incluir a linha `categoryDescriptions: {` ou a linha da entry anterior.
+
+### 6. Esquecer indent canônico (4 espaços)
+A entry deve ter 4 espaços antes da chave (`    'slug': \`html\`,`). Sem indent ou com indent errado quebra a estética + futuro diff/audit.
+
+### 7. Mencionar marca específica
+"Cobrimos creatinas da Growth, Max Titanium e Integralmédica." → NÃO. Generaliza: "Cobrimos as principais marcas brasileiras de creatina." Marcas vão nos artigos.
+
+### 8. Mencionar Amazon como entidade
+"Os melhores produtos da Amazon" → quebra a voz analítica. Omitir referência a Amazon na descrição de categoria.
+
+### 9. Não incluir vírgula no fim da entry
+Convenção do projeto: cada entry termina com vírgula. `'X': \`Y\`,` ✓ vs `'X': \`Y\`` ❌. Sem vírgula, próximas inserções confundem.
+
+### 10. HTML muito curto (< 100 chars)
+Schema do painel rejeita < 30 chars na sanitização, mas o canônico exige 100-2000 chars. Categoria com 1 frase só fica fraca editorialmente.
+
+## Exemplo de invocação
+
+Exemplos válidos do user — modo padrão:
+- "escreve a descrição da categoria impressoras do escritoriocasa"
+- "categoria impressoras do escritoriocasa"
+- "https://painel.melhorserum.com.br/editor-categoria.html?site=escritoriocasa&slug=impressoras" (com hint "descrição")
+
+Exemplos com instrução inline:
+- "escreve a descrição da categoria impressoras mais conciso"
+- "categoria creatinas enfatizando custo-benefício"
+- "escreve a descrição de cadeiras com foco em home office"
+
+Args canônico que invoco: `Skill(skill="categoria-descricao-escrever", args="escritoriocasa/impressoras")` (instrução vai pelo contexto do prompt natural)
+
+## Limitação intrínseca conhecida
+
+Sem schema Zod programático no output, validação fica editorial. ~3% de chance de algum campo ficar levemente fora do limite editorial (HTML em 2050 chars, 4 parágrafos em vez de 3, alguma tag inline rara). Mitigação principal: validar mentalmente a tag list e os caracteres proibidos (`` ` `` e `${`) antes de aplicar.
