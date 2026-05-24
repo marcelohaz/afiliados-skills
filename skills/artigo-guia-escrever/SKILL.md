@@ -18,7 +18,13 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 **Instrução opcional**: se o prompt natural do user contém algo tipo "mais conciso", "enfatize tanque de tinta", "sem subseções" → eu extraio como instrução adicional e uso no prompt. Se for só "escreve o guia do X" → modo padrão.
 
-**Concorrentes opcionais**: se o user colar 1-3 textos de páginas concorrentes ("aqui o guia da Buscapé/Submarino/etc, usa de referência"), eu detecto e passo no contexto. Sem isso, o agente trabalha só com bíblias + título.
+**Concorrentes (texto completo do "Como escolher") opcionais**: 2 modos:
+
+1. **Análise existente**: se já existe `docs/painel/_data/competitor-analyses/{keyword-slug}.md`, eu CARREGO automaticamente — você não precisa colar nada de novo. Isso permite reuso entre sites diferentes que miram a mesma keyword (a SERP é igual, os concorrentes são iguais).
+
+2. **Primeira vez** (análise ainda não existe pra essa keyword): você cola 1-3 textos completos de "Como escolher" de concorrentes. Eu **analiso** (tópicos, palavras-chave, ângulos, gaps, o que evitar), **gero o guia**, e **salvo a análise** em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` pra reuso futuro.
+
+**Override**: se a análise existe mas você quer regenerar com concorrentes novos (SERP mudou), cole textos novos junto com o comando — eu sobrescrevo (backup antes).
 
 # Escrever guia "Como escolher" do artigo
 
@@ -79,17 +85,63 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    - "mais conciso" / "enfatize tanque de tinta" / "sem subseções" / "com foco em iniciantes" → extrai como instrução
    - Sem instrução clara → modo padrão
 
-8. **Detectar concorrentes opcionais**: se user colou 1-3 textos longos de páginas concorrentes (ex: "aqui o que a Buscapé diz: ..."), usar como inspiração editorial. **NÃO COPIAR.** Cada texto é truncado em 8k chars pelo painel; faço o mesmo aqui mentalmente. Sem concorrentes = OK.
+8. **Análise de concorrentes** (3 cenários):
+
+   ### Cenário A — análise existe E user NÃO colou novos concorrentes
+   - `Read docs/painel/_data/competitor-analyses/{keyword-slug}.md` (slugify do `keyword` do frontmatter — ver função slugify abaixo)
+   - Carrega como contexto rico (topical map, gaps, o que evitar, ângulos)
+   - **NÃO regera a análise** (preserva a existente)
+   - Reporta no chat: "📊 Análise de concorrentes carregada de `_data/competitor-analyses/{kw}.md` (gerada em DD/MM/YYYY)"
+
+   ### Cenário B — análise NÃO existe + user colou textos de concorrentes
+   - Cada texto truncado em 16k chars (mais generoso que os 8k antigos — análise rica)
+   - Eu analiso os textos e produzo a análise estruturada (passo 10b)
+   - Usa como topical map pra gerar o guide
+   - Cria o `.md` da análise depois (passo 10b)
+
+   ### Cenário C — análise NÃO existe E user NÃO colou nada
+   - Fallback: gera só com bíblias + título (comportamento original sem concorrentes)
+   - Avisa no chat: "⚠ Sem análise de concorrentes pra essa keyword. Pra otimizar SEO, rode novamente colando textos do 'Como escolher' de 1-3 concorrentes (Buscapé/Zoom/etc)."
+
+   ### Slugify do keyword
+   ```js
+   // Espelha agent-validators.ts:128
+   function slugifyKeyword(s) {
+     return s
+       .normalize('NFD').replace(/[̀-ͯ]/g, '') // remove acentos
+       .replace(/\+/g, '-plus')
+       .toLowerCase()
+       .replace(/[^a-z0-9]+/g, '-')
+       .replace(/^-+|-+$/g, '');
+   }
+   // "Melhor Impressora Custo Benefício" → "melhor-impressora-custo-beneficio"
+   ```
 
 9. **Compor contexto pra geração**:
    - Title do artigo + keyword
    - Lista de ASINs (count + identidade.nome de cada bíblia pra entender categoria)
    - Bíblias completas (pra entender critérios técnicos da categoria)
    - Peer articles list (slug + título de cada um — formato pro prompt)
-   - Concorrentes (se houver)
+   - **Análise de concorrentes** (passo 8) — topical map + gaps + ângulos
    - Instrução opcional
 
-10. **Gerar o guide HTML** seguindo a régua editorial (ver seção abaixo). Foco em CRITÉRIOS, não em produtos.
+10. **Gerar o guide HTML** seguindo a régua editorial (ver seção abaixo). Foco em CRITÉRIOS, não em produtos. Cobertura paritária com tópicos do concorrente + extras dos gaps identificados.
+
+10b. **Gerar/atualizar análise de concorrentes** (só nos cenários B e overrides):
+
+    Conteúdo da análise (estrutura obrigatória — ver seção "Formato da análise" abaixo):
+    - Tópicos cobertos por cada concorrente (tabela check/cross)
+    - Ângulos editoriais identificados (preço-first, técnico, perfil-first, etc)
+    - Palavras-chave/jargão recorrente (com nota: usar / evitar)
+    - **Clichês ou claims fracos a EVITAR** (assertivas vagas, superlativos sem dado)
+    - **Gaps**: o que NINGUÉM cobriu — sua oportunidade
+    - Recomendações editoriais pra próximos artigos com mesma keyword
+
+    Backup se já existe: `docs/painel/.painel-backups/{day}/competitor-analysis-{keyword-slug}-{HHMMSS}.md`
+
+    Salvar: `docs/painel/_data/competitor-analyses/{keyword-slug}.md`.
+
+    Criar `_data/competitor-analyses/` se não existir.
 
 11. **Validar mentalmente** antes de salvar:
     - 500-15000 chars
@@ -147,8 +199,15 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 
 14. **Git add + commit + push**:
     ```bash
+    # .mdx do artigo SEMPRE entra. Análise .md entra SE foi criada/atualizada.
     git add sites/{site}/src/content/reviews/{slug}.mdx
-    git commit -m "feat({site}): guia 'Como escolher' de {slug} escrito via skill" \
+    if [ -f docs/painel/_data/competitor-analyses/{keyword-slug}.md ] && \
+       git diff --quiet HEAD -- docs/painel/_data/competitor-analyses/{keyword-slug}.md; then
+      :  # análise não mudou, não precisa commitar
+    else
+      git add docs/painel/_data/competitor-analyses/{keyword-slug}.md 2>/dev/null || true
+    fi
+    git commit -m "feat({site}): guia 'Como escolher' de {slug} escrito via skill (+ análise de concorrentes pra keyword '{keyword}')" \
       -m "Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
     git push origin main
     ```
@@ -159,7 +218,82 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     ```
     Falha graciosamente se `.env.painel-skills` não existir.
 
-16. **Reportar no chat**: char count do HTML + número de parágrafos + lista de links internos usados (se houver) + path do arquivo.
+16. **Reportar no chat**:
+    - char count do HTML do guide + número de parágrafos + lista de links internos
+    - path do `.mdx` salvo
+    - **Coverage report** (se análise foi usada):
+      - "Cobri N/M tópicos do concorrente"
+      - "Adicionei K tópicos extras (das bíblias / gaps): X, Y, Z"
+    - Se análise foi criada/atualizada: path do `_data/competitor-analyses/{kw}.md` salvo
+    - Se análise foi carregada de existente: lembrete "essa análise reusa em outros sites com mesma keyword"
+
+## Formato da análise de concorrentes
+
+Estrutura obrigatória do `_data/competitor-analyses/{keyword-slug}.md`:
+
+```markdown
+# Análise de concorrentes: {keyword}
+
+- **Última atualização:** {YYYY-MM-DD HH:MM}
+- **Gerada via skill:** /artigo-guia-escrever
+- **Artigo origem:** {site}/{slug}
+- **Concorrentes analisados:** {nome1}, {nome2}, {nome3}
+
+## 📋 Tópicos cobertos por concorrentes
+
+| Tópico | {Concorrente1} | {Concorrente2} | {Concorrente3} |
+|---|---|---|---|
+| {Tópico A} | ✓ | ✓ | ✓ |
+| {Tópico B} | ✓ | ✗ | ✓ |
+| ...
+
+## 🎯 Ângulos editoriais identificados
+
+- {Concorrente1}: {ângulo principal, 1 frase}
+- {Concorrente2}: {ângulo principal, 1 frase}
+- {Concorrente3}: {ângulo principal, 1 frase}
+
+## 🔑 Palavras-chave / jargão da categoria
+
+**Usar** (relevantes pro SEO da keyword):
+- "{termo X}" — usado por 3/3 concorrentes
+- "{termo Y}" — técnico mas claro
+- ...
+
+**Evitar** (vagos, clichês, ou comprometem voz analítica):
+- "{termo Z}" — superlativo sem dado
+- "{termo W}" — comercial demais
+- ...
+
+## 🚫 Clichês / claims fracos pra EVITAR no guide
+
+- {Claim 1 que aparece em 2+ concorrentes mas é vago/inútil}
+- {Claim 2}
+- ...
+
+## 💡 Gaps — o que NINGUÉM cobriu
+
+(Sua oportunidade SEO — incluir esses tópicos no guide pra superar a SERP)
+
+- {Gap 1: tópico relevante que está nas bíblias mas concorrentes ignoraram}
+- {Gap 2}
+- ...
+
+## 📌 Recomendações pra próximos artigos com mesma keyword
+
+- Cobrir os {N} tópicos comuns (paridade)
+- Adicionar gaps: {lista resumida}
+- Tom recomendado: {síntese editorial 1-2 frases}
+- Evitar: {síntese de armadilhas}
+```
+
+**Tamanho**: livre — 500-5000 chars típico. Não há limite duro, mas mantenha legível pra revisar manualmente no painel.
+
+**Validações antes de salvar**:
+- Encoding UTF-8 (acentos)
+- Sem links Amazon (não é review, é análise editorial)
+- Sem travessão `—` (consistência com outras escritas)
+- Tabela markdown válida (colunas batem com header)
 
 ## Régua editorial — ESTRUTURA OBRIGATÓRIA
 
