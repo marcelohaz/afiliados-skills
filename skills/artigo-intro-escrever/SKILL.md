@@ -44,7 +44,7 @@ Sua função é gerar **2-4 parágrafos curtos** que estabeleçam o contexto do 
 - **Sem superlativos sem evidência** — "o melhor disponível", "incomparável", "imbatível" são proibidos. "Excelente", "ótimo" são OK se contextualizado.
 - **NÃO mencionar marcas, modelos ou ASINs específicos** na intro. Linguagem GERAL (perfil de uso, critério de decisão, panorama da categoria). Marcas vão na tabela e nos reviews — não na intro.
 - **NÃO inventar dados** que não estejam nas bíblias dos produtos. Se a intro precisar de um número, ele veio de alguma bíblia.
-- **NÃO usar heading (H2/H3)** na intro. Começa direto com prosa. O `<title>` do artigo cumpre o papel de heading principal.
+- **NÃO usar heading de nenhum nível** (`#`, `##`, `###`, `<h1>`, `<h2>`, `<h3>`) na intro. Começa direto com prosa. O `title` do frontmatter cumpre o papel de H1; injetar outro heading no body criaria H1 duplicado ou hierarquia quebrada.
 
 ## Fluxo
 
@@ -92,7 +92,7 @@ Sua função é gerar **2-4 parágrafos curtos** que estabeleçam o contexto do 
    - **Exatamente 2 bolds no body inteiro** (keyword no §1, keywordPlural no §final). NADA mais em bold — sem `**ano**`, sem `**marca**`, sem nenhum outro destaque.
    - Sem travessão `—` nem `–`
    - Sem `<b>` ou `<strong>` (só `**markdown**`)
-   - Sem `<h2>`/`<h3>` ou markdown `## `/`### `
+   - Sem heading de nenhum nível: nem markdown (`# `, `## `, `### `) nem HTML (`<h1>`, `<h2>`, `<h3>`)
    - Sem menção a marca/modelo/ASIN específico (linguagem geral)
    - Se tag preenchida + intro tem links Amazon (raro mas possível): validar `?tag={tag}&linkCode=ogi&th=1&psc=1`
 
@@ -236,10 +236,10 @@ Carrega TODAS as bíblias dos produtos do lineup pra ENTENDER:
 ## Armadilhas recorrentes
 
 ### 1. Mais de 2 bolds
-Hábito de bold em "2026", "tanque de tinta", "Wi-Fi" — TODOS proibidos. Exatos 2 bolds: keyword no §1, keywordPlural no §final. Confere antes de salvar contando os `**` (devem ser 4 — abrindo e fechando de cada bold).
+Hábito de bold em "2026", "tanque de tinta", "Wi-Fi" — TODOS proibidos. Exatos 2 bolds: keyword no §1, keywordPlural no §final. Confere antes de salvar contando os marcadores `**` no body: devem ser exatamente 4 (1 abre + 1 fecha por bold × 2 bolds = 4 marcadores `**`, ou 8 caracteres `*` se for contar asterisco a asterisco).
 
-### 2. Heading H2/H3 por hábito
-"## Introdução", "### Por que esse guia" — proibido. A intro começa direto com a pergunta do §1.
+### 2. Heading de qualquer nível por hábito
+"# Título", "## Introdução", "### Por que esse guia", `<h1>`, `<h2>` — todos proibidos. A intro começa direto com a pergunta do §1. O H1 já é o `title` do frontmatter; injetar outro no body quebra a hierarquia.
 
 ### 3. Mencionar marca específica
 "A Epson lidera o segmento de tanque" — NÃO. Generaliza: "as marcas brasileiras dominam o segmento". Marcas vão na tabela e nos reviews.

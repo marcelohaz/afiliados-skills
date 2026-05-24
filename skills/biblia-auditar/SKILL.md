@@ -37,7 +37,15 @@ Você é o auditor de bíblias de produto. O usuário passa um ASIN (ou nome de 
 2. **Rodar as 5 categorias de checagem** (abaixo). Anote achados em memória.
 3. **Verificação externa opcional**: Se houver claims numéricos específicos (wattagem, dpi, capacidade) e dúvida, use `WebFetch` em `identidade.urlFabricante` pra cruzar. Não navegue em sites aleatórios; priorize fabricante oficial > Amazon ao vivo > nada.
 4. **Escrever relatório**: `Write docs/biblias-v2/.audits/<ASIN>-<YYYY-MM-DD-HHMM>.md` + `Write docs/biblias-v2/.audits/<ASIN>-last.md` (mesmo conteúdo, caminho fixo pro painel ler). Crie o diretório `.audits/` se não existir.
-5. **Reportar no chat**: 3-5 linhas com total de achados por severidade + caminho do relatório. Não cole o relatório inteiro no chat — só o resumo.
+5. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
+   ```bash
+   git add docs/biblias-v2/.audits/<ASIN>-last.md
+   git commit -m "audit(biblia): <ASIN> <identidade.nome curta>"
+   git push origin main
+   bash scripts/painel-vps-pull.sh
+   ```
+   `painel-vps-pull.sh` propaga pro painel da VPS via Basic Auth (creds em `.env.painel-skills`). Sem isso, Bárbara não vê o audit no painel até alguém puxar manualmente.
+6. **Reportar no chat**: 3-5 linhas com total de achados por severidade + caminho do relatório. Não cole o relatório inteiro no chat — só o resumo.
 
 ## As 5 categorias
 

@@ -125,7 +125,16 @@ A skill é **read-only**: não toca no `.mdx`, não commita nada. Só relatório
     ```
     Criar `docs/biblias-v2/.audits/articles/` se não existir. Conteúdo do relatório: ver seção "Formato do relatório" abaixo.
 
-12. **Reportar no chat**: linha curta com:
+12. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
+    ```bash
+    git add docs/biblias-v2/.audits/articles/{site}-{slug}-finalreview-last.md
+    git commit -m "finalreview({site}): {slug} (readyToLock={true|false})"
+    git push origin main
+    bash scripts/painel-vps-pull.sh
+    ```
+    `painel-vps-pull.sh` propaga pro painel da VPS via Basic Auth (creds em `.env.painel-skills`). Sem isso, Bárbara não vê o `readyToLock` no painel até alguém puxar manualmente.
+
+13. **Reportar no chat**: linha curta com:
     - `readyToLock: true/false`
     - `lockReasoning`
     - count de issues por nível

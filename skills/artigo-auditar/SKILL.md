@@ -96,7 +96,16 @@ Use **`artigo-analise-final`** quando achar que está pronto pra travar — vai 
    
    Criar `docs/biblias-v2/.audits/articles/` se não existir.
 
-9. **Reportar no chat**: linha curta com count de issues por nível + path do relatório.
+9. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
+   ```bash
+   git add docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md
+   git commit -m "audit({site}): artigo {slug}"
+   git push origin main
+   bash scripts/painel-vps-pull.sh
+   ```
+   `painel-vps-pull.sh` propaga pro painel da VPS via Basic Auth (creds em `.env.painel-skills`). Sem isso, Bárbara não vê o audit no painel até alguém puxar manualmente.
+
+10. **Reportar no chat**: linha curta com count de issues por nível + path do relatório.
 
 ## Critérios de auditoria (9 categorias do `regras_auditoria_artigo`)
 
