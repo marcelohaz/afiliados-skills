@@ -60,9 +60,19 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 
 1. **Parse args**: aceita `{site}/{slug-do-artigo} {ASIN-ou-slug-do-produto}` ou variantes humanas. Eu (Claude) interpreto e formato args canônicos antes.
 
+1.5. **Git pull antes de ler o .mdx** (CRÍTICO — evita falso "produto não está no lineup"):
+   ```bash
+   git stash push -m "skill-artigo-review-criar-temp" 2>/dev/null
+   git pull --rebase origin main 2>&1 | tail -3
+   git stash pop 2>/dev/null
+   ```
+   Pattern de falha resolvida em 2026-05-24: user adiciona produto no painel da VPS (botão "+ Adicionar produto"), painel commita + push pro GitHub. Mac local fica desatualizado (sem auto-pull). Skill lê o .mdx local STALE, não encontra o ASIN, aborta dizendo "produto não está no lineup" — mas o user JÁ ADICIONOU. Pull antes elimina esse falso-negativo.
+
+   Se pull falhar (rede offline, conflito), seguir mesmo assim — o stash pop pode pegar stale. Documentar no relatório.
+
 2. **Read artigo**: `Read sites/{site}/src/content/reviews/{slug}.mdx`. Se 404, abortar.
 
-3. **Localizar o produto** no `products[]` do frontmatter pelo ASIN. Se não encontrado, abortar com mensagem "Produto X não está no lineup do artigo; use '+ Adicionar produto' antes".
+3. **Localizar o produto** no `products[]` do frontmatter pelo ASIN. Se não encontrado APÓS o pull, abortar com mensagem "Produto X não está no lineup do artigo; use '+ Adicionar produto' antes" — agora sim com confiança que o local está sincronizado.
 
 4. **Read bíblia**: `Read docs/biblias-v2/{ASIN}.json`. Se não existir, abortar.
 
