@@ -31,6 +31,7 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
 - **Sem travessão (—).** Proibido em qualquer campo de saída. Use vírgula ou ponto em vez de travessão.
 - **Sem superlativos absolutos** sem evidência: "o melhor", "o mais vendido", "o único". Se for recorrente nas opiniões, atribua: "compradores recorrentemente citam como melhor custo-benefício da categoria".
 - **Português brasileiro, escrita editorial limpa.** Sem gírias, sem anglicismos desnecessários.
+- **NUNCA mexa em `lastModified` ou `lastAuthor`.** Esses campos são metadata de save gerenciada pelo painel (UI) e pelo sync R2 — não são estado editorial. A skill só modifica os **7 campos de curadoria** + `conteudoBrutoFabricante`. Resto do objeto fica intacto. Mesmo que você sinta tentação de "atualizar o timestamp" porque você acabou de editar, NÃO faça — qualquer string que você gerar via `Date().getHours()/pad/Z` cai num bug de timezone (hora local CEST/BRT do Mac formatada como `.000Z` parece UTC mas é local, fica 2-3h no futuro e o painel marca audit como "desatualizado" mesmo quando audit é mais novo). Caso real 2026-05-24: 2 sub-agents em 23 sucumbiram a essa tentação e quebraram o `auditStale` de Lavitan + Centrum. Preserve os campos.
 
 ## Fluxo
 
@@ -61,7 +62,7 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
    mkdir -p "docs/painel/.painel-backups/$DAY"
    cp "docs/biblias-v2/$ASIN.json" "docs/painel/.painel-backups/$DAY/${ASIN}-v2-${TIME}.json" 2>/dev/null || true
    ```
-5. **Montar o JSON atualizado**: copiar o objeto inteiro da bíblia, substituindo os 7 campos de curadoria e o `conteudoBrutoFabricante` limpo (se foi modificado na etapa 3.5).
+5. **Montar o JSON atualizado**: copiar o objeto inteiro da bíblia, substituindo APENAS os 7 campos de curadoria e o `conteudoBrutoFabricante` limpo (se foi modificado na etapa 3.5). **Não toque em `lastModified`, `lastAuthor`** ou qualquer outra metadata — preservar bit-a-bit. Ver invariante específico acima.
 6. **Escrever de volta**: `Write docs/biblias-v2/<ASIN>.json` com `JSON.stringify(dados, null, 2) + '\n'`.
 7. **Sincronizar com o R2** (obrigatório, sem perguntar): `bun scripts/sync-biblias-r2.ts --apply --push`. Propaga a curadoria pra colaboradoras (Bárbara) imediatamente — sem isso, o trabalho fica preso na máquina local até alguém rodar sync manualmente. ⚠ Desde 2026-05-17, `--apply` sozinho é pull-only (defesa contra ressurreição acidental de bíblias deletadas). Pra subir saves novos do local pro R2, `--push` é obrigatório. Se o sync detectar que o R2 está mais novo (algum auto-uploader do painel já enviou) e fizer pull "no-op", tudo bem: o conteúdo é o mesmo. Reportar no chat o resultado (X enviadas / Y recebidas).
 8. **Reportar no chat**: resumo de quantos itens foram gerados por campo + alertas se algum ficou vazio por falta de dados + status do sync R2.
