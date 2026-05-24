@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-escrever
-description: Escreve o guideContent (HTML "Como escolher") do artigo, no frontmatter do .mdx. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Régua dura — HTML educativo (não comercial), abertura com H2 "Como escolher {keyword}", 3-6 parágrafos, 500-15000 chars, allowlist h2/h3/p/ul/ol/li/strong/em/a, SEM links Amazon, SEM travessão, linkagem interna 0-3 só pra peer articles reais do site. Substitui só o campo guideContent — frontmatter, produtos e body ficam intactos. Backup + commit + push + sync VPS.
+description: Escreve o guideContent (HTML "Como escolher") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Quando user cola "Como escolher" de 1-3 concorrentes na mensagem, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + extras + SALVA análise em docs/painel/_data/competitor-analyses/{keyword-slug}.md pra reuso. Próximas execuções na mesma keyword (qualquer site) auto-carregam análise existente. Régua dura — HTML educativo (não comercial), abertura com H2 "Como escolher {keyword}", 3-6 parágrafos, 500-15000 chars, allowlist h2/h3/p/ul/ol/li/strong/em/a, SEM links Amazon, SEM travessão, linkagem interna 0-3 só pra peer articles reais do site. Substitui só o campo guideContent — frontmatter, produtos e body ficam intactos. Backup + commit + push + sync VPS.
 ---
 
 ## Parse de input
