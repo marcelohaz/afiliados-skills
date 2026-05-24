@@ -108,7 +108,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    // Espelha agent-validators.ts:128
    function slugifyKeyword(s) {
      return s
-       .normalize('NFD').replace(/[̀-ͯ]/g, '') // remove acentos
+       .normalize('NFD').replace(/[\u0300-\u036F]/g, '') // remove acentos
        .replace(/\+/g, '-plus')
        .toLowerCase()
        .replace(/[^a-z0-9]+/g, '-')
