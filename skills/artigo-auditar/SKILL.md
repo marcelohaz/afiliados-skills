@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only — cruza claims de intro/guide/reviews/frontmatter com bíblias dos produtos + PADROES + tag de afiliado. 9 categorias (claim-vs-bible, tag-affiliate, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial). NÃO modifica nada — gera relatório em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md. Sem decisão de lock (use artigo-analise-final pra isso). Aceita URL do painel OU args canônicos site/slug.
+description: Audita artigo inteiro read-only. Combina 9 categorias editoriais (claim-vs-bible, tag-affiliate, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
 ---
 
 ## Parse de input
@@ -16,25 +16,15 @@ Aceita 2 formatos no $ARGUMENTS:
 
 Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B (split por `/`).
 
-# Auditar artigo (read-only)
+# Auditar artigo (skill única, read-only)
 
-> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:audit_article`. Conteúdo essencial duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+> Versão executável local do prompt canônico em `docs/painel/_data/agent-prompts.json:audit_article` enriquecido com structural checks + readyToLock (antes esses 2 elementos viviam em `final_review`, hoje consolidados aqui).
 
-Você é o auditor read-only do artigo. O usuário passa `{site}/{slug}` e quer **descobrir problemas** sem precisar de decisão de lock. Sua função é cruzar cada claim do artigo contra a bíblia do produto correspondente + PADROES + tag de afiliado, e reportar findings estruturados.
+Você é o auditor read-only do artigo. O usuário passa `{site}/{slug}` e quer um diagnóstico completo: claims cruzados com bíblia, tag de afiliado correta, travessão, voz analítica, **mais checks estruturais** (intro/guide/produtos/meta) **mais veredito readyToLock**.
 
-A skill é **read-only**: não toca no `.mdx`, não commita nada. Só relatório.
+A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera relatório + commita o `.md` da auditoria.
 
-## Diferenças vs skills irmãs
-
-| Skill | Escopo | Modifica? | Decide lock? |
-|---|---|---|---|
-| `artigo-reviews-auditar` | Só reviews (cross-produto, write op) | **Sim** (sugere diffs, user aprova) | Não |
-| `artigo-analise-final` | Artigo todo + checks estruturais | Não | **Sim** (calcula `readyToLock`) |
-| **`artigo-auditar`** | **Artigo todo, sem decisão de lock** | **Não** | **Não** |
-
-Use **`artigo-auditar`** quando quer ver o estado do artigo num momento intermediário, sem ter que tomar decisão de fechar (lock). É o "audit puro" mais simples e barato.
-
-Use **`artigo-analise-final`** quando achar que está pronto pra travar — vai rodar os mesmos checks editoriais + os 4 checks estruturais (intro/guide/produtos/meta) + calcular `readyToLock`.
+**Histórico**: até 2026-05-24 existiam 2 skills separadas (`artigo-auditar` puro + `artigo-analise-final` com structural+lock). Foram consolidadas — separação era artificial (custo extra de $0.02, mesmas 9 categorias). Quem quiser audit "leve" no meio do dev pode simplesmente ignorar o campo `readyToLock` no output.
 
 ## Pré-requisitos
 
@@ -45,24 +35,33 @@ Use **`artigo-analise-final`** quando achar que está pronto pra travar — vai 
 
 ## Invariantes
 
-- **NÃO MODIFICA NADA.** Skill é puramente read-only. Output é arquivo markdown de relatório. Nenhum commit, nenhum push, nenhum write no `.mdx`.
+- **NÃO MODIFICA O `.mdx`.** Skill é read-only no conteúdo editorial. Só escreve o relatório de audit + commita ele.
 - **NÃO inventa findings.** Se não encontrou problema numa categoria, não fabrica. Audit vazio em categoria = legítimo.
 - **Toda issue precisa de evidência.** Cite trecho literal do `.mdx` (`evidence` ≤ 160 chars, idealmente < 15 palavras) OU da bíblia.
-- **NÃO calcula readyToLock.** Esse é trabalho da `artigo-analise-final`. Aqui só report findings.
+- **Código manda no readyToLock.** Override determinístico: IA pode dizer `true`, mas se estruturalmente falta peça obrigatória OU tem issue level=error, readyToLock final é `false`. IA só pode AFROUXAR, nunca APERTAR.
 - **Português brasileiro editorial.** Tom analítico, factual.
 
 ## Fluxo
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+`.
 
+1.5. **Git pull antes de ler o `.mdx`** (CRÍTICO — evita falso-negativo "produto stale"):
+   ```bash
+   git stash push -m "skill-artigo-auditar-temp" 2>/dev/null
+   git pull --rebase origin main 2>&1 | tail -3
+   git stash pop 2>/dev/null
+   ```
+   Se pull falhar (offline/conflito), seguir mesmo assim — documentar no relatório se for o caso.
+
 2. **Read `.mdx`**: `Read sites/{site}/src/content/reviews/{slug}.mdx`. Se 404, abortar.
 
 3. **Parse frontmatter** mentalmente:
    - `title` (H1)
-   - `description` (meta description — vou checar placeholder)
+   - `description` (meta description — checa placeholder)
    - `keyword` / `keywordPlural`
    - `products: []` — extrair ASINs + count
-   - `guideContent` (block scalar) — pra auditar como parte do artigo
+   - `contentLocked` — se `true`, avisa mas não bloqueia (útil pra reauditar pós-trava)
+   - `guideContent` (block scalar) — extrai pra check estrutural + audit
 
 4. **Read bíblias** dos produtos. Se alguma faltar, abortar com instrução pra rodar sync R2.
 
@@ -70,12 +69,32 @@ Use **`artigo-analise-final`** quando achar que está pronto pra travar — vai 
    - Tag preenchida → links DEVEM ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
    - Tag vazia → links DEVEM ser crus (sem `?tag=...`)
 
-6. **Rodar auditoria** nas 9 categorias do `regras_auditoria_artigo` (seção "Critérios de auditoria" abaixo). Gerar:
+6. **Rodar 4 checks estruturais determinísticos** (não-IA, código mental):
+
+   ### a) `hasIntro`
+   Body markdown do `.mdx` (tudo após o segundo `---` do frontmatter).
+   - Calcular `totalBodyChars` (count de chars do body, ignorando frontmatter)
+   - Quebrar body em "segmentos" (linhas separadas por blank lines)
+   - Detectar placeholder: algum segmento inclui `[a escrever` OU `— agente IA preenche`
+   - `hasIntro = totalBodyChars > 200 && !isPlaceholder`
+
+   ### b) `hasGuide`
+   - Extrair `guideContent` do frontmatter (block scalar `|` ou inline vazio)
+   - `hasGuide = guideContent.exists && guideContent.trim().length > 100`
+
+   ### c) `productCount >= 3`
+   - `parsed.products.length` (quantos itens no array `products[]`)
+
+   ### d) `hasMetaDescription`
+   - `description` é placeholder se inclui `[descrição a definir`
+   - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
+
+7. **Rodar auditoria IA** nas 9 categorias do `regras_auditoria_artigo` (seção "Critérios de auditoria" abaixo). Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
 
-7. **Detectar meta description placeholder específico** (paridade com `detectMetaDescPlaceholder` do painel — agent-edit.ts:1221-1235):
+8. **Detectar meta description placeholder específico** (paridade com `detectMetaDescPlaceholder` do painel — agent-edit.ts:1221-1235):
    ```js
    if (description.includes('[descrição a definir')) {
      issues.unshift({
@@ -87,25 +106,41 @@ Use **`artigo-analise-final`** quando achar que está pronto pra travar — vai 
    }
    ```
 
-8. **Escrever relatório** em 2 locais (paridade com pattern de bíblias/produtos):
+9. **Calcular `readyToLock`** com override determinístico:
    ```
-   docs/biblias-v2/.audits/articles/{site}-{slug}-audit-{YYYY-MM-DD-HHMM}.md  ← snapshot timestamped
-   docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md               ← caminho fixo
+   structuralOk = hasIntro && hasGuide && productCount >= 3 && hasMetaDescription
+   errorIssueCount = issues.filter(i => i.level === 'error').length
+   errorsOk = errorIssueCount === 0
+   readyToLock = structuralOk && errorsOk
    ```
-   Sufixo `-audit-` diferencia do relatório do `artigo-analise-final` (que usa `-finalreview-`).
-   
-   Criar `docs/biblias-v2/.audits/articles/` se não existir.
 
-9. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
-   ```bash
-   git add docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md
-   git commit -m "audit({site}): artigo {slug}"
-   git push origin main
-   bash scripts/painel-vps-pull.sh
-   ```
-   `painel-vps-pull.sh` propaga pro painel da VPS via Basic Auth (creds em `.env.painel-skills`). Sem isso, Bárbara não vê o audit no painel até alguém puxar manualmente.
+   `lockReasoning` (1-2 frases) listando blockers se readyToLock=false:
+   - "introdução vazia ou placeholder (execute /artigo-intro-escrever)"
+   - "guide ausente — campo guideContent vazio no frontmatter (execute /artigo-guia-escrever)"
+   - "apenas N produto(s) (mínimo 3) — adicione mais produtos via painel + execute /artigo-review-criar"
+   - "meta description ainda é placeholder (execute /artigo-meta-escrever)"
+   - "N issue(s) crítico(s) — veja seção 🔴 do relatório"
 
-10. **Reportar no chat**: linha curta com count de issues por nível + path do relatório.
+   Se readyToLock=true: `lockReasoning = "Tudo OK — pronto pra travar com contentLocked: true."`
+
+10. **Montar markdown do relatório** (formato em "Formato do relatório" abaixo).
+
+11. **Escrever relatório** em 2 locais:
+    ```
+    docs/biblias-v2/.audits/articles/{site}-{slug}-audit-{YYYY-MM-DD-HHMM}.md  ← snapshot timestamped
+    docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md               ← caminho fixo, painel lê esse
+    ```
+    Criar `docs/biblias-v2/.audits/articles/` se não existir.
+
+12. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
+    ```bash
+    git add docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md
+    git commit -m "audit({site}): artigo {slug} (readyToLock={true|false})"
+    git push origin main
+    bash scripts/painel-vps-pull.sh
+    ```
+
+13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
 ## Critérios de auditoria (9 categorias do `regras_auditoria_artigo`)
 
@@ -120,8 +155,6 @@ Afirmação no review (subtitle, shortDescription, fullReview, pros, cons, specs
 Link Amazon com tag diferente da esperada.
 - Tag preenchida no config: links DEVEM ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
 - Tag vazia: links DEVEM ser crus (sem `?tag=...`)
-
-**Exemplo**: config tem `melhorimpressora-20` mas review tem `https://amazon.com.br/dp/X?tag=outratag-20`.
 
 ### `travessao` (level=`warn`)
 Travessão (`—` ou `–`) detectado em qualquer campo editorial: title, description, subtitle, shortDescription, fullReview, pros, cons, intro (body markdown), guideContent.
@@ -155,28 +188,18 @@ Bíblia tem `dadosInconsistentes` com `decisaoEditorial`; review não respeita a
 ### `decisao-editorial-violada` (level=`warn`)
 Review contradiz `decisaoEditorial` registrada na bíblia (caso geral).
 
-## Schema do output (`AuditArticleSchema`)
+## Critérios estruturais (4 checks determinísticos)
 
-Paridade com `agent-edit.ts:1077-1084`:
-
-```typescript
-{
-  issues: Array<{
-    level: 'error' | 'warn' | 'info',
-    rule: string (2-60 chars),
-    message: string (10-800 chars),
-    product?: string,    // ASIN se aplicável
-    fix?: string (max 800 chars),
-    evidence?: string (max 160 chars)
-  }>,
-  summary: string (20-800 chars),
-  passed: string[] (max 20 items, 5-280 chars cada)
-}
-```
+| Check | Critério | Bloqueia readyToLock? |
+|---|---|---|
+| `hasIntro` | body chars > 200 + sem placeholder `[a escrever:` ou `— agente IA preenche` | Sim |
+| `hasGuide` | `guideContent` no frontmatter, trim > 100 chars | Sim |
+| `productCount >= 3` | array `products[]` tem ≥3 items | Sim |
+| `hasMetaDescription` | `description` >= 50 chars + sem placeholder `[descrição a definir` | Sim |
 
 ## Formato do relatório
 
-Template do markdown a salvar em `.audits/articles/{site}-{slug}-audit-{date}.md`:
+Template do markdown (gravado em arquivo E impresso inline no chat):
 
 ```markdown
 # Auditoria: {site}/{slug}
@@ -184,6 +207,17 @@ Template do markdown a salvar em `.audits/articles/{site}-{slug}-audit-{date}.md
 - **Data:** {YYYY-MM-DD HH:MM}
 - **affiliateTag:** {tag ou "(vazia — site em construção)"}
 - **Produtos auditados:** {count} ({asins list})
+- **readyToLock:** {true|false}
+- **lockReasoning:** {1-2 frases}
+
+## Structural checks
+
+| Check | Status | Valor |
+|---|---|---|
+| Introdução escrita | {✓|✗} | {chars do body} chars |
+| Guide presente | {✓|✗} | {chars do guideContent} chars |
+| ≥3 produtos | {✓|✗} | {productCount} produtos |
+| Meta description | {✓|✗} | {chars da description} chars |
 
 ## Summary
 
@@ -212,11 +246,7 @@ Template do markdown a salvar em `.audits/articles/{site}-{slug}-audit-{date}.md
 - {bullet curto, 10-30 palavras}
 ```
 
-Também salvar versão `.audits/articles/{site}-{slug}-audit-last.md` (mesmo conteúdo) — caminho fixo pra leitura programática se precisar.
-
 ## Voz analítica (CRÍTICO)
-
-Igual a todas as auditorias do projeto:
 
 - **Tom analítico.** "O review do produto 2 cita 5.000 páginas; bíblia confirma 4.500."
 - **NÃO comente preferências.** "Acho que ficaria melhor com Y" → "Y pode ser uma alternativa que cita {dado da bíblia}".
@@ -225,34 +255,34 @@ Igual a todas as auditorias do projeto:
 ## Quando NÃO usar essa skill
 
 - **Artigo sem produtos** (`products: []` vazio): nada pra auditar. Aborta orientando completar lineup primeiro.
-- **Falta de bíblia** de produtos: rodar `bun scripts/sync-biblias-r2.ts --apply` primeiro. Sem bíblias, a auditoria de `claim-vs-bible` é inútil (não consegue cruzar).
-- **Quer decidir lock**: use `artigo-analise-final` em vez disso — ela faz tudo isso + checks estruturais + `readyToLock`.
-- **Quer reescrever reviews**: use `artigo-reviews-auditar` em vez disso — ela é write op que propõe diffs cross-produto.
+- **Falta de bíblia** de produtos: rodar `bun scripts/sync-biblias-r2.ts --apply` primeiro.
+- **Quer REESCREVER reviews** (write op): use `artigo-reviews-auditar` em vez disso — ela propõe diffs cross-produto pra você aprovar.
 
-## Cooldown / dedup
+## Output no chat
 
-O painel tem cooldown de 20s por artigo (server.ts:2575). A skill local não tem cooldown automático — rodar 2x em sequência custa $0.05-0.08 cada. Recomendo rodar com intervalo razoável.
+Diferente de outras skills que só reportam "audit OK, ver path/X.md", essa skill **imprime o relatório markdown completo inline no chat**. Usuário não precisa abrir o `.md` pra ver o resultado — ele aparece direto na resposta da skill.
+
+Path do `.md` salvo é mencionado no rodapé do output pra referência (painel lê esse arquivo pra mostrar UI).
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
 ```
 docs/painel/_data/agent-prompts.json:audit_article  (SOURCE OF TRUTH editorial)
-    ├── handler do painel (POST /agent/article/:site/:slug/audit)
-    └── esta SKILL.md (versão local executável)
+    └── esta SKILL.md (versão local executável, enriquecida com structural+readyToLock)
 ```
 
-Compartilha o `regras_auditoria_artigo` com `final_review` (via `_shared`). Logo, manter sincronia entre essa skill e a `artigo-analise-final` (mesmas 9 categorias, mesma definição).
+Pré-consolidação (até 2026-05-24), existiam 2 prompts canônicos: `audit_article` (puro) e `final_review` (com structural+readyToLock). Hoje a skill local consome só `audit_article` e implementa structural+readyToLock como código em volta. Compartilha o `regras_auditoria_artigo` shared.
 
 ## Armadilhas recorrentes
 
 ### 1. Tentar editar o `.mdx`
-Skill é PURAMENTE read-only. Mesmo que veja problema fácil de consertar, NÃO edita. O user roda skills específicas (`artigo-intro-escrever`, `artigo-review-criar`, etc.) pra corrigir.
+Skill é read-only no conteúdo editorial. Mesmo que veja problema fácil de consertar, NÃO edita o `.mdx`. O user roda skills específicas (`artigo-intro-escrever`, `artigo-review-criar`, etc.) pra corrigir.
 
-### 2. Confundir com `artigo-analise-final`
-`artigo-analise-final` faz tudo isso AINDA + checks estruturais + readyToLock. Se o user quer saber "está pronto pra travar?", direcionar pra `artigo-analise-final`. Se quer só "audita o que tem", esta skill é a correta.
+### 2. Confundir com `artigo-reviews-auditar`
+Aquela é WRITE op cross-produto (sugere mudanças, user aprova granular). Esta é READ-only de TODO o artigo + structural + readyToLock.
 
-### 3. Confundir com `artigo-reviews-auditar`
-Aquela é WRITE op (sugere mudanças, user aprova granular). Esta é READ-only (só relatório). Esta cobre artigo INTEIRO (intro, guide, reviews, frontmatter); aquela cobre só reviews cross-produto.
+### 3. IA forçar readyToLock=true sem checks estruturais
+Override determinístico (passo 9) cobre isso. Se IA disse `true` mas falta intro/guide/produtos/meta, reescrevo o `lockReasoning` listando blockers e força `readyToLock = false`.
 
 ### 4. Citar comprador no audit
 "Compradores reclamam de X" → quebra a voz analítica. Sempre reescreva: "Bíblia registra trade-off X (campo Y)".
@@ -261,26 +291,29 @@ Aquela é WRITE op (sugere mudanças, user aprova granular). Esta é READ-only (
 Primeiro run do skill no projeto, o diretório não existe. Sempre fazer `mkdir -p docs/biblias-v2/.audits/articles/` antes de escrever.
 
 ### 6. Achar tone-clone onde é template intencional
-A estrutura dos 4 parágrafos com prefixos exatos (`Para quem é:` / `Por que gostamos:` / `Pontos de atenção:` / `Resumo:`) é o template canônico — **não é tone-clone**. Só flag tone-clone se houver frase concreta repetida em 2+ reviews ou parágrafo quase idêntico com nome trocado.
+A estrutura dos 4 parágrafos com prefixos exatos (`Para quem é:` / `Por que gostamos:` / `Pontos de atenção:` / `Resumo:`) é o template canônico — **não é tone-clone**.
 
 ### 7. Tag vazia esperando link com tag
-Site em construção tem `affiliateTag: ''`. Nesse caso, links Amazon devem ser CRUS (`https://amazon.com.br/dp/X`). Se a IA assume tag preenchida e flagga "tag-affiliate", está errado. Sempre cruzar com o config real.
+Site em construção tem `affiliateTag: ''`. Nesse caso, links Amazon devem ser CRUS (`https://amazon.com.br/dp/X`). Se a IA assume tag preenchida e flagga "tag-affiliate", está errado.
 
-### 8. Sobrescrever audit antigo sem perceber
-O arquivo `-audit-last.md` é sobrescrito a cada run. Se precisar comparar com run anterior, olhe o snapshot timestamped `{site}-{slug}-audit-{date}.md`.
+### 8. Não considerar `contentLocked` no input
+Se artigo já é `contentLocked: true`, a skill ainda roda (útil pra reauditar pós-trava), mas o relatório deve mencionar no header. UI do painel oferece "Destravar" se houver issue crítica achada.
 
 ### 9. Inventar issues pra ter "achados"
-Audit vazio é válido. Se artigo está bom, `issues: []` + `passed: [...]` é o output correto. Prefira 5 findings bem evidenciados a 20 vagos.
+Audit vazio é válido. Se artigo está bom, `issues: []` + `passed: [...]` + `readyToLock: true` é o output correto. Prefira 5 findings bem evidenciados a 20 vagos.
+
+### 10. Esquecer de imprimir inline no chat
+A diferença chave dessa skill é o output FULL inline (não apenas summary + path). Sempre imprimir o markdown completo do relatório como resposta no chat.
 
 ## Exemplo de invocação
 
-Exemplos válidos do user — modo padrão:
+Exemplos válidos do user:
 - "audita o artigo melhor-impressora-custo-beneficio do melhorimpressora"
-- "audita o artigo X"
+- "audita pra travar o melhor-impressora-custo-beneficio"
 - "https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "audita")
 
-Args canônico que invoco: `Skill(skill="artigo-auditar", args="melhorimpressora/melhor-impressora-custo-beneficio")`
+Args canônico: `Skill(skill="artigo-auditar", args="melhorimpressora/melhor-impressora-custo-beneficio")`
 
 ## Limitação intrínseca conhecida
 
-Sem schema Zod programático no output, validação fica editorial. ~5% de chance de algum issue ter `evidence` ligeiramente longa (>160 chars) ou estrutura do markdown levemente quebrada. Mitigação: conferir mentalmente antes de salvar o `.md`. Em caso de dúvida, optar por menos issues e mais evidência forte.
+Sem schema Zod programático no output, validação fica editorial. ~5% de chance de algum issue ter `evidence` levemente fora do limite. Mitigação: conferir mentalmente antes de salvar o `.md`.
