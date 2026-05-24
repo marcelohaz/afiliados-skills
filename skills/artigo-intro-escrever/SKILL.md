@@ -50,6 +50,14 @@ Sua função é gerar **2-4 parágrafos curtos** que estabeleçam o contexto do 
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+` em ambos.
 
+1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
+   ```bash
+   git stash push -m "skill-artigo-intro-escrever-temp" 2>/dev/null
+   git pull --rebase origin main 2>&1 | tail -3
+   git stash pop 2>/dev/null
+   ```
+   Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
+
 2. **Read `.mdx`**: `Read sites/{site}/src/content/reviews/{slug}.mdx`. Se 404, abortar.
 
 3. **Parse frontmatter** mentalmente:

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Skills editoriais do ProjetoAfiliados — preencher/criar/escrever e auditar bíblias v2, páginas individuais de produto, reviews em artigos, meta description, introdução, guia 'Como escolher', auditoria completa de artigo (com readyToLock), descrição de categoria. Skills aceitam URL do painel como input.",
-    "version": "1.6.1"
+    "version": "1.7.0"
   },
   "plugins": [
     {

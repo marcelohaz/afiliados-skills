@@ -33,6 +33,12 @@ Você é o auditor de bíblias de produto. O usuário passa um ASIN (ou nome de 
 
 ## Fluxo
 
+0.5. **Sync R2 antes de carregar bíblia** (CRÍTICO — evita estado stale):
+   ```bash
+   bun scripts/sync-biblias-r2.ts --apply 2>&1 | tail -3
+   ```
+   Bíblias vivem no R2 canônico. Painel VPS auto-uploada saves do user e auto-pulls a cada 60s. Mac local pode estar atrás. `--apply` sem `--push` é pull-only (seguro). Se sync falhar (rede offline, creds erradas), seguir mesmo assim — risco de stale aceito vs travar.
+
 1. **Carregar**: `Read docs/biblias-v2/<ASIN>.json`. Se não existir, abortar com mensagem clara.
 2. **Rodar as 5 categorias de checagem** (abaixo). Anote achados em memória.
 3. **Verificação externa opcional**: Se houver claims numéricos específicos (wattagem, dpi, capacidade) e dúvida, use `WebFetch` em `identidade.urlFabricante` pra cruzar. Não navegue em sites aleatórios; priorize fabricante oficial > Amazon ao vivo > nada.

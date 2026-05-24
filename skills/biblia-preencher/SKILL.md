@@ -35,6 +35,12 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
 
 ## Fluxo
 
+0.5. **Sync R2 antes de carregar bíblia** (CRÍTICO — evita estado stale):
+   ```bash
+   bun scripts/sync-biblias-r2.ts --apply 2>&1 | tail -3
+   ```
+   Bíblias vivem no R2 canônico. Painel VPS auto-uploada saves do user (botão "Salvar" do editor-biblia) e auto-pulls dos editores remotos a cada 60s. Mac local pode estar atrás se outra pessoa salvou recentemente via painel. `--apply` sem `--push` é pull-only (seguro: só baixa do R2, não sobrescreve). Se sync falhar (rede offline, creds erradas em `.env.painel-skills`), seguir mesmo assim — risco de stale aceito vs travar.
+
 1. **Carregar bíblia**: `Read docs/biblias-v2/<ASIN>.json`. Se não existir, abortar.
 1.5. **Verificar contaminação**: `bun scripts/check-contamination.ts <ASIN>`. Detecta dados que parecem vir de outro produto (ASIN errado no specs, marca trocada, doFabricante de outra marca). Se a saída tiver `hasContamination: true`:
    - Listar os issues no chat antes de prosseguir

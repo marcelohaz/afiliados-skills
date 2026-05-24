@@ -34,6 +34,14 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 1. **Parse args**: aceita `{site}/{slug}` canônico ou nomes humanos (mesmo padrão do `preencher-pagina-produto`).
 
+1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
+   ```bash
+   git stash push -m "skill-pagina-produto-auditar-temp" 2>/dev/null
+   git pull --rebase origin main 2>&1 | tail -3
+   git stash pop 2>/dev/null
+   ```
+   Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
+
 2. **Read .mdx**: `Read sites/{site}/src/content/products/{slug}.mdx`. Se 404, abortar com mensagem clara.
 
 3. **Parsear frontmatter**: extrair os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview). Se algum vazio/ausente, registra como issue `conteudo-curto`.

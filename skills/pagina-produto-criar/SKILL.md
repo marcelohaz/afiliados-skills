@@ -51,6 +51,14 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
    - `B098YHFT9S melhorimpressora` (idem)
    - Se ambíguo, perguntar antes de prosseguir.
 
+1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
+   ```bash
+   git stash push -m "skill-pagina-produto-criar-temp" 2>/dev/null
+   git pull --rebase origin main 2>&1 | tail -3
+   git stash pop 2>/dev/null
+   ```
+   Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Caso real Bárbara 2026-05-24: ela criou site melhoromega3 + stub vitafor-omegafor-plus pelo painel VPS; sub-agent rodou git fetch (sem novidades), assumiu que site não existia. Pull antes evita esse falso-negativo.
+
 2. **Read .mdx atual**: `Read sites/{site}/src/content/products/{slug}.mdx`. Se 404, abortar com mensagem do pré-requisito.
 
 3. **Parsear frontmatter**: extrair `asin`, `name`, `image`, `imageAlt`, `category`, `categorySlug`. Validar que `asin` está no formato `[A-Z0-9]{10}`.
