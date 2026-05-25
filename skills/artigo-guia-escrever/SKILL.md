@@ -449,6 +449,14 @@ Carrego TODAS as bíblias dos produtos do artigo pra ENTENDER:
 - **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.
 - **NUNCA cite compradores/reviews/avaliações/Amazon** (padrão do projeto).
 
+## Tom conversacional (CRÍTICO)
+
+Pergunta-teste antes de salvar: *"Um amigo que não entende disso entenderia?"* Se não → simplifica.
+
+Guide é educativo mas não acadêmico. Evite jargão corporativo (❌ "alinhado à narrativa", "perfil favorável", "estrutura química mais próxima do natural"). Use linguagem direta (✓ "vale procurar dose alta", "molécula mais parecida com o óleo natural"). NUNCA cite procedência burocrática ("conforme tipo de dieta declarado", "alérgenos confirmam") — destila o critério direto.
+
+Referência canônica pra calibrar tom: `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx` (campo `guideContent` é exemplo).
+
 ## Filtros editoriais
 
 - **Specs ambientais** (% reciclado, Energy Star, EPEAT, RoHS, "Planet Partners") → omitir no guide, salvo se tema `sustentabilidade` em `angulosConversao` de alguma bíblia.

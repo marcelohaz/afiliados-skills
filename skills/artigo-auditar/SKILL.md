@@ -142,7 +142,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (9 categorias do `regras_auditoria_artigo`)
+## Critérios de auditoria (10 categorias do `regras_auditoria_artigo`)
 
 Use exatamente esses valores em `rule`:
 
@@ -187,6 +187,28 @@ Bíblia tem `dadosInconsistentes` com `decisaoEditorial`; review não respeita a
 
 ### `decisao-editorial-violada` (level=`warn`)
 Review contradiz `decisaoEditorial` registrada na bíblia (caso geral).
+
+### `voz-citacao-ficha-tecnica` (level=`warn`)
+Marcadores de procedência **burocráticos** no .mdx — quando o modelo copiou da bíblia sem destilar. Diferente de `atribuicao-comprador` (cita comprador) — esta cobre **cita fonte burocrática** ("alérgenos confirmam", "atributos declaram", "conforme tipo de dieta").
+
+**Padrões pra grep**:
+- "alérgenos da Amazon confirmam"
+- "atributos de material declaram"
+- "conforme tipo de dieta"
+- "conforme declarado pelo fabricante" / "conforme o fabricante" (sem qualificar)
+- "apontada pelo fabricante como"
+- "relato recorrente nas opiniões" / "segundo relatos de compradores"
+- "citada como motivo de preferência por um comprador"
+- "datasheet" / "no datasheet"
+- "anúncio Amazon" / "apesar do anúncio Amazon listar"
+
+**Régua editorial — voz-citação OK SÓ quando atende AS DUAS condições:**
+1. **(a)** qualifica claim que SÓ o fabricante pode fazer (rendimento, garantia interna, certificação proprietária)
+2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica útil)
+
+**✓ Editorial OK** (não flag): "rende até 4.500 páginas em preto, segundo a Epson" — claim só-fabricante + qualifica rendimento.
+
+**❌ Burocrática** (flag warn): "alérgenos da Amazon confirmam ausência de glúten" → sugerir "sem glúten".
 
 ## Critérios estruturais (4 checks determinísticos)
 

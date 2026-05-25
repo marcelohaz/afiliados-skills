@@ -241,6 +241,15 @@ Carrega TODAS as bíblias dos produtos do lineup pra ENTENDER:
 - **Português brasileiro editorial** — sem gírias, sem anglicismos desnecessários.
 - **NUNCA cite compradores/reviews/avaliações/estrelas/Amazon** como entidade. Padrão de toda a voz editorial do projeto (`02-estilo-editorial.md`).
 
+## Tom conversacional (CRÍTICO)
+
+Pergunta-teste antes de salvar: *"Um amigo que não entende disso entenderia?"* Se não → simplifica.
+
+Evite jargão corporativo (❌ "alinhado à narrativa", "perfil favorável", "posicionamento de mercado", "uma rotina X séria"). Use linguagem direta (✓ "se você imprime em casa", "boa dose pra rotina contínua"). NUNCA cite procedência burocrática ("alérgenos da Amazon confirmam", "atributos declaram") — destila o claim direto.
+
+Referência canônica pra calibrar tom:
+- `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx` (intro do artigo é bom exemplo)
+
 ## Armadilhas recorrentes
 
 ### 1. Mais de 2 bolds

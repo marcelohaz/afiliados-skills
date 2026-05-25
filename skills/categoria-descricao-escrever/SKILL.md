@@ -216,6 +216,14 @@ Mesma regra editorial de todo o projeto. Vírgula, ponto, dois pontos.
 - **NÃO cite compradores/reviews/avaliações/Amazon.** Padrão da voz editorial do projeto.
 - **Tom de conhecimento, não de vendedor.** "Cobrimos os principais perfis" > "Encontre o melhor X aqui!".
 
+## Tom conversacional (CRÍTICO)
+
+Pergunta-teste antes de salvar: *"Um amigo que não entende disso entenderia?"* Se não → simplifica.
+
+Evite jargão corporativo (❌ "alinhado à narrativa de categoria", "posicionamento de mercado"). Use linguagem direta de quem orienta (✓ "se você procura X, considere Y"). NÃO cite procedência burocrática ("conforme dados", "segundo Amazon") — descrição de categoria não precisa justificar fonte.
+
+Referência canônica: leia outras descrições de categoria já travadas em `sites/*/src/config.ts` (`categoryDescriptions`).
+
 ## Filtros editoriais (paridade com outras skills)
 
 - **Specs ambientais** (% reciclado, Energy Star, EPEAT, etc.) → omitir, salvo se for tese central da categoria.

@@ -32,7 +32,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 ## Fluxo
 
-1. **Parse args**: aceita `{site}/{slug}` canônico ou nomes humanos (mesmo padrão do `preencher-pagina-produto`).
+1. **Parse args**: aceita `{site}/{slug}` canônico ou nomes humanos (mesmo padrão do `pagina-produto-criar`).
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
@@ -54,7 +54,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 6. **Read reviews que citam o ASIN** (anti-duplicate): `Grep` em `sites/{site}/src/content/reviews/*.mdx` por `asin:.*{asin}`. Se houver, leia o `fullReview` do produto-no-artigo pra comparar com o `fullReview` da página individual — flag se for muito parecido (parágrafo inteiro idêntico, frases-chave repetidas).
 
-7. **Rodar as 9 categorias de checagem** (abaixo).
+7. **Rodar as 10 categorias de checagem** (abaixo).
 
 8. **Escrever relatório**:
    - `docs/biblias-v2/.audits/products/{site}-{slug}-{YYYY-MM-DD-HHMM}.md` (histórico)
@@ -72,7 +72,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 10. **Reportar no chat**: 3-5 linhas com total de findings por severidade + path do relatório. Não cole o relatório inteiro no chat.
 
-## As 9 categorias de check
+## As 10 categorias de check
 
 ### 1. `claim-vs-bible`
 Afirmação em qualquer campo (subtitle, shortDescription, pros, cons, specs, fullReview) que não tem origem rastreável na bíblia (specs, números, certificações, marca).
@@ -136,6 +136,39 @@ Heurística: frases-chave repetidas, mesma sequência argumentativa, conclusões
 
 Se nenhum review cita o ASIN, essa categoria sai vazia automaticamente (não há com que comparar).
 
+### 10. `voz-citacao-ficha-tecnica`
+
+Detecta marcadores de procedência **burocráticos** no .mdx — quando o modelo copiou da bíblia sem destilar. Diretrizes #5 e #6 da bíblia proíbem isso ("não pode parecer leitura de planilha").
+
+**Padrões pra grep**:
+- "alérgenos da Amazon confirmam"
+- "atributos de material declaram"
+- "conforme tipo de dieta"
+- "conforme declarado pelo fabricante" / "conforme o fabricante" (sem qualificar)
+- "apontada pelo fabricante como" / "apontado pelo fabricante como"
+- "relato recorrente nas opiniões" / "segundo relatos de compradores"
+- "citada como motivo de preferência por um comprador"
+- "datasheet" / "no datasheet"
+- "anúncio Amazon" / "apesar do anúncio Amazon listar"
+
+**Severidade: 🟡 Aviso** (não crítico) — porque "segundo X" pode ser **editorial OK** em casos específicos. Verificar contra a régua:
+
+Voz-citação OK SÓ quando atende AS DUAS condições:
+1. **(a)** qualifica claim que SÓ o fabricante pode fazer (rendimento, garantia interna, certificação proprietária)
+2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica útil)
+
+**✓ Exemplos editorial OK** (não flagar, ou flagar como info):
+- "rende até 4.500 páginas em preto, segundo a Epson" *(rendimento é claim só-fabricante + qualifica)*
+- "número de marketing 33 ppm, mas a velocidade ISO é mais realista" *(crítica útil)*
+- "a HP recomenda volume de 50 a 100 páginas mensais" *(claim só-fabricante)*
+
+**❌ Exemplos burocráticos** (flagar aviso):
+- "alérgenos da Amazon confirmam ausência de glúten" → reformula pra "sem glúten"
+- "atributos de material declaram ausência de contaminantes" → "livre de contaminantes"
+- "apontada pelo fabricante como mais absorvível" → "considerada mais absorvível"
+
+Reportar no relatório com sugestão de reformulação destilada. Humano decide se aceita.
+
 ## Filtros editoriais — flag se aparecer nos campos curados
 
 Também sinalizar (severidade `aviso`):
@@ -181,12 +214,12 @@ Template exato — use blocos idênticos pro painel parsear visualmente:
 ## Classificação de severidade
 
 - **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido, tone-comprador.
-- **🟡 Aviso**: superlativo sem evidência, conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content.
+- **🟡 Aviso**: superlativo sem evidência, conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content, voz-citação ficha-técnica burocrática.
 - **🔵 Info**: nota que vale registrar mas não exige ação (ex: "subtitle no limite mínimo de 10 chars, considere expandir").
 
 ## Boas práticas
 
-- Se a página está quase vazia (stub recém-criado, antes de rodar `preencher-pagina-produto`), resuma em 1 bullet "página em estágio inicial; checagens de conteúdo adiadas até preenchimento" e termine.
+- Se a página está quase vazia (stub recém-criado, antes de rodar `pagina-produto-criar`), resuma em 1 bullet "página em estágio inicial; checagens de conteúdo adiadas até preenchimento" e termine.
 - Prefira 5 findings bem evidenciados a 20 vagos. Assine valor, não volume.
 - Se errou na auditoria (ex: confundiu campo X com Y), o humano vê no diff do markdown na próxima rodada. Não há vergonha em revisar o próprio relatório.
 
@@ -198,4 +231,4 @@ audita o produto epson-ecotank-l3250 do melhorimpressora
 audita melhorimpressora/epson-ecotank-l3250
 ```
 
-Args canônico: `Skill(skill="auditar-pagina-produto", args="melhorimpressora/epson-ecotank-l3250")`.
+Args canônico: `Skill(skill="pagina-produto-auditar", args="melhorimpressora/epson-ecotank-l3250")`.

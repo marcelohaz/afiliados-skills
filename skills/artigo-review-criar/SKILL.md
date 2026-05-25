@@ -49,7 +49,7 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 
 - **Nunca invente.** Cada claim numérico tem origem rastreável na bíblia (`specsAmazon`, `doFabricante`, `pontosFortes`, etc).
 - **Conteúdo COMPARATIVO** (diferente da página individual): pode comparar com outros produtos do lineup, citar por nome, dizer "vs HP X" se houver dado na bíblia. Pode falar "nesta seleção", "comparado ao primeiro da lista".
-- **Anti-duplicate vs página individual**: leia o `productPageReview` da página individual antes (`sites/{site}/src/content/products/{slug-do-produto}.mdx` → campo `fullReview`). O texto do produto-no-artigo deve ter ângulo DIFERENTE — comparativo, posicionamento na seleção, etc.
+- **Anti-duplicate vs página individual**: leia o `fullReview` da página individual antes (`sites/{site}/src/content/products/{slug-do-produto}.mdx`). O texto do produto-no-artigo deve ter ângulo DIFERENTE — comparativo, posicionamento na seleção, etc.
 - **Sem travessão (—)** em nenhum campo.
 - **Voz analítica**: NUNCA cite compradores/reviews/avaliações/estrelas/Amazon.
 - **HTML allowlist no `fullReview`**: `<p>`, `<strong>`, `<em>`, `<a>`. Proibido: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<table>`, `<img>`, `<script>`.
@@ -119,7 +119,8 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
    - HTML allowlist OK no fullReview
    - Sem travessão
    - Tag correta nos links (ou cruas se config vazia)
-   - Voz analítica (zero "compradores", "reviews", "avaliações")
+   - Voz analítica (zero "compradores", "reviews", "avaliações", "posicionamento Amazon")
+   - Voz-citação ficha-técnica (zero "alérgenos confirmam", "atributos declaram", "conforme tipo de dieta", "apontada pelo fabricante como") — exceção: claim só-fabricante que adiciona valor editorial, ver Armadilha 4
    - Anti-duplicate vs página individual (frases não-repetidas)
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-prod-{ASIN}.mdx`. Pattern paralelo ao do painel pra aparecer no card "Histórico de versões".
@@ -182,8 +183,64 @@ Specs técnicas derivadas de `specsAmazon`/`doFabricante`/`conteudoBrutoFabrican
 
 Idêntica à da página individual (mesma régua):
 - Tom de quem testou/analisou
-- NUNCA cite compradores, reviews, avaliações, estrelas, Amazon como entidade
+- NUNCA cite **compradores, reviews, avaliações, estrelas, posicionamento Amazon**
 - Reescreva insights de `sentimentoCompradores` como observação editorial direta
+
+> **Sobre citar o fabricante**: regra diferente. Citar fabricante pode ser editorial OK em casos específicos (rendimento, garantia interna, certificação proprietária). Ver Armadilha 4 abaixo pra régua completa.
+
+## Tom conversacional (CRÍTICO)
+
+A pergunta-teste antes de salvar qualquer campo:
+> *"Um amigo que não entende disso entenderia e saberia o que fazer?"*
+
+Se não → simplifica.
+
+Reviews afiliados são **especialista explicando pra amigo ou vizinho**: claro, direto, fluido. Sem jargão corporativo, sem formalidade institucional. Use 2ª pessoa quando faz sentido ("se você imprime em casa..."), descreva uso real ("você abre uma tampa, derrama a garrafa direto, e pronto"), conecte com a situação do leitor ("está cansado de gastar com cartucho").
+
+**Padrões de tom — antes/depois:**
+
+| ❌ Formal/corporativo | ✓ Conversacional |
+|---|---|
+| "atende quem busca dose alta de EPA e DHA" | "se você quer dose cheia de EPA e DHA em poucas cápsulas" |
+| "O posicionamento da X em suplementação esportiva" | "se você treina e quer um da linha esportiva" |
+| "alinhado à narrativa de procedência" | "isso encaixa com a história de pureza do produto" |
+| "estrutura química mais próxima do óleo de peixe in natura" | "molécula mais parecida com o óleo natural" |
+| "perfil de absorção favorável" | "absorve melhor" |
+| "uma rotina de suplementação séria" | "uma rotina contínua" |
+| "números compatíveis com" | "boa dose pra" |
+| "tradicionalmente associada a" | "conhecida por" |
+
+**Referências canônicas do projeto pra calibrar tom** (leia se desconfia que o output está formal demais):
+- `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`
+- `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx`
+
+## Operação de destilação bíblia → .mdx (CRÍTICO)
+
+A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conforme declarado pelo fabricante", "confirmado nos alérgenos"). É correto e útil internamente — rastreabilidade evita invenção. **O .mdx público é destilado**: droppa marcadores que viraram ruído burocrático.
+
+**4 categorias de claim — como destilar cada:**
+
+| Tipo | Bíblia (raw, OK) | .mdx destilado |
+|---|---|---|
+| **A) Fato verificável simples** | "Sem glúten confirmado nos alérgenos da Amazon" | "Sem glúten" |
+| **B) Claim do fabricante repetível** | "Forma triglicerídeo, apontada pelo fabricante como mais absorvível" | "Forma triglicerídeo, considerada mais absorvível" |
+| **C) Claim institucional / PR** | "Marca tradicional brasileira segundo o próprio fabricante" | "Marca brasileira" (ou omite se não agrega) |
+| **D) Voz comprador implícita** | "Cápsulas sem sabor segundo relatos de compradores" | "Cápsulas sem sabor" |
+
+**Exceção (raro, mas existe)**: claim do fabricante VERIFICÁVEL SÓ por ele (rendimento, garantia interna, certificação proprietária) pode manter "segundo X" se adiciona valor editorial — ver Armadilha 4 abaixo.
+
+## Peso por fonte
+
+Ao decidir QUAL claim vira pro central no artigo vs. spec:
+
+| Combinação de fontes | Confiança | Onde usar |
+|---|---|---|
+| Fabricante + Amazon coincidem | **FORTE** | Pode ser pro central, strong, ênfase no fullReview |
+| Só fabricante | MÉDIO | OK em pros/specs, descrição própria (sem "segundo X") |
+| Só Amazon (specsAmazon) | **FRACO** | Só na tabela specs, NÃO vira pro central |
+| Só opiniões | FRACO | Inspira voz, não cita |
+
+**Caso real (Vitafor B07L5W6GVC)**: "Composição cetogênica" vem de `Tipo de dieta: Cetogênica` nas specs Amazon — fonte fraca, classificação automática do marketplace. Vai na tabela specs, **não vira pro central**. Óleo de peixe é trivialmente keto; elevar isso a "diferencial" engana o leitor.
 
 ## Filtros editoriais
 
@@ -219,8 +276,39 @@ Confere antes de salvar. Se uma frase específica está na página individual, r
 ### 3. Comparações sem dado
 "Uma das mais econômicas" sem `concorrentes` na bíblia é especulação. Use linguagem absoluta com dado: "rende 4.500 páginas por kit" em vez de "rende mais que a maioria".
 
-### 4. Misturar voz comprador
-"Compradores destacam X" → "X destaca-se por {dado da bíblia}".
+### 4. Voz de citação — comprador, fabricante, Amazon ("segundo X", "alérgenos confirmam", "atributos declaram")
+
+**Armadilha mais comum e fácil de cair.** Quando os dados da bíblia vêm de várias fontes, o modelo tende a citar a fonte pra justificar o claim. Há 3 tipos de citação com tratamentos diferentes:
+
+**A) Citar comprador → SEMPRE proibido**
+- ❌ "Compradores destacam X" → "X destaca-se por {dado da bíblia}"
+- ❌ "Relato recorrente nas opiniões indica cápsulas sem sabor" → "cápsulas sem sabor"
+- ❌ "Citada como motivo de preferência por um comprador" → drop ou reformula
+
+**B) Citar Amazon/specs → SEMPRE proibido (burocrático)**
+- ❌ "alérgenos da Amazon confirmam ausência de glúten" → "sem glúten"
+- ❌ "atributos de material declaram ausência de contaminantes" → "livre de contaminantes"
+- ❌ "conforme tipo de dieta declarado" → "compatível com dieta X"
+
+**C) Citar fabricante → CONDICIONAL (editorial OK em casos específicos)**
+
+Régua: voz-citação do fabricante OK SÓ quando atende AS DUAS condições:
+1. **(a)** qualifica claim que SÓ o fabricante pode fazer (rendimento, garantia interna, certificação proprietária)
+2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica)
+
+**✓ EDITORIAL OK** (referência: `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`):
+- "rende até 4.500 páginas em preto, **segundo a Epson**" → claim só-fabricante + qualifica rendimento
+- "número de marketing 33 ppm, mas a **velocidade ISO (padrão da indústria)** é mais realista" → crítica útil
+- "a HP recomenda volume de 50 a 100 páginas mensais" → claim só-fabricante + ajuda leitor calibrar
+
+**❌ BUROCRÁTICA** (drop sempre):
+- "apontada pelo fabricante como mais absorvível" → "considerada mais absorvível"
+- "segundo o próprio fabricante" como muleta repetitiva → drop
+- "conforme o fabricante" sem qualificar nada → drop
+
+**Tratamento de divergências internas** (dadosInconsistentes): a `decisaoEditorial` da bíblia já diz qual lado tomar. Aplica direto, sem mencionar o conflito.
+
+**Antes de gravar, faça grep mental**: se aparece "confirmado", "declarado", "apontada", "conforme X", "segundo Y", "relato recorrente", "atributos de material" — reescreva. Exceção: passou nos 2 critérios editoriais (C) acima.
 
 ### 5. Atualizar campos top-level quando não-stub
 Se o artigo já tem `title`, `description`, `excerpt` populados, NÃO sobrescreva (preserva trabalho do user). Só preenche se estão vazios.
@@ -236,7 +324,7 @@ Exemplos válidos do user:
 - "preenche melhorimpressora/melhor-impressora-custo-beneficio B098YHFT9S"
 
 Args canônicos que invoco:
-- `Skill(skill="preencher-produto-em-artigo", args="melhorimpressora/melhor-impressora-custo-beneficio B098YHFT9S")`
+- `Skill(skill="artigo-review-criar", args="melhorimpressora/melhor-impressora-custo-beneficio B098YHFT9S")`
 
 ## Limitação intrínseca conhecida
 

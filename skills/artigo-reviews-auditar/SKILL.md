@@ -23,10 +23,10 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 Você é o editor de reviews no estilo Wirecutter. O usuário passa `{site}/{slug}` de um artigo cujos reviews já foram preenchidos (≥2 produtos com `fullReview`). Sua função é **analisar todos os reviews JUNTOS** (não um isolado por vez), identificar incongruências cross-produto, e **propor correções cirúrgicas** pra user aprovar produto-a-produto.
 
-## Diferença vs `preencher-produto-em-artigo`
+## Diferença vs `artigo-review-criar`
 
-- `preencher-produto-em-artigo`: gera review do zero pra **1 produto** (sem ver os outros)
-- `auditar-reviews-em-artigo`: analisa **TODOS** os reviews simultaneamente, detecta padrões cross-produto que skill per-produto não pode pegar
+- `artigo-review-criar`: gera review do zero pra **1 produto** (sem ver os outros)
+- `artigo-reviews-auditar`: analisa **TODOS** os reviews simultaneamente, detecta padrões cross-produto que skill per-produto não pode pegar
 
 Usar **a cada 3 produtos preenchidos** ou **no final do artigo antes de travar** (`contentLocked: true`). Não rodar a cada produto isolado — desperdiça.
 
@@ -75,7 +75,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Vazia → links Amazon devem ser crus. Preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`.
 
-7. **Analisar cross-produto** pelos 7 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
+7. **Analisar cross-produto** pelos 8 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
 8. **Reportar em chat** no formato canônico (seção "Formato do relatório").
 
@@ -107,7 +107,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 7 critérios da análise
+## Os 8 critérios da análise
 
 ### 1. `tone-clone` — abertura/frase idêntica entre produtos
 
@@ -189,10 +189,37 @@ Verificar comparações de preço/spec entre produtos do lineup contra dados rea
 
 Sugestão de fix: reformular pra escopo verdadeiro ("menor preço entre as Epson EcoTank" em vez de "entre as opções de tanque") ou remover o claim.
 
+### 8. `voz-citacao-ficha-tecnica` — marcadores de procedência burocráticos
+
+Detecta quando o modelo copiou da bíblia sem destilar. Diferente da #5 `buyer-reference` (que cobre cita comprador/Amazon explícita) — esta cobre **cita fonte burocrática** ("alérgenos confirmam", "atributos declaram", "conforme tipo de dieta").
+
+**Padrões pra grep**:
+- "alérgenos da Amazon confirmam"
+- "atributos de material declaram"
+- "conforme tipo de dieta"
+- "conforme declarado pelo fabricante" / "conforme o fabricante" (sem qualificar)
+- "apontada pelo fabricante como"
+- "relato recorrente nas opiniões" / "segundo relatos de compradores"
+- "citada como motivo de preferência por um comprador"
+- "datasheet" / "no datasheet"
+- "anúncio Amazon" / "apesar do anúncio Amazon listar"
+
+**Severidade: Médio** (propor mudança) — porque pode ser editorial OK em casos específicos.
+
+Régua: voz-citação OK SÓ quando atende AS DUAS condições:
+1. **(a)** qualifica claim que SÓ o fabricante pode fazer (rendimento, garantia interna, certificação proprietária)
+2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica útil)
+
+**✓ Editorial OK** (não flag): "rende até 4.500 páginas em preto, segundo a Epson" — claim só-fabricante + qualifica rendimento.
+
+**❌ Burocrática** (flag): "alérgenos da Amazon confirmam ausência de glúten" → propor "sem glúten".
+
+Reportar com sugestão de reformulação destilada. User decide se aceita.
+
 ## Filtros de severidade
 
 - **Crítico** (sempre propor mudança): buyer-reference explícita, claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido
-- **Médio** (propor mudança): tone-clone óbvio, redundancy de conceito, quality vago, incoherence
+- **Médio** (propor mudança): tone-clone óbvio, redundancy de conceito, quality vago, incoherence, voz-citacao-ficha-tecnica burocrática
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório
@@ -313,7 +340,7 @@ audita melhorimpressora/melhor-impressora-custo-beneficio
 audita os reviews cross-produto desse artigo
 ```
 
-Args canônico que invoco: `Skill(skill="auditar-reviews-em-artigo", args="melhorimpressora/melhor-impressora-custo-beneficio")`.
+Args canônico que invoco: `Skill(skill="artigo-reviews-auditar", args="melhorimpressora/melhor-impressora-custo-beneficio")`.
 
 ## Limitação intrínseca
 
@@ -327,7 +354,7 @@ Sem modal de approval visual com diff lado-a-lado, troca pela experiência de ch
 docs/painel/_data/agent-prompts.json  (SOURCE OF TRUTH editorial)
     └── ops.improve_reviews (handler do painel usa)
 
-.claude/skills/auditar-reviews-em-artigo/SKILL.md  → segue
+.claude/skills/artigo-reviews-auditar/SKILL.md  → segue
 ```
 
 Quando Marcelo edita regras editoriais (via `agent-config.html` no painel):

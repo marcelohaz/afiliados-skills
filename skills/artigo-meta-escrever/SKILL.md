@@ -161,6 +161,10 @@ Exemplos ruins:
 - **Verbos de análise**: "comparativo", "análise", "guia para escolher", "panorama das opções".
 - **Concreto, não vago**: dois ou três ângulos específicos (specs, perfis, critérios) batem mais que "tudo o que você precisa saber".
 
+## Tom conversacional (CRÍTICO)
+
+Mesmo em 50-160 chars: pergunta-teste *"Um amigo entenderia?"*. Evite jargão corporativo (❌ "uma análise das melhores opções da categoria"). Linguagem direta (✓ "comparativo das X mais econômicas em 2026"). NÃO cite "Amazon", "fabricante", "ficha técnica" na meta.
+
 ## Armadilhas recorrentes
 
 ### 1. Aspa dupla interna
