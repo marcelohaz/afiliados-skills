@@ -410,6 +410,48 @@ Guide bem feito tem ~12-18k chars. Menos que 6k provavelmente faltou cobertura; 
 
 Lista de 1-2 itens vira prosa.
 
+### Densidade visual: negrito e links Amazon
+
+**Régua descoberta em 2026-05** comparando 35 guides do monorepo. Os canônicos atuais (melhoraspirador, melhorestablets, qualamelhorcreatina) seguem padrão **"negrito denso + links concentrados"**. Sites legados (escritoriocasa, melhorcozinha) seguem padrão antigo "poucos negritos + muitos links" — NÃO seguir esse padrão antigo.
+
+#### Negrito (`<strong>`) — alvo: 4-5 por 1.000 chars
+
+Pra um guide de 18k chars, isso significa ~70-90 tags `<strong>` distribuídas. Menos que 3/1k = guide visualmente fraco (parece muro de texto). Mais que 6/1k = inflação de destaque (perde efeito).
+
+**O que SEMPRE negritar:**
+- Specs numéricos: `<strong>1.000W a 2.000W</strong>`, `<strong>4.500 páginas</strong>`, `<strong>R$ 60</strong>`
+- Termos técnicos da categoria: `<strong>filtro HEPA</strong>`, `<strong>tanque de tinta</strong>`, `<strong>Wi-Fi Direct</strong>`, `<strong>escova rotativa motorizada</strong>`
+- Frases-chave conceituais (insight editorial): `<strong>onde o peso se concentra</strong>`, `<strong>preço inicial somado ao custo por página</strong>`, `<strong>não resseca quando a impressora fica sem uso</strong>`
+- Perfis de uso destacados: `<strong>uso doméstico médio</strong>`, `<strong>escritório com fluxo alto</strong>`, `<strong>pets e tapetes grossos</strong>`
+- Diferenciais reais entre produtos/marcas: `<strong>tinta preta pigmento</strong>`, `<strong>duplex automático</strong>`
+
+**O que NÃO negritar:**
+- Conectivos e palavras de transição ("portanto", "além disso", "também")
+- Palavras isoladas sem contexto editorial ("rápido", "bom", "fácil")
+- Frases inteiras (>10 palavras) — destaque perde efeito
+- Marcas no texto corrido fora da seção "Quais as melhores marcas" (a marca aparece como nome próprio, não como destaque)
+
+**Pergunta-teste**: *"Se eu escanear o guide só lendo o que está em negrito, capto os pontos-chave?"* Se sim, densidade está OK. Se vejo só números sem contexto, falta negritar conceitos.
+
+#### Links Amazon — distribuição esperada por seção
+
+| Seção | Links Amazon (alvo) | Por quê |
+|---|---|---|
+| Vale a pena | **0** | Seção educativa-introdutória, sem CTA. Mesmo citando modelos como âncora de preço (P2), os modelos vão em texto SIMPLES (sem link) — o link aparece quando o produto é citado no card do artigo. |
+| Como escolher (H3s) | **0** | Seção 100% educativa sobre critérios. Linkar produto aqui distrai do critério. |
+| Quais as melhores marcas (H3s) | **1 por marca** (busca) | Formato: `<a href="https://www.amazon.com.br/s?k={marca}+{categoria}&tag={affiliateTag}" rel="nofollow" target="_blank">{Marca}</a>`. Tipicamente 3-5 links. |
+| Perguntas Frequentes | **2-4 totais** | Apenas em FAQs comparativas ("Qual o melhor X?", "X ou Y?") onde o link é resposta direta. NÃO em FAQs explicativas tipo "O que é HEPA?". |
+| Conclusão | **5-8** (lista por nicho) | P1 cita 1-2 modelos top com link. P2 lista alternativas por perfil (1 link cada). É a seção com mais links Amazon do guide. |
+| **Total alvo** | **~10-15 Amazon links** num guide de 18k chars | |
+
+**Padrão errado a evitar** (visto no melhorimpressora V2): 24 links Amazon distribuídos por TODAS as seções, incluindo 5 na Vale a pena. Esse padrão dilui o efeito do link como CTA e diverge do canon visual.
+
+#### Links internos (peer articles)
+
+- **0-3 links totais** no guide inteiro (já documentado em "Linkagem interna")
+- Distribuir ao longo do texto (não concentrar no fim)
+- Bom encaixe: dentro de H3 de "Como escolher" pra cross-linkar critério com outro artigo do site (ex: H3 "Com fio ou sem fio" linka pra "/melhor-aspirador-sem-fio-vertical/")
+
 ## Linkagem interna — peer articles do site
 
 A skill carrega `[{slug, title}]` dos OUTROS artigos do mesmo site (passo 6). **0-3 links** no guide inteiro, distribuídos ao longo do texto (não concentrar no fim).
@@ -504,7 +546,7 @@ Pergunta-teste antes de salvar: *"Um amigo que não entende disso entenderia?"* 
 
 Guide é educativo mas não acadêmico. Evite jargão corporativo (❌ "alinhado à narrativa", "perfil favorável", "estrutura química mais próxima do natural"). Use linguagem direta (✓ "vale procurar dose alta", "molécula mais parecida com o óleo natural"). NUNCA cite procedência burocrática ("conforme tipo de dieta declarado", "alérgenos confirmam") — destila o critério direto.
 
-Referência canônica pra calibrar tom: `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx` (campo `guideContent` é exemplo).
+Referência canônica pra calibrar tom + densidade visual: `sites/melhoraspirador/src/content/reviews/melhor-aspirador-de-po-vertical.mdx` (campo `guideContent`). Esse é o padrão atual de qualidade — 5,3 `<strong>` por 1k chars + links Amazon concentrados em Marca/FAQ/Conclusão (0 Amazon em Vale a pena/Como escolher). Outros bons exemplos: `sites/melhorestablets/src/content/reviews/melhor-tablet-custo-beneficio.mdx`, `sites/qualamelhorcreatina/src/content/reviews/qual-a-melhor-creatina.mdx`.
 
 ## Filtros editoriais
 
@@ -600,6 +642,39 @@ Android.</p>
 ```
 
 Mesma regra aplica em listas tipo "tipos de impressora" (cartucho/tanque/laser) — cada tipo merece parágrafo próprio pra leitor escanear. Leitor cansa em parágrafos densos; SEO também premia conteúdo escaneável.
+
+### 18. Negrito esparso (frases conceituais sem destaque)
+Inverso da armadilha 17. Modelo tende a negritar SÓ specs numéricos (R$ 450, 12W, 4.500 páginas) e deixar frases-chave conceituais em texto normal. Resultado: guide com 2 strongs/1k chars (visualmente fraco) em vez do alvo 4-5/1k dos canônicos.
+
+Antes de salvar, escaneie cada parágrafo procurando **frases-chave conceituais sem negrito**. Padrões típicos a negritar:
+- *"o ponto que define X é Y"* → negritar Y
+- *"diferente das outras opções, esta tem Z"* → negritar Z
+- *"o trade-off real: ..."* → negritar a coisa que é o trade-off
+- *"o que importa de verdade é A"* → negritar A
+- *"perfil de quem imprime B"* → negritar B (perfil)
+
+**Exemplo real do canon melhoraspirador** (`<h3>Peso e ergonomia</h3>`):
+
+```html
+<p>O peso varia bastante: de <strong>1,43 kg</strong> nos modelos mais
+compactos até cerca de <strong>5 kg</strong> nos mais potentes. Para
+quem limpa escadas, sofás ou usa o aspirador no modo portátil com
+frequência, cada grama extra pesa no braço.</p>
+
+<p>Além do peso total, vale observar <strong>onde o peso se concentra</strong>.
+Modelos com motor no topo da haste ficam mais leves na base e entram
+embaixo de móveis com facilidade, enquanto modelos com motor na base
+oferecem mais estabilidade no piso. Bocais com <strong>rotação 180° ou 360°</strong>
+também ajudam: acompanham o movimento da mão e reduzem o esforço em
+manobras.</p>
+```
+
+5 strongs em ~50 palavras de conteúdo: 2 specs numéricos (1,43 kg, 5 kg) + 1 frase conceitual destacada (onde o peso se concentra) + 1 spec técnico (rotação 180°/360°). É o ritmo visual que diferencia bom de mediano.
+
+### 19. Links Amazon nas seções "educativas" (Vale a pena / Como escolher)
+Régua dura: links Amazon SÓ em Quais as melhores marcas + FAQ + Conclusão. Modelo violou várias vezes na prática (2026-05) colocando links de "Modelo Y" como âncora em Vale a pena P2 quando a régua é texto SIMPLES sem link. Fix: em Vale a pena, citar modelos como referência de preço *"Os preços vão de R$ X (Modelo Y) a R$ Z (Modelo W)"* mas com **Modelo Y / Modelo W em texto puro, sem `<a>`**. Em Como escolher, mesmo critério: produto se for citado vira texto simples.
+
+Verificação antes de salvar: `grep -c 'amazon\.com\.br' nas seções 1-2 do guide` deve retornar **0**.
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
