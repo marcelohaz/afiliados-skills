@@ -200,7 +200,32 @@ Detecção:
     `pagina-produto-auditar` separado quando quiser (1 produto por vez
     via skill individual, ou paralelo manual via múltiplas invocações).
 
-13. **Report final no chat**:
+13. **Report final no chat** (template muda conforme `--audit` ativa ou não):
+
+    **Sem `--audit`** (default — paridade com skill individual):
+
+    ```
+    ✅ Batch concluído em {tempo}
+
+    PÁGINAS CRIADAS ({N}/{total}):
+      ✓ {slug-1} ({chars} chars no fullReview, 3 links Amazon)
+      ✓ {slug-2} ({chars} chars no fullReview, 3 links Amazon)
+
+    FALHAS NO BATCH ({M}):
+      ✗ {slug-x} — {erro do sub-agent}
+
+    PULADOS ({Z}):
+      ⏭️  {slug-y} (stub parcial: skill batch não sobrescreve)
+      ⏭️  {slug-z} (já preenchido)
+
+    📦 Commit: {commit-hash}
+    🔄 VPS sincronizado: {OK | bloqueado}
+
+    💡 Pra auditar as páginas criadas, rode `pagina-produto-auditar`
+       em cada uma ou re-rode esta skill com --audit.
+    ```
+
+    **Com `--audit`** (após auditar todas as criadas):
 
     ```
     ✅ Batch concluído em {tempo}
@@ -214,10 +239,11 @@ Detecção:
       ✗ {slug-x} — {erro do sub-agent}
 
     PULADOS ({Z}):
-      ⏭️  {slug-y} (stub parcial: skill batch não sobrescreve)
+      ⏭️  {slug-y} (stub parcial)
       ⏭️  {slug-z} (já preenchido)
 
-    📦 Commit: {commit-hash}
+    📦 Commit (criação): {commit-hash-1}
+    📦 Commit (audits): {commit-hash-2}
     🔄 VPS sincronizado: {OK | bloqueado}
     🔍 Audits: {ok} OK / {warn} warnings / {err} críticos
     ```
