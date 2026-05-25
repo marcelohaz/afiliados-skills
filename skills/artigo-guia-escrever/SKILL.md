@@ -441,18 +441,44 @@ Pra um guide de 18k chars, isso significa ~70-90 tags `<strong>` distribuídas. 
 
 **Pergunta-teste**: *"Se eu escanear o guide só lendo o que está em negrito, capto os pontos-chave?"* Se sim, densidade está OK. Se vejo só números sem contexto, falta negritar conceitos.
 
-#### Links Amazon — distribuição esperada por seção
+#### Links no guide — estratégia hub-and-spoke (2026-05)
 
-| Seção | Links Amazon (alvo) | Por quê |
-|---|---|---|
-| Vale a pena | **0** | Seção educativa-introdutória, sem CTA. Mesmo citando modelos como âncora de preço (P2), os modelos vão em texto SIMPLES (sem link) — o link aparece quando o produto é citado no card do artigo. |
-| Como escolher (H3s) | **0** | Seção 100% educativa sobre critérios. Linkar produto aqui distrai do critério. |
-| Quais as melhores marcas (H3s) | **1 por marca** (busca) | Formato: `<a href="https://www.amazon.com.br/s?k={marca}+{categoria}&tag={affiliateTag}" rel="nofollow" target="_blank">{Marca}</a>`. Tipicamente 3-5 links. |
-| Perguntas Frequentes | **2-4 totais** | Apenas em FAQs comparativas ("Qual o melhor X?", "X ou Y?") onde o link é resposta direta. NÃO em FAQs explicativas tipo "O que é HEPA?". |
-| Conclusão | **5-8** (lista por nicho) | P1 cita 1-2 modelos top com link. P2 lista alternativas por perfil (1 link cada). É a seção com mais links Amazon do guide. |
-| **Total alvo** | **~10-15 Amazon links** num guide de 18k chars | |
+**Decisão editorial (2026-05)**: quando o site tem páginas individuais dos produtos do lineup em `sites/{site}/src/content/products/{slug}.mdx`, **prefira link INTERNO** (`/{slug}/`) sobre link Amazon `/dp/{ASIN}` no guide. Motivos:
 
-**Padrão errado a evitar** (visto no melhorimpressora V2): 24 links Amazon distribuídos por TODAS as seções, incluindo 5 na Vale a pena. Esse padrão dilui o efeito do link como CTA e diverge do canon visual.
+1. **SEO interno**: distribui link juice do artigo principal pras páginas de produto → elas rankeiam melhor no Google
+2. **UX no guide**: leitor que aprofunda no guide chega numa página com info concentrada do produto (mais reflexiva que ir direto pra Amazon)
+3. **Conversão preservada**: a página individual TEM CTA Amazon próprio (botão "Comprar"), então a conversão acontece com 1 clique extra
+4. **Links Amazon abundantes nos reviews-em-artigo** (parte de cima do artigo) já capturam quem decide direto
+
+**Distribuição esperada por seção (atualizada):**
+
+| Seção | Links | Tipo | Por quê |
+|---|---|---|---|
+| Vale a pena | **0** | — | Educativa-introdutória, sem CTA. Citações de modelo como âncora de preço (P2) em texto SIMPLES |
+| Como escolher (H3s) | **0** | — | 100% educativa sobre critérios |
+| Quais as melhores marcas (H3s) | **1 por marca** | Amazon search `/s?k=...` | Não há páginas internas de "marca" — usa search Amazon mesmo |
+| Perguntas Frequentes | **2-4** | **Internos `/slug/`** (se peer page existe) ou Amazon `/dp/` (fallback) | FAQs comparativas/recomendativas |
+| Conclusão | **5-8** | **Internos `/slug/`** (se peer pages existem) ou Amazon `/dp/` (fallback) | Lista por nicho |
+| **Total alvo** | **~10-15** | majoritariamente internos, com 3-5 search Amazon nas Marcas | |
+
+**Como decidir entre interno vs Amazon `/dp/`:**
+
+```
+Antes de inserir <a> pra produto no guide (FAQ/Conclusão):
+  1. Existe sites/{site}/src/content/products/{slug-do-produto}.mdx?
+     SIM → use <a href="/{slug}/">Nome</a>  (SEM rel, SEM target — link interno)
+     NÃO → use <a href="https://www.amazon.com.br/dp/{ASIN}?tag={tag}&..." rel="nofollow" target="_blank">Nome</a>
+  2. Sites em construção (affiliateTag vazia) podem trabalhar mesmo se peer page faltar:
+     usa link Amazon CRU sem tag pra esperar peer page ser criada
+```
+
+**Padrões errados a evitar:**
+- ❌ Link Amazon `/dp/` no guide quando a peer page existe (oportunidade perdida de SEO interno)
+- ❌ Link interno `/slug/` SEM verificar se a peer page existe (gera 404 em produção)
+- ❌ Misturar `rel="nofollow" target="_blank"` em link interno (esses atributos são pra externo apenas)
+- ❌ 24+ links no guide inteiro espalhados em todas seções, incluindo educativas
+
+**Implementação canônica (referência):** `melhorimpressora/melhor-impressora-custo-beneficio.mdx` aplica esse padrão desde 2026-05 — 0 Amazon `/dp/` no guide, 13 internos pras 9 páginas individuais, 6 Amazon search (4 marcas + 2 FAQ específica), Amazon `/dp/` continuam nos reviews-em-artigo (parte de cima) sem mudança.
 
 #### Links internos (peer articles)
 
