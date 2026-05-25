@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-escrever
-description: Escreve o guideContent (HTML "Como escolher") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Quando user cola "Como escolher" de 1-3 concorrentes na mensagem, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + extras + SALVA análise em docs/painel/_data/competitor-analyses/{keyword-slug}.md pra reuso. Próximas execuções na mesma keyword (qualquer site) auto-carregam análise existente. Régua dura — HTML educativo (não comercial), abertura com H2 "Como escolher {keyword}", 3-6 parágrafos, 500-15000 chars, allowlist h2/h3/p/ul/ol/li/strong/em/a, SEM links Amazon, SEM travessão, linkagem interna 0-3 só pra peer articles reais do site. Substitui só o campo guideContent — frontmatter, produtos e body ficam intactos. Backup + commit + push + sync VPS.
+description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Quando user cola "Como escolher" de 1-3 concorrentes na mensagem, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + extras + SALVA análise em docs/painel/_data/competitor-analyses/{keyword-slug}.md pra reuso. Próximas execuções na mesma keyword (qualquer site) auto-carregam análise existente. Régua dura — 5 H2 obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + 1 opcional (Por que confiar), 6000-25000 chars (alvo 12-18k), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon PERMITIDOS em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 0-3 só pra peer articles reais do site. Substitui só o campo guideContent — frontmatter, produtos e body ficam intactos. Backup + commit + push + sync VPS.
 ---
 
 ## Parse de input
@@ -39,22 +39,23 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 - O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx`. Se não, abortar com orientação pra criar via painel ("✨ Criar artigo" no site detail → `make-reviews-stub`).
 - O artigo tem **pelo menos 1 produto** no lineup (`products: []` vazio = abortar — guide sem categoria concreta fica vago).
 - Bíblias dos produtos do artigo estão em `docs/biblias-v2/{ASIN}.json`. Se alguma faltar, rodar `bun scripts/sync-biblias-r2.ts --apply` antes (skill avisa e aborta se faltar).
-- `affiliateTag` em `sites/{site}/src/config.ts` é conhecida (pode ser vazia — guide NÃO PRECISA ter links Amazon, então tag vazia OK).
+- `affiliateTag` em `sites/{site}/src/config.ts` é conhecida. Se vazia (site em construção), links Amazon do guide saem CRUS (`https://www.amazon.com.br/dp/{ASIN}`). Se preenchida, com tag (`?tag={tag}&linkCode=ogi&th=1&psc=1`). Guide TEM links Amazon em FAQ/Marca/Conclusão — então tag-aware importa.
 
 ## Invariantes
 
 - **Nunca toque em nada além do campo `guideContent`** do frontmatter. Title, description, keyword, products, intro do body, tudo intacto. Só substitui o block scalar do `guideContent` (ou insere se ainda não existir).
 - **HTML, não markdown.** Diferente da intro (que é markdown puro), o guide é HTML.
 - **Allowlist de tags**: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Tudo mais é proibido: `<h1>` (artigo já tem H1 no title), `<script>`, `<iframe>`, `<style>`, `<img>`, `<table>`, `<form>`, `<button>`, `<div>`, `<span>` (visual fica pro CSS).
-- **500 a 15000 chars** no total do HTML.
-- **SEM links Amazon.** Afiliados ficam só nos cards do `.mdx` (subtitle, fullReview, pros, cons). Guide é educativo, sem CTA de compra.
+- **6.000 a 25.000 chars** no total do HTML (alvo típico 8-18k — vide canônicos do projeto).
+- **Estrutura: 5 H2 obrigatórios** + 1 opcional. Faltar qualquer obrigatório = ERRO. Ver "Régua editorial — ESTRUTURA OBRIGATÓRIA" abaixo.
+- **Links Amazon: tag-aware.** PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca" (link de busca da marca), "FAQ" e "Conclusão" (recomendações de produto). Formato: `?tag={tag}&linkCode=ogi&th=1&psc=1` se tag preenchida; URL crua se vazia.
 - **Linkagem interna 0-3 links** pra **peer articles reais do mesmo site** — slugs verificados antes. Formato: `<a href="/{slug}/">texto descritivo</a>`. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade).
 - **Sem travessão (—).** Use vírgula, ponto, dois pontos ou parênteses.
 - **Sem superlativos sem evidência** ("o melhor disponível", "incomparável", "imbatível"). "Excelente", "ótimo" OK se contextualizado.
-- **NÃO mencionar marcas/modelos/ASINs específicos.** Linguagem GERAL (critérios, perfis, panorama). Marcas vão na tabela e nos reviews.
+- **Citação de produto específico: contextual.** PROIBIDA em "Como escolher" (linguagem GERAL — critérios, perfis). PERMITIDA em "Melhor marca" (1 H3 por marca), "FAQ" (recomendação direta), "Conclusão" (recomendação central) e como âncoras de preço em "Vale a pena" (P2). Ver matriz completa em "Como usar a bíblia".
 - **NÃO inventar dados.** Se o guide precisar de número, vem de alguma bíblia.
-- **NÃO citar compradores/reviews/avaliações/Amazon** como entidade (mesma regra de toda voz editorial do projeto, `02-estilo-editorial.md`).
-- **Tom EDUCATIVO, não comercial.** Guide explica COMO decidir, não vende produto.
+- **NÃO citar compradores/reviews/avaliações** como entidade ("compradores avaliam X estrelas") — viola voz editorial do projeto. Link Amazon como destino de COMPRA está OK em FAQ/Marca/Conclusão.
+- **Tom: educativo nas seções 1-2, recomendativo nas 3-6.** Vale a pena + Como escolher são puramente educativas. Melhor marca + FAQ + Conclusão são onde o leitor decide a compra.
 
 ## Fluxo
 
@@ -157,16 +158,17 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     Criar `_data/competitor-analyses/` se não existir.
 
 11. **Validar mentalmente** antes de salvar:
-    - 500-15000 chars
-    - Abertura: `<h2>Como escolher {keyword}</h2>` (ou variante natural com a keyword na frase)
+    - **6.000-25.000 chars** total (alvo 12-18k)
+    - **5 H2 obrigatórios presentes na ordem**: `Vale a pena` → `Como escolher` → `Melhor marca` → `Perguntas Frequentes` → `Conclusão` (6º opcional: `Por que confiar` entre FAQ e Conclusão)
+    - Primeiro tag = `<h2>` (NÃO `<h1>`, NÃO `<p>`)
     - HTML allowlist OK (Grep mental por tags fora da lista)
     - 0-3 links internos: cada `href="/{slug}/"` aponta pra slug REAL da peer articles list
-    - ZERO links Amazon: nenhum `href` contém `amazon.com` ou `amzn.to`
+    - Links Amazon: ZERO em "Vale a pena" e "Como escolher"; PERMITIDOS em "Melhor marca" (busca), "FAQ" e "Conclusão" (recomendação). Tag-aware do site.
     - Sem travessão `—` nem `–`
     - Sem `<h1>` (artigo já tem H1 no title)
     - Sem `<img>`, `<table>`, `<script>` etc
-    - Sem citação a marca/modelo/ASIN específico
-    - Sem citação a "compradores"/"reviews"/"avaliações"
+    - Citação de produto específico só em FAQ/Marca/Conclusão (+ âncoras de preço em "Vale a pena" P2)
+    - Sem citação a "compradores"/"reviews"/"avaliações" como entidade
 
 12. **Backup** ANTES de sobrescrever (paridade exata com pattern do painel, server.ts:4994):
     ```bash
@@ -310,52 +312,92 @@ Estrutura obrigatória do `_data/competitor-analyses/{keyword-slug}.md`:
 
 ## Régua editorial — ESTRUTURA OBRIGATÓRIA
 
-### Abertura: H2 com a keyword
+> **Padrão consolidado em 2026-05** com `docs/PADROES.md` + canônicos do projeto (ex: `sites/melhorestablets/src/content/reviews/melhor-tablet-custo-beneficio.mdx`).
 
-Primeira tag SEMPRE é `<h2>` contendo a keyword principal. Padrão canônico:
-
-- `<h2>Como escolher {keyword}</h2>`
-
-Variante natural OK se a frase fica forçada (ex: keyword muito longa ou já no infinitivo). Quando em dúvida, use o padrão canônico — paridade com o que o painel gera.
-
-**NUNCA** `<h1>` (artigo já tem H1 no title). **NUNCA** começar com `<p>` antes do H2.
-
-### Corpo: 3-6 parágrafos `<p>`
-
-Cobrem **critérios objetivos de decisão**. Exemplos do que vai aqui:
-
-- Tecnologias da categoria (ex: tanque de tinta vs cartucho, hidrolisada vs concentrada, OLED vs LCD)
-- Perfis de uso (ex: doméstico leve vs profissional, iniciante vs avançado, uso ocasional vs intenso)
-- Specs técnicos que realmente importam (ex: rendimento, velocidade, conectividade — generalizando o que aparece nas bíblias)
-- Pegadinhas comuns (ex: "atenção ao kit de cartuchos, não ao preço do equipamento sozinho")
-- O que verificar antes de comprar (ex: voltagem, garantia, compatibilidade)
-
-**Cada parágrafo 2-5 frases.** Sem walls of text. Sem 1-frase-parágrafo (vira lista disfarçada).
-
-### Subseções H3 (opcionais)
-
-Use `<h3>` se faz sentido segmentar o tópico. Bom uso:
+### 5 H2 obrigatórios (na ordem) + 1 opcional
 
 ```html
-<h3>Tanque de tinta vs cartucho</h3>
-<p>...</p>
-
-<h3>Conectividade e Wi-Fi</h3>
-<p>...</p>
+<h2>Vale a pena comprar um/uma {keyword} em {ano}?</h2>
+<h2>Como escolher o melhor/a melhor {keyword} em {ano}?</h2>
+<h2>Qual a melhor marca de {keyword} em {ano}?</h2>
+<h2>Perguntas Frequentes</h2>
+<!-- [OPCIONAL] <h2>Por que confiar neste conteúdo</h2> -->
+<h2>Conclusão</h2>
 ```
 
-Mau uso (subseção redundante):
+- **`em {ano}`** é padrão recomendado (atualidade SEO) mas pode ser omitido se a frase fica forçada (keyword já tem ano implícito, soa redundante, etc).
+- **"Perguntas Frequentes"** e **"Conclusão"** ficam **sem** `em {ano}`.
+- **NUNCA** `<h1>` (artigo já tem H1 no title). **NUNCA** começar com `<p>` antes do primeiro H2.
+- A 6ª seção opcional ("Por que confiar neste conteúdo") fica entre FAQ e Conclusão. Use só quando agrega (transparência editorial específica, metodologia explicada).
 
-```html
-<h2>Como escolher impressora</h2>
-<h3>Introdução</h3>  <!-- ❌ redundante, o H2 já abre o tópico -->
-```
+### Régua por seção
 
-**Máximo 4 subseções H3.** Mais que isso vira índice, não guide.
+#### 1. Vale a pena comprar...?
+**3 parágrafos:**
+- **P1**: argumento central da categoria + critérios estruturais (ex: tanque vs cartucho, ecossistema, perfis de uso).
+- **P2**: âncoras de preço REAIS do lineup (ex: *"Os preços desta seleção vão de R$ X (Modelo Y) a R$ Z (Modelo W)"*). Cita 2-3 modelos como referência de preço (esta é a EXCEÇÃO à régua "geral").
+- **P3**: quando **NÃO** vale a pena comprar (perfil errado, alternativas melhores). Importante editorialmente — protege credibilidade.
 
-### Listas (opcionais)
+#### 2. Como escolher o melhor...?
+**Intro (1 parágrafo curto) + 4-7 subseções `<h3>`** — cada H3 é um critério.
 
-`<ul>` ou `<ol>` quando faz sentido enumerar critérios discretos:
+Régua de cada H3:
+- Texto explica **o que o critério significa** e **o que procurar** — não qual produto tem o quê
+- **Dar números de referência concretos** (ex: *"4.096 níveis é o padrão profissional atual"*, *"8 GB é o ponto ideal para a maioria"*)
+- Evitar linguagem vaga (*"quanto maior melhor"*, *"HD ou superior"* sem contexto)
+- **Produtos específicos só de forma pontual** quando agrega valor educativo (ex: *"Procreate é exclusivo do iPadOS"*)
+
+Exemplos do que diferencia bom vs ruim (de `docs/PADROES.md`):
+
+| Ruim (genérico) | Bom (educativo) |
+|---|---|
+| "quanto maior o número de níveis de pressão, melhor" | "4.096 níveis é o padrão profissional atual; abaixo disso o traço perde variação" |
+| "telas de 10 a 15 polegadas com HD ou superior" | "10–11\" é o equilíbrio entre canvas e portabilidade; 13\"+ para quem trabalha apoiado sobre mesa" |
+
+#### 3. Qual a melhor marca?
+**Intro (1 parágrafo curto) + 1 `<h3>` por marca relevante** (tipicamente 3-5 H3).
+
+Régua de cada H3:
+- Título: `<h3>{Marca}: {posicionamento curto editorial}</h3>` (ex: *"Samsung: a marca mais completa para Android no Brasil"*)
+- 1 parágrafo: foco em **diferencial editorial real** (linha principal, ecossistema, suporte, característica única)
+- **Sem ranking absoluto** entre marcas — cada uma cobre um cenário diferente
+- **Pode incluir link Amazon de busca da marca** (formato `<a href="https://www.amazon.com.br/s?k={termo}&tag={affiliateTag}" rel="nofollow" target="_blank">{Marca}</a>`)
+- Manter **objetivo** e baseado em fatos da bíblia/categoria (NÃO inventar "história da empresa")
+
+#### 4. Perguntas Frequentes
+**5-8 subseções `<h3>`** cada uma com a pergunta como título + 1-3 frases de resposta concreta.
+
+Régua de cada FAQ:
+- Pergunta como leitor digitaria no Google (ex: *"Qual o melhor X em 2026?"*, *"Vale a pena Y?"*, *"X ou Z?"*)
+- Resposta direta e concreta (não rodeio)
+- **PODE citar produtos específicos do lineup com link Amazon** (ex: *"Para a maioria das pessoas, o Samsung Galaxy Tab S10 Lite é a melhor compra..."* com link Amazon do ASIN)
+- Distribuir 1-2 links Amazon por FAQ que justifique recomendação
+- Pergunta-teste: *"Esta FAQ responde algo que o leitor REALMENTE perguntaria?"*
+
+#### 5. [OPCIONAL] Por que confiar neste conteúdo
+1-3 parágrafos sobre metodologia editorial (sem citar Amazon/avaliações — viola memória do projeto). Use só quando há diferencial real a comunicar.
+
+#### 6. Conclusão
+**2 parágrafos:**
+- **P1**: recomendação central do guide (1-2 modelos top com link Amazon)
+- **P2**: alternativas por perfil (modelos específicos por nicho ou redireciona pra artigos peer relacionados)
+- **Tom resolutivo** — leitor sai com decisão tomada
+
+### Tamanho típico
+
+**Alvo: 8.000-18.000 chars.** Range válido: 6.000-25.000.
+
+Canônicos atuais (referência):
+- `melhor-tablet-custo-beneficio` — 17.847 chars
+- `melhor-aspirador-de-po-vertical` — 18.923 chars
+- `melhor-tablet-samsung` — 20.073 chars
+- `kindle-qual-o-melhor` — 15.518 chars
+
+Guide bem feito tem ~12-18k chars. Menos que 6k provavelmente faltou cobertura; mais que 25k vira walls of text.
+
+### Listas (opcionais, dentro das seções)
+
+`<ul>` ou `<ol>` quando faz sentido enumerar critérios discretos. **Mínimo 3 itens**:
 
 ```html
 <p>Antes de comprar, verifique:</p>
@@ -366,17 +408,7 @@ Mau uso (subseção redundante):
 </ul>
 ```
 
-**Itens objetivos e curtos**, não frases longas. Se vai ter 1-2 itens só, é melhor virar prosa.
-
-### Fechamento (opcional, 1 parágrafo)
-
-Pode ter um parágrafo final que conecta o guide ao comparativo, tipo:
-
-```html
-<p>Com esses critérios em mente, fica mais fácil avaliar a tabela acima e escolher o modelo que melhor encaixa no seu perfil.</p>
-```
-
-**Sem CTA de compra** ("compre agora", "clique aqui pra comprar"). Sem links Amazon.
+Lista de 1-2 itens vira prosa.
 
 ## Linkagem interna — peer articles do site
 
@@ -433,18 +465,30 @@ Carrego TODAS as bíblias dos produtos do artigo pra ENTENDER:
 - Perfis de uso que aparecem em `angulosConversao`
 - Filtros editoriais (ver bíblia → `diretrizesEditoriais`)
 
-**NÃO cito produtos por nome no guide.** Uso a info das bíblias pra escrever sobre a CATEGORIA, generalizando.
+**Citação de produto específico varia por seção:**
 
-**Padrão bom**:
+| Seção do guide | Cita produto específico? |
+|---|---|
+| Vale a pena | SOMENTE como âncoras de preço ("R$ X do Modelo Y a R$ Z do Modelo W") |
+| Como escolher | NÃO (exceto exceções editoriais pontuais como *"Procreate é exclusivo do iPadOS"*) |
+| Melhor marca | SIM (1 H3 por marca, cita linha principal e diferencial editorial) |
+| Perguntas Frequentes | SIM (recomendação direta com link Amazon) |
+| Conclusão | SIM (recomendação central + alternativas por perfil) |
+
+**Padrão bom em "Como escolher"** (generaliza):
 - Bíblia 1 (Epson L3250): tanque, 4.500 páginas, doméstico
 - Bíblia 2 (HP Smart Tank 581): tanque, 6.000 páginas, escritório pequeno
 - Bíblia 3 (HP DeskJet 2975): cartucho, 200 páginas, uso raro
 
 → Guide fala sobre "rendimento por kit", "tanque vs cartucho", "perfis de uso (doméstico/profissional)" — generaliza o que as bíblias revelam, sem citar Epson, HP, modelos.
 
-**Padrão ruim**:
-- ❌ "A Epson L3250 oferece 4.500 páginas..." (cita produto específico — função da tabela/review)
-- ❌ "Recomendamos a HP Smart Tank para escritório" (recomenda produto — função do review)
+**Padrão bom em FAQ/Conclusão** (cita):
+- ✅ *"Para a maioria das pessoas, o `<a href='{amazonUrl}'>Epson EcoTank L3250</a>` é a melhor compra: tanque de tinta, 4.500 páginas por kit, Wi-Fi por cerca de R$ 1.060"* (FAQ)
+- ✅ *"Quem quer mais rendimento por kit pode considerar o `<a href='{amazonUrl}'>HP Smart Tank 581</a>` (12.000 páginas) por preço similar"* (Conclusão)
+
+**Padrão sempre ruim:**
+- ❌ "A Epson L3250 oferece 4.500 páginas..." em "Como escolher" (cita produto específico fora das seções permitidas)
+- ❌ "FAQ: Qual a melhor? Resposta: depende..." (FAQ genérica sem produto/link, conteúdo vazio)
 
 ## Voz editorial
 
@@ -470,15 +514,16 @@ Referência canônica pra calibrar tom: `sites/melhorimpressora/src/content/revi
 
 ## Regras duras (bloqueiam audit)
 
-- Abertura é `<h2>` (NÃO `<h1>`, NÃO começa com `<p>`).
-- 500-15000 chars total no HTML.
+- **Estrutura: 5 H2 obrigatórios + 1 opcional** (Vale a pena / Como escolher / Melhor marca / FAQ / [Por que confiar] / Conclusão). Faltar qualquer um dos 5 obrigatórios = ERRO.
+- Primeira tag é `<h2>` (NÃO `<h1>`, NÃO começa com `<p>`).
+- **6.000-25.000 chars** total no HTML (alvo típico 8-18k).
 - HTML allowlist: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Nada mais.
-- ZERO links Amazon. Nenhum `href` contém `amazon.com` ou `amzn.to`.
-- Linkagem interna: 0-3 links totais, todos pra slugs reais de peer articles. Formato `<a href="/{slug}/">texto descritivo</a>` sem `target`/`rel`.
+- **Links Amazon**: PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca", "FAQ" e "Conclusão" (formato `?tag={tag}&...` tag-aware do site; também pode ser link de busca de marca `/s?k=...`).
+- **Linkagem interna**: 0-3 links totais pra peer articles reais, distribuídos ao longo do texto. Formato `<a href="/{slug}/">texto descritivo</a>` sem `target`/`rel`.
 - Sem travessão `—` nem `–`.
-- Sem superlativos sem evidência ("o melhor disponível", "incomparável").
-- Sem citação a marca/modelo/ASIN específico.
-- Sem citação a compradores/reviews/avaliações/Amazon como entidade.
+- Sem superlativos sem evidência ("o melhor disponível", "incomparável", "imbatível").
+- **Citação de produto específico**: PROIBIDA em "Vale a pena" (exceto âncoras de preço — *"R$ X do Modelo Y a R$ Z do Modelo W"*) e "Como escolher" (exceto exceções editoriais pontuais, ex: *"Procreate é exclusivo do iPadOS"*). PERMITIDA em "Melhor marca" (1 H3 por marca), "FAQ" (recomendação direta) e "Conclusão" (recomendação central).
+- Sem citação a compradores/reviews/avaliações/Amazon **como entidade** ("compradores avaliam", "X estrelas"). Link Amazon como destino de compra está OK em FAQ/Marca/Conclusão.
 - Sem `<h1>`, `<img>`, `<table>`, `<script>`, `<iframe>`, `<style>`, `<div>`, `<span>`, `<form>`.
 
 ## Armadilhas recorrentes
@@ -486,14 +531,14 @@ Referência canônica pra calibrar tom: `sites/melhorimpressora/src/content/revi
 ### 1. H1 em vez de H2 na abertura
 Hábito de modelos LLM começar HTML com `<h1>`. Proibido aqui — o artigo já tem H1 no title do frontmatter. Sempre `<h2>`.
 
-### 2. Mencionar produto específico
-"A Epson L3250 lidera o segmento..." → NÃO. Generaliza: "as marcas brasileiras dominam o segmento". Produtos vão na tabela e nos reviews.
+### 2. Mencionar produto específico FORA das seções permitidas
+"A Epson L3250 lidera o segmento" em "Como escolher" → NÃO. Generaliza: "marcas brasileiras com sistema EcoTank dominam o segmento de tanque". Produtos específicos podem ser citados em FAQ, Conclusão, Melhor Marca e como âncoras de preço em "Vale a pena" (ex: *"de R$ X (Modelo Y) a R$ Z (Modelo W)"*).
 
 ### 3. Slug inventado pra linkagem
 IA frequentemente inventa `/melhor-impressora-laser-barata/` quando esse artigo NÃO existe. Antes de salvar, eu Grep mentalmente todos os `href` e confiro contra peer list. Se inventar → regenero o trecho.
 
-### 4. Link Amazon no guide
-Por hábito de outras skills (reviews têm 2-3 links Amazon), modelo pode tentar incluir `https://www.amazon.com.br/...`. PROIBIDO no guide. Afiliados ficam só nos cards do `.mdx`.
+### 4. Link Amazon FORA das seções permitidas
+Links Amazon em "Vale a pena" ou "Como escolher" = ERRO (essas 2 seções são educativas, sem CTA). Em "Melhor marca", "FAQ" e "Conclusão" são PERMITIDOS e até esperados (canônico tem ~10-20 links Amazon distribuídos nessas seções).
 
 ### 5. UL/OL com 1-2 itens só
 Lista de 1-2 items é "lista de mentira" — sempre vira prosa melhor. Reserve UL/OL pra 3+ critérios discretos.
@@ -518,6 +563,18 @@ Se user colou texto da Buscapé e o guide reusa frase quase literal, é cópia (
 
 ### 12. Citar comprador no guide
 "Compradores recorrentemente preferem..." → PROIBIDO. Substituir por linguagem analítica: "Para uso doméstico, o critério principal é..." ou "Quem imprime muito tende a recuperar...".
+
+### 13. Gerar só 1 H2 (estrutura antiga)
+Versão da skill pré-1.8.2 induzia "abertura com 1 H2 + H3 dentro". Estrutura atual é **5 H2 obrigatórios** (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão). Faltar qualquer um = ERRO. Conferir contagem de H2 antes de salvar.
+
+### 14. Faltar FAQ ou Conclusão
+Modelo tende a parar em "Melhor marca" achando que cobriu o tema. Mas FAQ e Conclusão são obrigatórios pelo PADROES.md + são onde leitor decide a compra (FAQ responde dúvidas pré-compra; Conclusão dá recomendação clara). Sem essas 2 seções, guide fica fraco em SEO + UX.
+
+### 15. Inflar "Vale a pena" sem ancorar preço
+P2 da seção "Vale a pena" pede âncoras de preço reais do lineup. Modelo tende a generalizar ("os preços variam") — VAI BUSCAR números reais nas bíblias (`snapshot.precoBRL`) ou no frontmatter do `.mdx` (`schemaPrice` dos produtos) e citar 2-3 modelos pra ancorar a faixa.
+
+### 16. FAQ genérica sem produto específico
+"FAQ: Qual a melhor X? Resposta: depende das suas necessidades..." — FAQ inútil. Régua: cada FAQ deve ter resposta CONCRETA, geralmente com 1-2 links Amazon de produtos específicos do lineup que cobrem a resposta. Sem link Amazon ≠ FAQ ruim, mas sem CONCRETUDE = ruim.
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
