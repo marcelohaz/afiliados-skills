@@ -108,8 +108,13 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    - Cria o `.md` da análise depois (passo 10b)
 
    ### Cenário C — análise NÃO existe E user NÃO colou nada
-   - Fallback: gera só com bíblias + título (comportamento original sem concorrentes)
-   - Avisa no chat: "⚠ Sem análise de concorrentes pra essa keyword. Pra otimizar SEO, rode novamente colando textos do 'Como escolher' de 1-3 concorrentes (Buscapé/Zoom/etc)."
+   - **PAUSAR antes de gerar.** Padrão do projeto: usar concorrentes pra otimizar SEO + criar análise reusável é o caminho preferido. Antes de cair no fallback, perguntar ao user:
+     > "Análise de concorrentes pra essa keyword ainda não existe. Você quer:
+     > **(a)** Colar 1-3 'Como escolher' de concorrentes agora (Buscapé, Zoom, Canaltech, Mundo Conectado, etc) — recomendado, gera análise reusável pra próximos artigos com a mesma keyword
+     > **(b)** Rodar fallback sem análise (genérico, baseado só nas bíblias dos produtos do lineup)"
+   - Se user escolher (a): aguarda os textos colados, depois processa como cenário B
+   - Se user escolher (b): segue gerando sem análise + avisa no log: "⚠ Sem análise de concorrentes pra essa keyword (rodado em modo fallback). Pra otimizar SEO depois, regenere colando concorrentes."
+   - **Razão**: experiência mostrou que cair em fallback silencioso desperdiça oportunidade de SEO e gera retrabalho (user gera, vê output genérico, pede pra refazer com concorrentes). Pausar evita o ciclo.
 
    ### Slugify do keyword
    ```js
