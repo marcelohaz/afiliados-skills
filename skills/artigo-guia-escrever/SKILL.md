@@ -352,7 +352,7 @@ Exemplos do que diferencia bom vs ruim (de `docs/PADROES.md`):
 | Ruim (genérico) | Bom (educativo) |
 |---|---|
 | "quanto maior o número de níveis de pressão, melhor" | "4.096 níveis é o padrão profissional atual; abaixo disso o traço perde variação" |
-| "telas de 10 a 15 polegadas com HD ou superior" | "10–11\" é o equilíbrio entre canvas e portabilidade; 13\"+ para quem trabalha apoiado sobre mesa" |
+| "telas de 10 a 15 polegadas com HD ou superior" | "10 a 11 polegadas é o equilíbrio entre canvas e portabilidade; 13 polegadas ou mais para quem trabalha apoiado sobre mesa" |
 
 #### 3. Qual a melhor marca?
 **Intro (1 parágrafo curto) + 1 `<h3>` por marca relevante** (tipicamente 3-5 H3).
@@ -575,6 +575,31 @@ P2 da seção "Vale a pena" pede âncoras de preço reais do lineup. Modelo tend
 
 ### 16. FAQ genérica sem produto específico
 "FAQ: Qual a melhor X? Resposta: depende das suas necessidades..." — FAQ inútil. Régua: cada FAQ deve ter resposta CONCRETA, geralmente com 1-2 links Amazon de produtos específicos do lineup que cobrem a resposta. Sem link Amazon ≠ FAQ ruim, mas sem CONCRETUDE = ruim.
+
+### 17. Parágrafos densos com 3+ conceitos
+Cada parágrafo deve cobrir **1 ideia principal** (com 1-2 conceitos relacionados, no máximo). Quando um parágrafo lista 3+ conceitos distintos com `<strong>` dedicado pra cada (ex: "Wi-Fi Direct, AirPrint, Mopria e Bivolt automático" tudo junto), divide em 2 ou 3 parágrafos menores. **Regra prática**: se você usa 3+ tags `<strong>` no mesmo parágrafo pra introduzir conceitos diferentes, considere dividir.
+
+Exemplos de divisão (corrigindo padrão denso):
+
+❌ **Denso (1 parágrafo, 4 conceitos)**:
+```html
+<p><strong>Wi-Fi Direct</strong> permite imprimir sem roteador. <strong>AirPrint</strong>
+é o padrão Apple. <strong>Mopria</strong> é o equivalente Android. <strong>Bivolt
+automático</strong> é diferencial brasileiro: liga em 110V ou 220V sem configuração.</p>
+```
+
+✅ **Dividido (2 parágrafos, 1 ideia cada)**:
+```html
+<p>Pra impressão pelo celular, três padrões cobrem os principais cenários: <strong>Wi-Fi
+Direct</strong> permite imprimir sem roteador (útil em redes instáveis), <strong>AirPrint</strong>
+é o padrão Apple (iPhone/iPad imprimem sem app), <strong>Mopria</strong> é o equivalente
+Android.</p>
+
+<p><strong>Bivolt automático</strong> é diferencial brasileiro: a impressora liga em 110V ou
+220V sem configuração, prático pra quem muda de casa ou cidade.</p>
+```
+
+Mesma regra aplica em listas tipo "tipos de impressora" (cartucho/tanque/laser) — cada tipo merece parágrafo próprio pra leitor escanear. Leitor cansa em parágrafos densos; SEO também premia conteúdo escaneável.
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
