@@ -1,11 +1,11 @@
 ---
 name: pagina-produto-criar-em-massa
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) de TODAS as páginas individuais vazias de um site, em PARALELO via sub-agents — com a MESMA qualidade editorial da skill individual `pagina-produto-criar`. Cada sub-agent é uma conversa independente do Opus (fresh, isolada, sem cross-contamination), executa o fluxo individual completo. Foco em QUALIDADE: skill mãe roda pre-flight obrigatório de bíblias, valida cada output dos sub-agents, opcionalmente roda audit pós-batch em cada página criada. Skill mãe orquestra: lista stubs vazios → pre-flight bíblias → confirmação interativa → dispara N Agents em paralelo (até 10 simultâneos) → valida outputs → 1 commit lote → push + VPS pull → audit opcional → report. Aceita `site` (todos os stubs vazios) OU `site/B0X1,B0X2,B0X3` (subset). NÃO toca em stubs parciais (proteção contra sobrescrever trabalho manual). NÃO cria stubs (pré-requisito: stubs criados no painel).
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) de TODAS as páginas individuais vazias de um site, em PARALELO via sub-agents — qualidade IDÊNTICA à skill individual `pagina-produto-criar` (cada sub-agent é conversa fresh do Opus, sem cross-contamination). Skill mãe orquestra: pre-flight bíblias → confirmação interativa → N Agents paralelos (até 10) → 1 commit lote → push + VPS pull → report. Aceita `site` (todos os stubs vazios) OU `site/ASIN1,ASIN2` (subset). Flag opcional `--audit` dispara audit pós-batch em paralelo. NÃO toca em stubs parciais. NÃO cria stubs (pré-requisito: stubs no painel).
 ---
 
 ## Parse de input
 
-Aceita 2 formatos no $ARGUMENTS:
+Aceita 2 formatos no $ARGUMENTS, com flag opcional `--audit`:
 
 **A) Site sozinho** (modo "todos os stubs vazios"):
 - `melhorpretreino` → processa todos os stubs vazios em `sites/melhorpretreino/src/content/products/`
@@ -13,7 +13,16 @@ Aceita 2 formatos no $ARGUMENTS:
 **B) Site + lista de ASINs** (modo "subset"):
 - `melhorpretreino/B07XYZ123A,B08ABC456B` → só esses ASINs (filtra pelos slugs/asins correspondentes)
 
-Detecção: se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z0-9]{10}` → caminho B. Senão → caminho A.
+**Flag opcional `--audit`** (default OFF — opt-in pra qualidade extra):
+- `melhorpretreino --audit` → após criar páginas, roda `pagina-produto-auditar` em paralelo pra cada uma
+- Sem a flag, skill batch tem comportamento idêntico à skill individual (não audita automaticamente)
+- Adicione `--audit` quando: site novo importante, qualidade-crítico, primeiro batch
+- Pule `--audit` quando: re-rodar, batch rotineiro, vai auditar separado depois
+
+Detecção:
+- Se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z0-9]{10}` → caminho B
+- Senão → caminho A
+- Se contém substring `--audit` em qq posição → audit ativo
 
 # Criar páginas individuais em massa (paralelo via sub-agents)
 
@@ -30,7 +39,7 @@ Detecção: se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z
 - **Sub-agents NÃO fazem git operations.** Eles só fazem `Read` (bíblia/config/.mdx/artigos), `Edit/Write` no `.mdx` do produto e backup. **Skill mãe controla TUDO de git** (1 commit lote no fim, 1 push, 1 VPS pull).
 - **Detecção rigorosa de stub vazio.** Só processa stubs 100% vazios (marker no body + ausência de TODOS os 6 campos editoriais no frontmatter). Stub parcial NÃO entra no batch — protege trabalho manual em andamento.
 - **Pre-flight bíblias é obrigatório.** Skill aborta antes do paralelo se alguma bíblia faltar `pontosFortes` ou `angulosConversao` — senão sub-agent vai produzir página fraca em silêncio.
-- **Confirmação interativa.** Mostra lista de stubs encontrados + custo estimado + tempo. Pergunta `S/N` antes de disparar paralelo (pra evitar gastar $1+ por engano).
+- **Confirmação interativa.** Mostra lista de stubs encontrados + tempo estimado. Pergunta `S/N` antes de disparar paralelo (pra evitar disparar batch errado).
 - **Limite de paralelismo: 10 sub-agents simultâneos.** Acima disso, batch é dividido em levas (10 + 10 + ...). Throttling do harness pode degradar acima de 10.
 - **Erro em 1 não quebra batch.** Sub-agent que falha retorna `{ok: false, error: ...}`. Skill mãe agrega e reporta no fim. Outros sub-agents continuam.
 - **Português brasileiro editorial.** Tom analítico.
@@ -85,8 +94,12 @@ Detecção: se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z
 
    Cada produto será processado por um sub-agent Opus INDEPENDENTE
    (conversa fresh, isolada, sem cross-contamination). Mesma régua editorial
-   da skill individual `pagina-produto-criar`. Audit pós-batch obrigatório
-   pra cada página criada.
+   da skill individual `pagina-produto-criar`.
+
+   {{Se flag --audit ativa}}: Audit pós-batch via `pagina-produto-auditar`
+   em paralelo pra cada página criada (opt-in pra qualidade extra).
+   {{Se flag --audit ausente}}: SEM audit automático (user pode rodar
+   `pagina-produto-auditar` separado quando quiser).
 
    Tempo estimado: ~3-5 min (paralelo até 10 simultâneos).
 
@@ -148,9 +161,14 @@ Detecção: se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z
     bash scripts/painel-vps-pull.sh 2>&1 | tail -3
     ```
 
-12. **Auto-audit pós-batch (OBRIGATÓRIO — qualidade é o foco)**:
+12. **Audit pós-batch (CONDICIONAL — só se flag `--audit` ativa)**:
 
-    Pra cada página criada com sucesso, disparar audit independente em paralelo:
+    Default da skill batch é **NÃO auditar** (paridade com skill individual,
+    que também não auto-audita). User opta-in via `--audit` quando quer
+    garantia extra contra "falha silenciosa" do paralelismo.
+
+    Se `--audit` ativa: pra cada página criada com sucesso, disparar audit
+    independente em paralelo:
 
     ```
     Agent({...pagina-produto-auditar pra produto 1...},
@@ -159,14 +177,28 @@ Detecção: se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z
           {...pagina-produto-auditar pra produto N...})
     ```
 
-    Cada audit retorna relatório estruturado (errors/warnings/info). Skill mãe agrega:
-    - **Páginas SEM issues críticos**: aprovadas, deixa como está
+    **CRÍTICO — sub-agents de audit também NÃO fazem git** (mesma regra dos
+    sub-agents de criação, pra evitar race condition). Cada sub-agent de
+    audit recebe instrução explícita:
+    - Faça o audit completo (ler .mdx + bíblia, gerar relatório com
+      errors/warnings/info)
+    - **Escreva o relatório `.md`** em `docs/biblias-v2/.audits/products/{site}-{slug}-last.md`
+    - **NÃO faça** `git add`, `git commit`, `git push`, nem
+      `painel-vps-pull.sh` — skill mãe controla isso
+    - Retorne resumo estruturado: `{ok: true, slug, severity: 'ok'|'warn'|'error', issues: [...]}`
+
+    Skill mãe agrega:
+    - **Páginas SEM issues críticos**: aprovadas
     - **Páginas com warnings**: lista no report final pra user revisar
-    - **Páginas com errors críticos**: BLOQUEIO — alerta que precisam revisão individual via `pagina-produto-criar` em modo rewrite
+    - **Páginas com errors críticos**: alerta que precisam revisão individual via `pagina-produto-criar` em modo rewrite
 
-    Audit pós-batch é a única defesa contra "falha silenciosa" (sub-agent retornou `ok:true` mas output ficou com problema sutil: travessão escapou, HTML inválido, voz-citação burocrática, claim sem fonte).
+    Após agregar, skill mãe faz **1 commit lote dos `.md` de audit**
+    (`git add docs/biblias-v2/.audits/products/{site}-{slug}-last.md ...` —
+    lista específica, não glob) + push + VPS pull.
 
-    Se user NÃO quer audit pós-batch (raro — quer pular pra economizar tempo): argumento explícito `--skip-audit` no input.
+    Sem `--audit`, pula este passo inteiro. User pode rodar
+    `pagina-produto-auditar` separado quando quiser (1 produto por vez
+    via skill individual, ou paralelo manual via múltiplas invocações).
 
 13. **Report final no chat**:
 
@@ -309,9 +341,11 @@ Reporte em formato curto:
 
 ### Sub-agent falha individual
 - Falha não-fatal: skill mãe agrega no `falhas[]`, continua
-- Tipos comuns: bíblia tem dadosInconsistentes não resolvidos, HTML allowlist
-  violado pelo agent, tamanho fora do limite
-- User vê no report final + pode rodar skill INDIVIDUAL pra debugar produto-a-produto
+- Tipos comuns: bíblia bate em erro de parse, .mdx do stub não existe,
+  validação editorial falhou (HTML allowlist violado, tamanho fora do
+  limite, travessão escapou)
+- User vê no report final + pode rodar skill INDIVIDUAL pra debugar
+  produto-a-produto
 
 ### Stub aparece preenchido mas marker ainda lá
 - Casuística esperada se user editou frontmatter no painel mas não tocou no body
@@ -336,7 +370,7 @@ Reporte em formato curto:
 | Tempo total (10 produtos) | ~30-50 min sequencial | ~3-5 min paralelo |
 | Anti-duplicate cross-páginas | Não (skill individual também não faz) | Não (paridade) |
 | Commits no git | N commits | 1 commit lote |
-| Audit pós-criação | Manual via `pagina-produto-auditar` | **Automático** (skill mãe roda audit em cada página) |
+| Audit pós-criação | Manual via `pagina-produto-auditar` | Opt-in via flag `--audit` (paridade default) |
 | Pode sobrescrever conteúdo? | Sim (modo individual = ação explícita) | **NÃO** (só stubs vazios) |
 | Logging incremental | Sim (passo a passo) | Não (sub-agents reportam só no fim) |
 
@@ -388,11 +422,13 @@ A skill INDIVIDUAL `pagina-produto-criar` continua sincronizada com `agent-promp
 ```
 preenche em massa as páginas individuais do melhorpretreino
 roda batch de páginas individuais no melhorpretreino
-pagina-produto-criar-em-massa melhorpretreino
-pagina-produto-criar-em-massa melhorpretreino/B07XYZ123A,B08ABC456B  ← subset
+pagina-produto-criar-em-massa melhorpretreino                              ← sem audit (default)
+pagina-produto-criar-em-massa melhorpretreino --audit                      ← com audit pós-batch
+pagina-produto-criar-em-massa melhorpretreino/B07XYZ123A,B08ABC456B        ← subset, sem audit
+pagina-produto-criar-em-massa melhorpretreino/B07XYZ123A,B08ABC456B --audit ← subset, com audit
 ```
 
-Args canônico que invoco: `Skill(skill="afiliados-skills:pagina-produto-criar-em-massa", args="melhorpretreino")`
+Args canônico que invoco: `Skill(skill="afiliados-skills:pagina-produto-criar-em-massa", args="melhorpretreino")` (ou com `--audit` se quiser qualidade extra)
 
 ## Limitação intrínseca conhecida
 
@@ -402,4 +438,4 @@ Args canônico que invoco: `Skill(skill="afiliados-skills:pagina-produto-criar-e
 
 3. **Limite de paralelismo do harness** ≈10 sub-agents simultâneos. Batches >10 são divididos em levas. Não é limite formal documentado — assumido conservador. Pode ser mais (15-20) na prática, mas evita timeouts/throttling.
 
-4. **Falha silenciosa possível** — sub-agent pode retornar `{ok: true}` mas o `.mdx` ficou com problema sutil (travessão escapou, HTML inválido, voz-citação burocrática). **Auto-audit pós-batch (passo 12)** é a defesa: roda `pagina-produto-auditar` em paralelo em cada página criada, alerta no report final. Por isso o audit é OBRIGATÓRIO (não opcional) — qualidade é o foco da skill, não economia de tempo.
+4. **Falha silenciosa possível** — sub-agent pode retornar `{ok: true}` mas o `.mdx` ficou com problema sutil (travessão escapou, HTML inválido, voz-citação burocrática). Risco real mas baixo (mesma régua editorial canônica + sub-agent fresh do Opus). Mitigação opcional: rodar batch com flag `--audit` (dispara `pagina-produto-auditar` em paralelo após criar). Sem `--audit`, user pode auditar manualmente quando quiser — mesma paridade da skill individual (que também não auto-audita).
