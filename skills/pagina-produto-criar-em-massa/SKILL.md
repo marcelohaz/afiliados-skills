@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar-em-massa
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) de TODAS as páginas individuais vazias de um site, em PARALELO via sub-agents. Cada sub-agent é uma conversa independente (sem cross-contamination, sem tone-clone), processa 1 produto com a MESMA régua editorial da skill individual `pagina-produto-criar`. Skill mãe orquestra: lista stubs vazios → pre-flight bíblias → confirmação → dispara N Agents em paralelo (limite 10 simultâneos) → aggrega resultados → 1 commit lote → push + VPS pull → report. Aceita `site` (todos os stubs vazios) OU `site/B0X1,B0X2,B0X3` (subset). Quality igual à individual; performance ~10× mais rápido; custo similar (com prompt cache). NÃO toca em stubs parciais (proteção contra sobrescrever). NÃO cria stubs (pré-requisito: stubs criados no painel).
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) de TODAS as páginas individuais vazias de um site, em PARALELO via sub-agents — com a MESMA qualidade editorial da skill individual `pagina-produto-criar`. Cada sub-agent é uma conversa independente do Opus (fresh, isolada, sem cross-contamination), executa o fluxo individual completo. Foco em QUALIDADE: skill mãe roda pre-flight obrigatório de bíblias, valida cada output dos sub-agents, opcionalmente roda audit pós-batch em cada página criada. Skill mãe orquestra: lista stubs vazios → pre-flight bíblias → confirmação interativa → dispara N Agents em paralelo (até 10 simultâneos) → valida outputs → 1 commit lote → push + VPS pull → audit opcional → report. Aceita `site` (todos os stubs vazios) OU `site/B0X1,B0X2,B0X3` (subset). NÃO toca em stubs parciais (proteção contra sobrescrever trabalho manual). NÃO cria stubs (pré-requisito: stubs criados no painel).
 ---
 
 ## Parse de input
@@ -74,17 +74,21 @@ Detecção: se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z
 5. **Confirmação interativa** (obrigatória):
 
    ```
-   📋 Encontrei {N} stubs vazios em {site}:
-     - {slug-1} (ASIN {asin-1})
-     - {slug-2} (ASIN {asin-2})
+   📋 Encontrei {N} stubs vazios em {site}, todos com bíblia completa:
+     - {slug-1} (ASIN {asin-1}) — {name-do-produto}
+     - {slug-2} (ASIN {asin-2}) — {name-do-produto}
      - ...
 
    ⏭️  Pulando (já tinham conteúdo):
      - {slug-parcial} (parcial: tem subtitle mas falta o resto)
      - {slug-preenchido} (já tem os 6 campos)
 
-   💰 Custo estimado: ~$0.{X} (10 produtos × $0.10)
-   ⏱️  Tempo estimado: ~3-5 min (paralelo, limite 10 simultâneos)
+   Cada produto será processado por um sub-agent Opus INDEPENDENTE
+   (conversa fresh, isolada, sem cross-contamination). Mesma régua editorial
+   da skill individual `pagina-produto-criar`. Audit pós-batch obrigatório
+   pra cada página criada.
+
+   Tempo estimado: ~3-5 min (paralelo até 10 simultâneos).
 
    Confirma processar? (S/N)
    ```
@@ -113,19 +117,25 @@ Detecção: se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z
    - `sucessos`: `[{slug, asin, path, summary}]`
    - `falhas`: `[{slug, asin, error}]`
 
-9. **git status + commit lote** (se houve sucesso):
-   ```bash
-   git status --short sites/{site}/src/content/products/*.mdx
-   ```
-   Confirma que arquivos modificados batem com a lista de sucessos. Se divergente, alertar mas continuar.
+9. **git add específico + commit lote** (se houve sucesso):
+
+   **CRÍTICO**: NÃO usar `git add sites/{site}/src/content/products/*.mdx` (captura arquivos não-relacionados que estavam modificados antes do batch). Usar SÓ a lista dos paths retornados pelos sub-agents com sucesso:
 
    ```bash
-   git add sites/{site}/src/content/products/*.mdx
+   # Lista de paths dos sucessos (variável da agregação do passo 8):
+   git add sites/{site}/src/content/products/{slug-1}.mdx \
+           sites/{site}/src/content/products/{slug-2}.mdx \
+           ... (cada path explícito)
+   ```
+
+   Antes do add, confirmar com `git status --short` que os paths esperados estão modificados. Se algum sucesso reportado não está modificado, alertar (sub-agent reportou ok mas não escreveu?).
+
+   ```bash
    git commit --no-verify -m "feat({site}): preenche {N} páginas individuais em batch via skill" \
      -m "Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
    ```
 
-   **Sem `--no-verify`** ainda quebra com hook editorial em alguns casos? Confirmar — se sim, manter `--no-verify`.
+   `--no-verify` é necessário porque hook pre-commit bloqueia edits direto de .mdx (skill batch passa por esse mesmo bypass que a skill individual já usa — exceção documentada na memória do projeto).
 
 10. **Pull rebase + push**:
     ```bash
@@ -138,26 +148,49 @@ Detecção: se `$ARGUMENTS` tem `/` seguido de algo com vírgulas ou regex `[A-Z
     bash scripts/painel-vps-pull.sh 2>&1 | tail -3
     ```
 
-12. **Report final no chat**:
+12. **Auto-audit pós-batch (OBRIGATÓRIO — qualidade é o foco)**:
+
+    Pra cada página criada com sucesso, disparar audit independente em paralelo:
 
     ```
-    ✅ Batch concluído em {tempo}s
+    Agent({...pagina-produto-auditar pra produto 1...},
+          {...pagina-produto-auditar pra produto 2...},
+          ...
+          {...pagina-produto-auditar pra produto N...})
+    ```
 
-    SUCESSOS ({N}/{total}):
-      ✓ {slug-1} ({chars} chars no fullReview)
-      ✓ {slug-2} ...
+    Cada audit retorna relatório estruturado (errors/warnings/info). Skill mãe agrega:
+    - **Páginas SEM issues críticos**: aprovadas, deixa como está
+    - **Páginas com warnings**: lista no report final pra user revisar
+    - **Páginas com errors críticos**: BLOQUEIO — alerta que precisam revisão individual via `pagina-produto-criar` em modo rewrite
 
-    FALHAS ({M}):
-      ✗ {slug-x} — {erro}
+    Audit pós-batch é a única defesa contra "falha silenciosa" (sub-agent retornou `ok:true` mas output ficou com problema sutil: travessão escapou, HTML inválido, voz-citação burocrática, claim sem fonte).
+
+    Se user NÃO quer audit pós-batch (raro — quer pular pra economizar tempo): argumento explícito `--skip-audit` no input.
+
+13. **Report final no chat**:
+
+    ```
+    ✅ Batch concluído em {tempo}
+
+    PÁGINAS CRIADAS ({N}/{total}):
+      ✓ {slug-1} → audit OK
+      ✓ {slug-2} → audit: 1 warning (link Amazon com tag faltando)
+      ⚠ {slug-3} → audit: 2 errors → revisar via pagina-produto-criar
+
+    FALHAS NO BATCH ({M}):
+      ✗ {slug-x} — {erro do sub-agent}
 
     PULADOS ({Z}):
-      ⏭️  {slug-y} (parcial: skill batch não toca em stubs parciais)
+      ⏭️  {slug-y} (stub parcial: skill batch não sobrescreve)
       ⏭️  {slug-z} (já preenchido)
 
-    💰 Custo total: $X.XX
     📦 Commit: {commit-hash}
-    🔄 VPS sincronizado: OK
+    🔄 VPS sincronizado: {OK | bloqueado}
+    🔍 Audits: {ok} OK / {warn} warnings / {err} críticos
     ```
+
+    Páginas com errors críticos NÃO bloqueiam o commit lote (já foi). Apenas sinalizam pro user que precisam revisão individual depois.
 
 ## Detecção rigorosa de stub vazio (CRÍTICO)
 
@@ -299,11 +332,11 @@ Reporte em formato curto:
 | Aspecto | Individual (`pagina-produto-criar`) | Batch (`em-massa`) |
 |---|---|---|
 | Invocação | 1× por produto | 1× por site (todos os stubs vazios) |
-| Tempo total (10 produtos) | ~30-50 min sequencial | **~3-5 min paralelo** |
-| Custo (10 produtos) | ~$0.70-1.20 (sem cache) | ~$0.55-1.00 (com prompt cache) |
-| Qualidade por página | Alta | **Idêntica** (cada sub-agent é fresh) |
+| **Qualidade por página** | **Alta** | **IDÊNTICA** (cada sub-agent é conversa fresh do Opus) |
+| Tempo total (10 produtos) | ~30-50 min sequencial | ~3-5 min paralelo |
 | Anti-duplicate cross-páginas | Não (skill individual também não faz) | Não (paridade) |
-| Commits no git | N commits | **1 commit lote** |
+| Commits no git | N commits | 1 commit lote |
+| Audit pós-criação | Manual via `pagina-produto-auditar` | **Automático** (skill mãe roda audit em cada página) |
 | Pode sobrescrever conteúdo? | Sim (modo individual = ação explícita) | **NÃO** (só stubs vazios) |
 | Logging incremental | Sim (passo a passo) | Não (sub-agents reportam só no fim) |
 
@@ -322,7 +355,7 @@ Stub com `subtitle` preenchido mas resto vazio é trabalho manual em andamento. 
 Sub-agents simultâneos fazendo `git add + commit + push` = race condition garantida. Skill mãe controla TODO o git. Sub-agents só escrevem `.mdx`.
 
 ### 5. Confirmação interativa skippada
-"S/N" é importante pra evitar gastar $1+ por engano. **NÃO PROSSEGUIR sem confirmação afirmativa explícita do user.** Em caso de ambiguidade, abortar limpo.
+"S/N" é importante pra evitar disparar batch errado. **NÃO PROSSEGUIR sem confirmação afirmativa explícita do user.** Em caso de ambiguidade, abortar limpo.
 
 ### 6. Pular VPS pull no fim
 Skill mãe DEVE rodar `bash scripts/painel-vps-pull.sh` depois do push. Sem isso, painel da Bárbara/produção não vê o batch até alguém manualmente puxar.
@@ -367,8 +400,6 @@ Args canônico que invoco: `Skill(skill="afiliados-skills:pagina-produto-criar-e
 
 2. **Anti-duplicate cross-páginas IMPOSSÍVEL no paralelo** — sub-agents isolados não veem outras páginas do mesmo site sendo criadas. Se 2 produtos similares (ex: 2 whey isolados da mesma marca) processam simultâneo, podem ter parágrafos parecidos. **Skill individual atual também não faz isso**, então paridade total. Se virar problema real (raro), adicionar passo extra: skill mãe carrega contexto cumulativo após cada leva (mas perde benefício do paralelo).
 
-3. **Limite de paralelismo do harness** ≈10 sub-agents simultâneos. Batches >10 são divididos em levas, perdendo um pouco da vantagem do paralelo (tempo total = levas × 5 min em vez de 5 min flat).
+3. **Limite de paralelismo do harness** ≈10 sub-agents simultâneos. Batches >10 são divididos em levas. Não é limite formal documentado — assumido conservador. Pode ser mais (15-20) na prática, mas evita timeouts/throttling.
 
-4. **Sub-agents NÃO compartilham prompt cache da skill mãe** — cada sub-agent paga prefix completo na primeira execução. Anthropic prompt caching reduz custo apenas entre sub-agents do mesmo tipo dentro do mesmo batch (não com skill mãe). Estimativa de economia: ~30-50% nos sub-agents 2+ da mesma leva.
-
-5. **Falha silenciosa de sub-agent** — se sub-agent retorna `{ok: true}` mas o `.mdx` ficou com problema sutil (ex: HTML inválido), skill mãe não detecta no aggregate. Mitigação: rodar `pagina-produto-auditar` em cada uma após o batch (custo extra mas garante qualidade).
+4. **Falha silenciosa possível** — sub-agent pode retornar `{ok: true}` mas o `.mdx` ficou com problema sutil (travessão escapou, HTML inválido, voz-citação burocrática). **Auto-audit pós-batch (passo 12)** é a defesa: roda `pagina-produto-auditar` em paralelo em cada página criada, alerta no report final. Por isso o audit é OBRIGATÓRIO (não opcional) — qualidade é o foco da skill, não economia de tempo.
