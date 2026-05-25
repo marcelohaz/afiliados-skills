@@ -412,7 +412,15 @@ Lista de 1-2 itens vira prosa.
 
 ### Densidade visual: negrito e links Amazon
 
-**Régua descoberta em 2026-05** comparando 35 guides do monorepo. Os canônicos atuais (melhoraspirador, melhorestablets, qualamelhorcreatina) seguem padrão **"negrito denso + links concentrados"**. Sites legados (escritoriocasa, melhorcozinha) seguem padrão antigo "poucos negritos + muitos links" — NÃO seguir esse padrão antigo.
+**Régua descoberta em 2026-05** comparando 35 guides do monorepo.
+
+A rede tem 2 padrões coexistindo:
+
+- **Padrão NOVO (canon atual — usar SEMPRE em guides novos)**: melhoraspirador (5,3 strongs/1k), melhorestablets (2,8–5,6), qualamelhorcreatina (2,6–3,6), melhorimpressora. Pattern: **"negrito denso + links Amazon concentrados em Marca/FAQ/Conclusão"**.
+
+- **Padrão LEGADO (NÃO REPLICAR — herança histórica)**: escritoriocasa (8 guides, 0,15–2,7 strongs/1k), melhorcozinha (0,0–0,8), guides antigos de melhorcreatina (0,4–2,2). Pattern: **"poucos negritos + muitos links Amazon espalhados em todas as seções"**.
+
+Quando escrever guide novo ou refazer guide existente, seguir o padrão NOVO. Guides legados ficam onde estão até dor real (refazer compete com features); auditoria pode flaggar como info, mas migração é manual e caso a caso.
 
 #### Negrito (`<strong>`) — alvo: 4-5 por 1.000 chars
 
