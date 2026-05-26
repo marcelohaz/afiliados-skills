@@ -146,29 +146,45 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 
 ### §1 — abertura com pergunta + keyword bold
 
-Começa com uma **pergunta** contendo `**{keyword}**` em bold markdown. Variantes aceitas (escolha uma, varia entre artigos do mesmo site pra não ficar repetitivo):
+Começa com uma **pergunta** contendo `**{keyword}**` em bold markdown. Variantes aceitas — TOM padrão é EMPÁTICO (estilo blog afiliados brasileiro), não consultor frio:
 
+**Empáticas (preferidas — canon 2026-05-26)**:
+- `Está em dúvida sobre qual a **{keyword}**?`
+- `Cansou de procurar a **{keyword}** sem decidir?`
+- `Procurando a **{keyword}** sem complicação?`
+- `Quer saber qual a **{keyword}** em {ano}?`
+
+**Neutras (OK quando o site tem tom mais sóbrio)**:
+- `Qual a **{keyword}**?` / `Qual é a **{keyword}**?` / `Qual o **{keyword}**?`
 - `Procurando a **{keyword}**?`
 - `Quer comprar a **{keyword}**?`
-- `Qual a **{keyword}**?` / `Qual é a **{keyword}**?` / `Qual o **{keyword}**?`
-- `Está procurando a **{keyword}**?`
-- `Está em dúvida sobre qual a **{keyword}**?`
-- `Quer saber qual a **{keyword}** em {ano}?`
-- ...ou variantes próximas no mesmo espírito
 
-Após a pergunta, **2-5 frases** dando contexto:
-- Critério de decisão (o que importa pra escolher)
-- Perfil de comprador (quem usa, em que contexto)
-- O que vale verificar antes de comprar
+Após a pergunta, **1-2 frases curtas** com **promessa de ajuda** (canon 2026-05-26):
+- "Preparamos uma seleção pra ajudar você a {benefício}"
+- "Te ajudamos a comparar e decidir sem perder tempo"
+- "Reunimos os melhores modelos pra você {investir bem | economizar | escolher com segurança}"
+
+A promessa não deve ser vaga ("vamos te ajudar") — sempre amarrada a um benefício concreto pro leitor (economizar, investir bem, decidir rápido, escolher com confiança).
 
 **SEM mencionar marcas/modelos/ASINs específicos.** Linguagem geral.
 
 ### §s do meio (opcional — só se for 3 parágrafos)
 
-Aprofundamento PANORÂMICO, NÃO técnico:
-- **Panorama da categoria**: "o mercado oferece duas tecnologias principais: cartucho e tanque de tinta" ✅
-- **Perfis de uso**: "quem imprime raramente paga menos com cartucho; quem imprime muito recupera o tanque em poucos meses" ✅
-- **Decisão por contexto**: "vale a pena pra quem treina pesado / pra uso casual a opção XYZ" ✅
+Aprofundamento PANORÂMICO, NÃO técnico. Estrutura canônica (canon 2026-05-26): **CONJUGAR aplicações de uso + perfis concretos** — começa abrindo onde a categoria se aplica (acolhedor) e termina com perfis de decisão concretos (informativo).
+
+**Estrutura ideal**:
+```
+Para {aplicação 1}, {aplicação 2} ou {aplicação 3}, a decisão começa pelo
+perfil de uso: quem {perfil A} se dá bem com {opção X}; quem {perfil B}
+recupera o investimento de {opção Y}; e quem {perfil C} economiza mais
+com {opção Z}.
+```
+
+**Exemplos válidos**:
+- **Aplicações** (acolhe o leitor): "Para uso em casa, home office ou pequenas empresas" / "Pra treino, estudos ou rotina corrida" / "Em quartos, salas ou ambientes pequenos"
+- **Perfis técnicos** (informa decisão): "quem imprime pouco vs todo dia", "quem treina pesado vs casual", "quem tem alergia a X"
+- **Panorama da categoria** (alternativa): "o mercado oferece duas tecnologias principais (cartucho e tanque)"
+- **Tecnologias específicas OK quando informam decisão** (cartucho/tanque/laser, monohydrate/HCl, óleo de peixe/krill) — esses termos comprador busca e diferenciam decisão. NÃO confundir com critérios técnicos detalhados de guide (forma química, certificações, mg específicos).
 
 **NÃO entrar em**:
 - ❌ Critérios técnicos detalhados ("três fatores: concentração, certificação, forma química")
@@ -192,17 +208,39 @@ Use `**{keywordPlural}**` em bold markdown. Variantes de abertura aceitas:
 - `Por isso, reunimos uma lista com as **{keywordPlural}**...`
 - `A seguir, reunimos as **{keywordPlural}**...`
 
+**2 estilos de fechamento** (escolher conforme ângulo do artigo):
+
+**a) Valores qualificativos (canon 2026-05-26 — preferido pra produtos "decisão por benefício")**:
+> "...destacando as que realmente entregam {valor 1}, {valor 2} e {valor 3} no dia a dia."
+
+Exemplos: "qualidade, economia e praticidade", "potência, autonomia e custo-benefício", "pureza, concentração e absorção". 2-3 valores no máximo. Adjetivo "realmente" OK (qualificador conforme régua dos qualificadores positivos).
+
+**b) Critérios de comparação técnicos (OK pra produtos "decisão por specs")**:
+> "...comparadas por {critério 1}, {critério 2} e {critério 3}."
+
+Exemplos: "tecnologia, rendimento e custo por página", "concentração, certificação e custo por dose", "tela, processador e duração de bateria".
+
 Termina **OBRIGATORIAMENTE** com `. ✅` (ponto, espaço, emoji, sem nada depois).
 
 ## Exemplos bons (do prompt canônico)
 
-### Exemplo 1 — impressora multifuncional (2 parágrafos)
+### Exemplo 1 — impressora custo benefício (3 parágrafos, **CANON MEIO-TERMO**)
+
+Este é o **canon visual de referência** desde 2026-05-26. Padrão do "blog afiliados brasileiro" — empático + perfis concretos + promessa enfática. Cobre os 3 padrões aprovados em sessão: §1 empático com promessa de ajuda, §2 aplicações de uso conjugadas com perfis técnicos de decisão, §final com 3 valores qualificativos.
 
 ```
-Qual a **melhor impressora multifuncional** em 2026 para casa e home office? A decisão começa por uma pergunta simples: com que frequência você imprime? Quem imprime raramente paga menos com uma multifuncional de cartucho: menor custo de entrada e cabe em qualquer bancada. Quem imprime centenas de páginas por mês recupera o investimento de uma tanque de tinta em poucos meses, com custo por página muito menor.
+Está em dúvida sobre qual a **melhor impressora custo benefício** em 2026? Preparamos uma seleção pra ajudar você a investir bem e economizar nas suas impressões.
 
-Esta seleção reúne as **melhores impressoras multifuncionais** para uso doméstico e home office disponíveis no Brasil em 2026, comparadas por tecnologia de consumível, rendimento, duplex e Wi-Fi. ✅
+Para uso em casa, home office ou pequenas empresas, a decisão começa pelo perfil de uso: quem imprime pouco se dá bem com modelos a cartucho; quem imprime todo dia recupera o investimento de uma tanque de tinta em poucos meses; e quem precisa de volume alto em preto e branco economiza mais com a laser monocromática.
+
+Esta seleção reúne as **melhores impressoras custo benefício** disponíveis em 2026, destacando as que realmente entregam qualidade, economia e praticidade no dia a dia. ✅
 ```
+
+**Por que este é o canon**:
+- §1: pergunta empática ("Está em dúvida sobre...") + promessa concreta de ajuda ("investir bem e economizar")
+- §2: aplicações de uso ("em casa, home office ou pequenas empresas") + 3 perfis CONCRETOS com tecnologias ("cartucho/tanque/laser") — informa decisão sem invadir o guideContent
+- §3: fechamento com 3 valores qualificativos ("qualidade, economia, praticidade") em vez de critérios de comparação fria
+- ~610 chars, 3 §, 2 bolds, ✅
 
 ### Exemplo 2 — creatina (3 parágrafos)
 
