@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. Detecta tone-clone, redundância, buyer-reference, claim-vs-lineup-fato (comparações factualmente erradas), links incorretos. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. 11 critérios — tone-clone, redundância, incoerência, qualidade, buyer-reference explícita, links incorretos, claim-vs-lineup-fato (comparações factualmente erradas), voz-citacao-ficha-tecnica, voz-comprador-implicita (categoria D), termos-tecnico-industriais, html-texto-puro. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -107,7 +107,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 8 critérios da análise
+## Os 11 critérios da análise
 
 ### 1. `tone-clone` — abertura/frase idêntica entre produtos
 
@@ -216,9 +216,64 @@ Régua: voz-citação OK SÓ quando atende AS DUAS condições:
 
 Reportar com sugestão de reformulação destilada. User decide se aceita.
 
+### 9. `voz-comprador-implicita` — voz-comprador SUTIL (categoria D, régua v1.11.4)
+
+**Complementa #5** (`buyer-reference` cobre citação EXPLÍCITA — "compradores destacam"). Esta cobre voz-comprador **IMPLÍCITA** — fraseado que parece análise editorial mas é relato disfarçado copiado da bíblia.
+
+**Padrões pra grep** (palavras-flag):
+- "um comprador", "alguns compradores", "parte dos compradores"
+- "relata", "relatos", "relatado", "relatada"
+- "divide opiniões", "vista por alguns", "considerada por", "elogiada por"
+- "queixas", "elogios", "feedback dos"
+- "relatos recorrentes", "relato recorrente"
+
+**Exemplos pareados (errado vs fix)** — casos reais 2026-05-26 (batch melhorpretreino dux-energy-kick, dux-pre-workout):
+
+| ❌ Detectado | ✓ Fix proposto |
+|---|---|
+| "um comprador relata sentir energia em 15 minutos" | "início rápido percebido em ~15 minutos" |
+| "divide opiniões pelo sabor adocicado" | "sabor adocicado, agrada perfis específicos" |
+| "vista por alguns como queda de energia depois de 2h" | "duração efetiva ~2h, requer dose espaçada em treinos longos" |
+| "elogiada pela facilidade de dissolução" | "dissolve facilmente" |
+| "relatada como menos potente que a versão anterior" | "potência reduzida vs versão anterior" |
+
+**Severidade: Crítico** (sempre propor mudança) — voz-citação implícita quebra confiança editorial igual à explícita; só é mais difícil de detectar.
+
+### 10. `termos-tecnico-industriais` — termos de rotulagem técnica (régua v1.11.4)
+
+Termos de **rotulagem industrial** soam burocráticos e quebram voz editorial (especialista→amigo). Régua existia em audits desde 2026-05-17 mas só formalizada em 2026-05-26.
+
+**Termos proibidos pra grep**:
+- "contaminação cruzada"
+- "linha de produção compartilhada" (sem contexto editorial)
+- "padrões de fabricação ISO XXXX" (sem agregar valor)
+- "boas práticas de fabricação" (BPF — só técnico)
+- "rastreabilidade do lote", "lote de fabricação" (regulatório)
+
+**Substituições editoriais**:
+- ❌ "Pode ter contaminação cruzada com glúten" → ✓ "Pode conter traços de glúten. Leia a rotulagem antes do uso."
+- ❌ "Linha de produção compartilhada com produtos com lactose" → ✓ "Pode conter traços de lactose. Confira a rotulagem se você é sensível."
+- ❌ "Atende padrões ISO 22000 de segurança alimentar" → drop ou "produto seguindo padrões reconhecidos da categoria" (se agregar)
+
+**Severidade: Crítico** — quebra voz editorial direta. Auditoria deve sempre propor fix.
+
+### 11. `html-texto-puro` — HTML literal em campos texto-puro (régua v1.11.5)
+
+A allowlist HTML do `fullReview` (`<p>`, `<strong>`, `<em>`, `<a>`) é **EXCLUSIVA do fullReview**. Demais campos do produto-no-artigo são renderizados por Astro com `{var}` (escape XSS automático) — HTML inline vira **TEXTO LITERAL** no card pro usuário.
+
+**Sub-checks** (paridade com `pagina-produto-auditar` 6a/6b/6c):
+- **11a** `subtitle`: grep `<strong>`, `<em>`, `<a `, `<p>` — se achar, flag crítico
+- **11b** `shortDescription`: idem — bug-class real (Integralmédica Huger vazou `<strong>energia...</strong>` em 2026-05-26, apareceu literal no card)
+- **11c** `specs[].value`: idem — strings devem ser puras
+- **11d** `pros[N]` / `cons[N]`: `<strong>` permitido **APENAS no Título inicial** (template usa `set:html` ali). Proibido `<strong>`, `<em>`, `<a>` no texto APÓS o `:`. Ex: ❌ `<strong>Rendimento</strong>: <strong>4.500</strong> páginas`.
+
+**Severidade: Crítico** — usuário vê HTML literal renderizado como texto, quebra UX.
+
+**Fix proposto**: reescrever como texto puro. Pra ênfase em shortDescription, omitir bold ou reescrever pra colocar o termo no Título da spec.
+
 ## Filtros de severidade
 
-- **Crítico** (sempre propor mudança): buyer-reference explícita, claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido
+- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido
 - **Médio** (propor mudança): tone-clone óbvio, redundancy de conceito, quality vago, incoherence, voz-citacao-ficha-tecnica burocrática
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 

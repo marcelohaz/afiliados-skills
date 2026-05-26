@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 9 categorias editoriais (claim-vs-bible, tag-affiliate, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
+description: Audita artigo inteiro read-only. Combina 13 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
 ---
 
 ## Parse de input
@@ -65,9 +65,17 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 4. **Read bíblias** dos produtos. Se alguma faltar, abortar com instrução pra rodar sync R2.
 
-5. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Define a regra de validação dos links Amazon:
-   - Tag preenchida → links DEVEM ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
-   - Tag vazia → links DEVEM ser crus (sem `?tag=...`)
+5. **Read `affiliateTag` + `live` status** (canon 2026-05-26):
+   - `affiliateTag` de `sites/{site}/src/config.ts` via regex (pode ser `''`).
+   - `live` de `docs/painel/sites-meta.json[{site}].live` (boolean).
+   - Regra de validação dos links Amazon:
+     - Tag preenchida → links DEVEM ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
+     - Tag vazia → links DEVEM ser crus (sem `?tag=...`)
+   - Severity contextual da `tag-affiliate`:
+     - `live: true` → divergência é 🔴 error crítico (bloqueia readyToLock)
+     - `live: false` → divergência é 🟡 warn (site em construção, tag preenche pré-deploy)
+     - `live: true` + tag vazia → SEMPRE 🔴 error crítico (sem afiliação no ar = perda direta)
+     - **Fallback se `live` não definido em sites-meta**: tratar como `false` (default leniente — site recém-criado pode não ter o campo populado ainda).
 
 6. **Rodar 4 checks estruturais determinísticos** (não-IA, código mental):
 
@@ -89,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 9 categorias do `regras_auditoria_artigo` (seção "Critérios de auditoria" abaixo). Gerar:
+7. **Rodar auditoria IA** nas 13 categorias (10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26: html-invalido, voz-comprador-implicita, termos-tecnico-industriais — ver "Critérios de auditoria" abaixo). Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -142,7 +150,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (10 categorias do `regras_auditoria_artigo`)
+## Critérios de auditoria (13 categorias — 10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26)
 
 Use exatamente esses valores em `rule`:
 
@@ -151,10 +159,15 @@ Afirmação no review (subtitle, shortDescription, fullReview, pros, cons, specs
 
 **Exemplo**: review diz "5.000 páginas por kit" mas bíblia diz "4.500 páginas".
 
-### `tag-affiliate` (level=`error`)
+### `tag-affiliate` (level=`error` se site live, `warn` se em construção)
 Link Amazon com tag diferente da esperada.
 - Tag preenchida no config: links DEVEM ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
 - Tag vazia: links DEVEM ser crus (sem `?tag=...`)
+
+**Severity contextual** (canon 2026-05-26): a skill lê `sites-meta.json[site].live`.
+- `live: true` (site no ar): divergência de tag é **🔴 error** crítico — bloqueia readyToLock (não pode publicar sem afiliação correta).
+- `live: false` (em construção): divergência vira **🟡 warn** — site ainda não foi pro ar, tag pode ser preenchida pré-deploy. Não bloqueia readyToLock.
+- `live: true` + tag vazia: 🔴 error crítico **sempre** — site no ar sem afiliação é grave (perda direta de comissão).
 
 ### `travessao` (level=`warn`)
 Travessão (`—` ou `–`) detectado em qualquer campo editorial: title, description, subtitle, shortDescription, fullReview, pros, cons, intro (body markdown), guideContent.
@@ -209,6 +222,62 @@ Marcadores de procedência **burocráticos** no .mdx — quando o modelo copiou 
 **✓ Editorial OK** (não flag): "rende até 4.500 páginas em preto, segundo a Epson" — claim só-fabricante + qualifica rendimento.
 
 **❌ Burocrática** (flag warn): "alérgenos da Amazon confirmam ausência de glúten" → sugerir "sem glúten".
+
+### `html-invalido` (level=`error`)
+
+Tags HTML em campos do `.mdx` que **violam allowlist do campo** ou **viram texto literal** ao renderizar. Astro escapa `{var}` com proteção XSS — qualquer HTML literal em campo texto-puro aparece como TEXTO ao usuário (não-renderizado).
+
+Sub-checks:
+
+**a. Tags fora da allowlist em `fullReview` (produto-no-artigo) ou `guideContent`**:
+- `fullReview` (campo dentro de `products[N]` no `.mdx` do artigo): allowlist `<p>`, `<strong>`, `<em>`, `<a>`. Tags proibidas: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<li>`, `<table>`, `<img>`, `<script>`, `<iframe>`, `<style>`.
+- `guideContent` (frontmatter): allowlist mais permissiva — `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Mesmas proibições no resto.
+
+**b. HTML em campos TEXTO-PURO do produto-no-artigo** — `subtitle`, `shortDescription`, `specs[].value`. Esses campos são renderizados por Astro com `{var}` (escape XSS automático). Qualquer tag HTML literal (`<strong>`, `<em>`, `<a>`, `<p>`) aparece como TEXTO LITERAL pro usuário (não-renderizada). Verificar via regex `<\w+[^>]*>` em cada um.
+
+**c. HTML no meio do texto de `pros[N]` ou `cons[N]` do produto-no-artigo** (após o `:` que separa título de explicação). O `<strong>Título</strong>` no início está PERMITIDO (template usa `set:html` ali); mas `<strong>` aninhado no texto da explicação **vira texto literal**. Regex de detecção: depois do primeiro `</strong>:`, qualquer `<\w+` é violação.
+
+**d. HTML no body markdown da intro** (tudo após o segundo `---` do frontmatter, até o primeiro `## ` ou fim). Régua da `artigo-intro-escrever`: "body é puro markdown, sem HTML inline. Bold só em `**markdown**`, nunca `<b>` ou `<strong>`." Verificar via regex `<\w+[^>]*>` no body da intro — qualquer tag HTML é violação.
+
+**Caso real 2026-05-26**: `Integralmédica Huger` (página individual) vazou `<strong>energia com foco preservado</strong>` na shortDescription, apareceu literal no card. **Mesmo bug-class é vulnerável em campos de artigo** — qualquer `products[N].shortDescription`, `products[N].subtitle`, `products[N].specs.value` ou body markdown da intro pode ter o mesmo problema. Audit precisa pegar em todos esses lugares.
+
+### `voz-comprador-implicita` (level=`warn`)
+
+Diferente de `atribuicao-comprador` que pega menções explícitas ("compradores", "Amazon", "reviews"), esta categoria pega **voz-comprador SUTIL** que sub-agent não destilou da bíblia. Régua "destilação categoria D" canonizada 2026-05-26 (v1.11.4).
+
+**Padrões a flagar (regex em qualquer campo: subtitle, shortDescription, fullReview, pros, cons, intro, guideContent)**:
+- "opiniões" (no sentido de opiniões de compradores)
+- "comentários" (no sentido de comentários de quem comprou)
+- "um comprador relata"
+- "divide opiniões" / "opiniões divididas" / "opiniões mistas"
+- "elogios recorrentes" / "elogiado nas opiniões"
+- "recepção [mista/dividida/positiva]"
+- "avaliações" (no sentido de avaliações Amazon, não avaliação técnica)
+- "bem recebido [pelos/nos]"
+- "ponto positivo recorrente nas opiniões"
+- "queixa recorrente"
+
+**Caso real 2026-05-26** (batch melhorpretreino): 5 ocorrências em 3 produtos. Sub-agent Opus reconhecia voz-comprador EXPLÍCITA na bíblia ("elogiado de forma recorrente nas opiniões") e destilava. Mas CAÍA quando era SUTIL ("um comprador relata", "divide opiniões"). Régua "destilação categoria D" exige sub-agent REESCREVER como observação analítica antes de usar.
+
+**Exemplo flag (errado vs certo)**:
+- ❌ bíblia: "Sabor maçã verde divide opiniões nos reviews" → review: "Sabor divide opiniões"
+- ✅ destilado: "Sabor maçã verde é frutado, pode não agradar quem prefere perfis mais neutros"
+
+### `termos-tecnico-industriais` (level=`error`)
+
+Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-26 v1.11.4). Soam como rotulagem técnica/ANVISA — quebram a voz editorial.
+
+**Padrões a flagar (regex em qualquer campo)**:
+- "contaminação cruzada"
+- "linha de produção compartilhada" (sem contexto editorial)
+- "sujeito a contaminação"
+- "risco de contaminação por proteínas"
+
+**Caso real 2026-05-26** (batch melhorpretreino): `essential-nutrition-beta-action` cons[3] usou "considerar o risco de contaminação cruzada na linha de produção". Audit da página individual pegou. Pra produto-no-artigo, audit (esta) precisa pegar também.
+
+**Fix sugerido pelo audit**: linguagem editorial pra alérgenos:
+- ❌ "Risco de contaminação cruzada na linha de produção"
+- ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
 
 ## Critérios estruturais (4 checks determinísticos)
 

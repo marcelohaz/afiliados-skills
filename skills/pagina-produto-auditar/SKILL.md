@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. 12 categorias de check (claim-vs-bible, tag-affiliate, tone-comprador, travessao, superlativo, html-invalido com 3 sub-checks, link-externo, conteudo-curto, redundancia-com-artigo, voz-citacao-ficha-tecnica, voz-comprador-implicita, termos-tecnico-industriais). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
 ---
 
 ## Parse de input
@@ -54,7 +54,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 6. **Read reviews que citam o ASIN** (anti-duplicate): `Grep` em `sites/{site}/src/content/reviews/*.mdx` por `asin:.*{asin}`. Se houver, leia o `fullReview` do produto-no-artigo pra comparar com o `fullReview` da página individual — flag se for muito parecido (parágrafo inteiro idêntico, frases-chave repetidas).
 
-7. **Rodar as 10 categorias de checagem** (abaixo).
+7. **Rodar as 12 categorias de checagem** (abaixo).
 
 8. **Escrever relatório**:
    - `docs/biblias-v2/.audits/products/{site}-{slug}-{YYYY-MM-DD-HHMM}.md` (histórico)
@@ -72,7 +72,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 10. **Reportar no chat**: 3-5 linhas com total de findings por severidade + path do relatório. Não cole o relatório inteiro no chat.
 
-## As 10 categorias de check
+## As 12 categorias de check
 
 ### 1. `claim-vs-bible`
 Afirmação em qualquer campo (subtitle, shortDescription, pros, cons, specs, fullReview) que não tem origem rastreável na bíblia (specs, números, certificações, marca).
@@ -173,6 +173,50 @@ Voz-citação OK SÓ quando atende AS DUAS condições:
 - "apontada pelo fabricante como mais absorvível" → "considerada mais absorvível"
 
 Reportar no relatório com sugestão de reformulação destilada. Humano decide se aceita.
+
+### 11. `voz-comprador-implicita` (severidade: 🟡 Aviso)
+
+Diferente da categoria 3 (`tone-comprador`) que pega menções EXPLÍCITAS de "compradores"/"reviews"/"avaliações", esta pega **voz-comprador SUTIL** que o sub-agent não destilou da bíblia. Régua "destilação categoria D" canonizada 2026-05-26 (v1.11.4).
+
+**Padrões pra grep em qualquer campo (subtitle, shortDescription, pros, cons, specs.value, fullReview)**:
+- "opiniões" (no sentido de opiniões de compradores)
+- "comentários" (no sentido de comentários de quem comprou)
+- "um comprador relata" / "um comprador descreve"
+- "divide opiniões" / "opiniões divididas" / "opiniões mistas"
+- "elogios recorrentes" / "elogiado nas opiniões"
+- "recepção [mista/dividida/positiva]"
+- "avaliações" (no sentido Amazon, não avaliação técnica)
+- "bem recebido [pelos/nos]"
+- "ponto positivo recorrente nas opiniões"
+- "queixa recorrente"
+
+**Caso real 2026-05-26** (batch melhorpretreino, 3 produtos via `pagina-produto-criar-em-massa` v1.11.3):
+- `dux-energy-kick` pros[4]: "paladar bem recebido pelos comentários disponíveis"
+- `dux-energy-kick` fullReview: "Um comprador inclusive descreve uso durante o treino"
+- `dux-pre-workout` cons[0]: "Sabor divide: opiniões sobre o sabor são mistas"
+- `dux-pre-workout` fullReview: "O sabor maçã verde divide opiniões"
+
+Sub-agent v1.11.3 reconhecia voz-comprador EXPLÍCITA na bíblia mas CAÍA em SUTIL ("um comprador relata", "divide opiniões"). v1.11.4 adicionou auto-check na skill de criação — esta audit cobre defesa em camadas.
+
+**Exemplo flag (errado vs certo)**:
+- ❌ "Sabor divide opiniões" → ✅ "Sabor maçã verde é frutado, pode não agradar quem prefere perfis mais neutros"
+
+### 12. `termos-tecnico-industriais` (severidade: 🔴 Crítico)
+
+Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-26 v1.11.4). Soam como rotulagem técnica/ANVISA — quebram a voz editorial.
+
+**Padrões pra grep em qualquer campo**:
+- "contaminação cruzada"
+- "linha de produção compartilhada" (sem contexto editorial)
+- "sujeito a contaminação"
+- "risco de contaminação por proteínas"
+
+**Caso real 2026-05-26**: `essential-nutrition-beta-action` cons[3] usou "considerar o risco de contaminação cruzada na linha de produção". Audit pegou — sugerido fix:
+
+- ❌ "Risco de contaminação cruzada na linha de produção"
+- ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
+
+Linguagem editorial em vez de técnica. Aviso é crítico porque quebra a voz, não é um qualificador a debater.
 
 ## Filtros editoriais — flag se aparecer nos campos curados
 

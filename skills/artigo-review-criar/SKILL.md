@@ -53,6 +53,14 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 - **Sem travessão (—)** em nenhum campo.
 - **Voz analítica**: NUNCA cite compradores/reviews/avaliações/estrelas/Amazon.
 - **HTML allowlist no `fullReview`**: `<p>`, `<strong>`, `<em>`, `<a>`. Proibido: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<table>`, `<img>`, `<script>`.
+
+- **CAMPOS TEXTO-PURO — sem HTML inline** (régua v1.11.5, canon 2026-05-26). A allowlist HTML acima é EXCLUSIVA do `fullReview`. Os demais campos do produto-no-artigo são texto puro renderizado por Astro com `{var}` (escape XSS automático):
+  - `subtitle`: texto puro
+  - `shortDescription`: texto puro (renderizado em `<p>{var}</p>` no card — `<strong>` literal vira texto pro usuário)
+  - `specs[].value`: strings simples sem HTML
+  - `pros[N]` / `cons[N]`: formato `<strong>Título</strong>: explicação` — `<strong>` está PERMITIDO **apenas no Título inicial** (template usa `set:html` ali), **NÃO** no meio do texto após o `:`.
+
+  **AUTO-CHECK obrigatório**: antes de gravar o `.mdx`, grep `<strong>`, `<em>`, `<a `, `<p>` em subtitle/shortDescription/specs.value. Se achar — ERRADO. Reescreva como texto puro. Caso real 2026-05-26: `Integralmédica Huger` (página individual) vazou `<strong>energia...</strong>` na shortDescription, apareceu literal no card pro usuário. Mesmo bug-class é vulnerável em produto-no-artigo.
 - **Tag-aware**: leia `siteConfig.affiliateTag`. Vazia (sites em construção) → URL crua `https://www.amazon.com.br/dp/{ASIN}`. Preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`.
 - **Português brasileiro editorial** sem gírias.
 
@@ -228,6 +236,50 @@ A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conf
 | **D) Voz comprador implícita** | "Cápsulas sem sabor segundo relatos de compradores" | "Cápsulas sem sabor" |
 
 **Exceção (raro, mas existe)**: claim do fabricante VERIFICÁVEL SÓ por ele (rendimento, garantia interna, certificação proprietária) pode manter "segundo X" se adiciona valor editorial — ver Armadilha 4 abaixo.
+
+### AUTO-CHECK categoria D — voz-comprador IMPLÍCITA (régua v1.11.4, canon 2026-05-26)
+
+**Categoria D é a mais traiçoeira** porque a voz-comprador vem SUTIL — não tem palavra-flag óbvia ("compradores destacam"), tem fraseado conversacional que parece análise editorial mas é relato disfarçado.
+
+**Bíblias com voz EXPLÍCITA** ("elogiado nas opiniões", "relato recorrente"): você reconhece e destila. Fácil.
+**Bíblias com voz IMPLÍCITA** ("um comprador relata", "divide opiniões", "vista por alguns como"): você COPIA LITERAL achando que é análise. Erro.
+
+**Exemplos pareados (errado vs certo)** — TODOS de casos reais 2026-05-26 (batch melhorpretreino: dux-energy-kick, dux-pre-workout):
+
+| ❌ Voz-comprador implícita (copiado da bíblia) | ✓ Destilado pra voz editorial |
+|---|---|
+| "um comprador relata sentir energia em 15 minutos" | "início rápido percebido em ~15 minutos" |
+| "divide opiniões pelo sabor adocicado" | "sabor adocicado, agrada perfis específicos" |
+| "vista por alguns como queda de energia depois de 2h" | "duração efetiva ~2h, requer dose espaçada em treinos longos" |
+| "elogiada pela facilidade de dissolução" | "dissolve facilmente" |
+| "relatada como menos potente que a versão anterior" | "potência reduzida vs versão anterior" |
+| "considerada cara por parte dos compradores" | drop (preço já tem qualificador objetivo em outro lugar) |
+
+**Auto-check obrigatório antes de gravar — grep por palavras-flag**:
+- "um comprador", "alguns compradores", "parte dos compradores"
+- "relata", "relatos", "relatado", "relatada"
+- "divide opiniões", "vista por alguns", "considerada por", "elogiada por"
+- "queixas", "elogios", "feedback dos"
+
+Se aparecer QUALQUER ocorrência → reescreva como observação editorial direta. Sem citar quem fala. Categoria D bem destilada vira **observação técnica curta sem sujeito-comprador**.
+
+### TERMOS TÉCNICO-INDUSTRIAIS PROIBIDOS (régua v1.11.4 formalizada, canon 2026-05-26)
+
+Termos de **rotulagem industrial** soam burocráticos e quebram voz editorial. Régua existia em audits desde 2026-05-17 mas só foi formalizada em 2026-05-26.
+
+**Proibidos em todo o conteúdo do produto-no-artigo**:
+- "contaminação cruzada"
+- "linha de produção compartilhada" (sem contexto editorial)
+- "padrões de fabricação ISO XXXX" (sem agregar valor ao leitor)
+- "boas práticas de fabricação" (BPF — só técnico)
+- "lote de fabricação", "rastreabilidade do lote" (técnico-regulatório)
+
+**Substituições editoriais**:
+- ❌ "Pode ter contaminação cruzada com glúten" → ✓ "Pode conter traços de glúten. Leia a rotulagem antes do uso."
+- ❌ "Linha de produção compartilhada com produtos com lactose" → ✓ "Pode conter traços de lactose. Confira a rotulagem se você é sensível."
+- ❌ "Atende padrões ISO 22000 de segurança alimentar" → drop ou "produto seguindo padrões reconhecidos da categoria" (se agregar)
+
+**Por quê proibido**: reviews afiliados são especialista→amigo, não bula técnica. Termo técnico-industrial sinaliza copy-paste de ficha técnica ou ChatGPT genérico — quebra confiança editorial.
 
 ## Peso por fonte
 
