@@ -241,7 +241,7 @@ Sub-checks:
 
 **Caso real 2026-05-26**: `Integralmédica Huger` (página individual) vazou `<strong>energia com foco preservado</strong>` na shortDescription, apareceu literal no card. **Mesmo bug-class é vulnerável em campos de artigo** — qualquer `products[N].shortDescription`, `products[N].subtitle`, `products[N].specs.value` ou body markdown da intro pode ter o mesmo problema. Audit precisa pegar em todos esses lugares.
 
-### `voz-comprador-implicita` (level=`warn`)
+### `voz-comprador-implicita` (level=`error`)
 
 Diferente de `atribuicao-comprador` que pega menções explícitas ("compradores", "Amazon", "reviews"), esta categoria pega **voz-comprador SUTIL** que sub-agent não destilou da bíblia. Régua "destilação categoria D" canonizada 2026-05-26 (v1.11.4).
 

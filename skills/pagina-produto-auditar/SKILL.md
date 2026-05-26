@@ -174,7 +174,7 @@ Voz-citação OK SÓ quando atende AS DUAS condições:
 
 Reportar no relatório com sugestão de reformulação destilada. Humano decide se aceita.
 
-### 11. `voz-comprador-implicita` (severidade: 🟡 Aviso)
+### 11. `voz-comprador-implicita` (severidade: 🔴 Crítico)
 
 Diferente da categoria 3 (`tone-comprador`) que pega menções EXPLÍCITAS de "compradores"/"reviews"/"avaliações", esta pega **voz-comprador SUTIL** que o sub-agent não destilou da bíblia. Régua "destilação categoria D" canonizada 2026-05-26 (v1.11.4).
 
@@ -262,7 +262,7 @@ Template exato — use blocos idênticos pro painel parsear visualmente:
 
 ## Classificação de severidade
 
-- **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido, tone-comprador.
+- **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4).
 - **🟡 Aviso**: superlativo sem evidência, conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content, voz-citação ficha-técnica burocrática.
 - **🔵 Info**: nota que vale registrar mas não exige ação (ex: "subtitle no limite mínimo de 10 chars, considere expandir").
 

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Skills editoriais do ProjetoAfiliados — preencher/criar/escrever e auditar bíblias v2, páginas individuais de produto, reviews em artigos, meta description, introdução, guia 'Como escolher', auditoria completa de artigo (com readyToLock), descrição de categoria. Skills aceitam URL do painel como input. [v1.12.0] artigo-auditar Fase 1: 4 categorias críticas (html-invalido com sub-checks, voz-comprador-implicita, termos-tecnico-industriais, tag-affiliate-contextual leniente se live=false) + readyToLock contextual. Propagação régua v1.11.4 em 3 skills críticas (artigo-review-criar, artigo-reviews-auditar, pagina-produto-auditar): AUTO-CHECK categoria D (voz-comprador implícita) com 6 exemplos pareados + TERMOS TÉCNICO-INDUSTRIAIS proibidos (contaminação cruzada) + HTML literal em campos texto-puro (sub-checks paridade entre auditores).",
-    "version": "1.12.0"
+    "version": "1.12.1"
   },
   "plugins": [
     {
