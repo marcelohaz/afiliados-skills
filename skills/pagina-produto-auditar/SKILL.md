@@ -115,7 +115,12 @@ Use `superlativas qualificadas` quando houver dado de comparação na bíblia:
 - ✓ "um dos mais leves" (se bíblia tem comparação de peso)
 
 ### 6. `html-invalido`
-Tag não permitida em `fullReview`: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<li>`, `<table>`, `<img>`, `<script>`, `<iframe>`, `<style>`. Permitido apenas: `<p>`, `<strong>`, `<em>`, `<a>`.
+
+**6a. Tags proibidas em `fullReview`** (`<h2>`, `<h3>`, `<ul>`, `<ol>`, `<li>`, `<table>`, `<img>`, `<script>`, `<iframe>`, `<style>`). Permitido apenas: `<p>`, `<strong>`, `<em>`, `<a>`.
+
+**6b. HTML em campos TEXTO-PURO** (sub-tipo da mesma categoria, severity crítica): `subtitle`, `shortDescription` e `specs[].value` são strings TEXTO PURO renderizadas por Astro com `{var}` (escape XSS automático). Qualquer tag HTML literal nesses campos (`<strong>`, `<em>`, `<a>`, `<p>`) aparece como TEXTO LITERAL pro usuário (não-renderizada). Verificar via regex `<\w+[^>]*>` em cada um dos 3 campos. Caso real 2026-05-26: shortDescription do Integralmédica Huger vazou `<strong>energia...</strong>` → exibido literal no card da página individual.
+
+**6c. HTML no meio do texto de `pros[N]` ou `cons[N]`** (após o `:` que separa título de explicação). O `<strong>Título</strong>` no início está PERMITIDO (template usa `set:html` ali); mas `<strong>` aninhado no texto da explicação **vira texto literal** (mesmo bug). Regex de detecção: depois do primeiro `</strong>:`, qualquer `<\w+` é violação.
 
 ### 7. `link-externo-nao-amazon`
 Links em `fullReview` que NÃO apontam pra `amazon.com.br/dp/...`. Página individual não deve ter links externos pra outras lojas/sites.

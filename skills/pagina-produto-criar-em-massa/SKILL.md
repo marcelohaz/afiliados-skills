@@ -327,6 +327,16 @@ EXCETO os passos de git operations (12, 13). Especificamente:
    - Sem superlativos absolutos ("o melhor", "incomparável")
    - Voz analítica (NUNCA cite compradores/reviews/avaliações/estrelas)
    - HTML allowlist em fullReview: só `<p>`, `<strong>`, `<em>`, `<a>`
+   - **CAMPOS TEXTO-PURO** — subtitle, shortDescription e specs[].value são
+     TEXTO PURO, sem HTML inline. Astro renderiza via `{var}` (escape XSS):
+     `<strong>X</strong>` vira `&lt;strong&gt;X&lt;/strong&gt;` no HTML →
+     exibido como texto literal pro usuário, NÃO negrito. Caso real
+     2026-05-26: Integralmédica Huger pros[5] vazou `<strong>energia...</strong>`
+     na shortDescription, apareceu literal no card da página individual.
+     **AUTO-CHECK antes de escrever**: grep `<strong>` em subtitle/
+     shortDescription/specs.value — se achar, ERRADO, reescreva sem markup.
+     (Em pros/cons, `<strong>Título</strong>` no início é OK — template usa
+     `set:html` ali; só não pode `<strong>` DENTRO do texto após o `:`.)
    - Tag-aware nos links Amazon (formato acima)
    - Sem comparações com concorrentes (página individual é sobre o produto sozinho)
    - Voz-citação ("segundo X", "alérgenos confirmam") drop sempre EXCETO

@@ -1,6 +1,6 @@
 ---
 name: artigo-intro-escrever
-description: Escreve a introdução do artigo (body markdown que vai logo após o frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Régua dura — §1 abre com pergunta + keyword em bold, §final fecha com keywordPlural em bold + ✅, 2-4 parágrafos, 300-1500 chars, sem travessão, sem mencionar marcas/modelos específicos. Substitui só o body — frontmatter e produtos ficam intactos. Backup + commit + push + sync VPS.
+description: Escreve a introdução do artigo (body markdown que vai logo após o frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Régua dura — §1 abre com pergunta + keyword em bold, §final fecha com keywordPlural em bold + ✅, 2-3 parágrafos, 300-800 chars, tom conversacional (não consultor científico), sem critérios técnicos detalhados (isso é função do guideContent), sem travessão, sem mencionar marcas/modelos específicos. Substitui só o body — frontmatter e produtos ficam intactos. Backup + commit + push + sync VPS.
 ---
 
 ## Parse de input
@@ -24,7 +24,9 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 Você é o curador editorial da introdução do artigo. A introdução é o **body markdown que aparece logo depois do frontmatter** do `.mdx`, antes da tabela de produtos (que é renderizada pelo componente `<SlugPage>` do `@afiliados/ui`).
 
-Sua função é gerar **2-4 parágrafos curtos** que estabeleçam o contexto do artigo, atendam a régua SEO (keyword bold §1, keywordPlural bold §final, ✅ no fim), e respeitem as restrições editoriais (sem travessão, sem marcas específicas, linguagem geral).
+Sua função é gerar **2-3 parágrafos curtos** que estabeleçam o contexto do artigo, atendam a régua SEO (keyword bold §1, keywordPlural bold §final, ✅ no fim), e respeitem as restrições editoriais (sem travessão, sem marcas específicas, linguagem geral, tom conversacional alinhado com os reviews — NÃO registro científico-médico).
+
+A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina critérios técnicos detalhados (isso é função do `guideContent` H2 "Como escolher" que vem depois). Não usa registro acadêmico nem cita instituições científicas (OMS, FAO, ANVISA, FDA). O leitor que chega aqui ainda está se orientando — a intro abre a porta, não dá aula.
 
 ## Pré-requisitos
 
@@ -37,8 +39,12 @@ Sua função é gerar **2-4 parágrafos curtos** que estabeleçam o contexto do 
 
 - **Nunca toque em nada além do body do .mdx.** Frontmatter (title, description, keyword, products, etc), guideContent, products[] — tudo intacto. Só substitui o conteúdo após o `---` final do frontmatter.
 - **Body é puro markdown.** Verificado: zero artigos do monorepo têm componentes MDX no body — toda a estrutura (TabelaTop, ProductSection, ReviewLayout, etc) é montada pelo `<SlugPage>` via thin-wrapper em `pages/[slug].astro`. Skill nunca insere `<TabelaTop>` ou similar.
-- **2 a 4 parágrafos.** Ideal: 2-3. Cada parágrafo separado por linha em branco.
-- **300 a 1500 chars no total** (todo o body somado).
+- **2 a 3 parágrafos** (obrigatório). Cada parágrafo separado por linha em branco. 4 parágrafos é EXCESSO — intro vira ensaio.
+- **300 a 800 chars no total** (todo o body somado). Alvo: 500-700 chars. Antes era 300-1500 e sub-agents miravam 900-1400, tornando a intro cansativa — apertado em 2026-05-26 após feedback "muito longa, muito explicativa".
+- **Tom conversacional alinhado com os reviews** (NOVA régua 2026-05-26). Escreva como amigo que pesquisou explicando, NÃO como consultor científico/médico ditando. Linguagem cotidiana, sem registro acadêmico. Os reviews do mesmo artigo são o padrão tonal — intro NÃO pode soar mais formal que eles.
+- **NÃO citar instituições científicas** (OMS, FAO, ANVISA, FDA, INMETRO, IFOS). Esse tipo de menção quebra o tom de comparador editorial e vira página de saúde. Se a info importa, ela aparece nos reviews (como feature de produto certificado) ou no guide.
+- **NÃO dar recomendações com número** ("X recomenda N mg/dia"). Números OK quando aparecem nos reviews depois (são features dos produtos comparados). Na intro, números viram recomendação acadêmica e quebram o tom.
+- **NÃO entrar em critérios técnicos detalhados** que pertencem ao `guideContent` H2 "Como escolher". Listar "três fatores que diferenciam premium de entrada" é função do guia, não da intro. Intro fica em PERFIL DE USO e PANORAMA, sem ensinar a escolher.
 - **Bold só em `**markdown**`**, nunca `<b>` ou `<strong>`.
 - **Sem travessão (—).** Use vírgula ou ponto.
 - **Sem superlativos sem evidência** — "o melhor disponível", "incomparável", "imbatível" são proibidos. "Excelente", "ótimo" são OK se contextualizado.
@@ -90,11 +96,11 @@ Sua função é gerar **2-4 parágrafos curtos** que estabeleçam o contexto do 
    - Bíblias completas (pra entender categoria, perfis, ângulos comuns)
    - Instrução opcional (se detectada no prompt do user, passo 1)
 
-8. **Gerar a intro** seguindo a régua editorial (ver seção abaixo). 2-4 parágrafos markdown.
+8. **Gerar a intro** seguindo a régua editorial (ver seção abaixo). 2-3 parágrafos markdown.
 
 9. **Validar mentalmente** antes de salvar:
-   - 300-1500 chars total
-   - 2-4 parágrafos (separados por linha em branco)
+   - 300-800 chars total (alvo 500-700)
+   - 2-3 parágrafos (separados por linha em branco)
    - §1 contém `?` (pergunta) E `**{keyword}**` bold
    - §final contém `**{keywordPlural}**` bold E termina com `. ✅`
    - **Exatamente 2 bolds no body inteiro** (keyword no §1, keywordPlural no §final). NADA mais em bold — sem `**ano**`, sem `**marca**`, sem nenhum outro destaque.
@@ -117,7 +123,7 @@ Sua função é gerar **2-4 parágrafos curtos** que estabeleçam o contexto do 
     - `new_string` = nova intro gerada (sem `---` na frente — Edit substitui APÓS o último `---` do frontmatter)
 
     Se body atual é muito curto (ex: só `[a escrever: ...]`), `old_string` é único na file. Edit funciona direto.
-    Se body atual é a intro velha (300-1500 chars), também é único.
+    Se body atual é a intro velha (300-800 chars), também é único.
     Risco: se a intro velha tem alguma frase EXATA que aparece também no frontmatter (ex: title repetido literal), Edit pode confundir. Mitigação: incluir 1-2 linhas de contexto antes (ex: `---\n\n[body]`) — força match no body especificamente.
 
 12. **Git add + commit + push**:
@@ -157,12 +163,21 @@ Após a pergunta, **2-5 frases** dando contexto:
 
 **SEM mencionar marcas/modelos/ASINs específicos.** Linguagem geral.
 
-### §s do meio (opcional — só se for 3 ou 4 parágrafos)
+### §s do meio (opcional — só se for 3 parágrafos)
 
-Aprofundamento:
-- Panorama da categoria (ex: "o mercado oferece duas tecnologias principais: cartucho e tanque de tinta")
-- Perfis de uso (ex: "quem imprime raramente paga menos com cartucho; quem imprime muito recupera o tanque em poucos meses")
-- O que verificar antes de comprar (rendimento, conectividade, etc — critérios objetivos)
+Aprofundamento PANORÂMICO, NÃO técnico:
+- **Panorama da categoria**: "o mercado oferece duas tecnologias principais: cartucho e tanque de tinta" ✅
+- **Perfis de uso**: "quem imprime raramente paga menos com cartucho; quem imprime muito recupera o tanque em poucos meses" ✅
+- **Decisão por contexto**: "vale a pena pra quem treina pesado / pra uso casual a opção XYZ" ✅
+
+**NÃO entrar em**:
+- ❌ Critérios técnicos detalhados ("três fatores: concentração, certificação, forma química")
+- ❌ Recomendações com números ("OMS recomenda 250-500mg/dia")
+- ❌ Siglas de instituições científicas (OMS, FAO, ANVISA, FDA, IFOS, etc — termos certificadores OK quando aparecem nos reviews como feature)
+- ❌ Jargão médico/científico ("manutenção cardiovascular", "posologia", "forma química do óleo")
+- ❌ Distinções acadêmicas ("triglicerídeo é considerado mais próximo do natural que éster etílico")
+
+Isso tudo é função do `guideContent` H2 "Como escolher" que vem depois. Intro **abre a porta**, guide **ensina a escolher**, reviews **comparam os produtos específicos**.
 
 **SEM bold em nenhuma palavra** — bold é EXCLUSIVO de §1 e §final.
 
@@ -199,6 +214,42 @@ Neste guia, analisamos as principais creatinas disponíveis por tipo, custo-bene
 Se você quer encontrar as **melhores creatinas** do mercado sem perder tempo com pesquisa, está no lugar certo. Confira o ranking completo abaixo. ✅
 ```
 
+### Exemplo 3 — ômega 3 (BAD vs GOOD pareado, caso real 2026-05-26)
+
+**❌ BAD** (924c, registro científico-médico, invade conteúdo de guia):
+
+```
+Qual o **melhor ômega 3** pra escolher em 2026? A decisão depende do que você quer com a suplementação: pra manutenção cardiovascular e cognitiva, a OMS e a FAO recomendam 250 a 500 mg de EPA e DHA por dia pra adulto saudável. Quem não come peixe gordo 2 a 3 vezes por semana pode usar suplemento pra fechar essa conta sem complicar a rotina.
+
+O que diferencia produtos premium de opções de entrada é a soma de três fatores: concentração total de ômega 3 na porção (não no peso da cápsula), selo internacional de pureza que ateste ausência de metais pesados, e a forma química do óleo (triglicerídeo é considerado mais próximo do natural que éster etílico). Posologia e tamanho do pote também pesam no custo por dia de uso contínuo.
+
+Para te ajudar na escolha, reunimos as **melhores ômega 3** disponíveis no Brasil em 2026, comparadas por concentração de EPA e DHA, certificação de pureza, forma química e custo por dose. ✅
+```
+
+Por que está errado:
+- Cita "OMS e FAO" (instituições científicas) e dose acadêmica "250-500mg" — registro médico
+- Lista "três fatores" técnicos (concentração, selo, forma química) — é CONTEÚDO DO GUIA "Como escolher"
+- "Triglicerídeo é mais próximo do natural que éster etílico" — distinção acadêmica
+- "Posologia", "manutenção cardiovascular e cognitiva" — jargão médico
+- 924 chars — acima do range 300-800
+
+**✅ GOOD** (~500c, tom conversacional, contextual):
+
+```
+Qual o **melhor ômega 3** pra escolher em 2026? Pra quem não come peixe gordo na rotina, o suplemento virou prática comum, especialmente entre quem busca apoio cardiovascular ou cognitivo. Mas o mercado tem opções bem diferentes em concentração, certificação e preço, e nem todo pote entrega o que promete pelo valor.
+
+Para te ajudar, reunimos as **melhores ômega 3** disponíveis no Brasil em 2026, comparadas por concentração de EPA e DHA, certificação de pureza e custo por dose. ✅
+```
+
+Por que está OK:
+- Sem siglas de instituição (OMS/FAO sumiram)
+- Sem dose acadêmica (250-500mg sumiu)
+- Cita "EPA e DHA" SÓ no fechamento como sinalização (não como recomendação)
+- Sem lista de "três fatores" — esse trabalho é do guia
+- "Pra quem não come peixe gordo na rotina" — perfil de uso conversacional
+- Termo "concentração / certificação / preço" genérico, sem ensinar a diferença
+- ~500 chars, 2 §
+
 ## Regras duras (bloqueiam audit)
 
 - §1 contém `?` (pergunta) E `**{keyword}**` em bold markdown
@@ -206,12 +257,16 @@ Se você quer encontrar as **melhores creatinas** do mercado sem perder tempo co
 - **Apenas 2 bolds totais no body**: keyword no §1 + keywordPlural no §final. NADA mais em bold.
 - Bold em markdown `**texto**`. NUNCA `<b>` ou `<strong>`.
 - Começa direto com prosa, SEM heading. NÃO use `## Introdução` nem qualquer h2/h3.
-- 2-4 parágrafos (separar com linha em branco). Ideal: 2-3.
-- 300-1500 chars no total.
+- 2-3 parágrafos (separar com linha em branco). 4 parágrafos é EXCESSO.
+- 300-800 chars no total. Alvo: 500-700.
 - Sem travessão (—). Vírgula ou ponto.
 - Sem superlativos sem evidência (`o melhor disponível`, `incomparável`).
 - NÃO mencionar marcas, modelos ou ASINs específicos. Linguagem geral.
 - NÃO inventar dados que não estejam nas bíblias dos produtos.
+- **NÃO citar instituições científicas/regulatórias** (OMS, FAO, ANVISA, FDA, INMETRO, IFOS). Registro acadêmico quebra o tom de comparador editorial.
+- **NÃO dar recomendações com número** ("X recomenda N mg/dia"). Números só nos reviews (são features dos produtos comparados, não recomendações).
+- **NÃO entrar em critérios técnicos detalhados** (forma química, distinções acadêmicas, listas tipo "três fatores"). Esse trabalho é do `guideContent` H2 "Como escolher". Intro fica em PERFIL DE USO + PANORAMA.
+- **Tom conversacional, NÃO científico-médico**. Escreve como amigo que pesquisou, não como consultor. Use os reviews do mesmo artigo como referência tonal — intro NÃO pode soar mais formal que eles.
 
 ## Como usar as bíblias (contexto, não citação)
 

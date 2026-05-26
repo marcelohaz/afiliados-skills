@@ -59,6 +59,14 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
   - ❌ "Risco de contaminação cruzada na linha de produção"
   - ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
 - **HTML allowlist no `fullReview`.** Permitido: `<p>`, `<strong>`, `<em>`, `<a>`. **Proibido**: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<table>`, `<img>`, `<script>`, `<iframe>`, `<style>`.
+
+- **CAMPOS TEXTO-PURO — sem HTML inline.** A allowlist HTML acima é EXCLUSIVA do `fullReview`. Os demais campos editoriais são texto puro renderizado por Astro com `{var}` (escape automático XSS):
+  - `subtitle`: texto puro (o template já envolve em `<strong class="pp-hero__subtitle">`, então `<strong>` literal aqui aninharia ou vazaria como texto)
+  - `shortDescription`: texto puro (renderizado em `<p class="pp-hero__desc">{var}</p>` — qualquer `<strong>` vira `&lt;strong&gt;` no HTML, exibido como texto literal pro usuário)
+  - `specs[].value`: strings simples (já documentado abaixo)
+  - `pros[N]` / `cons[N]`: formato `<strong>Título</strong>: explicação` — o `<strong>` está PERMITIDO **apenas no Título inicial**, não no meio do texto após o `:`. Render via `set:html` em ProsCons component.
+  
+  **AUTO-CHECK obrigatório**: ANTES de gravar `.mdx`, faça uma busca por `<strong>`, `<em>`, `<a `, `<p>` em subtitle/shortDescription/specs.value. Se achar — ERRADO. Reescreva como texto puro destacando via vocabulário, não markup. Caso real 2026-05-26 Bárbara: sub-agent escreveu `<strong>energia com foco preservado</strong>` na shortDescription do Integralmédica Huger; Astro escapou → texto literal pro usuário (não negrito).
 - **Tag-aware nos links Amazon.** Se `siteConfig.affiliateTag` está preenchida, usar `?tag={tag}&linkCode=ogi&th=1&psc=1`. Se está vazia (`''`, estado de construção), usar **URL crua** sem `?tag=...`.
 - **Não listar concorrentes.** É função do artigo comparativo, não da página individual.
 - **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.
