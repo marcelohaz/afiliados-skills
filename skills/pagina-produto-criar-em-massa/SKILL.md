@@ -332,6 +332,42 @@ EXCETO os passos de git operations (12, 13). Especificamente:
    - Voz-citação ("segundo X", "alérgenos confirmam") drop sempre EXCETO
      quando qualifica claim só-fabricante + adiciona valor editorial
    - Operação de destilação bíblia → .mdx (drop marcadores burocráticos)
+
+   - **DESTILAÇÃO CATEGORIA D (operação OBRIGATÓRIA pra cada claim da bíblia)**:
+     Bíblia frequentemente traz claim com voz-comprador IMPLÍCITA dentro de
+     pontosFortes/pontosFracos. Exemplos reais que sub-agents do Opus já
+     caíram em armadilha (caso 2026-05-26, batch melhorpretreino):
+
+       Bíblia → "Sabor maçã verde divide opiniões nos reviews"
+         ❌ "Sabor divide: opiniões sobre o sabor são mistas"  (voz-comprador vazou)
+         ✅ "Sabor maçã verde é frutado, pode não agradar quem prefere
+             perfis mais neutros"
+
+       Bíblia → "Um comprador relata que a fórmula não causou parestesia"
+         ❌ "Um comprador relata que não há formigamento"  (voz-comprador literal)
+         ✅ "A fórmula em uso normal não induz formigamento marcante"
+
+       Bíblia → "Sabor elogiado de forma recorrente nas opiniões disponíveis"
+         ❌ "Bem avaliado pelos compradores"  (voz-comprador)
+         ✅ "Sabor jabuticaba com romã, perfil cítrico-frutado"
+
+       Bíblia → "Paladar bem recebido nos comentários disponíveis"
+         ❌ "Paladar bem recebido pelos comentários disponíveis"  (literal)
+         ✅ "Perfil de sabor adocicado, agradável em uso continuado"
+
+     **AUTO-CHECK final antes de escrever**: se ALGUM campo do .mdx final
+     contém "opiniões", "comentários", "um comprador", "elogios", "recepção",
+     "avaliações", "reviews", "divide opiniões", "bem recebido [pelos/nos]" —
+     está ERRADO. Reescreva como observação ANALÍTICA OBJETIVA antes de
+     finalizar.
+
+   - **Termos técnico-industriais proibidos** (régua específica do projeto):
+     "contaminação cruzada", "linha de produção compartilhada" (sem contexto
+     editorial). Não agregam ao leitor final; soam como ficha técnica.
+     Para alérgenos, usar linguagem editorial:
+       ❌ "Risco de contaminação cruzada na linha de produção"
+       ✅ "Pode conter traços de leite — alérgicos severos devem ler a
+           rotulagem antes do uso"
 8. Validações antes de escrever:
    - Tamanhos no limite
    - HTML allowlist

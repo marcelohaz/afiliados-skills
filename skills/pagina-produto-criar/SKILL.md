@@ -37,6 +37,27 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 - **Sem travessão (—).** Em nenhum campo. Use vírgula, ponto, parênteses ou dois pontos.
 - **Sem superlativos absolutos** sem evidência ("o melhor", "o único", "incomparável").
 - **Voz analítica.** NUNCA cite compradores/reviews/avaliações/estrelas (proibido pela voz editorial). Reescreva insights do `sentimentoCompradores` da bíblia como observação analítica direta.
+
+- **DESTILAÇÃO CATEGORIA D (operação OBRIGATÓRIA pra cada claim da bíblia)**.
+  Bíblia frequentemente traz claim com voz-comprador IMPLÍCITA dentro de
+  `pontosFortes` / `pontosFracos`. Exemplos reais que sub-agents do Opus
+  já caíram em armadilha (caso 2026-05-26, batch melhorpretreino):
+
+  - Bíblia → "Sabor maçã verde divide opiniões nos reviews"
+    - ❌ "Sabor divide: opiniões sobre o sabor são mistas" (voz-comprador literal)
+    - ✅ "Sabor maçã verde é frutado, pode não agradar quem prefere perfis mais neutros"
+  - Bíblia → "Um comprador relata que a fórmula não causou parestesia"
+    - ❌ "Um comprador relata que não há formigamento" (voz-comprador)
+    - ✅ "A fórmula em uso normal não induz formigamento marcante"
+  - Bíblia → "Sabor elogiado de forma recorrente nas opiniões disponíveis"
+    - ❌ "Bem avaliado pelos compradores"
+    - ✅ "Sabor jabuticaba com romã, perfil cítrico-frutado"
+
+  **AUTO-CHECK final antes de escrever**: se ALGUM campo do `.mdx` final contém "opiniões", "comentários", "um comprador", "elogios", "recepção", "avaliações", "reviews", "divide opiniões", "bem recebido [pelos/nos]" — está ERRADO. Reescreva como observação ANALÍTICA OBJETIVA.
+
+- **Termos técnico-industriais proibidos** (régua específica do projeto): "contaminação cruzada", "linha de produção compartilhada" (sem contexto editorial). Não agregam ao leitor final; soam como ficha técnica. Para alérgenos, usar linguagem editorial:
+  - ❌ "Risco de contaminação cruzada na linha de produção"
+  - ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
 - **HTML allowlist no `fullReview`.** Permitido: `<p>`, `<strong>`, `<em>`, `<a>`. **Proibido**: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<table>`, `<img>`, `<script>`, `<iframe>`, `<style>`.
 - **Tag-aware nos links Amazon.** Se `siteConfig.affiliateTag` está preenchida, usar `?tag={tag}&linkCode=ogi&th=1&psc=1`. Se está vazia (`''`, estado de construção), usar **URL crua** sem `?tag=...`.
 - **Não listar concorrentes.** É função do artigo comparativo, não da página individual.
