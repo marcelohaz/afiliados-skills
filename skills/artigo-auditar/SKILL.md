@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 17 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 2 (canon 2026-05-27): qualidade editorial de intro/title/meta/listHeading auditada contra régua v1.11.6. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
+description: Audita artigo inteiro read-only. Combina 21 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade, guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 2 (2026-05-27): qualidade editorial de intro/title/meta/listHeading. Fase 3 (2026-05-27): audit do guideContent (estrutura 5 H2 / tamanho / allowlist HTML / hub-and-spoke links). Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
 ---
 
 ## Parse de input
@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 17 categorias (10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26: html-invalido, voz-comprador-implicita, termos-tecnico-industriais + 4 adicionadas 2026-05-27 Fase 2: intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade — ver "Critérios de auditoria" abaixo). Gerar:
+7. **Rodar auditoria IA** nas 21 categorias (10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26: html-invalido, voz-comprador-implicita, termos-tecnico-industriais + 4 adicionadas 2026-05-27 Fase 2: intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade + 4 adicionadas 2026-05-27 Fase 3: guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke — ver "Critérios de auditoria" abaixo). Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -340,6 +340,80 @@ Audit do campo `listHeading` do frontmatter (H2 que abre a TabelaTop dos produto
 - **Sem travessão**.
 
 Fix sugerido: editar via painel (editor-artigo.html → campo "Heading da tabela").
+
+### `guide-estrutura` (level=`warn`)
+
+Audit da estrutura do `guideContent` HTML (Fase 3, canon 2026-05-27). Régua canon da skill `artigo-guia-escrever`.
+
+**Checklist**:
+- **5 H2 obrigatórios na ordem**:
+  1. "Vale a pena" (ou variante: "Vale a pena comprar")
+  2. "Como escolher"
+  3. "Melhor marca" (ou variante: "Qual a melhor marca")
+  4. "FAQ" (ou variante: "Perguntas frequentes")
+  5. "Conclusão"
+- **1 H2 opcional permitido**: "Por que confiar" (geralmente no início, antes de "Vale a pena")
+- **Ordem importa**: H2s fora de ordem viram issue (ex: "Conclusão" antes de "FAQ").
+- **Sem H1 no guide** — H1 já é o `title` do artigo, duplicar quebra hierarquia SEO.
+- **Sem placeholder** (`[GUIDE TODO`, `Conteúdo do guia aqui`).
+
+**Exemplo flag**:
+- ❌ Guide só tem 3 H2 (faltando "Melhor marca" e "FAQ") → warn "guide-estrutura: faltam 2 H2 obrigatórios"
+- ❌ H2s na ordem "Vale a pena / FAQ / Como escolher" → warn "ordem invertida"
+
+Fix sugerido: rodar skill `artigo-guia-escrever` (gera os 5 H2 na ordem canônica).
+
+### `guide-tamanho` (level=`info`)
+
+Audit do tamanho do `guideContent` (chars). Régua canon: 6000-25000 chars, alvo 12000-18000.
+
+**Checklist**:
+- **<6000 chars**: info "guide-tamanho: muito curto ({N} chars), abaixo do mínimo 6000. Aprofundar análise."
+- **>25000 chars**: info "guide-tamanho: muito longo ({N} chars), acima do máximo 25000. Considerar dividir ou condensar."
+- **6000-25000**: passa silenciosamente (não flag).
+
+Fix sugerido: ajustar via skill `artigo-guia-escrever` ou editar via painel.
+
+### `guide-html-allowlist` (level=`error`)
+
+Audit do HTML do `guideContent`. Régua canon: allowlist estrita.
+
+**Tags PERMITIDAS**:
+- `<h2>`, `<h3>` (h3 pode aninhar dentro de h2)
+- `<p>`, `<ul>`, `<ol>`, `<li>`
+- `<strong>`, `<em>`
+- `<a href="..." rel="nofollow" target="_blank">` (Amazon ou interno)
+- `<br>` (linha em branco — uso pontual)
+
+**Tags PROIBIDAS** (flag como error):
+- `<h1>` (duplica o title do artigo)
+- `<h4>`, `<h5>`, `<h6>` (hierarquia além de h3 não-canônica)
+- `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>` (não usar tabela no guide — usar listas)
+- `<img>`, `<picture>`, `<video>`, `<iframe>` (sem mídia inline no guide)
+- `<script>`, `<style>` (segurança)
+- `<div>`, `<span>` (HTML estrutural — não-canônico)
+
+**Sub-check obrigatório**:
+- **Sem travessão** (`—` ou `–`) — proibido em todo o guide.
+
+Fix sugerido: rodar skill `artigo-guia-escrever` (allowlist enforced no output).
+
+### `guide-links-hub-and-spoke` (level=`info`)
+
+Audit dos links no `guideContent`. Régua hub-and-spoke (canon v1.10.0 da skill `artigo-guia-escrever`, 2026-05-25).
+
+**Checklist**:
+- **Links Amazon (`amazon.com.br/dp/`) em FAQ/Marca/Conclusão**: tag-aware (com `?tag={tag}&linkCode=ogi&th=1&psc=1` se site live). Sem tag = warn.
+- **Preferir link interno sobre Amazon em FAQ/Conclusão** (info): se há peer-article no site (em `content/reviews/`) que cobre o tópico, link interno (`/{slug}/`) é preferido. Ex: FAQ sobre "creatina monohidratada" — link pra `/melhor-creatina-monohidratada/` (peer article do site) em vez de produto Amazon.
+- **Vale a pena / Como escolher**: 0 links (essas 2 seções são EDUCATIVAS, sem links pra não distrair).
+- **Marca**: links Amazon de busca por marca permitidos (`amazon.com.br/s?k=marca-X`).
+- **Sem travessão** (também coberto em guide-html-allowlist, mas reforço aqui).
+
+**Exemplo flag**:
+- ❌ Link `<a href="https://amazon.com.br/dp/X">` SEM tag em site live → warn
+- ℹ️ Conclusão linka `/dp/B123` mas há peer article `/melhor-creatina-monohidratada/` no site → info "considere link interno hub-and-spoke"
+
+Fix sugerido: rodar skill `artigo-guia-escrever` (aplica hub-and-spoke automaticamente).
 
 ## Critérios estruturais (4 checks determinísticos)
 
