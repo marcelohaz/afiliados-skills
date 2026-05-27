@@ -93,8 +93,8 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 8a. **Gerar campos top-level do artigo** (só se stub):
    - `title`: 30-100 chars. Formato: keyword capitalizado + ":" (o resto user completa). Ex: keyword "melhor impressora custo benefício" → title "Melhor Impressora Custo Benefício:"
    - `description`: 50-160 chars, meta-description SEO
-   - `keywordPlural`: forma plural do keyword pro H2 "Comparativo técnico dos {keywordPlural}". Ex: "melhores impressoras custo benefício"
-   - `listHeading`: 10-200 chars. H2 que abre a tabela. Ex: "Quais são as melhores impressoras custo benefício?"
+   - `keywordPlural`: forma plural do keyword. Ex: keyword "melhor impressora custo benefício" → keywordPlural "melhores impressoras custo benefício"
+   - `listHeading`: SEMPRE derivado do `keywordPlural` gerado acima — nunca do keyword singular. Formato: "Quais os/as melhores {keywordPlural} em {ano}?" — use o artigo correto pelo gênero do substantivo plural (impressoras → "as", pré-treinos → "os", creatinas → "as", robôs → "os"). Ex: keywordPlural "melhores impressoras custo benefício" → listHeading "Quais as melhores impressoras custo benefício em 2026?"
    - `excerpt`: 50-300 chars. Teaser do topo
    - `specLabels`: array de 3-10 labels (intersecção dos specs.label dos produtos no lineup). Pra primeiro produto, deriva direto. Pra produtos adicionados depois, deixa como está e atualiza só se o novo produto tiver labels diferentes.
 
