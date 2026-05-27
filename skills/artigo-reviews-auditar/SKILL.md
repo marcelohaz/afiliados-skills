@@ -75,7 +75,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Vazia → links Amazon devem ser crus. Preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`.
 
-7. **Analisar cross-produto** pelos 8 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
+7. **Analisar cross-produto** pelos 12 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
 8. **Reportar em chat** no formato canônico (seção "Formato do relatório").
 
@@ -107,7 +107,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 11 critérios da análise
+## Os 12 critérios da análise
 
 ### 1. `tone-clone` — abertura/frase idêntica entre produtos
 
@@ -126,6 +126,10 @@ Reviews 2+ devem **referenciar** conceitos já explicados em reviews anteriores 
 - ✅ "como mencionado, o sistema EcoTank..."
 - ✅ "conforme a L3250 desta lista, o tanque de tinta..."
 - ❌ "EcoTank é um sistema sem cartuchos onde você abre uma tampa e..." (explicação completa em review 3 depois de já ter feito em review 1)
+
+**Sub-check: listagem exaustiva de preços em pros/cons** — a tabela do artigo já mostra todos os preços; listar cada concorrente com preço num bullet é redundante:
+- ✅ `"Preço mais acessível desta lista: R$ 40, o menor entre os modelos analisados."`
+- ❌ `"Preço mais acessível: R$ 40, abaixo do Produto A (R$ 55), B (R$ 78), C (R$ 80), D e E (R$ 90 cada)..."` → flag 🟡 Médio se 3+ preços de concorrentes no mesmo bullet
 
 ### 3. `incoherence` — contradição interna
 
@@ -271,10 +275,33 @@ A allowlist HTML do `fullReview` (`<p>`, `<strong>`, `<em>`, `<a>`) é **EXCLUSI
 
 **Fix proposto**: reescrever como texto puro. Pra ênfase em shortDescription, omitir bold ou reescrever pra colocar o termo no Título da spec.
 
+### 12. `frase-repetida` — âncora saturada, "lineup" e vocabulário repetitivo
+
+**Este critério é avaliado no artigo inteiro**, não por produto isolado. Rodar após analisar todos os produtos.
+
+**A. `"lineup"` no conteúdo gerado** — qualquer ocorrência em fullReview/pros/cons = 🔴 Crítico.
+Proibido na skill de criação; se passou é regressão. Substituir por: "desta lista", "desta seleção", "neste comparativo", "entre os modelos analisados".
+
+**B. Âncoras comparativas saturadas** — grep em todos os fullReview + pros + cons por: `"desta seleção"`, `"nesta seleção"`, `"desta lista"`, `"neste artigo"`, `"neste comparativo"`, `"entre os modelos"`, `"entre os produtos":
+- Contar total e dividir por nº de produtos com fullReview → média por produto
+- Média > 2× = 🟡 Médio — propor variantes onde há excesso
+- Média > 4× = 🔴 Crítico
+- Identificar quais produtos estão acima de 2× e propor substituições
+
+**Não flagrar** âncoras dentro do limite (1-2× por produto é esperado no estilo comparativo).
+
+**C. Termos técnicos de nicho sem gloss na primeira ocorrência** — verificar se termos especializados aparecem pela primeira vez no artigo sem explicação breve entre parênteses. Flag 🟡 Médio quando encontrar. Exemplos comuns:
+- "BCAAs" sem "(aminoácidos essenciais)" na primeira ocorrência
+- "parestesia" sem "(formigamento na pele)" na primeira ocorrência
+- "cafeína anidra" sem gloss explicativo
+- Outros termos de nicho (farmacologia, ingredientes, processos) que um leitor não-especialista não reconheceria
+
+Nas ocorrências seguintes, o termo pode aparecer sem gloss.
+
 ## Filtros de severidade
 
-- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido
-- **Médio** (propor mudança): tone-clone óbvio, redundancy de conceito, quality vago, incoherence, voz-citacao-ficha-tecnica burocrática
+- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, frase-repetida ("lineup" no conteúdo), frase-repetida (âncora média > 4×)
+- **Médio** (propor mudança): tone-clone óbvio, redundancy de conceito (incl. listagem exaustiva de preços), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, frase-repetida (âncora média 2-4×), frase-repetida (termo técnico sem gloss)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório
@@ -321,6 +348,27 @@ DEPOIS: <p>...</p>
 ### 2. {Nome Produto D} ...
 
 (idem)
+
+---
+
+## 📊 Palavras e frases mais repetidas
+
+> Gerado sempre, independente de findings. Contar em todos os fullReview + pros + cons do artigo.
+
+**Top frases (2-3 palavras)** — excluindo prefixos editoriais obrigatórios ("Para quem é", "Por que gostamos", etc.) e nomes de produtos:
+
+| Frase | Ocorrências |
+|-------|-------------|
+| (top 10 por frequência) | N |
+
+**Top palavras** — excluindo stopwords (o, a, os, as, de, do, da, em, no, na, para, com, que, e, é, ou, se, ao, por, um, uma, não, já, mais, mas, como, seu, sua) e nomes próprios dos produtos:
+
+| Palavra | Ocorrências |
+|---------|-------------|
+| (top 15 por frequência) | N |
+
+> 🚩 Threshold de atenção: frase > 2× nº de produtos com review; palavra > 15× no artigo inteiro.
+> Nomes de produtos e termos inevitáveis do nicho (ex: "dose", "fórmula", "pré-treino") são esperados em alta frequência — foque nas âncoras comparativas e conectores.
 
 ---
 

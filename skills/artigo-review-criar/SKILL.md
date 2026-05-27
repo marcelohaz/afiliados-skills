@@ -130,6 +130,10 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
    - Voz analítica (zero "compradores", "reviews", "avaliações", "posicionamento Amazon")
    - Voz-citação ficha-técnica (zero "alérgenos confirmam", "atributos declaram", "conforme tipo de dieta", "apontada pelo fabricante como") — exceção: claim só-fabricante que adiciona valor editorial, ver Armadilha 4
    - Anti-duplicate vs página individual (frases não-repetidas)
+   - `"lineup"`: deve ser 0 no produto gerado (proibido — substituir por "desta lista", "desta seleção", etc.)
+   - Âncoras comparativas: se > 2× neste produto, substituir excedente por variante ou elide
+   - Pros de preço: verificar se listou 3+ concorrentes com preços — simplificar pra 1 referência ou afirmação geral
+   - Termos técnicos de nicho: se apareceu pela primeira vez no artigo sem gloss, adicionar explicação breve entre parênteses
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-prod-{ASIN}.mdx`. Pattern paralelo ao do painel pra aparecer no card "Histórico de versões".
 
@@ -174,12 +178,21 @@ Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L32
 ```
 
 **Ângulo COMPARATIVO** (diferente da página individual que é autônoma):
-- Pode mencionar "nesta seleção", "entre os modelos analisados"
-- Pode comparar com outros produtos do lineup pelo nome
+- Usar âncoras comparativas com moderação — variar obrigatoriamente entre:
+  `"nesta seleção"` · `"desta lista"` · `"neste artigo"` · `"neste comparativo"` ·
+  `"entre os produtos que analisamos"` · `"entre os modelos analisados"` · `"aqui"` (quando contexto já é claro) · ou **elide** completamente quando o contexto é óbvio
+- **Máx. 2× âncora comparativa por produto.** No artigo inteiro, variar — não repetir a mesma frase produto após produto; o efeito acumula
+- ❌ **`"lineup"` proibido** em conteúdo gerado — jargão em inglês sem equivalente natural; substituir sempre por uma das variantes acima
+- Pode comparar com outros produtos da lista pelo nome
 - Pode dizer "diferente do produto anterior" se houver fluxo narrativo
 
 ### pros (3-8 itens)
 `<strong>Título</strong>: explicação com dado concreto`. Sempre dado verificável.
+
+**Regra de comparação de preço em pros**: mencionar o próprio preço + afirmar posição ("o mais acessível desta lista") + **no máximo 1 referência comparativa**. A tabela do artigo já mostra todos os preços — listar todos os concorrentes no bullet é redundante.
+- ✅ `<strong>Preço mais acessível desta lista</strong>: cerca de R$ 40, o menor entre os modelos analisados.`
+- ✅ `<strong>Melhor custo por dose</strong>: R$ 40 por pote, abaixo das opções com fórmula similar (R$ 78-90).`
+- ❌ `<strong>Preço mais acessível do lineup</strong>: cerca de R$ 40, abaixo do Produto A (R$ 55), Produto B (R$ 78), Produto C (R$ 80), Produto D e E (R$ 90 cada)... desta seleção.`
 
 ### cons (1-5 itens)
 Mesma formatação dos pros. Trade-offs reais.
@@ -307,6 +320,9 @@ Ao decidir QUAL claim vira pro central no artigo vs. spec:
 - ✓ Qualificadores positivos simples ("excelente", "ótimo", "muito bom") são OK — reviews são levemente inclinados ao positivo por design (diretriz #2 da bíblia)
 - ✓ Superlativas qualificadas com dado: "entre as mais econômicas da categoria" (se houver concorrentes na bíblia)
 - Densidade ~5-7 dados quantitativos no fullReview
+- ❌ `"lineup"` proibido em conteúdo gerado — substituir por "desta lista", "desta seleção", "neste comparativo", "entre os modelos analisados"
+- Âncoras comparativas ("desta seleção", "nesta seleção", "desta lista", etc.): máx. 2× por produto; variar ao longo do artigo (ver Ângulo COMPARATIVO acima)
+- Termos técnicos de nicho (ingredientes, processos, farmacologia) → glossar na **primeira ocorrência** do artigo com explicação breve entre parênteses; nas seguintes, usar livremente. Ex: "parestesia (formigamento na pele)", "BCAAs (aminoácidos essenciais)", "cafeína anidra (cafeína seca, a forma padrão)"
 
 ## Anti-duplicate vs página individual
 
