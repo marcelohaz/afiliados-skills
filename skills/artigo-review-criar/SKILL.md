@@ -119,6 +119,7 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 - **specs** (3-10 pares label/value): strings simples sem HTML. Reuso labels comuns do lineup pra alinhar com `specLabels`.
 
 - **subtitle** (10-150 chars): título descritivo curto, sem redundância com nome.
+  > **Se já preenchido no stub (valor não-vazio)**: usar como está — não regenerar. O user pode ter definido o subtítulo no modal "+ Adicionar produto" do painel; respeitar a escolha dele.
 
 - **shortDescription** (50-800 chars): 1-2 frases que resumem o produto pra TabelaProdutos e TopPickCard.
 
