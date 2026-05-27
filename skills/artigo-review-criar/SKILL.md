@@ -118,8 +118,25 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 
 - **specs** (3-10 pares label/value): strings simples sem HTML. Reuso labels comuns do lineup pra alinhar com `specLabels`.
 
-- **subtitle** (10-150 chars): título descritivo curto, sem redundância com nome.
-  > **Se já preenchido no stub (valor não-vazio)**: usar como está — não regenerar. O user pode ter definido o subtítulo no modal "+ Adicionar produto" do painel; respeitar a escolha dele.
+- **subtitle** (10-70 chars): rótulo de posicionamento SEO — espelha buscas reais no Google. NÃO é descrição de specs.
+
+  **Formato**: `"Melhor {tipo-produto} {diferenciador}"` — ou sem "Melhor" quando mais natural.
+  Extrai o **tipo-produto** do `keyword` do artigo: `"melhor pré-treino"` → `"Pré-treino"`, `"melhor impressora custo-benefício"` → `"Impressora"`, `"melhor tablet"` → `"Tablet"`.
+
+  **Sequência posicional default** (guia inteligente — ajuste pela bíblia se não calçar):
+  - Posição 0: `"Melhor {tipo} em Geral"` — campeão da seleção, reflete badge "Melhor Escolha"
+  - Posição 1: `"Melhor {tipo} Custo-Benefício"` — melhor relação qualidade/preço
+  - Posição 2: `"Melhor {tipo} Bom e Barato"` — mais acessível que ainda entrega resultado
+  - Posição 3+: derivado da bíblia — público (`"para Iniciantes"`, `"para Idosos"`, `"para Mulheres"`), feature (`"sem Cafeína"`, `"com Creatina"`), combinação (`"sem Cafeína para Iniciantes"`)
+
+  **Coerência com badge**: se badge preenchido, subtitle deve refletir. Badge `"Custo-Benefício"` → subtitle contém "Custo-Benefício". Badge `"Bom e Barato"` → subtitle contém "Bom e Barato". Badge `"Melhor Escolha"` → subtitle contém "em Geral".
+
+  **O subtitle define o ângulo do review**: a lente escolhida guia o `Para quem é` e o `Resumo`. Ex: subtitle `"para Iniciantes"` → enfatizar facilidade, fórmula mais leve, segurança para quem começa.
+
+  ✅ `"Melhor Pré-treino em Geral"` · `"Melhor Impressora Custo-Benefício"` · `"Melhor Tablet para Desenhar"` · `"Melhor Pré-treino sem Cafeína para Iniciantes"` · `"Melhor Tablet Bom e Barato"`
+  ❌ `"Pré-treino com 400mg de cafeína, creatina e beta-alanina..."` (specs, não posicionamento) · `"Compacta de Orçamento"` (sem keyword âncora)
+
+  > **Se já preenchido no stub (valor não-vazio)**: usar como está — não regenerar.
 
 - **shortDescription** (50-800 chars): 1-2 frases que resumem o produto pra TabelaProdutos e TopPickCard.
 
