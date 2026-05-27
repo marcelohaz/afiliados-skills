@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 13 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
+description: Audita artigo inteiro read-only. Combina 17 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 2 (canon 2026-05-27): qualidade editorial de intro/title/meta/listHeading auditada contra régua v1.11.6. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
 ---
 
 ## Parse de input
@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 13 categorias (10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26: html-invalido, voz-comprador-implicita, termos-tecnico-industriais — ver "Critérios de auditoria" abaixo). Gerar:
+7. **Rodar auditoria IA** nas 17 categorias (10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26: html-invalido, voz-comprador-implicita, termos-tecnico-industriais + 4 adicionadas 2026-05-27 Fase 2: intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade — ver "Critérios de auditoria" abaixo). Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -278,6 +278,68 @@ Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-
 **Fix sugerido pelo audit**: linguagem editorial pra alérgenos:
 - ❌ "Risco de contaminação cruzada na linha de produção"
 - ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
+
+### `intro-qualidade` (level=`warn`)
+
+Audit da qualidade EDITORIAL do body markdown da intro (não só "tem chars > 200" do check estrutural). Régua canon v1.11.6 (canon 2026-05-26).
+
+**Checklist obrigatório** — falhar QUALQUER um vira issue:
+- **Chars 300-800** (alvo 500-700). >1500 chars = ensaio cansativo, <300 = vaga.
+- **2-3 parágrafos** (separados por linha em branco). 4+ parágrafos quebra régua.
+- **§1 inclui pergunta** (`?`) + `**{keyword}**` em bold markdown.
+- **§final inclui** `**{keywordPlural}**` em bold E **termina com `. ✅`** (ponto + espaço + emoji, nada depois).
+- **Exatamente 2 bolds totais** no body inteiro (keyword no §1, keywordPlural no §final). Nada mais em bold.
+- **Sem travessão** (`—` ou `–`).
+- **Sem heading** (`#`, `##`, `<h1>`, `<h2>`, `<h3>`).
+- **Sem mencionar marcas/modelos/ASINs específicos** (linguagem geral).
+- **Sem instituições científicas** (OMS, FAO, ANVISA, FDA, IFOS).
+- **Sem registro acadêmico/médico** (tom conversacional especialista→amigo).
+
+**Exemplo flag**:
+- ❌ "A OMS recomenda 250mg de EPA+DHA diários" → cita instituição
+- ❌ "**Excelente** ômega 3 com **dose alta**" → bolds extras
+- ✅ "Procurando a **melhor impressora**? A decisão começa por..."
+
+Fix sugerido: rodar skill `artigo-intro-escrever` (passa por régua canon completa).
+
+### `title-qualidade` (level=`warn`)
+
+Audit do campo `title` do frontmatter.
+
+**Checklist**:
+- **30-100 chars** (alvo 40-70). <30 = SEO fraco, >100 = truncado no Google.
+- **Inclui `{keyword}` (case-insensitive)** — keyword principal do artigo precisa estar no title.
+- **Não tem placeholder** (`[TITLE TODO`, `Title aqui`, etc).
+- **Não termina com travessão**.
+
+Fix sugerido: editar via painel (editor-artigo.html → campo Título).
+
+### `meta-description-qualidade` (level=`warn`)
+
+Audit do campo `description` do frontmatter (meta description SEO).
+
+**Checklist**:
+- **50-160 chars** (alvo 120-155). <50 = pobre, >160 = truncado no Google.
+- **Single-line** (sem quebras de linha).
+- **Sem aspas duplas internas** (quebra o YAML do frontmatter).
+- **Sem travessão** (`—` ou `–`).
+- **Inclui `{keyword}` ou variante próxima** (case-insensitive).
+- **Não tem placeholder** (`[descrição a definir`, `Meta description aqui`).
+
+Fix sugerido: rodar skill `artigo-meta-escrever`.
+
+### `list-heading-qualidade` (level=`warn`)
+
+Audit do campo `listHeading` do frontmatter (H2 que abre a TabelaTop dos produtos).
+
+**Checklist**:
+- **Existe e não-vazio** (campo obrigatório no schema do .mdx).
+- **10-200 chars** (alvo 30-80).
+- **Não tem placeholder** (`[listHeading TODO`, `Heading aqui`).
+- **Idealmente inclui `{keyword}` ou pergunta**: "Qual a **melhor impressora** em 2026?", "Quais são as **melhores creatinas**?"
+- **Sem travessão**.
+
+Fix sugerido: editar via painel (editor-artigo.html → campo "Heading da tabela").
 
 ## Critérios estruturais (4 checks determinísticos)
 
