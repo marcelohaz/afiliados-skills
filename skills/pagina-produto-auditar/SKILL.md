@@ -261,6 +261,20 @@ Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-
 
 Linguagem editorial em vez de técnica. Aviso é crítico porque quebra a voz, não é um qualificador a debater.
 
+
+### 14. `capitalizacao-duplicacao` (régua v1.18.3, severidade: 🔴 Crítico)
+
+Detecta bugs de substituição mecânica que vazam pro output:
+
+**Sub-checks:**
+- **14a — duplicação contígua**: regex `([a-zA-ZÀ-ÿ\s]{8,40})\1` em qualquer campo. Ex real (`a72e7d9`): "sem empilhar suplementos sem empilhar suplementos"
+- **14b — bullet minúsculo**: bullet de pros/cons começa com `<strong>[a-z]`. Ex real: `<strong>aminoácidos essenciais na fórmula</strong>` (era `<strong>BCAAs na fórmula</strong>` antes da substituição)
+- **14c — minúscula após ponto**: padrão `\. [a-z]` em texto editorial (excluir URLs amazon.com.br). Ex real: "(maior dose declarada). pra emagrecer onde"
+
+**Causa raiz**: substituições mecânicas com palavras minúsculas viram bug em posição de início de frase/bullet, ou colidem com cauda já existente.
+
+**Fix proposto**: capitalizar primeira letra ou destilar duplicação. Bug-class encontrado pela 1ª vez em commit a72e7d9 (melhorpretreino).
+
 ## Filtros editoriais — flag se aparecer nos campos curados
 
 Também sinalizar (severidade `aviso`):

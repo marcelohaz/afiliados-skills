@@ -523,6 +523,16 @@ pagina-produto-criar-em-massa melhorpretreino/B07XYZ123A,B08ABC456B --audit ← 
 
 Args canônico que invoco: `Skill(skill="afiliados-skills:pagina-produto-criar-em-massa", args="melhorpretreino")` (ou com `--audit` se quiser qualidade extra)
 
+
+### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
+
+Antes de gravar, verificar 3 bug-classes que substituições mecânicas podem causar:
+1. **Duplicação contígua**: grep `([a-zA-ZÀ-ÿ\s]{8,40})\1` — se achar, remover duplicado
+2. **Bullet minúsculo**: grep `<strong>[a-z]` em pros/cons — capitalizar primeira letra
+3. **Minúscula após ponto**: grep `\. [a-z]` em texto editorial (excluir URLs) — capitalizar
+
+Caso real (melhorpretreino, commit a72e7d9): "sem empilhar suplementos sem empilhar suplementos", "). pra emagrecer onde...", `<strong>aminoácidos essenciais</strong>` no início de bullet.
+
 ## Limitação intrínseca conhecida
 
 1. **Sem progress logging incremental** — sub-agents só reportam no fim do trabalho, não emitem "[3/10] processando..." conforme andam. Pra batch de 5 min, aceitável; pra batch de 30 min (50+ produtos), user fica no escuro. Mitigação: dividir batches grandes em levas explícitas (skill mãe loga "Leva 1/3 começando").

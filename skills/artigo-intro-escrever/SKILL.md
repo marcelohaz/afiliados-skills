@@ -412,6 +412,16 @@ Exemplos com instrução inline:
 
 Args canônico que invoco: `Skill(skill="artigo-intro-escrever", args="melhorimpressora/melhor-impressora-custo-beneficio")` (instrução vai pelo contexto do prompt natural)
 
+
+### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
+
+Antes de gravar, verificar 3 bug-classes que substituições mecânicas podem causar:
+1. **Duplicação contígua**: grep `([a-zA-ZÀ-ÿ\s]{8,40})\1` — se achar, remover duplicado
+2. **Bullet minúsculo**: grep `<strong>[a-z]` em pros/cons — capitalizar primeira letra
+3. **Minúscula após ponto**: grep `\. [a-z]` em texto editorial (excluir URLs) — capitalizar
+
+Caso real (melhorpretreino, commit a72e7d9): "sem empilhar suplementos sem empilhar suplementos", "). pra emagrecer onde...", `<strong>aminoácidos essenciais</strong>` no início de bullet.
+
 ## Limitação intrínseca conhecida
 
 Sem schema Zod programático no output (diferente do painel), validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (3 bolds em vez de 2, char count em 1510, etc). Mitigação: contar bolds (`**`) e chars depois de gerar e ajustar antes de aplicar.

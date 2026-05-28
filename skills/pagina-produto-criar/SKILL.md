@@ -544,6 +544,16 @@ preenche B098YHFT9S no melhorimpressora
 
 Args canônico que invoco: `Skill(skill="pagina-produto-criar", args="melhorimpressora/epson-ecotank-l3250")`.
 
+
+### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
+
+Antes de gravar, verificar 3 bug-classes que substituições mecânicas podem causar:
+1. **Duplicação contígua**: grep `([a-zA-ZÀ-ÿ\s]{8,40})\1` — se achar, remover duplicado
+2. **Bullet minúsculo**: grep `<strong>[a-z]` em pros/cons — capitalizar primeira letra
+3. **Minúscula após ponto**: grep `\. [a-z]` em texto editorial (excluir URLs) — capitalizar
+
+Caso real (melhorpretreino, commit a72e7d9): "sem empilhar suplementos sem empilhar suplementos", "). pra emagrecer onde...", `<strong>aminoácidos essenciais</strong>` no início de bullet.
+
 ## Limitação intrínseca conhecida
 
 Sem schema Zod programático no output (diferente do painel), a validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (subtitle de 9 chars, fullReview de 290 chars, etc).
