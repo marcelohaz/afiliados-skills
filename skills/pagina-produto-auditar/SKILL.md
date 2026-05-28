@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. 16 categorias de check (claim-vs-bible, tag-affiliate, tone-comprador, travessao, superlativo, html-invalido com 3 sub-checks, link-externo, tamanho-fora-de-faixa, redundancia-com-artigo, voz-citacao-ficha-tecnica, voz-comprador-implicita, termos-tecnico-industriais, chavoes-por-nicho, capitalizacao-duplicacao, concordancia-quebrada-pt-br, health-absolutes-ymyl). Régua v1.19.0 (ChatGPT-Bárbara 2026-05-28) — critérios novos: concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), health-absolutes-ymyl ("uso regular é seguro"/"alternativa segura"/"não causa dano" — Google YMYL). Régua v1.18.0 — critério 13 chavoes-por-nicho. v1.16.0 — tamanho-fora-de-faixa cobre curto E LONGO demais (shortDescription >250 chars, pros/cons >180 chars texto puro). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. 17 categorias de check (claim-vs-bible, tag-affiliate, tone-comprador, travessao, superlativo, html-invalido com 3 sub-checks, link-externo, tamanho-fora-de-faixa, redundancia-com-artigo, voz-citacao-ficha-tecnica, voz-comprador-implicita, termos-tecnico-industriais, chavoes-por-nicho, capitalizacao-duplicacao, concordancia-quebrada-pt-br, health-absolutes-ymyl, voz-eximir-responsabilidade). Régua v1.19.1 (2026-05-28) — voz-eximir-responsabilidade: ban "X mg declarados" parentético, "declarado pelo fabricante", "todas/doses declaradas" (muleta epistêmica). Régua v1.19.0 (ChatGPT-Bárbara 2026-05-28) — critérios novos: concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), health-absolutes-ymyl ("uso regular é seguro"/"alternativa segura"/"não causa dano" — Google YMYL). Régua v1.18.0 — critério 13 chavoes-por-nicho. v1.16.0 — tamanho-fora-de-faixa cobre curto E LONGO demais (shortDescription >250 chars, pros/cons >180 chars texto puro). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
 ---
 
 ## Parse de input
@@ -306,6 +306,25 @@ Detecta bugs de substituição mecânica que vazam pro output:
 - `cientificamente comprovado` / `clinicamente comprovado` (sem citar estudo)
 
 **Fix proposto**: qualificar sempre — "Tolerado pela maioria; consulte um profissional se tem comorbidade" em vez de "uso regular é seguro".
+
+### 17. `voz-eximir-responsabilidade` (régua v1.19.1, severidade: 🔴 Crítico)
+
+**Bug-class** (canon 2026-05-28, Marcelo): "declarado pelo fabricante", "X mg declarados", "todas declaradas" viraram muleta epistêmica — site se eximindo de afirmar diretamente. Se o dado está na ficha técnica, é por definição declarado: redundância pura.
+
+**Sub-checks (regex em todos os 6 campos editoriais)**:
+
+| Sub | Padrão | Caso real |
+|---|---|---|
+| 17a `mg-declarados-parentetico` | `\\d+\\s*(?:mg\|g\|µg\|ml)\\s+declarad[oas]+` | "(400 mg declarados)" |
+| 17b `declarado-pelo-fabricante` | `declarad[oas]+ pelo fabricante` | "declarado pelo fabricante" sobrando |
+| 17c `todas-doses-declaradas` | `(?:todos\|todas\|doses) declarad[oas]+` | "doses todas declaradas" |
+| 17d `alergeno-declarado` | `contém [\\w\\s]+ declarad[oas]+ pelo fabricante` | "Contém glúten declarado pelo fabricante" |
+| 17e `sem-mg-declarado` | `sem mg declarad[ao]` | "Sem mg declarada de creatina" |
+| 17f `conforme-declaracao` | `conforme (?:declaração\|declarado\|declarada)` | "Pode conter lactose conforme declaração" |
+
+**Fix proposto**: drop "declarad*" e verifique se a frase ainda faz sentido — se sim, era redundância. Para alérgenos: "Contém X" direto (rotulagem é obrigatória por lei).
+
+**Exceção CANÔNICA** (não flag): "rende 4.500 páginas, segundo a Epson" — claim só-fabricante + qualifica expectativa.
 
 ## Filtros editoriais — flag se aparecer nos campos curados
 

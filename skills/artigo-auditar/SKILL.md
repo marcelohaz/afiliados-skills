@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 26 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade, guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, tamanho-escannavel-produto, capitalizacao-duplicacao, concordancia-quebrada-pt-br, template-para-quem-e, numeros-em-excesso, health-absolutes-ymyl) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 8 (2026-05-28 v1.19.0): ChatGPT-Bárbara batch — concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), template-para-quem-e (>2 produtos com "ocupa o papel de"), numeros-em-excesso (>2 valores mg/g/R$ por frase), health-absolutes-ymyl ("uso regular é seguro"/"alternativa segura"/"não causa dano" — Google YMYL). Fase 7 (2026-05-28 v1.18.3): sub-check capitalizacao-duplicacao. Fase 6 (2026-05-28 v1.18.0): sub-check chavoes-por-nicho (lê sites-meta.json pra identificar `niche`, depois docs/painel/_data/chavoes-por-nicho.json). Fase 5 (2026-05-28 v1.17.0): shortDescription-tecnico-first. Fase 4 (2026-05-28 v1.16.0): tamanho-escannavel-produto. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
+description: Audita artigo inteiro read-only. Combina 27 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade, guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, tamanho-escannavel-produto, capitalizacao-duplicacao, concordancia-quebrada-pt-br, template-para-quem-e, numeros-em-excesso, health-absolutes-ymyl, voz-eximir-responsabilidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 9 (2026-05-28 v1.19.1): voz-eximir-responsabilidade (ban "X mg declarados" parentético, "declarado pelo fabricante", "todas declaradas" — site se eximindo de afirmar diretamente). Fase 8 (2026-05-28 v1.19.0): ChatGPT-Bárbara batch — concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), template-para-quem-e (>2 produtos com "ocupa o papel de"), numeros-em-excesso (>2 valores mg/g/R$ por frase), health-absolutes-ymyl ("uso regular é seguro"/"alternativa segura"/"não causa dano" — Google YMYL). Fase 7 (2026-05-28 v1.18.3): sub-check capitalizacao-duplicacao. Fase 6 (2026-05-28 v1.18.0): sub-check chavoes-por-nicho (lê sites-meta.json pra identificar `niche`, depois docs/painel/_data/chavoes-por-nicho.json). Fase 5 (2026-05-28 v1.17.0): shortDescription-tecnico-first. Fase 4 (2026-05-28 v1.16.0): tamanho-escannavel-produto. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
 ---
 
 ## Parse de input
@@ -514,6 +514,29 @@ for produto in products:
 **Bloqueia readyToLock?** Sim — YMYL é risco SEO real.
 
 Fix sugerido: qualificar sempre — "Tolerado pela maioria, consulte um profissional se tem comorbidade" em vez de "uso regular é seguro".
+
+### `voz-eximir-responsabilidade` (level=`error`, régua v1.19.1)
+
+**Bug-class** (canon 2026-05-28, Marcelo): "declarado", "declarada", "declarados" e "pelo fabricante" viram muleta epistêmica — site se eximindo de afirmar diretamente. 91 ocorrências combinadas no melhorpretreino. Soa como se a redação não confiasse nos próprios dados.
+
+**Princípio**: se o dado está na ficha técnica, é por definição declarado. Repetir "declarado" é redundância + transfere responsabilidade.
+
+**Sub-checks (regex em todos os campos editoriais)**:
+
+| Sub | Padrão |
+|---|---|
+| `mg-declarados-parentetico` | `\\d+\\s*(?:mg\|g\|µg\|ml)\\s+declarad[oas]+` (ex: "400 mg declarados") |
+| `declarado-pelo-fabricante` | `declarad[oas]+ pelo fabricante` |
+| `todas-doses-declaradas` | `(?:todos\|todas\|doses) declarad[oas]+` |
+| `alergeno-declarado` | `contém [\\w\\s]+ declarad[oas]+ pelo fabricante` |
+| `sem-mg-declarado` | `sem mg declarad[ao]` |
+| `conforme-declaracao` | `conforme (?:declaração\|declarado\|declarada)` |
+
+**Exceção CANÔNICA** (não flag): "rende 4.500 páginas, segundo a Epson" — claim só-fabricante (leitor não verifica sem teste) + qualifica expectativa.
+
+**Bloqueia readyToLock?** Sim — categoria `error`.
+
+Fix sugerido: drop "declarad*" e verifique se a frase ainda faz sentido. Se sim, era redundância. Para alérgenos: "contém X" direto (rotulagem é obrigatória, não precisa qualificar como "declarado").
 
 ## Critérios estruturais (4 checks determinísticos)
 

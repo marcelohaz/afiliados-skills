@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.19.0 (2026-05-28) — ChatGPT-Bárbara batch: auto-check concordância PT-BR (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), health absolutes YMYL banidos ("uso regular é seguro", "alternativa segura", "não causa dano"), linguagem_artificial_max (calibrar/empilhar/pico-e-queda = 0, pico nervoso cap 4), corporativo_max ("diferencial central" cap 2, "posicionamento" cap 3). Régua v1.18.0 — carrega chavoes-por-nicho.json (limites por nicho). v1.17.0 — shortDescription padrão BENEFÍCIO-FIRST (posicionamento na 1ª frase, técnico justifica depois), hard caps alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.19.1 (2026-05-28) — voz-eximir-responsabilidade: ban "X mg declarados" parentético, "declarado pelo fabricante", "todas/doses declaradas". Se o dado está na ficha técnica, é declarado por definição — afirmar direto sem muleta epistêmica. Exceção CANÔNICA: "rende X páginas, segundo a Epson" (claim só-fabricante + qualifica). Régua v1.19.0 (2026-05-28) — ChatGPT-Bárbara batch: auto-check concordância PT-BR (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), health absolutes YMYL banidos ("uso regular é seguro", "alternativa segura", "não causa dano"), linguagem_artificial_max (calibrar/empilhar/pico-e-queda = 0, pico nervoso cap 4), corporativo_max ("diferencial central" cap 2, "posicionamento" cap 3). Régua v1.18.0 — carrega chavoes-por-nicho.json (limites por nicho). v1.17.0 — shortDescription padrão BENEFÍCIO-FIRST (posicionamento na 1ª frase, técnico justifica depois), hard caps alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -592,6 +592,28 @@ Se achar — corrija antes de gravar.
 - "totalmente seguro" / "100% seguro" / "sem riscos" → reescrever qualificando
 - "sem efeitos colaterais" → "Efeitos colaterais raros e leves quando reportados"
 - "cientificamente comprovado" / "clinicamente comprovado" (sem citar estudo)
+
+### Voz-eximir-responsabilidade (régua v1.19.1, canon 2026-05-28)
+
+**Bug-class**: "declarado pelo fabricante", "X mg declarados", "todas declaradas" viram muleta epistêmica — o site se eximindo de afirmar diretamente. Se o dado está na ficha técnica, é por definição declarado: redundância pura.
+
+**3 sub-padrões proibidos**:
+
+a) **"X mg declarados" parentético** (redundância):
+- ❌ "(400 mg declarados)" → ✓ "(400 mg)"
+- ❌ "valina (550 mg) declarados" → ✓ "valina (550 mg)"
+
+b) **"declarado pelo fabricante" sobrando** (transfere responsabilidade):
+- ❌ "doses todas declaradas pelo fabricante" → ✓ "doses transparentes" / "fórmula totalmente declarada"
+- ❌ "restrição etária declarada pelo fabricante é 19 anos" → ✓ "restrição etária 19 anos"
+
+c) **Alérgeno com "declarado"** (rotulagem é obrigatória por lei):
+- ❌ "A fórmula contém glúten declarado pelo fabricante" → ✓ "Contém glúten"
+- ❌ "Sem mg declarada de creatina" → ✓ "Sem creatina específica na fórmula"
+
+**Exceção CANÔNICA** (não flag): "rende até 4.500 páginas, segundo a Epson" — claim só-fabricante (leitor não verifica sem teste próprio) + qualifica expectativa.
+
+**Auto-check**: grep `\d+\s*(mg|g|µg|ml)\s+declarad`, `declarad\w+ pelo fabricante`, `(todos|todas|doses) declarad` antes de gravar. Achou → drop "declarad*" e verifique se a frase ainda faz sentido.
 
 ### Voz consultiva, não corporativa (régua v1.19.0)
 

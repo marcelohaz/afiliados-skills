@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.19.0 (2026-05-28) — ChatGPT-Bárbara batch: auto-check concordância PT-BR (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), "Para quem é" deve variar entre 6+ aberturas (banir "ocupa o papel de" templated), max 2 valores numéricos por frase em comparações cross-produto, health absolutes YMYL banidos ("uso regular é seguro", "alternativa segura", "não causa dano"), linguagem_artificial_max (calibrar/empilhar/pico-e-queda = 0, pico nervoso cap 4), corporativo_max (categoria 15, posicionamento 3). Régua v1.18.0 — passo 0.5 lê `sites-meta.json` pra identificar `niche` do site, depois carrega chavões POR NICHO de `docs/painel/_data/chavoes-por-nicho.json` (cada nicho tem limites específicos: Pré Treino, Creatinas, Tablets, Impressoras, etc.). Régua v1.17.0 — shortDescription PADRÃO BENEFÍCIO-FIRST + hard caps + ban "lineup"/"seleção"/"SKU"/"ASIN"/"trade-off"/"hardcore". Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.19.1 (2026-05-28) — voz-eximir-responsabilidade: ban "declarado"/"declarada"/"declarados" como muleta após número parentético ("400 mg declarados"), ban "declarado pelo fabricante" / "todas declaradas pelo fabricante" / "X declarado pelo fabricante" (site se eximindo de afirmar diretamente). Exceção CANÔNICA: "rende X páginas, segundo a Epson" (claim só-fabricante + qualifica expectativa). Caps reduzidos: declarado 10→3, declarada 15→5, declarados 15→5, fabricante 20→5. Régua v1.19.0 (2026-05-28) — ChatGPT-Bárbara batch: auto-check concordância PT-BR (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), "Para quem é" deve variar entre 6+ aberturas (banir "ocupa o papel de" templated), max 2 valores numéricos por frase em comparações cross-produto, health absolutes YMYL banidos ("uso regular é seguro", "alternativa segura", "não causa dano"), linguagem_artificial_max (calibrar/empilhar/pico-e-queda = 0, pico nervoso cap 4), corporativo_max (categoria 15, posicionamento 3). Régua v1.18.0 — passo 0.5 lê `sites-meta.json` pra identificar `niche` do site, depois carrega chavões POR NICHO de `docs/painel/_data/chavoes-por-nicho.json` (cada nicho tem limites específicos: Pré Treino, Creatinas, Tablets, Impressoras, etc.). Régua v1.17.0 — shortDescription PADRÃO BENEFÍCIO-FIRST + hard caps + ban "lineup"/"seleção"/"SKU"/"ASIN"/"trade-off"/"hardcore". Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -86,6 +86,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    - `ingles_max` → não passar do número
    - `linguagem_artificial_max` → calibrar/empilhar/pico-e-queda/energia metabólica = 0; pico nervoso cap 4 (v1.19.0)
    - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
+   - `voz_eximir_responsabilidade` (v1.19.1) → ban "X mg declarados" parentético, "declarado pelo fabricante", "todos/todas/doses declaradas pelo fabricante", "sem mg declarado". Exceção: "rende X páginas, segundo a Epson" (claim só-fabricante + qualifica)
    - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano" = 0 (YMYL, v1.19.0)
    - `chavoes_estruturais_max` → "ocupa o papel" cap 2, "rotina de emagrecimento" cap 4, "sustenta intensidade" cap 4 (v1.19.0)
    - `concordancia_quebrada_regex` → composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX" = 0 (v1.19.0)
@@ -744,6 +745,40 @@ for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
 - 14c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
 
 Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
+
+### 15. Voz-eximir-responsabilidade (régua v1.19.1, canon 2026-05-28)
+
+**Bug-class**: "declarado pelo fabricante", "X mg declarados", "todas declaradas" viram muleta epistêmica — o site se eximindo de afirmar diretamente. **91 ocorrências combinadas** nos 2 artigos pré-treino. Soa como se a redação não confiasse nos próprios dados.
+
+**Princípio**: se o dado está na ficha técnica do produto, é por definição declarado pelo fabricante. Repetir "declarado" é redundância pura — e transfere responsabilidade desnecessariamente. Quando o número é fato verificável, afirme direto.
+
+**3 sub-padrões proibidos** (regex no JSON `voz_eximir_responsabilidade`):
+
+**15a) "X mg declarados" parentético** (redundância 100%):
+| ❌ Antes | ✓ Depois |
+|---|---|
+| "dose mais alta de cafeína (400 mg declarados)" | "dose mais alta de cafeína (400 mg)" |
+| "valina (550 mg) declarados, reforço pra recuperação" | "valina (550 mg), reforço pra recuperação" |
+| "óxido nítrico declarada pelo fabricante, empata com Dux (2000 mg)" | "óxido nítrico de 2000 mg, empata com Dux" |
+
+**15b) "declarado pelo fabricante" sobrando** (transfere responsabilidade):
+| ❌ Antes | ✓ Depois |
+|---|---|
+| "restrição etária declarada pelo fabricante é 19 anos" | "restrição etária 19 anos" (ou drop, é regulação ANVISA) |
+| "doses todas declaradas pelo fabricante" | "doses transparentes" / "fórmula totalmente declarada" |
+| "todos declarados pelo fabricante" | "todos com mg específico" / drop |
+
+**15c) Alérgeno com "declarado"** (regulação obrigatória, redundância):
+| ❌ Antes | ✓ Depois |
+|---|---|
+| "A fórmula contém glúten declarado pelo fabricante" | "Contém glúten" / "Tem glúten na fórmula" |
+| "Pode conter lactose conforme declaração" | "Pode conter traços de lactose" |
+| "Sem mg declarada de creatina" | "Sem creatina específica na fórmula" / "Creatina embutida sem dose declarada" (se for o caso) |
+
+**Exceção CANÔNICA** (não flag):
+- ✅ "rende até 4.500 páginas em preto, **segundo a Epson**" — claim só-fabricante (rendimento de impressora não tem como leitor verificar sem teste próprio) + qualifica expectativa
+
+**Régua mental antes de gravar**: se a frase tem `\d+ mg declarad` ou `declarad\w+ pelo fabricante` ou `(todas|todos|doses) declarad`, drop "declarad*" e veja se a frase ainda faz sentido. Se sim, era redundância — drop sempre.
 
 ## Invocação
 

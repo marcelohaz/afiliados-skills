@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. 18 critérios — tone-clone, redundância (conceito + palavras-chavão com limites), incoerência, qualidade, buyer-reference explícita, links incorretos, claim-vs-lineup-fato (comparações factualmente erradas), voz-citacao-ficha-tecnica, voz-comprador-implicita (categoria D), termos-tecnico-industriais, html-texto-puro, tamanho-escannavel, chavoes-por-nicho. v1.19.0 (ChatGPT-Bárbara): + concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), + template-para-quem-e (todos os produtos abrindo com "ocupa o papel de X" = flag), + numeros-em-excesso (>2 valores mg/g/R$ por frase), + health-absolutes-ymyl ("uso regular é seguro", "alternativa segura"). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. 19 critérios — tone-clone, redundância (conceito + palavras-chavão com limites), incoerência, qualidade, buyer-reference explícita, links incorretos, claim-vs-lineup-fato (comparações factualmente erradas), voz-citacao-ficha-tecnica, voz-comprador-implicita (categoria D), termos-tecnico-industriais, html-texto-puro, tamanho-escannavel, chavoes-por-nicho. v1.19.0 (ChatGPT-Bárbara): + concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), + template-para-quem-e (todos os produtos abrindo com "ocupa o papel de X" = flag), + numeros-em-excesso (>2 valores mg/g/R$ por frase), + health-absolutes-ymyl ("uso regular é seguro", "alternativa segura"). v1.19.1: + voz-eximir-responsabilidade (ban "declarado" como muleta — "(400 mg declarados)", "declarado pelo fabricante", "todas declaradas"). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -516,9 +516,36 @@ for produto in products:
 
 **Caso real**: melhorpretreino tem "uso regular é seguro", "alternativa segura", "não causa dano" presentes. Risco SEO YMYL real.
 
+### 19. `voz-eximir-responsabilidade` (régua v1.19.1, severidade: 🔴 Crítico)
+
+**Bug-class** (canon 2026-05-28, Marcelo): "declarado", "declarada", "declarados" e "pelo fabricante" viraram muleta epistêmica — site se eximindo de afirmar diretamente. 91 ocorrências combinadas em 2 artigos do melhorpretreino. Soa como se a redação não confiasse nos próprios dados.
+
+**Princípio editorial**: se o dado está na ficha técnica, é por definição declarado pelo fabricante. Repetir "declarado" é redundância + transfere responsabilidade.
+
+**Sub-checks (regex em todos os campos editoriais)**:
+
+| Sub | Regex | Caso real |
+|---|---|---|
+| **19a** `mg-declarados-parentetico` | `\\d+\\s*(?:mg\|g\|µg\|ml\|kcal)\\s+declarad[oas]+` | "(400 mg declarados)", "valina (550 mg) declarados" |
+| **19b** `declarado-pelo-fabricante` | `declarad[oas]+ pelo fabricante` | "restrição etária declarada pelo fabricante", "óxido nítrico declarada pelo fabricante" |
+| **19c** `todas-doses-declaradas` | `(?:todos\|todas\|doses) declarad[oas]+` | "doses todas declaradas pelo fabricante", "todos declarados pelo fabricante" |
+| **19d** `alergeno-declarado` | `contém [\\w\\s]+ declarad[oas]+ pelo fabricante` | "A fórmula contém glúten declarado pelo fabricante" |
+| **19e** `sem-mg-declarado` | `sem mg declarad[ao]` | "Black Skull tem creatina embutida sem mg declarada" |
+| **19f** `conforme-declaracao` | `conforme (?:declaração\|declarado\|declarada)` | "Pode conter lactose conforme declaração" |
+| **19g** `segundo-declaracao-fabricante` | `segundo a declaração do fabricante` | "tem 20% mais segundo a declaração do fabricante" |
+
+**Fix proposto** (drop "declarad*" e veja se a frase faz sentido — se sim, era redundância):
+- ❌ "(400 mg declarados)" → ✓ "(400 mg)"
+- ❌ "doses todas declaradas pelo fabricante" → ✓ "doses transparentes" / "fórmula totalmente declarada"
+- ❌ "contém glúten declarado pelo fabricante" → ✓ "contém glúten"
+- ❌ "sem mg declarada" → ✓ "sem dose específica" / "embutida sem detalhamento"
+
+**Exceção CANÔNICA** (não flag):
+- ✅ "rende 4.500 páginas, segundo a Epson" — claim só-fabricante (leitor não verifica sem teste) + qualifica expectativa (ver `voz-citacao-ficha-tecnica` critério 8 acima — mesma régua aplicada com mais rigor pra "declarado")
+
 ## Filtros de severidade
 
-- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL)
+- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado")
 - **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
