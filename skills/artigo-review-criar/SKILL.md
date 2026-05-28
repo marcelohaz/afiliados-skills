@@ -261,7 +261,18 @@ drop "todos declarados pelo fabricante", drop "preço médio em torno", drop pú
 - Pode comparar com outros produtos pelo nome (sem prefixo "do lineup")
 - Pode dizer "diferente do produto anterior" se houver fluxo narrativo
 
-**Banidas no output editorial** (régua v1.16.0 + v1.17.2, canon 2026-05-28):
+**Banidas no output editorial** (régua v1.16.0 + v1.17.2 + v1.17.3, canon 2026-05-28):
+
+**🚨 JARGÃO TÉCNICO/INTERNO ABSOLUTAMENTE PROIBIDO** (régua v1.17.3 — gap descoberto via melhorpretreino vazou "SKU avaliado" + "ASIN aqui só vem em..."):
+- ❌ `SKU` — termo de dev/estoque que ninguém entende. Use "a versão", "este modelo", "esta apresentação"
+- ❌ `ASIN` — identificador Amazon interno. Use "o produto avaliado", "a versão analisada", "este item"
+- ❌ `UPC`, `EAN`, `GTIN` — códigos de barras, jargão técnico. Drop ou usar "código do produto" se relevante
+- ❌ `datasheet` — jargão de engenharia. Use "ficha técnica" / "rótulo"
+- ❌ `dataset`, `metadata`, `frontmatter` — jargão dev
+- ❌ `notificado` (regulatório) — soa bula. Use "registrado" / "regulado pela ANVISA"
+- ❌ Procedência burocrática: "anúncio Amazon", "datasheet do fabricante", "número de notificação N°..." — drop ou simplifica
+
+**Outras banidas:**
 - ❌ "lineup" — palavra puramente interna, jamais aparece em texto público
 - ❌ **TODAS as variantes de "seleção"** como muleta repetida em reviews de produto:
   - "desta seleção", "nesta seleção", "na seleção", "da seleção"

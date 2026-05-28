@@ -280,6 +280,31 @@ Reportar com sugestão de reformulação destilada. User decide se aceita.
 
 **Severidade: Crítico** (sempre propor mudança) — voz-citação implícita quebra confiança editorial igual à explícita; só é mais difícil de detectar.
 
+### 10b. `jargao-tecnico-vazado` (régua v1.17.3, severidade: CRÍTICO)
+
+Termos de dev/estoque/regulatório que vazaram pro texto público — usuário não entende e quebra confiança editorial. Gap real descoberto no melhorpretreino: "E o SKU avaliado vem só em Laranja", "o ASIN com cafeína só vem em Pink Lemonade".
+
+**Termos PROIBIDOS no texto público** (fullReview, pros, cons, shortDescription, subtitle, specs.value):
+- `\bSKU\b` — jargão de estoque
+- `\bASIN\b` — identificador Amazon interno
+- `\bUPC\b`, `\bEAN\b`, `\bGTIN\b` — códigos de barras
+- `\bdatasheet\b` — jargão engenharia
+- `\bdataset\b`, `\bfrontmatter\b`, `\bmetadata\b` — jargão dev
+- `\bnotificado\b` (regulatório) — soa bula
+
+**Filtro do search** — IGNORAR matches no frontmatter YAML (campos `asin:`, `image:`, etc são técnicos por design e NÃO renderizam pro usuário).
+
+**Fix proposto** (substituições editoriais):
+| ❌ Jargão | ✅ Editorial |
+|---|---|
+| "SKU avaliado" / "SKU disponível" | "versão avaliada" / "este modelo" / "esta apresentação" |
+| "ASIN aqui" / "ASIN com cafeína" | "versão analisada" / "produto avaliado" |
+| "datasheet do fabricante" | "ficha técnica" / "rótulo" |
+| "alimento notificado sob N°..." | "produto registrado na ANVISA" |
+| "o rótulo cita possíveis traços" | "pode conter traços" |
+
+**Severidade: Crítico** — usuário casual vê SKU/ASIN e fica confuso, quebra confiança editorial direto.
+
 ### 10. `termos-tecnico-industriais` — termos de rotulagem técnica (régua v1.11.4)
 
 Termos de **rotulagem industrial** soam burocráticos e quebram voz editorial (especialista→amigo). Régua existia em audits desde 2026-05-17 mas só formalizada em 2026-05-26.

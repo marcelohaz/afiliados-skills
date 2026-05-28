@@ -223,6 +223,19 @@ Sub-agent v1.11.3 reconhecia voz-comprador EXPLÍCITA na bíblia mas CAÍA em SU
 **Exemplo flag (errado vs certo)**:
 - ❌ "Sabor divide opiniões" → ✅ "Sabor maçã verde é frutado, pode não agradar quem prefere perfis mais neutros"
 
+### 12b. `jargao-tecnico-vazado` (régua v1.17.3, severidade: 🔴 Crítico)
+
+Termos de dev/estoque/regulatório que NUNCA devem aparecer no texto público. Gap real descoberto no melhorpretreino: bullets de produto continham "SKU avaliado" / "ASIN aqui só vem em...".
+
+**Termos PROIBIDOS** (em subtitle, shortDescription, fullReview, pros, cons, specs.value):
+- `\bSKU\b`, `\bASIN\b`, `\bUPC\b`, `\bEAN\b`, `\bGTIN\b` — identificadores técnicos
+- `\bdatasheet\b`, `\bdataset\b`, `\bfrontmatter\b`, `\bmetadata\b` — jargão dev
+- `\bnotificado\b` (regulatório) — soa bula
+
+**IGNORAR** matches no frontmatter YAML (`asin:`, `image:` são campos técnicos por design, não renderizam).
+
+**Fix**: substitua por linguagem editorial — "SKU avaliado" → "versão avaliada"; "ASIN aqui" → "produto avaliado"; "alimento notificado sob N°..." → "produto registrado na ANVISA".
+
 ### 12. `termos-tecnico-industriais` (severidade: 🔴 Crítico)
 
 Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-26 v1.11.4). Soam como rotulagem técnica/ANVISA — quebram a voz editorial.
