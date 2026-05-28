@@ -319,7 +319,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 ### Auto-check capitalização + duplicação
 
 - Duplicação contígua: `([a-zA-ZÀ-ÿ\s]{8,40})\1` → remover duplicado
-- Bullet minúsculo: `<strong>[a-z]` em pros/cons → capitalizar
+- Bullet minúsculo em arrays editoriais (`pontosFortes`, `pontosFracos`, `dicasAcionaveis`) — primeira letra de cada item deve ser maiúscula
 - Minúscula após ponto: `\. [a-z]` (excluir URLs) → capitalizar
 - Termo entre parênteses dup: `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)` (ex: "formigamento (formigamento)")
 ## Armadilhas recorrentes — evitar sempre
