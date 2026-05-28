@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar-em-massa
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) de TODAS as páginas individuais vazias de um site, em PARALELO via sub-agents — qualidade IDÊNTICA à skill individual `pagina-produto-criar` (cada sub-agent é conversa fresh do Opus, sem cross-contamination). Skill mãe orquestra: pre-flight bíblias → confirmação interativa → N Agents paralelos (até 10) → 1 commit lote → push + VPS pull → report. Aceita `site` (todos os stubs vazios) OU `site/ASIN1,ASIN2` (subset). Flag opcional `--audit` dispara audit pós-batch em paralelo. NÃO toca em stubs parciais. NÃO cria stubs (pré-requisito: stubs no painel). Régua v1.18.0 — sub-agents carregam chavoes-por-nicho.json baseado no niche do site (Pré Treino, Creatinas, Tablets, etc.) pra respeitar limites editoriais específicos do segmento.
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) de TODAS as páginas individuais vazias de um site, em PARALELO via sub-agents — qualidade IDÊNTICA à skill individual `pagina-produto-criar` (cada sub-agent é conversa fresh do Opus, sem cross-contamination). Skill mãe orquestra: pre-flight bíblias → confirmação interativa → N Agents paralelos (até 10) → 1 commit lote → push + VPS pull → report. Aceita `site` (todos os stubs vazios) OU `site/ASIN1,ASIN2` (subset). Flag opcional `--audit` dispara audit pós-batch em paralelo. NÃO toca em stubs parciais. NÃO cria stubs (pré-requisito: stubs no painel). Régua v1.19.0 (2026-05-28) — sub-agent prompt agora inclui: auto-check concordância PT-BR (composiçãos/combinaçãos/"a produto"/"a formigamento"), health absolutes YMYL banidos ("uso regular é seguro", "alternativa segura"), linguagem_artificial_max (calibrar/empilhar/pico-e-queda = 0), corporativo_max ("diferencial central" cap). Régua v1.18.0 — sub-agents carregam chavoes-por-nicho.json baseado no niche do site (Pré Treino, Creatinas, Tablets, etc.) pra respeitar limites editoriais específicos do segmento.
 ---
 
 ## Parse de input
@@ -298,12 +298,16 @@ Inputs:
 Execute o fluxo da skill `.claude/skills/pagina-produto-criar/SKILL.md` à risca,
 EXCETO os passos de git operations (12, 13). Especificamente:
 
-0.5. **Carregar chavões do nicho** (régua v1.18.0):
+0.5. **Carregar chavões do nicho** (régua v1.18.0, expandida v1.19.0):
    - Leia `docs/painel/sites-meta.json` e identifique `{{site}}.niche` (ex: "Pré Treino", "Creatinas", "Tablets")
    - Leia `docs/painel/_data/chavoes-por-nicho.json`
    - Use `_genericos` + bloco do nicho identificado (se nicho não listado, use só `_genericos`)
    - Aplique limites como guard rail durante geração:
-     - `termos_banidos_absoluto` → NUNCA use no output (lineup, SKU, ASIN, trade-off, hardcore, datasheet, notificado, etc.)
+     - `termos_banidos_absoluto` → NUNCA use no output (lineup, SKU, ASIN, trade-off, hardcore, datasheet, notificado, peers, claim, stack)
+     - `linguagem_artificial_max` → calibrar/empilhar/pico-e-queda/energia metabólica = 0 (v1.19.0); pico nervoso cap 4
+     - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0). Use "o grande ponto é", "categoria premium", "funciona pra quem"
+     - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano", "totalmente seguro", "sem efeitos colaterais", "cientificamente comprovado" = 0 (YMYL, v1.19.0). Qualifique sempre.
+     - `concordancia_quebrada_regex` → grep antes de gravar: composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"/"produtos elaboradas" — corrija (v1.19.0)
      - `ingles_max` → não passe do número (ex: Pré Treino tem cutting ≤25, fat-burner ≤5)
      - `medico_tecnico_max` → variar léxico após atingir limite (ex: parestesia ≤5 → use "formigamento")
      - `industrial_max` → variar com sinônimos PT (ex: fórmula ≤60 → "composição", "mistura", "produto")

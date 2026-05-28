@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. 12 categorias de check (claim-vs-bible, tag-affiliate, tone-comprador, travessao, superlativo, html-invalido com 3 sub-checks, link-externo, tamanho-fora-de-faixa, redundancia-com-artigo, voz-citacao-ficha-tecnica, voz-comprador-implicita, termos-tecnico-industriais). Régua v1.18.0 — critério 13 chavoes-por-nicho (carrega docs/painel/_data/chavoes-por-nicho.json). v1.16.0 — tamanho-fora-de-faixa cobre tanto curto demais quanto LONGO demais (shortDescription >250 chars, pros/cons >180 chars texto puro). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. 16 categorias de check (claim-vs-bible, tag-affiliate, tone-comprador, travessao, superlativo, html-invalido com 3 sub-checks, link-externo, tamanho-fora-de-faixa, redundancia-com-artigo, voz-citacao-ficha-tecnica, voz-comprador-implicita, termos-tecnico-industriais, chavoes-por-nicho, capitalizacao-duplicacao, concordancia-quebrada-pt-br, health-absolutes-ymyl). Régua v1.19.0 (ChatGPT-Bárbara 2026-05-28) — critérios novos: concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), health-absolutes-ymyl ("uso regular é seguro"/"alternativa segura"/"não causa dano" — Google YMYL). Régua v1.18.0 — critério 13 chavoes-por-nicho. v1.16.0 — tamanho-fora-de-faixa cobre curto E LONGO demais (shortDescription >250 chars, pros/cons >180 chars texto puro). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
 ---
 
 ## Parse de input
@@ -274,6 +274,38 @@ Detecta bugs de substituição mecânica que vazam pro output:
 **Causa raiz**: substituições mecânicas com palavras minúsculas viram bug em posição de início de frase/bullet, ou colidem com cauda já existente.
 
 **Fix proposto**: capitalizar primeira letra ou destilar duplicação. Bug-class encontrado pela 1ª vez em commit a72e7d9 (melhorpretreino).
+
+### 15. `concordancia-quebrada-pt-br` (régua v1.19.0, severidade: 🔴 Crítico)
+
+**Bug-class** (ChatGPT-Bárbara 2026-05-28): substituições mecânicas v1.17-1.18 não reconcordaram plural/gênero/artigo.
+
+**Sub-checks (regex em todos os 6 campos editoriais)**:
+
+| Sub | Regex | Exemplo |
+|---|---|---|
+| 15a `plural-aos-errado` | `\b(composição\|combinação\|porção\|injeção\|reação\|opção)s\b` | `composiçãos` → composições |
+| 15b `artigo-fem-antes-masc` | `\b(a\|na\|da\|esta) (produto\|formigamento\|ingrediente\|ativo)\b` | `a produto` → o produto |
+| 15c `artigo-masc-antes-fem` | `\b(o\|no\|do\|este) (fórmula\|dose\|porção\|composição)\b` | `o fórmula` → a fórmula |
+| 15d `adjetivo-quebrado` | `produto[s]? elaborada[s]?\b\|produto ampla\|formula natural` | `produto ampla` → fórmula ampla |
+| 15e `duplicacao-prep` | `\b(?:disponíveis?\|disponível) no em \d{4}\|Pra a (maioria\|primeira)` | `disponíveis no em 2026` → disponíveis em 2026 |
+| 15f `genero-errado` | `\b(as produtos\|os fórmulas)\b` | `as produtos em geral` → os produtos em geral |
+| 15g `termo-duplicado-parens` | `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)` | `formigamento (formigamento)` |
+
+**Fix proposto**: regex find-and-replace direto, sem ambiguidade semântica.
+
+### 16. `health-absolutes-ymyl` (régua v1.19.0, severidade: 🔴 Crítico)
+
+**Bug-class** (ChatGPT-Bárbara ponto 7): absolutos de segurança/saúde violam diretrizes YMYL do Google ("Your Money Your Life") — Google penaliza páginas afiliadas que afirmam segurança absoluta sem fonte.
+
+**Termos banidos absolutos** (limite 0 em qualquer dos 6 campos):
+- `uso regular é seguro`
+- `alternativa segura` (sem qualificar contra o quê)
+- `não causa dano`
+- `totalmente seguro` / `100% seguro` / `sem riscos`
+- `sem efeitos colaterais`
+- `cientificamente comprovado` / `clinicamente comprovado` (sem citar estudo)
+
+**Fix proposto**: qualificar sempre — "Tolerado pela maioria; consulte um profissional se tem comorbidade" em vez de "uso regular é seguro".
 
 ## Filtros editoriais — flag se aparecer nos campos curados
 

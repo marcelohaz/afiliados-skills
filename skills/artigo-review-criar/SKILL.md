@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.18.0 (2026-05-28) — passo 0.5 lê `sites-meta.json` pra identificar `niche` do site, depois carrega chavões POR NICHO de `docs/painel/_data/chavoes-por-nicho.json` (cada nicho tem limites específicos: Pré Treino, Creatinas, Tablets, Impressoras, etc.). Régua v1.17.0 — shortDescription PADRÃO BENEFÍCIO-FIRST + hard caps + ban "lineup"/"seleção"/"SKU"/"ASIN"/"trade-off"/"hardcore". Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.19.0 (2026-05-28) — ChatGPT-Bárbara batch: auto-check concordância PT-BR (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), "Para quem é" deve variar entre 6+ aberturas (banir "ocupa o papel de" templated), max 2 valores numéricos por frase em comparações cross-produto, health absolutes YMYL banidos ("uso regular é seguro", "alternativa segura", "não causa dano"), linguagem_artificial_max (calibrar/empilhar/pico-e-queda = 0, pico nervoso cap 4), corporativo_max (categoria 15, posicionamento 3). Régua v1.18.0 — passo 0.5 lê `sites-meta.json` pra identificar `niche` do site, depois carrega chavões POR NICHO de `docs/painel/_data/chavoes-por-nicho.json` (cada nicho tem limites específicos: Pré Treino, Creatinas, Tablets, Impressoras, etc.). Régua v1.17.0 — shortDescription PADRÃO BENEFÍCIO-FIRST + hard caps + ban "lineup"/"seleção"/"SKU"/"ASIN"/"trade-off"/"hardcore". Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -74,7 +74,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 ## Fluxo
 
-0.5. **Carregar chavões do nicho** (régua v1.18.0):
+0.5. **Carregar chavões do nicho** (régua v1.18.0, expandida v1.19.0):
    ```bash
    # Identificar nicho do site
    bun -e "console.log(require('./docs/painel/sites-meta.json')['$SITE'].niche)"
@@ -82,8 +82,14 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    Read docs/painel/_data/chavoes-por-nicho.json
    ```
    Use o bloco `_genericos` + o bloco do nicho específico (ex: `Pré Treino`, `Creatinas`). Durante geração, **respeite os limites como guard rail editorial**:
-   - `termos_banidos_absoluto` → 0 ocorrências
+   - `termos_banidos_absoluto` → 0 ocorrências (inclui peers/claim/stack/SKU/ASIN/lineup)
    - `ingles_max` → não passar do número
+   - `linguagem_artificial_max` → calibrar/empilhar/pico-e-queda/energia metabólica = 0; pico nervoso cap 4 (v1.19.0)
+   - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
+   - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano" = 0 (YMYL, v1.19.0)
+   - `chavoes_estruturais_max` → "ocupa o papel" cap 2, "rotina de emagrecimento" cap 4, "sustenta intensidade" cap 4 (v1.19.0)
+   - `concordancia_quebrada_regex` → composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX" = 0 (v1.19.0)
+   - `comparacoes_max.max_valores_numericos_por_frase` → max 2 valores mg/g/R$ por frase (v1.19.0)
    - `medico_tecnico_max` → variar léxico após atingir limite
    - `industrial_max` → variar com sinônimos PT-BR
    - `indicacao_medica_max` → não repetir advertência médica em N produtos
@@ -130,6 +136,26 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 <p><strong>Pontos de atenção:</strong> trade-offs, limitações. SEM link de afiliado neste parágrafo.</p>
 <p><strong>Resumo:</strong> fechamento conciso. Inclua 1 link Amazon na última menção.</p>
 ```
+
+**🚨 RÉGUA "Para quem é" — VARIAR ABERTURA (v1.19.0, canon 2026-05-28)**
+
+**Bug detectado em batch melhorpretreino v1.18.x**: 7 dos 11 produtos abriram com `[Produto] ocupa o papel de [Badge] porque...` — template óbvio, pareceu gerado em bloco. **ChatGPT-Bárbara flagou crítico**.
+
+**Régua nova**: o "Para quem é:" **NUNCA** deve começar com a fórmula `[Produto] ocupa o papel de [Badge]`. Varie entre 6+ aberturas canônicas:
+
+| Padrão | Exemplo |
+|---|---|
+| **Perfil + benefício** | "Para quem treina à noite e busca disposição sem cafeína..." |
+| **Contexto comparativo** | "Entre as opções sem cafeína da seleção, este produto se destaca..." |
+| **Conexão funcional** | "Combina melhor com quem busca pump intenso e foco mental..." |
+| **Proposta direta** | "A proposta aqui é atender quem precisa de dose alta de creatina..." |
+| **Diferencial-âncora** | "O grande ponto deste produto é a fórmula sem aditivos artificiais..." |
+| **Cenário concreto** | "Se você imprime poucas páginas por mês e quer custo baixo de entrada..." |
+| **Adjetivo posicional + perfil** | "Vegano e com sabor agradável, é ideal pra quem..." |
+
+**Limite duro**: máximo **2 produtos por artigo** podem usar "ocupa o papel de [badge]" (já está no JSON como `chavoes_estruturais_max.ocupa o papel: 2`). Os demais variam.
+
+**Auto-check antes de gravar**: grep `ocupa o papel` no review gerado. Se aparecer + outros 2 produtos do artigo já usam — reescreve abertura.
 
 - **3 links de afiliado** total (Para quem é + Por que gostamos + Resumo). SEM link em "Pontos de atenção".
 - Formato dos links: `<a href="{amazonUrl}" rel="nofollow" target="_blank">Nome do Produto</a>` onde `amazonUrl` é crua quando tag vazia, com tag quando preenchida.
@@ -561,7 +587,127 @@ Mecânica: depois de gerar o review completo, antes do Edit tool, faz 1 passada 
 
 **Por que importa**: bullets longos viram parágrafos. Parágrafos viram wall-of-text. Wall-of-text quebra escanabilidade — usuário não lê, vai pro próximo produto, pula a decisão.
 
-### 10. Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
+### 10. Auto-check de concordância PT-BR (régua v1.19.0, canon 2026-05-28)
+
+**Bug-class real** (batch melhorpretreino v1.17-1.18): substituições mecânicas (BCAAs→aminoácidos, parestesia→formigamento, fórmula→composição) **NÃO reconcordaram** plural/gênero/artigo. ChatGPT-Bárbara identificou 11+ casos novos só nos 2 artigos pré-treino.
+
+**Padrões mais comuns + auto-check**:
+
+```python
+import re
+
+# 10a) Plural errado em -ãos (em vez de -ões)
+for m in re.finditer(r'\b(composição|combinação|porção|injeção|reação|opção|posição)s\b', campo):
+    print(f"⚠ plural errado: {m.group(0)} → use -ões")
+    # composiçãos → composições, combinaçãos → combinações
+
+# 10b) Artigo errado antes de substantivo masculino (com "a/na/da/esta")
+for m in re.finditer(r'\b(a|na|da|esta|nessa|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto|atleta)\b', campo, re.IGNORECASE):
+    print(f"⚠ artigo errado: {m.group(0)} → use 'o/no/do/este'")
+
+# 10c) Artigo errado antes de substantivo feminino (com "o/no/do/este")
+for m in re.finditer(r'\b(o|no|do|este|nesse|neste|esse) (fórmula|dose|porção|composição|combinação|tolerância)\b', campo, re.IGNORECASE):
+    print(f"⚠ artigo errado: {m.group(0)} → use 'a/na/da/esta'")
+
+# 10d) Concordância de adjetivo quebrada
+for m in re.finditer(r'produto[s]? elaborada[s]?\b|produto ampla|formula natural', campo, re.IGNORECASE):
+    print(f"⚠ concordância: {m.group(0)}")
+    # "produto ampla" → "fórmula ampla"; "formula natural" → "fórmula natural"
+
+# 10e) "no em 20XX" (sobra de substituição)
+for m in re.finditer(r'\b(?:disponíveis?|disponível) no em \d{4}', campo, re.IGNORECASE):
+    print(f"⚠ duplicação prep: {m.group(0)} → 'em 20XX'")
+
+# 10f) "Pra a" / "no o" / sobras de contração
+for m in re.finditer(r'\bPra a (maioria|minoria|primeira|melhor|pior)\b', campo):
+    print(f"⚠ Pra a → Pra ou Para a")
+
+# 10g) "as produtos" / "os fórmulas" — gênero errado
+for m in re.finditer(r'\b(as produtos|os fórmulas|as ingredientes)\b', campo, re.IGNORECASE):
+    print(f"⚠ gênero errado: {m.group(0)}")
+```
+
+**Casos reais** (commits 2026-05-28, melhorpretreino):
+- 10a: `composiçãos` (11x), `combinaçãos` (4x) — devem ser composições/combinações
+- 10b: `a produto` (4x), `a formigamento` (7x), `causa a formigamento` (2x)
+- 10c: nenhum recente
+- 10d: `produto ampla` (1x), `produtos elaboradas` (1x), `melhor formula natural` (1x)
+- 10e: `disponíveis no em 2026` (1x)
+- 10f: `Pra a maioria` (1x)
+- 10g: `as produtos em geral` (1x)
+
+Se achar qualquer bug: corrija ANTES de gravar. Skill atualmente faz isso mentalmente; tempo de re-check é trivial (~5s por campo).
+
+### 11. Voz consultiva, não corporativa (régua v1.19.0, ChatGPT-Bárbara)
+
+**Bug-class**: termos corporativos ("diferencial central", "posicionamento", "segmento", "proposta de valor") quebram voz especialista→amigo.
+
+**Caps no JSON** (`_genericos.corporativo_max`):
+- `categoria`: 15
+- `diferencial central`: 2
+- `diferencial principal`: 3
+- `posicionamento`: 3
+- `segmento`: 3
+- `proposta de valor`: 0 (banido)
+
+**Substituições editoriais**:
+| ❌ Corporativo | ✓ Conversacional |
+|---|---|
+| "O diferencial central é a fórmula sem aditivos" | "O grande ponto é a fórmula sem aditivos" |
+| "Posicionamento de mercado premium" | "Categoria premium" / "Linha mais cara" |
+| "Atende ao segmento de emagrecimento" | "Funciona pra quem está emagrecendo" |
+| "Proposta de valor única" | drop sempre — vazio retórico |
+| "Categoria de pré-treinos sem cafeína" | "Os pré-treinos sem cafeína" |
+
+### 12. Health absolutes YMYL banidos (régua v1.19.0, canon 2026-05-28)
+
+**Bug-class** (ChatGPT ponto 7): absolutos de segurança/saúde violam diretrizes YMYL do Google ("Your Money Your Life") e expõem o site a penalização.
+
+**Termos banidos absolutos** (limite 0):
+- "uso regular é seguro"
+- "alternativa segura" (sem qualificar contra o quê)
+- "não causa dano"
+- "totalmente seguro" / "100% seguro" / "sem riscos"
+- "sem efeitos colaterais"
+- "cientificamente comprovado" / "clinicamente comprovado" (sem citar estudo)
+
+**Substituições**:
+| ❌ Absoluto | ✓ Qualificado |
+|---|---|
+| "Uso regular é seguro" | "Tolerado em uso regular pela maioria; consulte um profissional se tem comorbidade" |
+| "Alternativa segura ao X" | "Alternativa mais leve ao X" |
+| "Não causa dano renal" | "Sem evidência de impacto renal em pessoas saudáveis em doses recomendadas" |
+| "Sem efeitos colaterais" | "Efeitos colaterais raros e leves quando reportados" |
+| "Cientificamente comprovado" | "Sustentado por evidências em estudos" (se houver na bíblia) |
+
+**Auto-check**: grep dos termos exatos antes de gravar. Achou → reescreve qualificando.
+
+### 13. Auto-check max 2 valores numéricos por frase (régua v1.19.0, canon 2026-05-28)
+
+**Bug-class** (ChatGPT-Bárbara ponto 10): frases comparativas viram tabela em prosa quando listam 3+ valores em mg/g/R$.
+
+**Limite duro**: máximo **2 valores numéricos por frase** em comparações cross-produto. Mais que isso → quebrar em 2 frases OU substituir por categoria ("entre os mais altos", "no piso da Anvisa").
+
+**Auto-check**:
+```python
+import re
+# Contar mg/g/R$ por frase
+for frase in re.split(r'[.!?]\s+', campo):
+    valores = re.findall(r'\d+[\.,]?\d*\s*(?:mg|g|R\$)', frase, re.IGNORECASE)
+    if len(valores) > 2:
+        print(f"⚠ {len(valores)} valores em 1 frase: {frase[:200]}")
+```
+
+**Exemplo real** (caso melhorpretreino emagrecer):
+> ❌ "R$ 130 fica abaixo só do Essential Nutrition Beta Action (R$ 225) e acima do Dux Pre Workout (R$ 110), Vitafor V-Fort (R$ 95), Darkness Évora XT e Night Train (R$ 90 cada), 3VS Prohibido (R$ 80), Adaptogen Panic (R$ 78), Black Skull..."
+> (8 preços em 1 frase = tabela em prosa)
+
+> ✓ "Preço médio R$ 130, entre os 3 mais caros analisados. Abaixo só do Essential Nutrition Beta Action (R$ 225)."
+> (2 valores na 1ª frase, 1 na 2ª = legível)
+
+**Exceção canônica**: tabela específica de doses comparativa em **1 lugar único** do fullReview (ex: parágrafo dedicado a comparar cafeína entre 3 produtos) pode usar 3 valores SE houver gancho narrativo claro. Vale 1x por review, não como muleta.
+
+### 14. Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
 
 **Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
 

@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.18.0 (2026-05-28) — carrega chavoes-por-nicho.json (limites por nicho). v1.17.0 — shortDescription padrão BENEFÍCIO-FIRST (posicionamento na 1ª frase, técnico justifica depois), hard caps alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.19.0 (2026-05-28) — ChatGPT-Bárbara batch: auto-check concordância PT-BR (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), health absolutes YMYL banidos ("uso regular é seguro", "alternativa segura", "não causa dano"), linguagem_artificial_max (calibrar/empilhar/pico-e-queda = 0, pico nervoso cap 4), corporativo_max ("diferencial central" cap 2, "posicionamento" cap 3). Régua v1.18.0 — carrega chavoes-por-nicho.json (limites por nicho). v1.17.0 — shortDescription padrão BENEFÍCIO-FIRST (posicionamento na 1ª frase, técnico justifica depois), hard caps alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -73,11 +73,17 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
 ## Fluxo
 
-0.5. **Carregar chavões do nicho** (régua v1.18.0):
+0.5. **Carregar chavões do nicho** (régua v1.18.0, expandida v1.19.0):
    - Identifique `niche` do site em `docs/painel/sites-meta.json`
    - Read `docs/painel/_data/chavoes-por-nicho.json`
    - Use `_genericos` + bloco do nicho (ex: `Pré Treino`, `Creatinas`, `Tablets`)
-   - Limites aplicam como guard rail editorial — não passar de `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max` por artigo
+   - Limites aplicam como guard rail editorial:
+     - `termos_banidos_absoluto` → 0 ocorrências (peers/claim/stack/SKU/ASIN/lineup)
+     - `linguagem_artificial_max` → calibrar/empilhar/pico-e-queda = 0 (v1.19.0)
+     - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
+     - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura" = 0 (YMYL, v1.19.0)
+     - `concordancia_quebrada_regex` → composiçãos/combinaçãos/"a produto"/"a formigamento" = 0 (v1.19.0)
+     - `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max` — não passar do número
 
 1. **Parse args**: aceita formatos `{site}/{slug}` (canônico) ou nomes humanos. Exemplos válidos:
    - `melhorimpressora/epson-ecotank-l3250` ✓
@@ -543,6 +549,62 @@ preenche B098YHFT9S no melhorimpressora
 
 Args canônico que invoco: `Skill(skill="pagina-produto-criar", args="melhorimpressora/epson-ecotank-l3250")`.
 
+### Auto-check de concordância PT-BR (régua v1.19.0, canon 2026-05-28)
+
+**Bug-class real** (batch melhorpretreino v1.17-1.18 — ChatGPT-Bárbara identificou 11+ casos): substituições mecânicas (BCAAs→aminoácidos, parestesia→formigamento, fórmula→composição) **NÃO reconcordaram** plural/gênero/artigo.
+
+**Auto-check antes de gravar — grep regex**:
+
+```python
+import re
+
+# Para cada campo (subtitle, shortDescription, pros, cons, specs.value, fullReview):
+
+# 1) Plural errado em -ãos (deve ser -ões)
+re.search(r'\b(composição|combinação|porção|injeção|reação|opção|posição)s\b', campo)
+# composiçãos → composições, combinaçãos → combinações
+
+# 2) Artigo errado antes de substantivo masculino
+re.search(r'\b(a|na|da|esta|nessa|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto)\b', campo, re.IGNORECASE)
+# "a produto" → "o produto" / "a formigamento" → "o formigamento"
+
+# 3) Artigo errado antes de substantivo feminino
+re.search(r'\b(o|no|do|este|nesse|neste|esse) (fórmula|dose|porção|composição|tolerância)\b', campo, re.IGNORECASE)
+
+# 4) Adjetivo concordância quebrada
+re.search(r'produto[s]? elaborada[s]?\b|produto ampla|formula natural', campo, re.IGNORECASE)
+# "produto ampla" → "fórmula ampla" / "formula natural" → "fórmula natural"
+
+# 5) Duplicação preposicional "no em 20XX"
+re.search(r'\b(?:disponíveis?|disponível) no em \d{4}', campo, re.IGNORECASE)
+```
+
+Se achar — corrija antes de gravar.
+
+### Health absolutes YMYL banidos (régua v1.19.0, canon 2026-05-28)
+
+**Bug-class** (ChatGPT ponto 7): absolutos de segurança/saúde violam diretrizes YMYL do Google.
+
+**Banidos absolutos** (limite 0):
+- "uso regular é seguro" → "Tolerado em uso regular pela maioria; consulte um profissional"
+- "alternativa segura" → "alternativa mais leve"
+- "não causa dano" → "Sem evidência de impacto em pessoas saudáveis em doses recomendadas"
+- "totalmente seguro" / "100% seguro" / "sem riscos" → reescrever qualificando
+- "sem efeitos colaterais" → "Efeitos colaterais raros e leves quando reportados"
+- "cientificamente comprovado" / "clinicamente comprovado" (sem citar estudo)
+
+### Voz consultiva, não corporativa (régua v1.19.0)
+
+Termos corporativos quebram voz especialista→amigo. Caps no JSON:
+- `diferencial central`: 2 / `posicionamento`: 3 / `segmento`: 3 / `proposta de valor`: 0
+
+**Substituições**:
+| ❌ Corporativo | ✓ Conversacional |
+|---|---|
+| "O diferencial central é..." | "O grande ponto é..." |
+| "Posicionamento de mercado premium" | "Categoria premium" / "Linha mais cara" |
+| "Atende ao segmento de X" | "Funciona pra quem X" |
+
 ### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
 
 **Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
@@ -554,18 +616,18 @@ import re
 
 # Para cada campo gerado (shortDescription, fullReview, pros, cons, specs.value):
 
-# 14a) Duplicação contígua (>=8 chars repetidos em sequência)
+# a) Duplicação contígua (>=8 chars repetidos em sequência)
 for m in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
     print(f"⚠ duplicação: {m.group(0)}")
     # → Reescreve removendo a metade duplicada
 
-# 14b) Bullet começa com minúscula (em pros/cons)
+# b) Bullet começa com minúscula (em pros/cons)
 for bullet in pros + cons:
     if re.match(r'<strong>[a-záéíóúâêôãõàèìòùç]', bullet):
         print(f"⚠ bullet minúsculo: {bullet[:60]}")
         # → Capitalize primeira letra dentro de <strong>...</strong>
 
-# 14c) Minúscula após ponto (texto editorial — excluir URLs)
+# c) Minúscula após ponto (texto editorial — excluir URLs)
 for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
     ctx = campo[max(0,m.start()-30):m.end()+30]
     if 'http' in ctx or 'amazon.com.br' in ctx: continue
@@ -575,9 +637,9 @@ for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
 ```
 
 **Exemplos reais** (commit a72e7d9, melhorpretreino):
-- 14a: `"sem empilhar suplementos sem empilhar suplementos"`
-- 14b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
-- 14c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
+- a: `"sem empilhar suplementos sem empilhar suplementos"`
+- b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
+- c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
 
 Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
 

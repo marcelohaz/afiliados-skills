@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. 12 critérios — tone-clone, redundância (conceito + palavras-chavão com limites), incoerência, qualidade, buyer-reference explícita, links incorretos, claim-vs-lineup-fato (comparações factualmente erradas), voz-citacao-ficha-tecnica, voz-comprador-implicita (categoria D), termos-tecnico-industriais, html-texto-puro, tamanho-escannavel (régua v1.16.0), chavoes-por-nicho (régua v1.18.0 — carrega docs/painel/_data/chavoes-por-nicho.json com limites POR NICHO: Pré Treino, Creatinas, Tablets, etc.). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. 18 critérios — tone-clone, redundância (conceito + palavras-chavão com limites), incoerência, qualidade, buyer-reference explícita, links incorretos, claim-vs-lineup-fato (comparações factualmente erradas), voz-citacao-ficha-tecnica, voz-comprador-implicita (categoria D), termos-tecnico-industriais, html-texto-puro, tamanho-escannavel, chavoes-por-nicho. v1.19.0 (ChatGPT-Bárbara): + concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), + template-para-quem-e (todos os produtos abrindo com "ocupa o papel de X" = flag), + numeros-em-excesso (>2 valores mg/g/R$ por frase), + health-absolutes-ymyl ("uso regular é seguro", "alternativa segura"). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -415,10 +415,111 @@ Detecta bugs de substituição mecânica que vazam pro output:
 
 **Fix proposto**: capitalizar primeira letra ou destilar duplicação. Bug-class encontrado pela 1ª vez em commit a72e7d9 (melhorpretreino).
 
+### 15. `concordancia-quebrada-pt-br` (régua v1.19.0, severidade: 🔴 Crítico)
+
+**Bug-class** (ChatGPT-Bárbara 2026-05-28): substituições mecânicas v1.17-1.18 (BCAAs→aminoácidos, parestesia→formigamento, fórmula→composição) **não reconcordaram** plural/gênero/artigo. Identificados 11+ casos em 2 artigos do melhorpretreino.
+
+**Sub-checks** (auto-grep em todos os campos editoriais):
+
+| Sub | Padrão | Exemplo |
+|---|---|---|
+| **15a** | Plural errado `-ãos` (deve ser `-ões`) | `composiçãos` (8x principal, 3x emagrecer), `combinaçãos` (3+1x) |
+| **15b** | Artigo feminino antes de subst. masculino | `a produto` (4x), `a formigamento` (7x), `a mesma formigamento` |
+| **15c** | Artigo masculino antes de subst. feminino | `o fórmula`, `este dose` |
+| **15d** | Adjetivo concordância quebrada | `produto ampla`, `produtos elaboradas`, `formula natural` (sem acento) |
+| **15e** | Duplicação preposicional | `disponíveis no em 2026`, `pra a maioria` |
+| **15f** | Gênero gramatical errado | `as produtos em geral`, `os fórmulas` |
+| **15g** | Termo entre parênteses duplicado | `formigamento (formigamento)` |
+
+**Regex referência** (do JSON `concordancia_quebrada_regex`):
+- `\b(composição|combinação|porção|injeção|reação|opção|posição)s\b`
+- `\b(a|na|da|esta|nessa|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto)\b`
+- `\b(o|no|do|este|nesse|neste|esse) (fórmula|dose|porção|composição|combinação|tolerância)\b`
+- `produtos? elaboradas?\b|produto ampla|formula natural`
+- `\b(?:disponíveis?|disponível) no em \d{4}`
+- `\bPra a (maioria|minoria|primeira|melhor|pior)\b`
+- `\b(as produtos|os fórmulas|as ingredientes)\b`
+- `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)`
+
+**Fix proposto**: corrigir concordância. Bug está sempre em texto colável, sem ambiguidade semântica.
+
+### 16. `template-para-quem-e` (régua v1.19.0, severidade: 🟡 Médio)
+
+**Bug-class** (ChatGPT-Bárbara ponto 4): se >2 produtos do artigo abrem o parágrafo "Para quem é:" com o mesmo padrão `[Produto] ocupa o papel de [Badge]`, vira template óbvio.
+
+**Check programático**:
+```python
+import re
+abertura_template = 0
+for produto in products:
+    review = produto.get('fullReview', '')
+    m = re.search(r'Para quem é:</strong>\s*([^.<]{20,150})', review)
+    if m and re.search(r'ocupa (o|um) (papel|espaço)', m.group(1), re.IGNORECASE):
+        abertura_template += 1
+if abertura_template > 2:
+    print(f"⚠ {abertura_template} produtos usam 'ocupa o papel'. Limite: 2.")
+```
+
+**Caso real melhorpretreino principal**: 7 dos 11 produtos abriram com "ocupa o papel de [Badge]". Severidade médio porque cada review individual é tecnicamente OK; o problema é cross-produto (homogeneidade).
+
+**Fix proposto**: reescrever aberturas dos 4-5 produtos excedentes usando aberturas alternativas:
+- "Para quem treina à noite..." (perfil)
+- "Entre as opções sem cafeína..." (contexto comparativo)
+- "Combina melhor com quem busca..." (conexão funcional)
+- "A proposta aqui é atender quem..." (proposta direta)
+- "O grande ponto deste produto é..." (diferencial-âncora)
+- "Se você imprime poucas páginas..." (cenário concreto)
+
+### 17. `numeros-em-excesso` (régua v1.19.0, severidade: 🟡 Médio)
+
+**Bug-class** (ChatGPT-Bárbara ponto 10): frases comparativas com 3+ valores em mg/g/R$ viram tabela em prosa, perdem escanabilidade.
+
+**Check programático**:
+```python
+import re
+for produto in products:
+    review = produto.get('fullReview', '')
+    for frase in re.split(r'[.!?]\s+', re.sub(r'<[^>]+>', '', review)):
+        valores = re.findall(r'\d+[\.,]?\d*\s*(?:mg|g|R\$)', frase, re.IGNORECASE)
+        if len(valores) > 2:
+            print(f"⚠ {len(valores)} valores em 1 frase: {frase[:200]}")
+```
+
+**Caso real melhorpretreino emagrecer**:
+> "R$ 130 fica abaixo só do Essential Nutrition Beta Action (R$ 225) e acima do Dux Pre Workout (R$ 110), Vitafor V-Fort (R$ 95), Darkness Évora XT e Night Train (R$ 90 cada), 3VS Prohibido (R$ 80), Adaptogen Panic (R$ 78)..."
+> (8 preços em 1 frase = tabela em prosa)
+
+**Fix proposto**: quebrar em 2 frases OU substituir lista por categoria ("entre os 3 mais caros analisados", "no piso da Anvisa", "abaixo só do mais caro do comparativo").
+
+**Exceção canônica**: 1 frase comparativa de doses entre 3 produtos vale por review SE houver gancho narrativo claro. Repetir = chavão.
+
+### 18. `health-absolutes-ymyl` (régua v1.19.0, severidade: 🔴 Crítico)
+
+**Bug-class** (ChatGPT-Bárbara ponto 7): absolutos de segurança/saúde violam diretrizes YMYL do Google ("Your Money Your Life") — Google penaliza páginas afiliadas que afirmam segurança absoluta sem fonte.
+
+**Termos banidos absolutos** (limite 0 em qualquer campo):
+- `uso regular é seguro`
+- `alternativa segura` (sem qualificar contra o quê)
+- `não causa dano`
+- `totalmente seguro` / `100% seguro` / `sem riscos`
+- `sem efeitos colaterais`
+- `cientificamente comprovado` / `clinicamente comprovado` (sem citar estudo)
+
+**Substituições propostas**:
+| ❌ Absoluto | ✓ Qualificado |
+|---|---|
+| "Uso regular é seguro" | "Tolerado em uso regular pela maioria; consulte um profissional se tem comorbidade" |
+| "Alternativa segura ao X" | "Alternativa mais leve ao X" |
+| "Não causa dano renal" | "Sem evidência de impacto renal em pessoas saudáveis em doses recomendadas" |
+| "Sem efeitos colaterais" | "Efeitos colaterais raros e leves quando reportados" |
+| "Cientificamente comprovado" | "Sustentado por evidências em estudos" (se houver na bíblia) |
+
+**Caso real**: melhorpretreino tem "uso regular é seguro", "alternativa segura", "não causa dano" presentes. Risco SEO YMYL real.
+
 ## Filtros de severidade
 
-- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida)
-- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática
+- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL)
+- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório

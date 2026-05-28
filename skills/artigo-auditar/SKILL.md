@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 22 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade, guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, tamanho-escannavel-produto) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 2 (2026-05-27): qualidade editorial de intro/title/meta/listHeading. Fase 3 (2026-05-27): audit do guideContent. Fase 4 (2026-05-28 v1.16.0): tamanho-escannavel-produto (hard caps shortDescription ≤250, pros/cons ≤180 texto puro + ban "lineup"). Fase 5 (2026-05-28 v1.17.0): sub-check shortDescription-tecnico-first (detecta abertura "[Tipo] brasileiro/a da [marca]..." que viola padrão benefício-first). Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug. Fase 7 (2026-05-28 v1.18.3): sub-check capitalizacao-duplicacao (detecta duplicações + bullets minúsculos + minúscula após ponto causados por substituições mecânicas). Fase 6 (2026-05-28 v1.18.0): sub-check chavoes-por-nicho (lê sites-meta.json pra identificar `niche` do site, depois docs/painel/_data/chavoes-por-nicho.json e aplica limites específicos — Pré Treino, Creatinas, Tablets, etc.).
+description: Audita artigo inteiro read-only. Combina 26 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade, guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, tamanho-escannavel-produto, capitalizacao-duplicacao, concordancia-quebrada-pt-br, template-para-quem-e, numeros-em-excesso, health-absolutes-ymyl) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 8 (2026-05-28 v1.19.0): ChatGPT-Bárbara batch — concordancia-quebrada-pt-br (composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"), template-para-quem-e (>2 produtos com "ocupa o papel de"), numeros-em-excesso (>2 valores mg/g/R$ por frase), health-absolutes-ymyl ("uso regular é seguro"/"alternativa segura"/"não causa dano" — Google YMYL). Fase 7 (2026-05-28 v1.18.3): sub-check capitalizacao-duplicacao. Fase 6 (2026-05-28 v1.18.0): sub-check chavoes-por-nicho (lê sites-meta.json pra identificar `niche`, depois docs/painel/_data/chavoes-por-nicho.json). Fase 5 (2026-05-28 v1.17.0): shortDescription-tecnico-first. Fase 4 (2026-05-28 v1.16.0): tamanho-escannavel-produto. Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
 ---
 
 ## Parse de input
@@ -442,6 +442,78 @@ Audit dos limites editoriais de tamanho nos campos do produto-no-artigo. Bullets
 **Bloqueia readyToLock?** Sim — categoria `error`, conta como blocker.
 
 Fix sugerido: rodar skill `artigo-review-criar` (v1.16.0+) com hard caps embutidos, ou destilar manualmente.
+
+### `concordancia-quebrada-pt-br` (level=`error`, régua v1.19.0)
+
+**Bug-class real** (ChatGPT-Bárbara 2026-05-28): substituições mecânicas v1.17-1.18 não reconcordaram plural/gênero/artigo. 11+ casos no melhorpretreino.
+
+**Sub-checks (regex em todos os campos editoriais)**:
+
+| Sub | Regex |
+|---|---|
+| `plural-aos-errado` | `\b(composição\|combinação\|porção\|injeção\|reação\|opção\|posição)s\b` (composiçãos, combinaçãos) |
+| `artigo-fem-antes-masc` | `\b(a\|na\|da\|esta\|nessa\|nesta\|essa) (produto\|formigamento\|ingrediente\|ativo\|estímulo\|composto)\b` |
+| `artigo-masc-antes-fem` | `\b(o\|no\|do\|este\|nesse\|neste\|esse) (fórmula\|dose\|porção\|composição\|tolerância)\b` |
+| `adjetivo-quebrado` | `produto[s]? elaborada[s]?\b\|produto ampla\|formula natural` |
+| `duplicacao-prep` | `\b(?:disponíveis?\|disponível) no em \d{4}\|Pra a (maioria\|primeira\|melhor)` |
+| `genero-errado` | `\b(as produtos\|os fórmulas\|as ingredientes)\b` |
+| `termo-duplicado-parens` | `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)` (ex: `formigamento (formigamento)`) |
+
+**Bloqueia readyToLock?** Sim — categoria `error`, conta como blocker.
+
+Fix sugerido: regex find-and-replace direto, sem ambiguidade semântica.
+
+### `template-para-quem-e` (level=`warn`, régua v1.19.0)
+
+**Bug-class** (ChatGPT-Bárbara ponto 4): >2 produtos do artigo abrindo "Para quem é:" com `[Produto] ocupa o papel de [Badge]` vira template óbvio.
+
+**Check**:
+```python
+import re
+abertura_template = 0
+for produto in products:
+    review = produto.get('fullReview', '')
+    m = re.search(r'Para quem é:</strong>\s*([^.<]{20,150})', review)
+    if m and re.search(r'ocupa (o|um) (papel|espaço)', m.group(1), re.IGNORECASE):
+        abertura_template += 1
+if abertura_template > 2:
+    print(f"⚠ {abertura_template} produtos usam 'ocupa o papel'. Limite: 2.")
+```
+
+**Caso real melhorpretreino principal**: 7 dos 11 produtos. Severidade warn porque cada review individual é OK; problema cross-produto.
+
+Fix sugerido: reescrever aberturas com 6+ padrões canônicos (perfil, contexto comparativo, conexão funcional, proposta direta, diferencial-âncora, cenário concreto).
+
+### `numeros-em-excesso` (level=`warn`, régua v1.19.0)
+
+**Bug-class** (ChatGPT-Bárbara ponto 10): frases com 3+ valores em mg/g/R$ viram tabela em prosa.
+
+**Check**:
+```python
+import re
+for produto in products:
+    review = produto.get('fullReview', '')
+    for frase in re.split(r'[.!?]\s+', re.sub(r'<[^>]+>', '', review)):
+        valores = re.findall(r'\d+[\.,]?\d*\s*(?:mg|g|R\$)', frase, re.IGNORECASE)
+        if len(valores) > 2:
+            print(f"⚠ {len(valores)} valores: {frase[:200]}")
+```
+
+**Caso real**: melhorpretreino emagrecer tem frase com 8 preços. Quebrar em 2 frases ou substituir por categoria ("entre os 3 mais caros").
+
+### `health-absolutes-ymyl` (level=`error`, régua v1.19.0)
+
+**Bug-class** (ChatGPT-Bárbara ponto 7, YMYL): absolutos de segurança/saúde violam Your Money Your Life guidelines do Google.
+
+**Termos banidos** (limite 0):
+- `uso regular é seguro` / `alternativa segura` / `não causa dano`
+- `totalmente seguro` / `100% seguro` / `sem riscos`
+- `sem efeitos colaterais`
+- `cientificamente comprovado` / `clinicamente comprovado` (sem citar estudo)
+
+**Bloqueia readyToLock?** Sim — YMYL é risco SEO real.
+
+Fix sugerido: qualificar sempre — "Tolerado pela maioria, consulte um profissional se tem comorbidade" em vez de "uso regular é seguro".
 
 ## Critérios estruturais (4 checks determinísticos)
 
