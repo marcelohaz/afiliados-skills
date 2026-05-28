@@ -383,8 +383,7 @@ Bullets e shortDescriptions inchados quebram a leitura escannável que o card e 
 
 **Caso real**: bullet do FTW Diabo Verde listou 8 preços de peers num único item (310 chars). Reescrita corta pra "o mais barato deste comparativo" (~85 chars).
 
-### 
-13. `chavoes-por-nicho` (régua v1.18.0, severidade: Crítico)
+### 13. `chavoes-por-nicho` (régua v1.18.0, severidade: 🔴 Crítico)
 
 Lê `docs/painel/_data/chavoes-por-nicho.json` baseado no `niche` do site. Para cada termo definido em `_genericos` + bloco do nicho, conta ocorrências NO TEXTO PÚBLICO (excluindo nomes de produto + frontmatter YAML técnico). Flag Crítico se passar do limite.
 
