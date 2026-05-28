@@ -446,13 +446,17 @@ Frases idênticas literais (ou quase) repetidas em N reviews viram chavão e per
 
 ### 9. Auto-check de tamanho final (régua v1.16.0)
 
-**Antes de gravar o .mdx**, conta caracteres dos campos críticos:
+**Antes de gravar o .mdx**, conta caracteres dos campos críticos (texto puro, descontando tags `<strong>`/`<a>`/`<em>`):
 
 ```
-shortDescription: max 250  → passou? reescreve mais curto
-pros[i]: max 180 (cada item) → passou? reescreve mais curto
-cons[i]: max 180 (cada item) → passou? reescreve mais curto
+shortDescription: max 250 chars (texto puro — campo não tem HTML mesmo)
+pros[i]: max 180 chars texto puro (cada item, descontando markup)
+cons[i]: max 180 chars texto puro (cada item, descontando markup)
 ```
+
+**Por que texto puro**: o HTML é estrutura (template de `<strong>Título</strong>: explicação`), não conteúdo. O leitor lê o texto, não o markup. Cota visual = palavras renderizadas, não bytes do arquivo.
+
+**Como contar mentalmente**: olha o bullet sem `<strong>...</strong>` e sem `<a href="...">...</a>` (mas mantendo o texto entre as tags). Se o resultado passa de 180 chars = reescreve.
 
 Mecânica: depois de gerar o review completo, antes do Edit tool, faz 1 passada de validação. Se algum item passa, **reescreve aquele item específico** (não o review inteiro). Custa 1 round-trip extra de modelo, mas evita gerar o problema do `melhorpretreino` (média bullets 175 chars vs canon 65).
 
