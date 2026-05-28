@@ -236,6 +236,14 @@ Termos de dev/estoque/regulatório que NUNCA devem aparecer no texto público. G
 
 **Fix**: substitua por linguagem editorial — "SKU avaliado" → "versão avaliada"; "ASIN aqui" → "produto avaliado"; "alimento notificado sob N°..." → "produto registrado na ANVISA".
 
+### 13. `chavoes-por-nicho` (régua v1.18.0, severidade: 🔴 Crítico)
+
+Lê `docs/painel/_data/chavoes-por-nicho.json` baseado em `niche` do site (`docs/painel/sites-meta.json`). Conta termos em texto público (subtitle, shortDescription, fullReview, pros, cons, specs.value), excluindo frontmatter YAML técnico (campos `asin:`, `image:`, etc).
+
+Aplica limites de `_genericos` + bloco do nicho específico (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam imediatamente; demais flagam quando passam do `_max` definido.
+
+Fix: variação léxica (alternativas PT-BR documentadas) + destilação cirúrgica.
+
 ### 12. `termos-tecnico-industriais` (severidade: 🔴 Crítico)
 
 Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-26 v1.11.4). Soam como rotulagem técnica/ANVISA — quebram a voz editorial.

@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.17.0 (2026-05-28) — shortDescription PADRÃO BENEFÍCIO-FIRST (posicionamento/benefício na 1ª frase, técnico justifica depois; 3 moldes A/B/C; drop marca+preço+público verboso), hard caps de tamanho (shortDescription ≤250 chars, pros/cons ≤180 chars cada), ban total de "lineup"/"desta seleção" no output editorial, anti-listagem-exaustiva de peers, anti-repetição de frases-padrão. Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.18.0 (2026-05-28) — passo 0.5 carrega chavões POR NICHO de `docs/painel/_data/chavoes-por-nicho.json` (cada nicho tem limites específicos: Pré Treino, Creatinas, Tablets, Impressoras, etc.). Régua v1.17.0 — shortDescription PADRÃO BENEFÍCIO-FIRST + hard caps + ban "lineup"/"seleção"/"SKU"/"ASIN"/"trade-off"/"hardcore". Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -73,6 +73,22 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 - **Português brasileiro editorial** sem gírias.
 
 ## Fluxo
+
+0.5. **Carregar chavões do nicho** (régua v1.18.0):
+   ```bash
+   # Identificar nicho do site
+   bun -e "console.log(require('./docs/painel/sites-meta.json')['$SITE'].niche)"
+   # Ler limites por nicho
+   Read docs/painel/_data/chavoes-por-nicho.json
+   ```
+   Use o bloco `_genericos` + o bloco do nicho específico (ex: `Pré Treino`, `Creatinas`). Durante geração, **respeite os limites como guard rail editorial**:
+   - `termos_banidos_absoluto` → 0 ocorrências
+   - `ingles_max` → não passar do número
+   - `medico_tecnico_max` → variar léxico após atingir limite
+   - `industrial_max` → variar com sinônimos PT-BR
+   - `indicacao_medica_max` → não repetir advertência médica em N produtos
+
+   Se nicho não listado: usa só `_genericos` (limites menos restritivos).
 
 1. **Parse args**: aceita `{site}/{slug-do-artigo} {ASIN-ou-slug-do-produto}` ou variantes humanas. Eu (Claude) interpreto e formato args canônicos antes.
 

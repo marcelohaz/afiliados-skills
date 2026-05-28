@@ -73,6 +73,13 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
 ## Fluxo
 
+
+0.5. **Carregar chavões do nicho** (régua v1.18.0):
+   - Identifique `niche` do site em `docs/painel/sites-meta.json`
+   - Read `docs/painel/_data/chavoes-por-nicho.json`
+   - Use `_genericos` + bloco do nicho (ex: `Pré Treino`, `Creatinas`, `Tablets`)
+   - Limites aplicam como guard rail editorial — não passar de `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max` por artigo
+
 1. **Parse args**: aceita formatos `{site}/{slug}` (canônico) ou nomes humanos. Exemplos válidos:
    - `melhorimpressora/epson-ecotank-l3250` ✓
    - `melhorimpressora epson-ecotank-l3250` ✓

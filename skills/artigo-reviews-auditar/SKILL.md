@@ -383,6 +383,24 @@ Bullets e shortDescriptions inchados quebram a leitura escannável que o card e 
 
 **Caso real**: bullet do FTW Diabo Verde listou 8 preços de peers num único item (310 chars). Reescrita corta pra "o mais barato deste comparativo" (~85 chars).
 
+### 
+13. `chavoes-por-nicho` (régua v1.18.0, severidade: Crítico)
+
+Lê `docs/painel/_data/chavoes-por-nicho.json` baseado no `niche` do site. Para cada termo definido em `_genericos` + bloco do nicho, conta ocorrências NO TEXTO PÚBLICO (excluindo nomes de produto + frontmatter YAML técnico). Flag Crítico se passar do limite.
+
+Filtros:
+- Excluir matches em campos YAML (`asin:`, `image:`, `name:` quando contém o termo só por ser nome de produto)
+- Excluir frases canônicas da intro: "Preparamos uma seleção pra", "Esta seleção reúne os melhores"
+- Excluir URLs Amazon (`/dp/`, `/s?k=`)
+
+Severidade:
+- `termos_banidos_absoluto` > 0 → Crítico (lineup, SKU, ASIN, trade-off, hardcore, etc.)
+- Limite numérico ultrapassado → Crítico se passou 50%+, Médio se 10-50%, Info se <10%
+
+Fix proposto: variação léxica conforme alternativas PT-BR documentadas em `artigo-review-criar` v1.17.x ou destilação cirúrgica.
+
+
+
 ## Filtros de severidade
 
 - **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida)
