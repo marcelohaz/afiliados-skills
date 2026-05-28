@@ -563,37 +563,41 @@ Mecânica: depois de gerar o review completo, antes do Edit tool, faz 1 passada 
 
 ### 10. Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
 
-**Bug-class real** descoberto no melhorpretreino: substituições mecânicas (find/replace de chavões, renomeação de termos) podem causar:
-- **Duplicação**: substituição cria texto que colide com cauda já existente. Caso real: `"Pacote premium pra quem quer fórmula completa"` → `"Pacote completo pra quem quer fórmula sem empilhar suplementos"` colidiu com `"sem empilhar suplementos"` que já existia no final → `"sem empilhar suplementos sem empilhar suplementos"`.
-- **Capitalização errada após substituição**: `"em cutting"` → `"pra emagrecer"` deixou `"). pra emagrecer onde"` (minúscula após ponto). `"BCAAs"` → `"aminoácidos essenciais"` quebrou bullets que começam com `<strong>aminoácidos`.
+**Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
 
-**Auto-check obrigatório ANTES de gravar o .mdx**:
+**Auto-check obrigatório ANTES de gravar**:
 
 ```python
-# Para cada campo gerado (shortDescription, fullReview, pros, cons, specs):
-# 1) Duplicação de texto contíguo
 import re
-for match in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
-    print(f"⚠ duplicação: {match.group(0)}")
-    # Reescreve removendo duplicação
 
-# 2) Bullet começa com minúscula (em pros/cons)
+# Para cada campo gerado (shortDescription, fullReview, pros, cons, specs.value):
+
+# 14a) Duplicação contígua (>=8 chars repetidos em sequência)
+for m in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
+    print(f"⚠ duplicação: {m.group(0)}")
+    # → Reescreve removendo a metade duplicada
+
+# 14b) Bullet começa com minúscula (em pros/cons)
 for bullet in pros + cons:
     if re.match(r'<strong>[a-záéíóúâêôãõàèìòùç]', bullet):
         print(f"⚠ bullet minúsculo: {bullet[:60]}")
-        # Capitalize primeira letra dentro de <strong>
+        # → Capitalize primeira letra dentro de <strong>...</strong>
 
-# 3) Minúscula após ponto (em texto editorial — excluir URLs)
-for match in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
-    ctx = campo[max(0,match.start()-30):match.end()+30]
+# 14c) Minúscula após ponto (texto editorial — excluir URLs)
+for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
+    ctx = campo[max(0,m.start()-30):m.end()+30]
     if 'http' in ctx or 'amazon.com.br' in ctx: continue
-    print(f"⚠ minúscula após ponto: ...{ctx}...")
-    # Capitalize a letra
+    if re.search(r'\d+\. \w', ctx[:50]): continue  # lista numerada
+    print(f"⚠ minúsc após ponto: ...{ctx}...")
+    # → Capitalize a letra (.+ espaço + Letra)
 ```
 
-**Aplica em**: shortDescription, fullReview, pros, cons, specs.value.
+**Exemplos reais** (commit a72e7d9, melhorpretreino):
+- 14a: `"sem empilhar suplementos sem empilhar suplementos"`
+- 14b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
+- 14c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
 
-**Se achar**: corrige antes de gravar. Não bloqueia a geração, mas evita commit com bug.
+Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
 
 ## Invocação
 
