@@ -311,10 +311,12 @@ EXCETO os passos de git operations (12, 13). Especificamente:
 6. Gere os 6 campos seguindo as regras detalhadas em pagina-produto-criar/SKILL.md:
    - subtitle (10-150 chars): título descritivo editorial, sem redundância
      com o nome do produto, SEM spec dump
-   - shortDescription (40-800 chars): 1-2 frases resumindo + ângulo
-   - pros (3-8 items, 8-300 chars cada): formato `<strong>Título</strong>: explicação`
-     com dado concreto
-   - cons (1-5 items, mesmo formato): pontos de atenção
+   - shortDescription (50-250 chars, alvo 150-220): 1-2 frases resumindo +
+     ângulo. **HARD CAP 250 chars** (régua v1.16.0). Canon `melhoraspirador`: 225 média.
+   - pros (3-8 items, 60-180 chars texto puro cada): formato
+     `<strong>Título</strong>: explicação` com dado concreto. **HARD CAP 180 chars**
+     texto puro (sem markup HTML). Canon `melhoraspirador`: 65 chars/item média.
+   - cons (1-5 items, 60-180 chars texto puro cada): mesmo formato e mesmos limites
    - specs (3-10 pares): label + value strings simples
    - fullReview (300-3000 chars HTML): 4 parágrafos marcados:
      `<p><strong>Para quem é:</strong> ...</p>`

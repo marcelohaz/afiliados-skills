@@ -45,6 +45,14 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 
 A bíblia do ASIN está OK e a página individual existe (verificado pelo gate Fase 2 quando o stub foi criado).
 
+## Nota terminológica — "lineup"
+
+**"lineup" é jargão técnico interno** do projeto pra "lista de produtos do artigo" (campo `products[]` no frontmatter). Aparece em mensagens de erro técnicas, nomes de endpoints (`make-reviews-stub`, `add-products-stub`), código do painel.
+
+**No output editorial PÚBLICO (o que o usuário lê no site), "lineup" é BANIDA** — termo em inglês que não cabe na voz editorial PT-BR. Use "lista de produtos", "comparativo", "entre os modelos analisados".
+
+Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo, exemplos ❌ ruins, definição da régua de ban). Isso é OK — é a régua descrevendo a si mesma. **Distinção mental**: contexto técnico (skill, código, erros) ≠ output editorial (texto do .mdx).
+
 ## Invariantes
 
 - **Nunca invente.** Cada claim numérico tem origem rastreável na bíblia (`specsAmazon`, `doFabricante`, `pontosFortes`, etc).

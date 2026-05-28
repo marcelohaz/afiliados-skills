@@ -40,6 +40,14 @@ Usar **a cada 3 produtos preenchidos** ou **no final do artigo antes de travar**
 
 Se algum requisito falhar, abortar com mensagem clara.
 
+## Nota terminológica — "lineup"
+
+**"lineup" é jargão técnico interno** do projeto pra "lista de produtos do artigo" (campo `products[]` no frontmatter). Aparece em nomes de critérios (`claim-vs-lineup-fato`), endpoints e mensagens técnicas.
+
+**No output editorial dos .mdx, "lineup" é BANIDA** — é uma das palavras-chavão que esta audit flagra como Crítico no critério 2b. Quando você vê "lineup" na própria SKILL.md (em nomes de critério, contexto técnico), isso é OK — é a régua descrevendo a si mesma.
+
+**Distinção mental**: nome de critério/contexto técnico ≠ ocorrência no `.mdx` do artigo.
+
 ## Invariantes
 
 - **EDIÇÃO MÍNIMA**: preserve wording original sempre que possível. Só proponha mudança onde tem violação clara de critério.

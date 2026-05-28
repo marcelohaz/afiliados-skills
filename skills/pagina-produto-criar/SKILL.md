@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Cria backup, commit, push, dispatch VPS pull.
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.16.0 (2026-05-28) — hard caps de tamanho alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -171,15 +171,19 @@ Exemplos ruins:
 
 Regra prática: se subtitle parece "ficha técnica resumida", reescreva como posicionamento editorial. Specs vivem na tabela `specs`.
 
-### 2. `shortDescription` (string, 40-800 chars)
+### 2. `shortDescription` (string, 50-250 chars, alvo 150-220)
 
 1-2 frases que aparecem no hero, abaixo do nome. Resumo do produto + ângulo principal.
 
-Exemplo: `"Impressora EcoTank com tanque de tinta recarregável, custo por página baixo e impressão duplex automática. Indicada para uso doméstico ou escritório pequeno com volume médio de impressão."`
+**HARD CAP em 250 chars** (alinhado com `artigo-review-criar` v1.16.0). Apesar de a página individual ter mais "espaço editorial" que a tabela do artigo, o shortDescription fica num card hero — texto longo passa de 3-4 linhas e quebra escanabilidade. Canon `melhoraspirador`: média 225 chars.
 
-### 3. `pros` (array de strings, 3-8 itens, cada 8-300 chars)
+Exemplo: `"Impressora EcoTank com tanque de tinta recarregável, custo por página baixo e impressão duplex automática. Indicada para uso doméstico ou escritório pequeno com volume médio de impressão."` *(204 chars — OK)*
+
+### 3. `pros` (array de strings, 3-8 itens, cada 60-180 chars com alvo 80-130)
 
 Formato: `<strong>Título</strong>: explicação`. A explicação **SEMPRE com dado concreto**, nunca genérico. Paridade com prompts de artigo (`formato_pros_cons_specs` shared).
+
+**HARD CAP em 180 chars/item** (texto puro, descontando markup). Canon `melhoraspirador`: média 65 chars/item. Bullet > 180 chars vira parágrafo e quebra escanabilidade.
 
 Exemplos bons:
 - ✓ `"<strong>Rendimento elevado</strong>: 4.500 páginas em preto por kit T544 segundo o fabricante."` *(usa "segundo o fabricante" — OK porque rendimento é claim só-fabricante e qualifica o número; ver Armadilha 7)*
@@ -192,11 +196,11 @@ Errados:
 - ❌ `"Melhor opção do mercado"` (superlativo sem evidência)
 - ❌ `"Mais barata que a HP Smart Tank 581"` (comparação com concorrente — função do artigo)
 
-### 4. `cons` (array de strings, 1-5 itens, cada 8-300 chars)
+### 4. `cons` (array de strings, 1-5 itens, cada 60-180 chars com alvo 80-130)
 
-Mesma formatação dos pros: `<strong>Título</strong>: explicação`. Pontos de atenção, trade-offs, contextos onde NÃO comprar. Se a bíblia tem `pontosFracos` populados, use como ponto de partida.
+Mesma formatação dos pros: `<strong>Título</strong>: explicação`. Mesmos limites de tamanho (180 chars texto puro). Pontos de atenção, trade-offs, contextos onde NÃO comprar. Se a bíblia tem `pontosFracos` populados, use como ponto de partida.
 
-Exemplo: `"<strong>Duplex manual</strong>: imprimir frente e verso exige virar o papel à mão, sem mecanismo automático."`
+Exemplo: `"<strong>Duplex manual</strong>: imprimir frente e verso exige virar o papel à mão, sem mecanismo automático."` *(108 chars — OK)*
 
 ### 5. `specs` (array de objetos, 3-10 pares label/value)
 
