@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 27 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
+description: Audita artigo inteiro read-only. Combina 30 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
 ---
 
 ## Parse de input
@@ -404,16 +404,78 @@ Audit dos links no `guideContent`. Régua hub-and-spoke (canon v1.10.0 da skill 
 
 **Checklist**:
 - **Links Amazon (`amazon.com.br/dp/`) em FAQ/Marca/Conclusão**: tag-aware (com `?tag={tag}&linkCode=ogi&th=1&psc=1` se site live). Sem tag = warn.
-- **Preferir link interno sobre Amazon em FAQ/Conclusão** (info): se há peer-article no site (em `content/reviews/`) que cobre o tópico, link interno (`/{slug}/`) é preferido. Ex: FAQ sobre "creatina monohidratada" — link pra `/melhor-creatina-monohidratada/` (peer article do site) em vez de produto Amazon.
+- **Preferir link interno sobre Amazon em FAQ/Conclusão** (info): se há peer page/article no site, link interno (`/{slug}/`) é preferido.
 - **Vale a pena / Como escolher**: 0 links (essas 2 seções são EDUCATIVAS, sem links pra não distrair).
 - **Marca**: links Amazon de busca por marca permitidos (`amazon.com.br/s?k=marca-X`).
 - **Sem travessão** (também coberto em guide-html-allowlist, mas reforço aqui).
 
 **Exemplo flag**:
 - ❌ Link `<a href="https://amazon.com.br/dp/X">` SEM tag em site live → warn
-- ℹ️ Conclusão linka `/dp/B123` mas há peer article `/melhor-creatina-monohidratada/` no site → info "considere link interno hub-and-spoke"
+- ℹ️ Conclusão linka `/dp/B123` mas há peer `/melhor-creatina-monohidratada/` no site → info "considere link interno hub-and-spoke"
 
 Fix sugerido: rodar skill `artigo-guia-escrever` (aplica hub-and-spoke automaticamente).
+
+### `link-interno-quebrado` (level=`error`, régua v1.20.0)
+
+Audit dos links internos no `guideContent` contra arquivos REAIS no filesystem. URLs internas que não batem com nenhum `.mdx` (em `content/reviews/` ou `content/products/`) viram 404 quando o site é deployado.
+
+**Causas frequentes**:
+- Acento no slug: `<a href="/melhor-pré-treino/">` — slug real é `/melhor-pre-treino/` (sem acento)
+- Slug derivado de versão antiga do slugify: ex: `/black-skull-b-o-p-e/` quando o arquivo se chama `black-skull-bope.mdx`
+- Typo no nome do produto/keyword
+- Slug pluralizado quando o arquivo é singular (ou vice-versa)
+
+**Como verificar**:
+1. Listar TODOS os `<a href="/{slug}/"` no `guideContent` (links internos)
+2. Pra cada slug, conferir se existe `sites/{site}/src/content/reviews/{slug}.mdx` OU `sites/{site}/src/content/products/{slug}.mdx`
+3. Se nenhum dos dois existe → 🔴 error `link-interno-quebrado`
+
+**Bloqueia readyToLock?** Sim — 404 em produção é defeito sério.
+
+**Fix sugerido**: ajustar `href` pra slug real correspondente (passando pela `slugify` canon: lowercase + remove acento + ponto entre dígitos vira hífen + demais pontos removidos).
+
+### `peer-article-nao-linkado` (level=`warn`, régua v1.20.0)
+
+Audit cross-article: detecta quando o site tem **2+ artigos comparativos** sobre temas relacionados (peer articles) MAS o `guideContent` do artigo auditado não referencia nenhum.
+
+**Conceito de peer article relevante**:
+- Outro `.mdx` em `sites/{site}/src/content/reviews/` (mesmo site)
+- Compartilha 2+ palavras iniciais com o `keyword` do artigo auditado (mesma raiz semântica)
+- Exemplo: `melhor-pre-treino` e `melhor-pre-treino-para-emagrecer` são peer (compartilham "melhor pre-treino")
+
+**Como verificar**:
+1. Listar peers do site (`glob sites/{site}/src/content/reviews/*.mdx`)
+2. Filtrar por keyword raiz comum (2+ palavras iniciais iguais)
+3. Excluir o próprio artigo
+4. Pra cada peer, conferir se `guideContent` tem `<a href="/{peer.slug}/"`
+5. Se nenhum link pro peer → 🟡 warn `peer-article-nao-linkado`
+
+**Sugestão editorial** (não auto-aplicada, só relatório):
+- Lugar natural: FAQ (nova H3) ou Conclusão (último ¶)
+- Anchor sugerida: `peer.keyword` exata (não plural, não com qualificador no anchor)
+- Exemplo de inserção:
+  ```html
+  <h3>[Pergunta sobre o tema do peer]?</h3>
+  <p>[explicação contextual]. Cobrimos isso no nosso guia do <a href="/{peer.slug}/">{peer.keyword}</a>.</p>
+  ```
+
+**Bloqueia readyToLock?** Não — é melhoria editorial/SEO, mas o artigo é válido sem ela.
+
+### `anchor-nao-keyword` (level=`info`, régua v1.20.0)
+
+Audit SEO: links internos (peer products/articles) cujo **anchor text** não bate com a `keyword` exata do destino.
+
+**Por que importa SEO**: anchor text = sinal forte pra ranking do destino. Anchor "melhor pré-treino do mercado" passa autoridade pra "melhor pré-treino do mercado" (não pra "melhor pré-treino"). Quando o destino tem `keyword: "Melhor Pré-Treino"`, melhor usar anchor = "melhor pré-treino" puro.
+
+**Como verificar**:
+1. Pra cada `<a href="/{slug}/"texto</a>` interno
+2. Achar a entry correspondente em `content/reviews/{slug}.mdx` ou `content/products/{slug}.mdx`
+3. Comparar `anchor.toLowerCase()` com `entry.data.keyword.toLowerCase()`
+4. Se diferente → 🔵 info `anchor-nao-keyword`
+
+**Tolerância**: anchor pode ter qualificadores FORA do `<a>` tag — `<a href="...">melhor pré-treino</a> do mercado` é OK. Só flagga se o qualificador está DENTRO do anchor.
+
+**Bloqueia readyToLock?** Não — info pra SEO, não erro.
 
 ### `tamanho-escannavel-produto` (level=`error`, régua v1.16.0)
 
