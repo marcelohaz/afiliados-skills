@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 22 categorias (10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26: html-invalido, voz-comprador-implicita, termos-tecnico-industriais + 4 adicionadas 2026-05-27 Fase 2: intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade + 4 adicionadas 2026-05-27 Fase 3: guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke + 1 adicionada 2026-05-28 Fase 4: tamanho-escannavel-produto — ver "Critérios de auditoria" abaixo). Gerar:
+7. **Rodar auditoria IA** nas 30 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -150,7 +150,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (13 categorias — 10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26)
+## Critérios de auditoria (30 categorias)
 
 Use exatamente esses valores em `rule`:
 
