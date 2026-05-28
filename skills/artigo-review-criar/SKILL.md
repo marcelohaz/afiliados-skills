@@ -261,9 +261,16 @@ drop "todos declarados pelo fabricante", drop "preço médio em torno", drop pú
 - Pode comparar com outros produtos pelo nome (sem prefixo "do lineup")
 - Pode dizer "diferente do produto anterior" se houver fluxo narrativo
 
-**Banidas no output editorial** (régua v1.16.0, canon 2026-05-28):
+**Banidas no output editorial** (régua v1.16.0 + v1.17.2, canon 2026-05-28):
 - ❌ "lineup" — palavra puramente interna, jamais aparece em texto público
-- ❌ "desta seleção" / "do lineup" / "do nosso lineup" / "do nosso comparativo" como muleta repetida
+- ❌ **TODAS as variantes de "seleção"** como muleta repetida em reviews de produto:
+  - "desta seleção", "nesta seleção", "na seleção", "da seleção"
+  - "do lineup", "do nosso lineup", "do nosso comparativo"
+  - **Padrão proibido**: "ocupa nesta seleção o papel de X", "X nesta seleção é a presença de Y", "outros pré-treinos da seleção"
+  - **Exceção CANÔNICA**: 2 frases da intro do body (`artigo-intro-escrever`):
+    - Abertura: "Preparamos uma seleção pra..."
+    - Fechamento: "Esta seleção reúne os melhores X disponíveis... ✅"
+    - Essas 2 são exigidas pela régua de intro e **não contam** como chavão
 - ❌ Listar mais de 2 peers num único trecho (ver Armadilha 7 abaixo)
 
 Substitua:

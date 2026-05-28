@@ -142,16 +142,31 @@ Conta ocorrências no `.mdx` inteiro (reviews + intro + guide). Flag se passar d
 | Palavra | Limite | Caso real `melhorpretreino` |
 |---|---|---|
 | `lineup` | **0** (BANIDA) | 50+14 ocorrências em 2 artigos |
-| `desta seleção` | **≤ 15** | 85+65 ocorrências |
+| **TODAS variantes de "seleção"** (régua v1.17.2) | **≤ 4 totais** | 29+42 = 71 ocorrências em 2 artigos |
+| └ `desta seleção` | (incluso no acima) | 85+65 originais |
+| └ `nesta seleção` | (incluso no acima) | 9+17 originais |
+| └ `na seleção` | (incluso no acima) | 3+0 originais |
+| └ `da seleção` | (incluso no acima) | 14+18 originais |
 | `do lineup` / `do nosso lineup` | **0** | 50+11 ocorrências |
 | `fórmula` | ≤ 60 | 109+94 |
 | `ativo` / `ativos` | ≤ 50 | 94+97 |
 | `preço médio` | ≤ 15 | 31+29 |
 | `parestesia` + `formigamento` | ≤ 20 combinados | 43+52 (cada review repete os 2 termos) |
 
-Severidade: **Crítico** pra "lineup" + "do lineup" (banidas); **Médio** pras outras (chavão).
+**Exceção canônica pra "seleção"** (não contar como chavão — exigida pela `artigo-intro-escrever`):
+- Abertura do body: "Preparamos uma **seleção** pra..."
+- Fechamento do body: "Esta **seleção** reúne os melhores X disponíveis... ✅"
+- Total acceptable: 2 ocorrências de "seleção" por artigo (= 4 totais em 2 artigos).
 
-Fix proposto: variação léxica + suprimir muletas. Ex: "lineup" → "comparativo" / "aqui" / "entre os analisados" (mas máximo 1 por bullet). "fórmula" repetida → "composição", "mistura", "produto", varia.
+**Padrões proibidos especificamente** (variantes de chavão estrutural):
+- ❌ "ocupa nesta seleção o papel de X" — em todos os reviews vira repetição forte
+- ❌ "X nesta seleção é a presença de Y" — variante do mesmo problema
+- ❌ "outros pré-treinos da seleção" — usar "outros pré-treinos analisados"
+- ❌ "única da seleção" — drop "da seleção" (contexto já é claro)
+
+Severidade: **Crítico** pra "lineup" + "do lineup" (banidas) E "seleção" se > 4 ocorrências totais; **Médio** pras outras (chavão).
+
+Fix proposto: variação léxica + suprimir muletas. Ex: "ocupa nesta seleção o papel" → "ocupa o papel"; "da seleção" → "analisados"; "nesta seleção é a presença" → "é a presença".
 
 ### 3. `incoherence` — contradição interna
 
