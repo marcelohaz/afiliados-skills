@@ -73,7 +73,6 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
 ## Fluxo
 
-
 0.5. **Carregar chavões do nicho** (régua v1.18.0):
    - Identifique `niche` do site em `docs/painel/sites-meta.json`
    - Read `docs/painel/_data/chavoes-por-nicho.json`
@@ -544,15 +543,43 @@ preenche B098YHFT9S no melhorimpressora
 
 Args canônico que invoco: `Skill(skill="pagina-produto-criar", args="melhorimpressora/epson-ecotank-l3250")`.
 
-
 ### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
 
-Antes de gravar, verificar 3 bug-classes que substituições mecânicas podem causar:
-1. **Duplicação contígua**: grep `([a-zA-ZÀ-ÿ\s]{8,40})\1` — se achar, remover duplicado
-2. **Bullet minúsculo**: grep `<strong>[a-z]` em pros/cons — capitalizar primeira letra
-3. **Minúscula após ponto**: grep `\. [a-z]` em texto editorial (excluir URLs) — capitalizar
+**Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
 
-Caso real (melhorpretreino, commit a72e7d9): "sem empilhar suplementos sem empilhar suplementos", "). pra emagrecer onde...", `<strong>aminoácidos essenciais</strong>` no início de bullet.
+**Auto-check obrigatório ANTES de gravar**:
+
+```python
+import re
+
+# Para cada campo gerado (shortDescription, fullReview, pros, cons, specs.value):
+
+# 14a) Duplicação contígua (>=8 chars repetidos em sequência)
+for m in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
+    print(f"⚠ duplicação: {m.group(0)}")
+    # → Reescreve removendo a metade duplicada
+
+# 14b) Bullet começa com minúscula (em pros/cons)
+for bullet in pros + cons:
+    if re.match(r'<strong>[a-záéíóúâêôãõàèìòùç]', bullet):
+        print(f"⚠ bullet minúsculo: {bullet[:60]}")
+        # → Capitalize primeira letra dentro de <strong>...</strong>
+
+# 14c) Minúscula após ponto (texto editorial — excluir URLs)
+for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
+    ctx = campo[max(0,m.start()-30):m.end()+30]
+    if 'http' in ctx or 'amazon.com.br' in ctx: continue
+    if re.search(r'\d+\. \w', ctx[:50]): continue  # lista numerada
+    print(f"⚠ minúsc após ponto: ...{ctx}...")
+    # → Capitalize a letra (.+ espaço + Letra)
+```
+
+**Exemplos reais** (commit a72e7d9, melhorpretreino):
+- 14a: `"sem empilhar suplementos sem empilhar suplementos"`
+- 14b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
+- 14c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
+
+Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
 
 ## Limitação intrínseca conhecida
 
