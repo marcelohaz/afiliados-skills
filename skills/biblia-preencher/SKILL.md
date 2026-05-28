@@ -259,6 +259,69 @@ O que fazer:
 - Não altere nenhum outro campo da bíblia além dos 7 de curadoria e do `conteudoBrutoFabricante` (limpeza de ruído). O restante do JSON deve ser preservado intacto.
 - Ao escrever o arquivo de volta, use exatamente o formato `JSON.stringify(obj, null, 2) + '\n'` para consistência com o painel.
 
+
+## Régua editorial PT-BR (v1.19.2, 2026-05-28)
+
+Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
+
+### Concordância PT-BR (bug-class real de substituições mecânicas)
+
+| Padrão | Fix |
+|---|---|
+| `composiçãos`, `combinaçãos`, `porçãos` | `composições`, `combinações`, `porções` |
+| `a produto`, `a formigamento`, `a ingrediente` | `o produto`, `o formigamento`, `o ingrediente` |
+| `o fórmula`, `o dose`, `o composição` | `a fórmula`, `a dose`, `a composição` |
+| `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
+| `disponíveis no em 2026` | `disponíveis em 2026` |
+| `Pra a maioria/primeira` | `Pra` ou `Para a` |
+
+### Linguagem artificial banida
+
+- `calibrar/calibrada/calibragem` = 0 → "ajustar"
+- `empilhar` = 0 → "usar separado"
+- `pico-e-queda` = 0 → "pico de energia seguido de queda"
+- `energia metabólica/adrenérgica` = 0
+- `peers/claim/stack/trade-off/hardcore` = 0
+- `SKU/ASIN/UPC/EAN/datasheet/notificado` = 0
+
+### Voz consultiva (não corporativa)
+
+| ❌ Corporativo | ✓ Conversacional |
+|---|---|
+| "diferencial central" | "o grande ponto é" |
+| "posicionamento" | "categoria" |
+| "segmento de X" | "tipo de X" |
+| "proposta de valor" | drop sempre |
+
+### Health absolutes YMYL banidos
+
+- "uso regular é seguro" → qualificar
+- "alternativa segura" → "alternativa mais leve"
+- "não causa dano" → "sem evidência de impacto"
+- "sem efeitos colaterais" → "efeitos colaterais raros"
+- "cientificamente comprovado" / "100% seguro" → qualificar
+
+### Voz-eximir-responsabilidade (não use fabricante como muleta)
+
+- "X mg declarados" parentético → drop "declarados"
+- "declarado pelo fabricante" → drop sempre
+- "todos/todas/doses declaradas pelo fabricante" → "fórmula transparente" ou drop
+- Alérgeno: "contém glúten declarado pelo fabricante" → "contém glúten"
+- **Exceção**: "rende X páginas, segundo a Epson" (claim só-fabricante OK)
+
+### Chavões por nicho (carregar `docs/painel/_data/chavoes-por-nicho.json`)
+
+- Identifique `niche` em `docs/painel/sites-meta.json`
+- Use `_genericos` + bloco do nicho (Pré Treino, Creatinas, Tablets, etc.)
+- Limites por nicho: `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`, `chavoes_estruturais_max`
+- Banidos absolutos: `lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`, `notificado`, `peers`, `claim`, `stack`
+
+### Auto-check capitalização + duplicação
+
+- Duplicação contígua: `([a-zA-ZÀ-ÿ\s]{8,40})\1` → remover duplicado
+- Bullet minúsculo: `<strong>[a-z]` em pros/cons → capitalizar
+- Minúscula após ponto: `\. [a-z]` (excluir URLs) → capitalizar
+- Termo entre parênteses dup: `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)` (ex: "formigamento (formigamento)")
 ## Armadilhas recorrentes — evitar sempre
 
 **1. Singular → plural em atribuições de compradores**

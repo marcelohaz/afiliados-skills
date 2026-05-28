@@ -349,6 +349,55 @@ Evite jargão corporativo (❌ "alinhado à narrativa", "perfil favorável", "po
 Referência canônica pra calibrar tom:
 - `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx` (intro do artigo é bom exemplo)
 
+
+## Régua editorial PT-BR (v1.19.2, 2026-05-28)
+
+Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
+
+### Concordância PT-BR (bug-class real de substituições mecânicas)
+
+| Padrão | Fix |
+|---|---|
+| `composiçãos`, `combinaçãos`, `porçãos` | `composições`, `combinações`, `porções` (plural correto em -ões) |
+| `a produto`, `a formigamento`, `a ingrediente` | `o produto`, `o formigamento`, `o ingrediente` |
+| `o fórmula`, `o dose`, `o composição` | `a fórmula`, `a dose`, `a composição` |
+| `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
+| `disponíveis no em 2026` | `disponíveis em 2026` |
+| `Pra a maioria/primeira` | `Pra` ou `Para a` |
+
+### Linguagem artificial banida (calques de inglês, jargão pseudo-técnico)
+
+- `calibrar/calibrada/calibragem` = 0 → use "ajustar"
+- `empilhar` = 0 → use "usar separado"
+- `pico-e-queda` = 0 → "pico de energia seguido de queda"
+- `energia metabólica/adrenérgica` = 0
+- `peers/claim/stack/trade-off/hardcore` = 0
+- `SKU/ASIN/UPC/EAN/datasheet/notificado` = 0 (banidos no público)
+
+### Voz consultiva (não corporativa)
+
+| ❌ Corporativo | ✓ Conversacional |
+|---|---|
+| "diferencial central" | "o grande ponto é" |
+| "posicionamento" | "categoria" |
+| "segmento de X" | "tipo de X" |
+| "proposta de valor" | drop sempre |
+
+### Health absolutes YMYL banidos (Google penaliza páginas afiliadas)
+
+- "uso regular é seguro" → "tolerado pela maioria; consulte profissional se tem comorbidade"
+- "alternativa segura" → "alternativa mais leve"
+- "não causa dano" → "sem evidência de impacto em pessoas saudáveis em doses recomendadas"
+- "sem efeitos colaterais" → "efeitos colaterais raros quando reportados"
+- "cientificamente comprovado" / "100% seguro" / "sem riscos" → qualificar
+
+### Voz-eximir-responsabilidade (não use fabricante como muleta)
+
+- "X mg declarados" parentético → drop "declarados" (info do mg já é declarada por definição)
+- "declarado pelo fabricante" → drop sempre
+- "todos/todas/doses declaradas pelo fabricante" → "fórmula totalmente transparente" ou drop
+- Alérgeno "contém X declarado pelo fabricante" → "contém X" direto
+- **Exceção**: "rende X páginas, segundo a Epson" (claim só-fabricante que qualifica expectativa) OK
 ## Armadilhas recorrentes
 
 ### 1. Mais de 2 bolds
