@@ -128,11 +128,11 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 - **subtitle** (10-150 chars): título descritivo curto, sem redundância com nome.
 
-- **shortDescription** (50-250 chars, alvo 150-220): 1-2 frases que resumem o produto pra TabelaProdutos e TopPickCard. **HARD CAP em 250 chars** — passou = reescreve mais curto. Aparece numa caixa do card; texto longo perde escanabilidade. Ver canon `melhoraspirador` (média 225 chars).
+- **shortDescription** (50-250 chars, alvo 180-230): padrão BENEFÍCIO-FIRST. 1-2 frases que abrem com posicionamento/perfil, técnico justifica depois. **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
 
 9. **Validar mentalmente** antes de salvar:
    - **Tamanhos** (hard caps — v1.16.0):
-     - `shortDescription` ≤ 250 chars (alvo 150-220)
+     - `shortDescription` ≤ 250 chars (alvo 180-230, **padrão benefício-first** — 1ª frase é posicionamento, não ficha técnica)
      - cada item de `pros` ≤ 180 chars (alvo 80-130)
      - cada item de `cons` ≤ 180 chars (alvo 80-130)
      - `fullReview` 800-3000 chars
