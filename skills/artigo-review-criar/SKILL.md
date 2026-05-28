@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios no lineup e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.16.0 (2026-05-28) — hard caps de tamanho (shortDescription ≤250 chars, pros/cons ≤180 chars cada), ban total de "lineup"/"desta seleção" no output editorial, anti-listagem-exaustiva de peers, anti-repetição de frases-padrão. Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -48,8 +48,8 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 ## Invariantes
 
 - **Nunca invente.** Cada claim numérico tem origem rastreável na bíblia (`specsAmazon`, `doFabricante`, `pontosFortes`, etc).
-- **Conteúdo COMPARATIVO** (diferente da página individual): pode comparar com outros produtos do lineup, citar por nome, dizer "vs HP X" se houver dado na bíblia. Pode falar "nesta seleção", "comparado ao primeiro da lista".
-- **Anti-duplicate vs página individual**: leia o `fullReview` da página individual antes (`sites/{site}/src/content/products/{slug-do-produto}.mdx`). O texto do produto-no-artigo deve ter ângulo DIFERENTE — comparativo, posicionamento na seleção, etc.
+- **Conteúdo COMPARATIVO** (diferente da página individual): pode comparar com outros produtos do artigo, citar por nome, dizer "vs HP X" se houver dado na bíblia. Pode falar "neste comparativo", "entre os modelos analisados", "aqui". **Banido no output**: "lineup", "desta seleção", "do lineup". Ver ângulo comparativo no campo `fullReview` abaixo.
+- **Anti-duplicate vs página individual**: leia o `fullReview` da página individual antes (`sites/{site}/src/content/products/{slug-do-produto}.mdx`). O texto do produto-no-artigo deve ter ângulo DIFERENTE — comparativo, posicionamento no comparativo, etc.
 - **Sem travessão (—)** em nenhum campo.
 - **Voz analítica**: NUNCA cite compradores/reviews/avaliações/estrelas/Amazon.
 - **HTML allowlist no `fullReview`**: `<p>`, `<strong>`, `<em>`, `<a>`. Proibido: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<table>`, `<img>`, `<script>`.
@@ -93,8 +93,8 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 8a. **Gerar campos top-level do artigo** (só se stub):
    - `title`: 30-100 chars. Formato: keyword capitalizado + ":" (o resto user completa). Ex: keyword "melhor impressora custo benefício" → title "Melhor Impressora Custo Benefício:"
    - `description`: 50-160 chars, meta-description SEO
-   - `keywordPlural`: forma plural do keyword. Ex: keyword "melhor impressora custo benefício" → keywordPlural "melhores impressoras custo benefício"
-   - `listHeading`: SEMPRE derivado do `keywordPlural` gerado acima — nunca do keyword singular. Formato: "Quais os/as melhores {keywordPlural} em {ano}?" — use o artigo correto pelo gênero do substantivo plural (impressoras → "as", pré-treinos → "os", creatinas → "as", robôs → "os"). Ex: keywordPlural "melhores impressoras custo benefício" → listHeading "Quais as melhores impressoras custo benefício em 2026?"
+   - `keywordPlural`: forma plural do keyword pro H2 "Comparativo técnico dos {keywordPlural}". Ex: "melhores impressoras custo benefício"
+   - `listHeading`: 10-200 chars. H2 que abre a tabela. Ex: "Quais são as melhores impressoras custo benefício?"
    - `excerpt`: 50-300 chars. Teaser do topo
    - `specLabels`: array de 3-10 labels (intersecção dos specs.label dos produtos no lineup). Pra primeiro produto, deriva direto. Pra produtos adicionados depois, deixa como está e atualiza só se o novo produto tiver labels diferentes.
 
@@ -118,40 +118,25 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 
 - **specs** (3-10 pares label/value): strings simples sem HTML. Reuso labels comuns do lineup pra alinhar com `specLabels`.
 
-- **subtitle** (10-70 chars): rótulo de posicionamento SEO — espelha buscas reais no Google. NÃO é descrição de specs.
+- **subtitle** (10-150 chars): título descritivo curto, sem redundância com nome.
 
-  **Formato**: `"Melhor {tipo-produto} {diferenciador}"` — ou sem "Melhor" quando mais natural.
-  Extrai o **tipo-produto** do `keyword` do artigo: `"melhor pré-treino"` → `"Pré-treino"`, `"melhor impressora custo-benefício"` → `"Impressora"`, `"melhor tablet"` → `"Tablet"`.
-
-  **Sequência posicional default** (guia inteligente — ajuste pela bíblia se não calçar):
-  - Posição 0: `"Melhor {tipo} em Geral"` — campeão da seleção, reflete badge "Melhor Escolha"
-  - Posição 1: `"Melhor {tipo} Custo-Benefício"` — melhor relação qualidade/preço
-  - Posição 2: `"Melhor {tipo} Bom e Barato"` — mais acessível que ainda entrega resultado
-  - Posição 3+: derivado da bíblia — público (`"para Iniciantes"`, `"para Idosos"`, `"para Mulheres"`), feature (`"sem Cafeína"`, `"com Creatina"`), combinação (`"sem Cafeína para Iniciantes"`)
-
-  **Coerência com badge**: se badge preenchido, subtitle deve refletir. Badge `"Custo-Benefício"` → subtitle contém "Custo-Benefício". Badge `"Bom e Barato"` → subtitle contém "Bom e Barato". Badge `"Melhor Escolha"` → subtitle contém "em Geral".
-
-  **O subtitle define o ângulo do review**: a lente escolhida guia o `Para quem é` e o `Resumo`. Ex: subtitle `"para Iniciantes"` → enfatizar facilidade, fórmula mais leve, segurança para quem começa.
-
-  ✅ `"Melhor Pré-treino em Geral"` · `"Melhor Impressora Custo-Benefício"` · `"Melhor Tablet para Desenhar"` · `"Melhor Pré-treino sem Cafeína para Iniciantes"` · `"Melhor Tablet Bom e Barato"`
-  ❌ `"Pré-treino com 400mg de cafeína, creatina e beta-alanina..."` (specs, não posicionamento) · `"Compacta de Orçamento"` (sem keyword âncora)
-
-  > **Se já preenchido no stub (valor não-vazio)**: usar como está — não regenerar.
-
-- **shortDescription** (50-800 chars): 1-2 frases que resumem o produto pra TabelaProdutos e TopPickCard.
+- **shortDescription** (50-250 chars, alvo 150-220): 1-2 frases que resumem o produto pra TabelaProdutos e TopPickCard. **HARD CAP em 250 chars** — passou = reescreve mais curto. Aparece numa caixa do card; texto longo perde escanabilidade. Ver canon `melhoraspirador` (média 225 chars).
 
 9. **Validar mentalmente** antes de salvar:
-   - Tamanhos dentro dos ranges
+   - **Tamanhos** (hard caps — v1.16.0):
+     - `shortDescription` ≤ 250 chars (alvo 150-220)
+     - cada item de `pros` ≤ 180 chars (alvo 80-130)
+     - cada item de `cons` ≤ 180 chars (alvo 80-130)
+     - `fullReview` 800-3000 chars
+     - Passou? reescreve **só o item que estourou** (não o review inteiro)
+   - **Banidas no output** (v1.16.0): grep por `lineup`, `desta seleção`, `do lineup`, `do nosso lineup`, `do nosso comparativo` — se achar, reescreve
+   - **Cota cross-produto**: máximo 2 peers citados por bullet/parágrafo (ver Armadilha 7)
    - HTML allowlist OK no fullReview
    - Sem travessão
    - Tag correta nos links (ou cruas se config vazia)
    - Voz analítica (zero "compradores", "reviews", "avaliações", "posicionamento Amazon")
    - Voz-citação ficha-técnica (zero "alérgenos confirmam", "atributos declaram", "conforme tipo de dieta", "apontada pelo fabricante como") — exceção: claim só-fabricante que adiciona valor editorial, ver Armadilha 4
    - Anti-duplicate vs página individual (frases não-repetidas)
-   - `"lineup"`: deve ser 0 no produto gerado (proibido — substituir por "desta lista", "desta seleção", etc.)
-   - Âncoras comparativas: se > 2× neste produto, substituir excedente por variante ou elide
-   - Pros de preço: verificar se listou 3+ concorrentes com preços — simplificar pra 1 referência ou afirmação geral
-   - Termos técnicos de nicho: se apareceu pela primeira vez no artigo sem gloss, adicionar explicação breve entre parênteses
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-prod-{ASIN}.mdx`. Pattern paralelo ao do painel pra aparecer no card "Histórico de versões".
 
@@ -182,8 +167,19 @@ A bíblia do ASIN está OK e a página individual existe (verificado pelo gate F
 ### subtitle (10-150 chars)
 Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L3250": "Multifuncional EcoTank com Wi-Fi, ideal para casa e home office".
 
-### shortDescription (50-800 chars)
-1-2 frases que resumem o produto. Aparece na TabelaProdutos e no TopPickCard. Ex: "Multifuncional 3 em 1 com tanque de tinta, Wi-Fi Direct e rendimento de até 4.500 páginas em preto por kit. Indicada para uso doméstico ou escritório pequeno com volume médio."
+### shortDescription (50-250 chars, alvo 150-220)
+1-2 frases que resumem o produto. Aparece na TabelaProdutos e no TopPickCard. **HARD CAP em 250 chars** — se passou, reescreve.
+
+✅ **BOM** (216 chars, canon `melhoraspirador`):
+> "Multifuncional 3 em 1 com tanque de tinta, Wi-Fi Direct e rendimento de até 4.500 páginas em preto por kit. Indicada para uso doméstico ou escritório pequeno com volume médio."
+
+❌ **RUIM** (414 chars, regressão real do `melhorpretreino`):
+> "Repositor energético em pó da Dux Human Health com mix de três carboidratos (palatinose, maltodextrina e frutose), 600 mg de taurina e eletrólitos completos (sódio, cálcio e potássio) por dose de 35 g. Único do lineup sem cafeína e sem beta-alanina, posicionado como combustível durante o exercício, não como estimulante antes do treino. Pote de 1000 g rende 29 doses, preço médio em torno de R$ 130."
+
+✅ **DESTILADO** do ruim acima (~180 chars):
+> "Repositor energético em pó com mix de palatinose, maltodextrina e frutose + 600 mg de taurina + eletrólitos por dose de 35 g. Sem cafeína, pensado como combustível durante treinos longos."
+
+**Régua de corte**: o shortDescription estabelece **posicionamento + 1-2 specs-chave**. NÃO lista marca + ASIN + preço + rendimento + público todo. Resto é função do fullReview e da tabela de specs.
 
 ### fullReview (HTML, ~800-3000 chars)
 **Estrutura obrigatória — 4 parágrafos marcados** (idêntico ao `formato_full_review` shared):
@@ -196,24 +192,41 @@ Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L32
 ```
 
 **Ângulo COMPARATIVO** (diferente da página individual que é autônoma):
-- Usar âncoras comparativas com moderação — variar obrigatoriamente entre:
-  `"nesta seleção"` · `"desta lista"` · `"neste artigo"` · `"neste comparativo"` ·
-  `"entre os produtos que analisamos"` · `"entre os modelos analisados"` · `"aqui"` (quando contexto já é claro) · ou **elide** completamente quando o contexto é óbvio
-- **Máx. 2× âncora comparativa por produto.** No artigo inteiro, variar — não repetir a mesma frase produto após produto; o efeito acumula
-- ❌ **`"lineup"` proibido** em conteúdo gerado — jargão em inglês sem equivalente natural; substituir sempre por uma das variantes acima
-- Pode comparar com outros produtos da lista pelo nome
+- Pode mencionar "neste comparativo", "entre os modelos analisados", "aqui"
+- Pode comparar com outros produtos pelo nome (sem prefixo "do lineup")
 - Pode dizer "diferente do produto anterior" se houver fluxo narrativo
 
-### pros (3-8 itens)
+**Banidas no output editorial** (régua v1.16.0, canon 2026-05-28):
+- ❌ "lineup" — palavra puramente interna, jamais aparece em texto público
+- ❌ "desta seleção" / "do lineup" / "do nosso lineup" / "do nosso comparativo" como muleta repetida
+- ❌ Listar mais de 2 peers num único trecho (ver Armadilha 7 abaixo)
+
+Substitua:
+| ❌ Antes | ✓ Depois |
+|---|---|
+| "único do lineup com cromo" | "único com cromo entre os analisados" |
+| "Black Skull B.O.P.E desta seleção" | "Black Skull B.O.P.E" (sem qualificar — contexto claro) |
+| "as outras opções desta seleção (X, Y, Z)" | "as outras opções aqui" |
+| "todos os 9 outros desta seleção" | "todos os outros analisados" |
+| "vantagem vs o Adaptogen Panic do lineup" | "vantagem vs o Adaptogen Panic" |
+
+**Quota dura**: máximo **1 menção** a "comparativo"/"seleção"/"aqui"/"analisados" **por bullet ou parágrafo**. Repetir = drop.
+
+### pros (3-8 itens, cada item 60-180 chars, alvo 80-130)
 `<strong>Título</strong>: explicação com dado concreto`. Sempre dado verificável.
 
-**Regra de comparação de preço em pros**: mencionar o próprio preço + afirmar posição ("o mais acessível desta lista") + **no máximo 1 referência comparativa**. A tabela do artigo já mostra todos os preços — listar todos os concorrentes no bullet é redundante.
-- ✅ `<strong>Preço mais acessível desta lista</strong>: cerca de R$ 40, o menor entre os modelos analisados.`
-- ✅ `<strong>Melhor custo por dose</strong>: R$ 40 por pote, abaixo das opções com fórmula similar (R$ 78-90).`
-- ❌ `<strong>Preço mais acessível do lineup</strong>: cerca de R$ 40, abaixo do Produto A (R$ 55), Produto B (R$ 78), Produto C (R$ 80), Produto D e E (R$ 90 cada)... desta seleção.`
+**HARD CAP em 180 chars por item** — passou = reescreve mais curto. Canon `melhoraspirador`: média 65 chars/item, máx 93.
 
-### cons (1-5 itens)
-Mesma formatação dos pros. Trade-offs reais.
+✅ **BOM** (88 chars):
+> "<strong>Preço mais acessível</strong>: cerca de R$ 40, o mais barato deste comparativo."
+
+❌ **RUIM** (310 chars, caso real FTW Diabo Verde):
+> "<strong>Preço mais acessível do lineup</strong>: cerca de R$ 40, abaixo do Black Skull B.O.P.E (R$ 55), Adaptogen Panic (R$ 78), 3VS Prohibido (R$ 80), Max Titanium Night Train e Darkness Évora XT (R$ 90 cada), Dux Pre Workout (R$ 110) e +Mu Exquenta (R$ 130) desta seleção."
+
+A lista exaustiva de 8 preços virou tabela em texto. Quem quer comparar vai na TabelaTop. Bullet é pra escannar em 2 segundos.
+
+### cons (1-5 itens, cada item 60-180 chars, alvo 80-130)
+Mesma formatação e mesmos limites dos pros. Trade-offs reais.
 
 ### specs (3-10 pares label/value)
 Specs técnicas derivadas de `specsAmazon`/`doFabricante`/`conteudoBrutoFabricante`. Strings simples. Reuso labels do lineup quando possível.
@@ -338,9 +351,6 @@ Ao decidir QUAL claim vira pro central no artigo vs. spec:
 - ✓ Qualificadores positivos simples ("excelente", "ótimo", "muito bom") são OK — reviews são levemente inclinados ao positivo por design (diretriz #2 da bíblia)
 - ✓ Superlativas qualificadas com dado: "entre as mais econômicas da categoria" (se houver concorrentes na bíblia)
 - Densidade ~5-7 dados quantitativos no fullReview
-- ❌ `"lineup"` proibido em conteúdo gerado — substituir por "desta lista", "desta seleção", "neste comparativo", "entre os modelos analisados"
-- Âncoras comparativas ("desta seleção", "nesta seleção", "desta lista", etc.): máx. 2× por produto; variar ao longo do artigo (ver Ângulo COMPARATIVO acima)
-- Termos técnicos de nicho (ingredientes, processos, farmacologia) → glossar na **primeira ocorrência** do artigo com explicação breve entre parênteses; nas seguintes, usar livremente. Ex: "parestesia (formigamento na pele)", "BCAAs (aminoácidos essenciais)", "cafeína anidra (cafeína seca, a forma padrão)"
 
 ## Anti-duplicate vs página individual
 
@@ -348,8 +358,8 @@ Ao decidir QUAL claim vira pro central no artigo vs. spec:
 
 | Página individual (autônoma) | Produto no artigo (comparativo) |
 |---|---|
-| "A L3250 é uma multifuncional pensada para uso doméstico" | "Na seleção, a L3250 cobre o perfil doméstico" |
-| "O diferencial central é o sistema EcoTank" | "Comparada às outras impressoras desta lista, a L3250 destaca-se pelo sistema EcoTank" |
+| "A L3250 é uma multifuncional pensada para uso doméstico" | "Aqui, a L3250 cobre o perfil doméstico" |
+| "O diferencial central é o sistema EcoTank" | "Comparada às outras impressoras analisadas, a L3250 destaca-se pelo sistema EcoTank" |
 
 ## Armadilhas recorrentes
 
@@ -401,6 +411,52 @@ Se o artigo já tem `title`, `description`, `excerpt` populados, NÃO sobrescrev
 
 ### 6. Block scalar `|` no fullReview
 Se reusar a abordagem yaml.parseYaml + stringify, fullReview pode mudar de `|` pra string quoted, bagunçando HTML. Recomendado: edição cirúrgica com Edit tool no trecho do produto-alvo, preservando o resto do arquivo intacto.
+
+### 7. Listagem exaustiva de peers num único bullet (régua v1.16.0)
+
+**Armadilha clássica em pros/cons de preço/rendimento**: o modelo lista TODOS os outros produtos do comparativo num bullet só, virando uma mini-tabela em texto.
+
+**Limite duro**: máximo **2 peers citados por bullet ou parágrafo**. Se a comparação precisa mostrar 3+ produtos, **deixa pra TabelaTop** (que já é tabela visual com todos os preços/specs).
+
+❌ **Caso real FTW Diabo Verde** (310 chars, lista 8 preços):
+> "<strong>Preço mais acessível do lineup</strong>: cerca de R$ 40, abaixo do Black Skull B.O.P.E (R$ 55), Adaptogen Panic (R$ 78), 3VS Prohibido (R$ 80), Max Titanium Night Train e Darkness Évora XT (R$ 90 cada), Dux Pre Workout (R$ 110) e +Mu Exquenta (R$ 130) desta seleção."
+
+✓ **Reescrito** (~85 chars):
+> "<strong>Preço mais acessível</strong>: cerca de R$ 40, o mais barato deste comparativo."
+
+✓ **Variante com 1-2 peers concretos** (também OK):
+> "<strong>Preço bem abaixo da média</strong>: R$ 40, contra R$ 110 do mais caro analisado."
+
+A lista exaustiva diz "olha quanto cada um custa" — função da tabela. O bullet diz "este é barato" — função do bullet.
+
+### 8. Repetição de frases-padrão entre produtos (régua v1.16.0)
+
+Frases idênticas literais (ou quase) repetidas em N reviews viram chavão e perdem peso editorial.
+
+**Padrões reais que precisam de tratamento especial:**
+
+| Frase repetida em N produtos | Solução |
+|---|---|
+| "Gestantes, lactantes, hipertensos e cardíacos devem consultar profissional antes do consumo" (em 4 reviews idênticas) | Move pro `guideContent` (FAQ "faz mal à saúde"). NÃO repete no review individual |
+| "Beta-alanina pode causar parestesia leve (formigamento na pele) nos primeiros minutos, efeito esperado e benigno" (em 8 bullets cons) | 1ª menção: explica completo. 2ª em diante: "mesma parestesia já descrita" ou só "formigamento leve" |
+| "ativo que dá suporte à recuperação muscular" (sobre creatina ausente, em 5 cons) | Encurta pra "ativo importante pra recuperação" e varia léxico |
+| "declarados pelo fabricante" colado a cada lista de mg | Drop quase sempre (info do rótulo já é por definição do fabricante) |
+
+**Régua**: se uma frase específica aparece **literal em 3+ reviews do mesmo artigo**, é chavão. Encurta a partir da 2ª aparição.
+
+### 9. Auto-check de tamanho final (régua v1.16.0)
+
+**Antes de gravar o .mdx**, conta caracteres dos campos críticos:
+
+```
+shortDescription: max 250  → passou? reescreve mais curto
+pros[i]: max 180 (cada item) → passou? reescreve mais curto
+cons[i]: max 180 (cada item) → passou? reescreve mais curto
+```
+
+Mecânica: depois de gerar o review completo, antes do Edit tool, faz 1 passada de validação. Se algum item passa, **reescreve aquele item específico** (não o review inteiro). Custa 1 round-trip extra de modelo, mas evita gerar o problema do `melhorpretreino` (média bullets 175 chars vs canon 65).
+
+**Por que importa**: bullets longos viram parágrafos. Parágrafos viram wall-of-text. Wall-of-text quebra escanabilidade — usuário não lê, vai pro próximo produto, pula a decisão.
 
 ## Invocação
 
