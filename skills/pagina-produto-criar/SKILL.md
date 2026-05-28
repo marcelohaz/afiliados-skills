@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.16.0 (2026-05-28) — hard caps de tamanho alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.17.0 (2026-05-28) — shortDescription padrão BENEFÍCIO-FIRST (posicionamento na 1ª frase, técnico justifica depois), hard caps alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -171,13 +171,42 @@ Exemplos ruins:
 
 Regra prática: se subtitle parece "ficha técnica resumida", reescreva como posicionamento editorial. Specs vivem na tabela `specs`.
 
-### 2. `shortDescription` (string, 50-250 chars, alvo 150-220)
+### 2. `shortDescription` (string, 50-250 chars, alvo 180-230) — padrão BENEFÍCIO-FIRST
 
-1-2 frases que aparecem no hero, abaixo do nome. Resumo do produto + ângulo principal.
+1-2 frases que aparecem no hero, abaixo do nome. **HARD CAP 250 chars.** Apesar de a página individual ter mais "espaço editorial" que a tabela do artigo, o shortDescription fica num card hero — texto longo passa de 3-4 linhas e quebra escanabilidade. Canon `melhoraspirador`: 225 média.
 
-**HARD CAP em 250 chars** (alinhado com `artigo-review-criar` v1.16.0). Apesar de a página individual ter mais "espaço editorial" que a tabela do artigo, o shortDescription fica num card hero — texto longo passa de 3-4 linhas e quebra escanabilidade. Canon `melhoraspirador`: média 225 chars.
+**Padrão obrigatório (régua v1.17.0): benefício/posicionamento PRIMEIRO, técnico DEPOIS.**
 
-Exemplo: `"Impressora EcoTank com tanque de tinta recarregável, custo por página baixo e impressão duplex automática. Indicada para uso doméstico ou escritório pequeno com volume médio de impressão."` *(204 chars — OK)*
+Estrutura em 3 partes:
+1. **Abertura**: posicionamento, perfil ou adjetivo posicional (engancha)
+2. **Meio**: 2-3 specs essenciais (justifica)
+3. **Fecho**: destaque, diferencial ou benefício (reforça)
+
+**3 moldes (varie):**
+- **Molde A**: "Ideal pra quem [perfil], entrega [spec]. Você ganha [benefício]."
+- **Molde B**: "[Adjetivos] pra [perfil]. Combina [spec 1] e [spec 2]. Destaque para [diferencial]."
+- **Molde C**: "[Posicionamento curto] pra [perfil]. [Fórmula/spec]. [Embalagem ou diferencial]."
+
+**Exemplos ✅:**
+- ✓ `"Custo-benefício forte e fórmula completa pra iniciantes ou rotina contínua. Combina creatina, beta-alanina, taurina e cafeína anidra em dose pequena de 5g, com pote de 300g que rende 60 doses por cerca de R$ 55."` (Molde C, 211ch)
+- ✓ `"Impressora EcoTank pra uso doméstico ou escritório pequeno. Tanque de tinta recarregável e impressão duplex automática, com rendimento de até 4.500 páginas em preto por kit. Destaque para o custo por página baixo."` (Molde B, 218ch)
+
+**Exemplo ❌ (técnico-first, REGRESSÃO):**
+- ❌ `"Impressora multifuncional da Epson (linha EcoTank L3250) com tanque de tinta, Wi-Fi Direct, ADF e rendimento de até 4.500 páginas em preto por kit T544. Indicada para uso doméstico ou escritório pequeno com volume médio."` (começa com marca + listagem de specs — perde o leitor)
+
+**Drop SEMPRE:**
+- ❌ "[Tipo] brasileira/o da [marca]" — marca já no campo `name`
+- ❌ "todos declarados pelo fabricante" — implícito
+- ❌ "preço médio em torno de R$ X" — preço já está nas specs
+- ❌ Público-alvo verboso ("Voltada para quem precisa de... e quer manter...")
+- ❌ Listagem completa de ingredientes — pega só 2-3 chave
+
+**Adicionar:**
+- ✅ Adjetivos posicionais ("Versátil", "Premium", "Custo-benefício forte")
+- ✅ Conexão emocional ("Ideal pra quem...", "Você ganha...")
+- ✅ Destaque do diferencial ("Destaque para...")
+
+**Régua de corte mental**: leia a 1ª frase. Começa com "[Tipo] brasileiro da X..." → ERRADO. Começa com adjetivo posicional ou "Ideal pra..." → CERTO.
 
 ### 3. `pros` (array de strings, 3-8 itens, cada 60-180 chars com alvo 80-130)
 

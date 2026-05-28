@@ -139,10 +139,18 @@ Campo fora dos limites editoriais — pode estar **curto demais** (vazio/incompl
 
 **Longo demais** (severidade: Crítico — quebra escanabilidade do card):
 - `subtitle` > 150 chars
-- `shortDescription` > 250 chars (HARD CAP régua v1.16.0; alvo 150-220)
+- `shortDescription` > 250 chars (HARD CAP régua v1.16.0; alvo 180-230)
 - `pros[i]` item > 180 chars texto puro (descontando markup `<strong>`/`<a>`)
 - `cons[i]` item > 180 chars texto puro
 - `fullReview` > 3000 chars
+
+**Padrão técnico-first** (sub-check `tamanho-fora-de-faixa-padrao`, régua v1.17.0):
+- Detecta `shortDescription` que abre com técnico em vez de benefício-first
+- **Antipadrões na 1ª frase** (flag):
+  - "[Tipo] brasileiro/a da [marca]..." (ex: "Impressora multifuncional da Epson...")
+  - "[Tipo] com X mg de Y..." / "[Tipo] com [spec técnica]..."
+- **Padrões OK na 1ª frase**: adjetivo posicional, "Ideal pra quem...", "Você ganha...", posicionamento direto
+- Fix: inverter ordem — posicionamento/benefício na 1ª frase, técnico justifica depois. Ver moldes A/B/C em `pagina-produto-criar` v1.17.0.
 
 **Como contar pros/cons sem HTML**: olhe o bullet sem `<strong>...</strong>` e sem `<a href="...">...</a>` mantendo só o texto interno. Se passa de 180 = flag.
 

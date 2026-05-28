@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.16.0 (2026-05-28) — hard caps de tamanho (shortDescription ≤250 chars, pros/cons ≤180 chars cada), ban total de "lineup"/"desta seleção" no output editorial, anti-listagem-exaustiva de peers, anti-repetição de frases-padrão. Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.17.0 (2026-05-28) — shortDescription PADRÃO BENEFÍCIO-FIRST (posicionamento/benefício na 1ª frase, técnico justifica depois; 3 moldes A/B/C; drop marca+preço+público verboso), hard caps de tamanho (shortDescription ≤250 chars, pros/cons ≤180 chars cada), ban total de "lineup"/"desta seleção" no output editorial, anti-listagem-exaustiva de peers, anti-repetição de frases-padrão. Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -175,19 +175,76 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 ### subtitle (10-150 chars)
 Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L3250": "Multifuncional EcoTank com Wi-Fi, ideal para casa e home office".
 
-### shortDescription (50-250 chars, alvo 150-220)
-1-2 frases que resumem o produto. Aparece na TabelaProdutos e no TopPickCard. **HARD CAP em 250 chars** — se passou, reescreve.
+### shortDescription (50-250 chars, alvo 180-230) — padrão BENEFÍCIO-FIRST
 
-✅ **BOM** (216 chars, canon `melhoraspirador`):
-> "Multifuncional 3 em 1 com tanque de tinta, Wi-Fi Direct e rendimento de até 4.500 páginas em preto por kit. Indicada para uso doméstico ou escritório pequeno com volume médio."
+**HARD CAP em 250 chars.** Aparece num card visual (TabelaProdutos / TopPickCard) e é a primeira coisa que o leitor lê pra decidir se quer ler mais. **NÃO PODE SER FICHA TÉCNICA** — tem que enganchar pelo benefício/posicionamento.
 
-❌ **RUIM** (414 chars, regressão real do `melhorpretreino`):
-> "Repositor energético em pó da Dux Human Health com mix de três carboidratos (palatinose, maltodextrina e frutose), 600 mg de taurina e eletrólitos completos (sódio, cálcio e potássio) por dose de 35 g. Único do lineup sem cafeína e sem beta-alanina, posicionado como combustível durante o exercício, não como estimulante antes do treino. Pote de 1000 g rende 29 doses, preço médio em torno de R$ 130."
+**Padrão obrigatório (régua v1.17.0, canon 2026-05-28): benefício/posicionamento PRIMEIRO, técnico DEPOIS.**
 
-✅ **DESTILADO** do ruim acima (~180 chars):
-> "Repositor energético em pó com mix de palatinose, maltodextrina e frutose + 600 mg de taurina + eletrólitos por dose de 35 g. Sem cafeína, pensado como combustível durante treinos longos."
+Estrutura geral em 3 partes:
+1. **Frase de abertura: benefício, posicionamento ou perfil** — engancha o leitor
+2. **2-3 specs essenciais** — justifica com o concreto
+3. **Destaque, diferencial ou fecho com benefício** — reforça
 
-**Régua de corte**: o shortDescription estabelece **posicionamento + 1-2 specs-chave**. NÃO lista marca + ASIN + preço + rendimento + público todo. Resto é função do fullReview e da tabela de specs.
+**3 moldes recomendados (varie entre produtos do mesmo artigo):**
+
+**Molde A — Perfil + benefício** (estilo "câmera de segurança"):
+> "Ideal pra quem [perfil/objetivo], entrega [função/spec curta]. Você ganha [benefício]."
+
+**Molde B — Adjetivo posicional + spec + destaque** (estilo "aspirador"):
+> "[Adjetivos] pra [perfil]. Combina/Reúne [spec 1] e [spec 2]. Destaque para [diferencial]."
+
+**Molde C — Posicionamento direto + técnico justifica** (estilo "Custo-benefício forte..."):
+> "[Posicionamento curto] pra [perfil]. [Fórmula/spec essencial]. [Embalagem ou diferencial]."
+
+**Exemplos ✅** (canon `melhorpretreino` V4, validado editorialmente):
+
+```
+"Custo-benefício forte e fórmula completa pra iniciantes ou rotina contínua.
+Combina creatina, beta-alanina, taurina e cafeína anidra em dose pequena de 5g,
+com pote de 300g que rende 60 doses por cerca de R$ 55."
+(211 ch — Molde C: posicionamento + spec + embalagem)
+
+"Vegano, com sabor agradável Pink Lemonade e sem o formigamento da beta-alanina.
+Entrega 150mg de cafeína moderada e 16g de palatinose (energia gradual) em
+embalagem de 500g, a maior da categoria."
+(195 ch — Molde B: adjetivos + perfil + spec + destaque)
+
+"Ideal pra quem treina à noite ou é sensível a estimulantes, entrega disposição
+muscular via 2g de beta-alanina e aminoácidos, sem cafeína na fórmula.
+Você ganha mais intensidade no treino sem comprometer o descanso."
+(225 ch — Molde A: perfil + spec + benefício)
+```
+
+**Exemplos ❌ (técnico-first, REGRESSÃO real do melhorpretreino pré-v1.17.0):**
+
+```
+"Pré-treino brasileiro da Adaptogen Science com 400 mg de cafeína, 2 g de beta-alanina,
+1 g de creatina e 1 g de taurina por porção de 10 g, todos declarados pelo fabricante.
+Sabor morango, pote de 300 g, preço médio em torno de R$ 78. Voltado para quem treina
+em rotina de emagrecimento e quer manter intensidade no treino..."
+(391 ch — começa com marca + listagem completa de specs; perde o leitor antes de
+chegar no posicionamento que está no fim)
+```
+
+→ **Fix**: inverta. Coloca posicionamento/benefício na 1ª frase. Drop "brasileiro da X",
+drop "todos declarados pelo fabricante", drop "preço médio em torno", drop público verboso.
+
+**Drop SEMPRE:**
+- ❌ "**brasileiro da [marca]**" — marca já está no campo `name` (renderizado no card acima)
+- ❌ "**todos declarados pelo fabricante**" — implícito
+- ❌ "**preço médio em torno de R$ X**" — preço já está nas specs e na tabela
+- ❌ **Público-alvo verboso** ("Voltado para quem treina em rotina de emagrecimento e quer manter intensidade no treino mesmo em déficit calórico...")
+- ❌ **Lista completa de ingredientes** — pega só 2-3 chave, resto vai pro fullReview
+
+**Adicionar:**
+- ✅ **Adjetivos posicionais** ("Custo-benefício forte", "Vegano", "Premium", "Foco mental")
+- ✅ **Conexão emocional/funcional** ("Ideal pra quem...", "Você ganha...", "Pra quem...")
+- ✅ **Destaque do diferencial** ("Destaque para...")
+
+**Régua de corte mental** — antes de salvar, leia a 1ª frase do shortDescription:
+- Começa com "Pré-treino com X mg de Y..." ou "[Tipo] brasileiro da [marca]..." → **ERRADO**. Inverta.
+- Começa com adjetivo posicional, "Ideal pra...", "Você ganha...", "Custo-benefício..." → **CERTO**.
 
 ### fullReview (HTML, ~800-3000 chars)
 **Estrutura obrigatória — 4 parágrafos marcados** (idêntico ao `formato_full_review` shared):

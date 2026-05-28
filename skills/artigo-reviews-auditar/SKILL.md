@@ -316,6 +316,19 @@ Bullets e shortDescriptions inchados quebram a leitura escannável que o card e 
 - Flag se > 250 chars
 - Fix proposto: cortar pra **posicionamento + 1-2 specs-chave**. Drop marca completa + ASIN + preço + rendimento + público (resto é função do fullReview e tabela)
 
+**12a-bis — shortDescription técnico-first (régua v1.17.0):**
+- Detecta abertura técnica em vez de benefício-first
+- **Antipadrões na 1ª frase** (flag se aparecer):
+  - "[Tipo] brasileiro/a da [marca]..." (ex: "Pré-treino brasileiro da Black Skull...")
+  - "[Tipo] com X mg de Y..." (ex: "Pré-treino com 400 mg de cafeína...")
+  - "[Tipo] multifuncional/premium/etc da [marca]..."
+- **Padrões OK na 1ª frase**:
+  - Adjetivo posicional ("Custo-benefício forte", "Vegano", "Premium", "Foco mental")
+  - "Ideal pra quem..."
+  - "Você ganha..."
+  - Posicionamento direto ("Combustível pra sessões longas", "Energia gradual pra cardio")
+- Fix proposto: inverter ordem — colocar posicionamento/benefício na 1ª frase, mover técnico pra 2ª frase. Ver 3 moldes em `artigo-review-criar` v1.17.0.
+
 **12b — bullet pros/cons longo demais:**
 - Mede chars do bullet (texto puro, descontando tags `<strong>`/`<a>`)
 - Flag se > 180 chars/item

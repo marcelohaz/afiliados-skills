@@ -311,8 +311,16 @@ EXCETO os passos de git operations (12, 13). Especificamente:
 6. Gere os 6 campos seguindo as regras detalhadas em pagina-produto-criar/SKILL.md:
    - subtitle (10-150 chars): título descritivo editorial, sem redundância
      com o nome do produto, SEM spec dump
-   - shortDescription (50-250 chars, alvo 150-220): 1-2 frases resumindo +
-     ângulo. **HARD CAP 250 chars** (régua v1.16.0). Canon `melhoraspirador`: 225 média.
+   - shortDescription (50-250 chars, alvo 180-230): padrão **BENEFÍCIO-FIRST**
+     (régua v1.17.0) — posicionamento/perfil na 1ª frase, técnico justifica
+     depois. **HARD CAP 250 chars.** Canon `melhoraspirador`: 225 média.
+     Drop "[Tipo] brasileiro da [marca]" (marca já no nome), drop "preço médio
+     em torno de R$ X", drop público verboso. Começar com adjetivo posicional
+     ("Custo-benefício forte"), "Ideal pra quem..." ou "Você ganha...".
+     Ex ✅: "Custo-benefício forte e fórmula completa pra iniciantes. Combina
+     creatina, beta-alanina e cafeína anidra em dose pequena de 5g, com pote
+     de 300g que rende 60 doses por cerca de R$ 55." (Molde C, 211ch)
+     Ex ❌: "Pré-treino brasileiro da X com Y mg de Z..." (técnico-first).
    - pros (3-8 items, 60-180 chars texto puro cada): formato
      `<strong>Título</strong>: explicação` com dado concreto. **HARD CAP 180 chars**
      texto puro (sem markup HTML). Canon `melhoraspirador`: 65 chars/item média.
