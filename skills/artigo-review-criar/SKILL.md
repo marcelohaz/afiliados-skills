@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.18.0 (2026-05-28) — passo 0.5 carrega chavões POR NICHO de `docs/painel/_data/chavoes-por-nicho.json` (cada nicho tem limites específicos: Pré Treino, Creatinas, Tablets, Impressoras, etc.). Régua v1.17.0 — shortDescription PADRÃO BENEFÍCIO-FIRST + hard caps + ban "lineup"/"seleção"/"SKU"/"ASIN"/"trade-off"/"hardcore". Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios na lista de produtos e pergunta qual preencher, 1 por vez (controle de qualidade) — OU args canônicos site/slug-artigo + ASIN. Régua v1.18.0 (2026-05-28) — passo 0.5 lê `sites-meta.json` pra identificar `niche` do site, depois carrega chavões POR NICHO de `docs/painel/_data/chavoes-por-nicho.json` (cada nicho tem limites específicos: Pré Treino, Creatinas, Tablets, Impressoras, etc.). Régua v1.17.0 — shortDescription PADRÃO BENEFÍCIO-FIRST + hard caps + ban "lineup"/"seleção"/"SKU"/"ASIN"/"trade-off"/"hardcore". Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input

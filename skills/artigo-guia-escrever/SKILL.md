@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-escrever
-description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Quando user cola "Como escolher" de 1-3 concorrentes na mensagem, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + extras + SALVA análise em docs/painel/_data/competitor-analyses/{keyword-slug}.md pra reuso. Próximas execuções na mesma keyword (qualquer site) auto-carregam análise existente. Régua dura — 5 H2 obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + 1 opcional (Por que confiar), 6000-25000 chars (alvo 12-18k), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon PERMITIDOS em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 0-3 só pra peer articles reais do site. Substitui só o campo guideContent — frontmatter, produtos e body ficam intactos. Backup + commit + push + sync VPS.
+description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Quando user cola "Como escolher" de 1-3 concorrentes na mensagem, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + extras + SALVA análise em docs/painel/_data/competitor-analyses/{keyword-slug}.md pra reuso. Próximas execuções na mesma keyword (qualquer site) auto-carregam análise existente. Régua dura — 5 H2 obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + 1 opcional (Por que confiar), 6000-25000 chars (alvo 12-18k), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon PERMITIDOS em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 0-3 só pra peer articles reais do site. Substitui só o campo guideContent — frontmatter, produtos e body ficam intactos. Backup + commit + push + sync VPS. Régua v1.18.0 (2026-05-28) — carrega `docs/painel/_data/chavoes-por-nicho.json` baseado em `niche` do site pra respeitar chavões nicho-específicos.
 ---
 
 ## Parse de input
@@ -58,6 +58,13 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 - **Tom: educativo nas seções 1-2, recomendativo nas 3-6.** Vale a pena + Como escolher são puramente educativas. Melhor marca + FAQ + Conclusão são onde o leitor decide a compra.
 
 ## Fluxo
+
+
+0.5. **Carregar chavões do nicho** (régua v1.18.0):
+   - Identifique `niche` em `docs/painel/sites-meta.json` (ex: Pré Treino, Creatinas, Tablets)
+   - Read `docs/painel/_data/chavoes-por-nicho.json` — use `_genericos` + bloco do nicho
+   - Aplique limites como guard rail: não passar de `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`
+   - Banidos absolutos sempre: lineup, SKU, ASIN, datasheet, notificado, trade-off, hardcore
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+` em ambos.
 

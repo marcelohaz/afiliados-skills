@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. 12 critérios — tone-clone, redundância (conceito + palavras-chavão com limites), incoerência, qualidade, buyer-reference explícita, links incorretos, claim-vs-lineup-fato (comparações factualmente erradas), voz-citacao-ficha-tecnica, voz-comprador-implicita (categoria D), termos-tecnico-industriais, html-texto-puro, tamanho-escannavel (régua v1.16.0 — shortDescription ≤250 chars, pros/cons ≤180 chars, max 2 peers por bullet). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug-artigo. 12 critérios — tone-clone, redundância (conceito + palavras-chavão com limites), incoerência, qualidade, buyer-reference explícita, links incorretos, claim-vs-lineup-fato (comparações factualmente erradas), voz-citacao-ficha-tecnica, voz-comprador-implicita (categoria D), termos-tecnico-industriais, html-texto-puro, tamanho-escannavel (régua v1.16.0), chavoes-por-nicho (régua v1.18.0 — carrega docs/painel/_data/chavoes-por-nicho.json com limites POR NICHO: Pré Treino, Creatinas, Tablets, etc.). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input

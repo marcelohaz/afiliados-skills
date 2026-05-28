@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.17.0 (2026-05-28) — shortDescription padrão BENEFÍCIO-FIRST (posicionamento na 1ª frase, técnico justifica depois), hard caps alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Stub precisa existir (criado no painel via "+ Nova página de produto"). Régua v1.18.0 (2026-05-28) — carrega chavoes-por-nicho.json (limites por nicho). v1.17.0 — shortDescription padrão BENEFÍCIO-FIRST (posicionamento na 1ª frase, técnico justifica depois), hard caps alinhados com artigo-review-criar (shortDescription ≤250 chars, pros/cons ≤180 chars texto puro cada). Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input

@@ -1,6 +1,6 @@
 ---
 name: artigo-intro-escrever
-description: Escreve a introdução do artigo (body markdown que vai logo após o frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Régua dura — §1 abre com pergunta + keyword em bold, §final fecha com keywordPlural em bold + ✅, 2-3 parágrafos, 300-800 chars, tom conversacional (não consultor científico), sem critérios técnicos detalhados (isso é função do guideContent), sem travessão, sem mencionar marcas/modelos específicos. Substitui só o body — frontmatter e produtos ficam intactos. Backup + commit + push + sync VPS.
+description: Escreve a introdução do artigo (body markdown que vai logo após o frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Régua dura — §1 abre com pergunta + keyword em bold, §final fecha com keywordPlural em bold + ✅, 2-3 parágrafos, 300-800 chars, tom conversacional (não consultor científico), sem critérios técnicos detalhados (isso é função do guideContent), sem travessão, sem mencionar marcas/modelos específicos. Substitui só o body — frontmatter e produtos ficam intactos. Backup + commit + push + sync VPS. Régua v1.18.0 (2026-05-28) — carrega `docs/painel/_data/chavoes-por-nicho.json` baseado em `niche` do site pra respeitar chavões nicho-específicos.
 ---
 
 ## Parse de input
@@ -53,6 +53,13 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 - **NÃO usar heading de nenhum nível** (`#`, `##`, `###`, `<h1>`, `<h2>`, `<h3>`) na intro. Começa direto com prosa. O `title` do frontmatter cumpre o papel de H1; injetar outro heading no body criaria H1 duplicado ou hierarquia quebrada.
 
 ## Fluxo
+
+
+0.5. **Carregar chavões do nicho** (régua v1.18.0):
+   - Identifique `niche` em `docs/painel/sites-meta.json` (ex: Pré Treino, Creatinas, Tablets)
+   - Read `docs/painel/_data/chavoes-por-nicho.json` — use `_genericos` + bloco do nicho
+   - Aplique limites como guard rail: não passar de `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`
+   - Banidos absolutos sempre: lineup, SKU, ASIN, datasheet, notificado, trade-off, hardcore
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+` em ambos.
 
