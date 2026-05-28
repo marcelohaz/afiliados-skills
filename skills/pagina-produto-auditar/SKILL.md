@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. 12 categorias de check (claim-vs-bible, tag-affiliate, tone-comprador, travessao, superlativo, html-invalido com 3 sub-checks, link-externo, conteudo-curto, redundancia-com-artigo, voz-citacao-ficha-tecnica, voz-comprador-implicita, termos-tecnico-industriais). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes editoriais + tag de afiliado. 12 categorias de check (claim-vs-bible, tag-affiliate, tone-comprador, travessao, superlativo, html-invalido com 3 sub-checks, link-externo, tamanho-fora-de-faixa, redundancia-com-artigo, voz-citacao-ficha-tecnica, voz-comprador-implicita, termos-tecnico-industriais). Régua v1.16.0 — tamanho-fora-de-faixa cobre tanto curto demais quanto LONGO demais (shortDescription >250 chars, pros/cons >180 chars texto puro). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos site/slug. Gera relatório em docs/biblias-v2/.audits/products/<site>-<slug>-last.md.
 ---
 
 ## Parse de input
@@ -44,7 +44,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 2. **Read .mdx**: `Read sites/{site}/src/content/products/{slug}.mdx`. Se 404, abortar com mensagem clara.
 
-3. **Parsear frontmatter**: extrair os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview). Se algum vazio/ausente, registra como issue `conteudo-curto`.
+3. **Parsear frontmatter**: extrair os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview). Se algum vazio/ausente, registra como issue `tamanho-fora-de-faixa` (sub-tipo curto).
 
 4. **Read bíblia**: `Read docs/biblias-v2/{asin}.json`. Sem bíblia, audit não tem como cruzar claims — abortar com mensagem.
 
@@ -125,14 +125,28 @@ Use `superlativas qualificadas` quando houver dado de comparação na bíblia:
 ### 7. `link-externo-nao-amazon`
 Links em `fullReview` que NÃO apontam pra `amazon.com.br/dp/...`. Página individual não deve ter links externos pra outras lojas/sites.
 
-### 8. `conteudo-curto`
-Campo crítico vazio ou muito curto:
+### 8. `tamanho-fora-de-faixa` (régua v1.16.0 — antes era só `conteudo-curto`)
+
+Campo fora dos limites editoriais — pode estar **curto demais** (vazio/incompleto) ou **longo demais** (regressão de escanabilidade, similar ao caso `melhorpretreino`).
+
+**Curto demais** (severidade: depende do campo):
 - `subtitle` ausente ou < 10 chars
-- `shortDescription` ausente ou < 40 chars
+- `shortDescription` ausente ou < 50 chars (era 40 antes da v1.16.0)
 - `fullReview` ausente ou < 300 chars
 - `pros` < 3 itens
 - `cons` ausente ou 0 itens
 - `specs` < 3 pares
+
+**Longo demais** (severidade: Crítico — quebra escanabilidade do card):
+- `subtitle` > 150 chars
+- `shortDescription` > 250 chars (HARD CAP régua v1.16.0; alvo 150-220)
+- `pros[i]` item > 180 chars texto puro (descontando markup `<strong>`/`<a>`)
+- `cons[i]` item > 180 chars texto puro
+- `fullReview` > 3000 chars
+
+**Como contar pros/cons sem HTML**: olhe o bullet sem `<strong>...</strong>` e sem `<a href="...">...</a>` mantendo só o texto interno. Se passa de 180 = flag.
+
+Canon vivo `melhoraspirador` (referência): shortDescription média 225 chars, pros/cons média 65 chars/item, máx 93.
 
 ### 9. `redundancia-com-artigo`
 Se conseguir detectar: pontos no `fullReview` da página individual que parecem copiados/parafraseados do `fullReview` do produto-no-artigo (anti-duplicate-content SEO).
@@ -262,7 +276,7 @@ Template exato — use blocos idênticos pro painel parsear visualmente:
 
 ## Classificação de severidade
 
-- **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4).
+- **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4), **tamanho-fora-de-faixa LONGO demais** (régua v1.16.0 — shortDescription >250, pros/cons >180 texto puro; cards viram parágrafos).
 - **🟡 Aviso**: superlativo sem evidência, conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content, voz-citação ficha-técnica burocrática.
 - **🔵 Info**: nota que vale registrar mas não exige ação (ex: "subtitle no limite mínimo de 10 chars, considere expandir").
 

@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 21 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade, guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 2 (2026-05-27): qualidade editorial de intro/title/meta/listHeading. Fase 3 (2026-05-27): audit do guideContent (estrutura 5 H2 / tamanho / allowlist HTML / hub-and-spoke links). Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
+description: Audita artigo inteiro read-only. Combina 22 categorias editoriais (claim-vs-bible, tag-affiliate-contextual, travessao, superlativo, atribuicao-comprador, tone-clone, spec-ausente, dado-inconsistente, decisao-editorial, voz-citacao-ficha-tecnica, html-invalido, voz-comprador-implicita, termos-tecnico-industriais, intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade, guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, tamanho-escannavel-produto) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Fase 2 (2026-05-27): qualidade editorial de intro/title/meta/listHeading. Fase 3 (2026-05-27): audit do guideContent. Fase 4 (2026-05-28 v1.16.0): tamanho-escannavel-produto (hard caps shortDescription ≤250, pros/cons ≤180 texto puro + ban "lineup"). Output: relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos site/slug.
 ---
 
 ## Parse de input
@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 21 categorias (10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26: html-invalido, voz-comprador-implicita, termos-tecnico-industriais + 4 adicionadas 2026-05-27 Fase 2: intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade + 4 adicionadas 2026-05-27 Fase 3: guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke — ver "Critérios de auditoria" abaixo). Gerar:
+7. **Rodar auditoria IA** nas 22 categorias (10 do `regras_auditoria_artigo` + 3 adicionadas 2026-05-26: html-invalido, voz-comprador-implicita, termos-tecnico-industriais + 4 adicionadas 2026-05-27 Fase 2: intro-qualidade, title-qualidade, meta-description-qualidade, list-heading-qualidade + 4 adicionadas 2026-05-27 Fase 3: guide-estrutura, guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke + 1 adicionada 2026-05-28 Fase 4: tamanho-escannavel-produto — ver "Critérios de auditoria" abaixo). Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -414,6 +414,33 @@ Audit dos links no `guideContent`. Régua hub-and-spoke (canon v1.10.0 da skill 
 - ℹ️ Conclusão linka `/dp/B123` mas há peer article `/melhor-creatina-monohidratada/` no site → info "considere link interno hub-and-spoke"
 
 Fix sugerido: rodar skill `artigo-guia-escrever` (aplica hub-and-spoke automaticamente).
+
+### `tamanho-escannavel-produto` (level=`error`, régua v1.16.0)
+
+Audit dos limites editoriais de tamanho nos campos do produto-no-artigo. Bullets/cards inchados quebram a escanabilidade visual (cards viram parágrafos, parágrafos viram wall-of-text → usuário pula a decisão).
+
+**Hard caps** (canon `melhoraspirador` validado live):
+
+| Campo | Limite | Alvo |
+|---|---|---|
+| `products[N].shortDescription` | 250 chars | 150-220 |
+| `products[N].pros[i]` item | 180 chars texto puro | 80-130 |
+| `products[N].cons[i]` item | 180 chars texto puro | 80-130 |
+
+**Como contar pros/cons**: descontar markup `<strong>`/`<a>`/`<em>` — conta só o texto visível ao leitor.
+
+**Sub-checks (sub-tipos do mesmo critério, todos level=`error`)**:
+- `shortDescription-longa`: campo > 250 chars
+- `bullet-longo`: pros[i] ou cons[i] texto puro > 180 chars
+- `listagem-peers-exaustiva`: bullet/parágrafo cita 4+ peers (lista virou tabela em texto)
+- `palavra-chavao-banida`: ocorrência de "lineup", "do lineup", "do nosso lineup", "desta seleção", "do nosso comparativo" em qualquer campo do produto
+- `palavra-chavao-alta-freq` (level=`warn`): "fórmula" > 60, "ativo"/"ativos" > 50, "preço médio" > 15, "parestesia"+"formigamento" > 20 combinados — chavões que precisam variação léxica
+
+**Caso real `melhorpretreino`** (regressão pré-v1.16.0): shortDescription média 329-414 chars (canon vivo: 225); bullets média 175-182 chars (canon: 65); 50 ocorrências de "lineup" + 114 de "seleção" num único artigo.
+
+**Bloqueia readyToLock?** Sim — categoria `error`, conta como blocker.
+
+Fix sugerido: rodar skill `artigo-review-criar` (v1.16.0+) com hard caps embutidos, ou destilar manualmente.
 
 ## Critérios estruturais (4 checks determinísticos)
 
