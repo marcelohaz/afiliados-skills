@@ -415,24 +415,29 @@ Audit dos links no `guideContent`. Régua hub-and-spoke (canon v1.10.0 da skill 
 
 Fix sugerido: rodar skill `artigo-guia-escrever` (aplica hub-and-spoke automaticamente).
 
-### `link-interno-quebrado` (level=`error`, régua v1.20.0)
+### `link-interno-quebrado` (level=`error`, régua v1.20.1)
 
-Audit dos links internos no `guideContent` contra arquivos REAIS no filesystem. URLs internas que não batem com nenhum `.mdx` (em `content/reviews/` ou `content/products/`) viram 404 quando o site é deployado.
+Audit dos links internos no `guideContent` contra arquivos REAIS no filesystem E contra o padrão `homeReviewSlug` do site. URLs internas que viram 404 em produção — seja por arquivo inexistente, seja por slug excluído do `getStaticPaths`.
 
 **Causas frequentes**:
 - Acento no slug: `<a href="/melhor-pré-treino/">` — slug real é `/melhor-pre-treino/` (sem acento)
-- Slug derivado de versão antiga do slugify: ex: `/black-skull-b-o-p-e/` quando o arquivo se chama `black-skull-bope.mdx`
+- Slug derivado de versão antiga do slugify: ex: `/black-skull-b-o-p-e/` → `black-skull-bope.mdx`
 - Typo no nome do produto/keyword
 - Slug pluralizado quando o arquivo é singular (ou vice-versa)
+- **⚠ homeReviewSlug (caso real 2026-05-29):** site com `homeReviewSlug: 'melhor-pre-treino'` no config — o review `melhor-pre-treino.mdx` EXISTE no fs mas é servido em `/` (home), NÃO em `/melhor-pre-treino/`. O `[slug].astro` filtra o homeReviewSlug do `getStaticPaths` → link pra `/{homeReviewSlug}/` é 404 em produção.
 
-**Como verificar**:
-1. Listar TODOS os `<a href="/{slug}/"` no `guideContent` (links internos)
-2. Pra cada slug, conferir se existe `sites/{site}/src/content/reviews/{slug}.mdx` OU `sites/{site}/src/content/products/{slug}.mdx`
-3. Se nenhum dos dois existe → 🔴 error `link-interno-quebrado`
+**Como verificar** (3 passos):
+1. Ler `homeReviewSlug` em `sites/{site}/src/config.ts` (pode ser `undefined` em sites grid)
+2. Listar TODOS os `<a href="/{slug}/"` no `guideContent`
+3. Pra cada slug:
+   - Se `slug === homeReviewSlug` → 🔴 error. O link correto é `href="/"` (home)
+   - Se não existe `sites/{site}/src/content/reviews/{slug}.mdx` NEM `sites/{site}/src/content/products/{slug}.mdx` → 🔴 error
 
 **Bloqueia readyToLock?** Sim — 404 em produção é defeito sério.
 
-**Fix sugerido**: ajustar `href` pra slug real correspondente (passando pela `slugify` canon: lowercase + remove acento + ponto entre dígitos vira hífen + demais pontos removidos).
+**Fix sugerido**:
+- Slug = homeReviewSlug → trocar `href="/{slug}/"` por `href="/"`
+- Outros → ajustar `href` pra slug real (slugify canon: lowercase + sem acento + ponto entre dígitos → hífen + demais pontos removidos)
 
 ### `peer-article-nao-linkado` (level=`warn`, régua v1.20.0)
 
