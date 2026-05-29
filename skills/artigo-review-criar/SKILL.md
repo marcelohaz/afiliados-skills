@@ -157,6 +157,16 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 **Limite duro**: máximo **2 produtos por artigo** podem usar "ocupa o papel de [badge]" (já está no JSON como `chavoes_estruturais_max.ocupa o papel: 2`). Os demais variam.
 
 **Auto-check antes de gravar**: grep `ocupa o papel` no review gerado. Se aparecer + outros 2 produtos do artigo já usam — reescreve abertura.
+**Adendo PT-BR — title case mid-sentence (v1.20.0)**: posicionadores como "é o melhor para X", "ganha o título de X", "entra como X" são ok — mas X deve ir em **minúsculo** em PT-BR, pois a frase continua no meio de um parágrafo. O  do produto usa title case (exibido no card), mas ao adaptá-lo para prosa, converta para lowercase.
+
+❌ "é o **M**elhor para **G**astar mais **E**nergia porque..."
+✅ "é o **m**elhor para gastar mais energia porque..."
+
+❌ "ganha o título de **M**elhor **F**órmula **E**quilibrada"
+✅ "ganha o título de melhor fórmula equilibrada"
+
+**Auto-check adicional**: no Para quem é gerado, grep `é o [A-Z]`, `é a [A-Z]`, `como [A-Z]`, `título de [A-Z]`. Se encontrar maiúscula — verifique se é nome próprio de produto/marca. Se não for, converta pra minúsculo.
+
 
 - **3 links de afiliado** total (Para quem é + Por que gostamos + Resumo). SEM link em "Pontos de atenção".
 - Formato dos links: `<a href="{amazonUrl}" rel="nofollow" target="_blank">Nome do Produto</a>` onde `amazonUrl` é crua quando tag vazia, com tag quando preenchida.
