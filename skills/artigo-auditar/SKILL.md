@@ -336,7 +336,8 @@ Audit do campo `listHeading` do frontmatter (H2 que abre a TabelaTop dos produto
 - **Existe e não-vazio** (campo obrigatório no schema do .mdx).
 - **10-200 chars** (alvo 30-80).
 - **Não tem placeholder** (`[listHeading TODO`, `Heading aqui`).
-- **Idealmente inclui `{keyword}` ou pergunta**: "Qual a **melhor impressora** em 2026?", "Quais são as **melhores creatinas**?"
+- **Idealmente inclui keyword ou pergunta**.
+- **PLURAL obrigatório com 2+ produtos** (régua v1.20.2): se `products.length >= 2`, o `listHeading` deve usar forma plural (derivada de `keywordPlural`). Singular ("Qual o melhor X") com lineup multi-produto é **warn** — fix: trocar pra "Quais os melhores X". Ex erro real: "Qual o melhor pré-treino para emagrecer em 2026?" com 10 produtos. Singular só OK se o artigo tiver 1 produto (raro).
 - **Sem travessão**.
 
 Fix sugerido: editar via painel (editor-artigo.html → campo "Heading da tabela").

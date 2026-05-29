@@ -125,7 +125,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    - `title`: 30-100 chars. Formato: keyword capitalizado + ":" (o resto user completa). Ex: keyword "melhor impressora custo benefício" → title "Melhor Impressora Custo Benefício:"
    - `description`: 50-160 chars, meta-description SEO
    - `keywordPlural`: forma plural do keyword pro H2 "Comparativo técnico dos {keywordPlural}". Ex: "melhores impressoras custo benefício"
-   - `listHeading`: 10-200 chars. H2 que abre a tabela. Ex: "Quais são as melhores impressoras custo benefício?"
+   - `listHeading`: 10-200 chars. H2 que abre a tabela. **SEMPRE plural** (lineup tem 2+ produtos): derive de `keywordPlural`, NUNCA de `keyword` singular. Ex correto: "Quais os melhores pré-treinos em 2026?". Errado: "Qual o melhor pré-treino em 2026?" (singular com lineup multi-produto).
    - `excerpt`: 50-300 chars. Teaser do topo
    - `specLabels`: array de 3-10 labels (intersecção dos specs.label dos produtos no lineup). Pra primeiro produto, deriva direto. Pra produtos adicionados depois, deixa como está e atualiza só se o novo produto tiver labels diferentes.
 
