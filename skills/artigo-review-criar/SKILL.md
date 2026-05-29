@@ -157,7 +157,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 **Limite duro**: máximo **2 produtos por artigo** podem usar "ocupa o papel de [badge]" (já está no JSON como `chavoes_estruturais_max.ocupa o papel: 2`). Os demais variam.
 
 **Auto-check antes de gravar**: grep `ocupa o papel` no review gerado. Se aparecer + outros 2 produtos do artigo já usam — reescreve abertura.
-**Adendo PT-BR — title case mid-sentence (v1.20.0)**: posicionadores como "é o melhor para X", "ganha o título de X", "entra como X" são ok — mas X deve ir em **minúsculo** em PT-BR, pois a frase continua no meio de um parágrafo. O  do produto usa title case (exibido no card), mas ao adaptá-lo para prosa, converta para lowercase.
+**Adendo PT-BR — title case mid-sentence (v1.20.0)**: posicionadores como "é o melhor para X", "ganha o título de X", "entra como X" são ok — mas X deve ir em **minúsculo** em PT-BR, pois a frase continua no meio de um parágrafo. O campo `subtitle` do produto usa title case (exibido no card), mas ao adaptá-lo para prosa, converta para lowercase.
 
 ❌ "é o **M**elhor para **G**astar mais **E**nergia porque..."
 ✅ "é o **m**elhor para gastar mais energia porque..."
