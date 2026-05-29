@@ -658,6 +658,23 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - Alérgeno: "contém glúten declarado pelo fabricante" → "contém glúten"
 - **Exceção**: "rende X páginas, segundo a Epson" (claim só-fabricante OK)
 
+### Qualificadores de procedência redundantes (régua v1.19.2, canon 2026-05-29)
+
+Quando um valor numérico concreto já está citado, qualificadores como "declarado", "informado", "detalhado", "especificado" são redundância pura — soam burocráticos.
+
+| ❌ Antes | ✓ Depois |
+|---|---|
+| "1 g de leucina declarados" | "1 g de leucina" |
+| "400 mg de cafeína declarados" | "400 mg de cafeína" |
+| "aminoácidos essenciais declarados (1 g de leucina...)" | "aminoácidos essenciais (1 g de leucina...)" |
+| "doses totalmente declaradas em mg" | "doses em mg" |
+| "transparência das doses" como elogio vago | citar as doses reais |
+| "fórmula com doses detalhadas" | "fórmula com 9 ativos em mg específicos" |
+
+**Exceção legítima**: quando descrevendo AUSÊNCIA — "mg não consta no rótulo", "fabricante não detalha as mg". "não declarado" / "não informado" são OK quando descrevem falta de dado real.
+
+Auto-check: grep por `declarad|informado|detalhado|especificado` logo após número concreto (`\d+\s*(?:mg|g)\s+(?:declarad|informad|detalhad|especificad)`). Se achar — drop o qualificador.
+
 ### Chavões por nicho (carregar `docs/painel/_data/chavoes-por-nicho.json`)
 
 - Identifique `niche` em `docs/painel/sites-meta.json`

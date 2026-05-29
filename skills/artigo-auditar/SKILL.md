@@ -605,6 +605,25 @@ Fix sugerido: qualificar sempre — "Tolerado pela maioria, consulte um profissi
 
 Fix sugerido: drop "declarad*" e verifique se a frase ainda faz sentido. Se sim, era redundância. Para alérgenos: "contém X" direto (rotulagem é obrigatória, não precisa qualificar como "declarado").
 
+### `qualificador-procedencia-redundante` (level=`warn`, régua v1.19.2, canon 2026-05-29)
+
+**Princípio**: quando um valor numérico concreto já está citado, qualificadores como "declarado", "informado", "detalhado", "especificado" são redundância pura — soam burocráticos e transferem responsabilidade desnecessariamente.
+
+**Sub-checks (regex em todos os campos editoriais)**:
+
+| Sub | Padrão | Exemplo flag |
+|---|---|---|
+| `qualificador-apos-numero` | `\d+\s*(?:mg\|g\|µg\|ml\|mcg)\s+(?:declarad\|informad\|detalhad\|especificad)` | "400 mg declarados" |
+| `qualificador-parentetico-numero` | `\(\d+\s*(?:mg\|g)[^)]*(?:declarad\|informad\|detalhad\|especificad)[^)]*\)` | "(1 g de leucina declarados)" |
+| `elogio-vago-procedencia` | `transparência das doses\|doses? (?:totalmente\|completamente) declarad` | "transparência das doses" como elogio sem citar as doses reais |
+| `formula-com-doses-detalhadas` | `fórmula com doses (?:detalhadas\|declaradas\|informadas)` | "fórmula com doses detalhadas" sem especificar as doses |
+
+**Exceção CANÔNICA** (não flag): "mg não consta no rótulo", "fabricante não detalha as mg" — nesses casos o qualificador descreve AUSÊNCIA de informação e informa algo útil. "não declarado" / "não informado" são OK quando descrevem falta de dado real.
+
+**Bloqueia readyToLock?** Não — é warn (redundância editorial, não erro factual ou estrutural).
+
+Fix sugerido: drop o qualificador e releia a frase. Se ainda faz sentido → era redundância, drop definitivo. Para elogios vagos de "transparência" → citar as doses reais no lugar.
+
 ## Critérios estruturais (4 checks determinísticos)
 
 | Check | Critério | Bloqueia readyToLock? |

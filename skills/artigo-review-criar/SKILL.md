@@ -780,6 +780,26 @@ Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evi
 
 **Régua mental antes de gravar**: se a frase tem `\d+ mg declarad` ou `declarad\w+ pelo fabricante` ou `(todas|todos|doses) declarad`, drop "declarad*" e veja se a frase ainda faz sentido. Se sim, era redundância — drop sempre.
 
+### 16. Qualificadores de procedência redundantes (régua v1.19.2, canon 2026-05-29)
+
+**Princípio**: quando um valor numérico concreto já está citado, qualificadores como "declarado", "informado", "detalhado", "especificado" são redundância pura — soam burocráticos e transferem responsabilidade desnecessariamente.
+
+**Sub-padrões proibidos**:
+
+| ❌ Antes | ✓ Depois |
+|---|---|
+| "1 g de leucina declarados" | "1 g de leucina" |
+| "400 mg de cafeína declarados" | "400 mg de cafeína" |
+| "aminoácidos essenciais declarados (1 g de leucina...)" | "aminoácidos essenciais (1 g de leucina...)" |
+| "doses totalmente declaradas em mg" | "doses em mg" |
+| "todos declarados em mg pelo fabricante" | "todos com mg específicas" |
+| "transparência das doses" como elogio vago | citar as doses reais |
+| "fórmula com doses detalhadas" | "fórmula com 9 ativos em mg específicos" |
+
+**Exceção legítima**: quando descrevendo AUSÊNCIA de informação — "mg não consta no rótulo", "fabricante não detalha as mg". Nesses casos o qualificador informa algo útil (que a info não existe). "não declarado" / "não informado" são OK quando descrevem falta de dado real.
+
+**Auto-check**: grep por `declarad`, `informado`, `detalhado`, `especificado` após número concreto (ex: `\d+\s*(?:mg|g|µg|ml)\s+(?:declarad|informad|detalhad|especificad)`). Se achar — drop o qualificador e releia a frase. Se ainda faz sentido, era redundância.
+
 ## Invocação
 
 Exemplos válidos do user:
