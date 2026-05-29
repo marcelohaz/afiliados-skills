@@ -167,6 +167,21 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 **Auto-check adicional**: no Para quem é gerado, grep `é o [A-Z]`, `é a [A-Z]`, `como [A-Z]`, `título de [A-Z]`. Se encontrar maiúscula — verifique se é nome próprio de produto/marca. Se não for, converta pra minúsculo.
 
+**Régua keyword no Para quem é (v1.20.1, canon 2026-05-29)**: prefira inserir a **keyword-raiz do nicho** no claim, com estrutura fixa `o [Produto] é o melhor [keyword] para/de/com [ângulo]`, VARIANDO só a abertura antes dela. A keyword consistente reforça SEO; a abertura variada evita tone-clone.
+
+Estrutura: `[abertura variada], o [Produto] é o melhor [keyword] para [ângulo do produto]`
+
+Exemplos (nicho pré-treino, ângulo vindo do subtitle de cada produto):
+- "Se você prioriza treino intenso, o FTW Diabo Verde é o melhor pré-treino para treino intenso, porque..."
+- "Para quem treina à noite, o Night Train é o melhor pré-treino para treino noturno, por ser..."
+- "Quando a concentração é o que falta, o Darkness é o melhor pré-treino para foco mental, porque..."
+
+Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / Quando o objetivo é X / Pensando em X / Voltado a quem X). O miolo `é o melhor [keyword] para [ângulo]` é o constante.
+
+Ângulos que não encaixam em "para X" usam "de X" / "com X" / adjetivo: "o melhor pré-treino premium", "o melhor pré-treino de fórmula natural", "o melhor pré-treino clean label".
+
+**Não force nos 100%**: 1-2 produtos com abertura narrativa própria ("o X sobe um degrau", "o X ocupa espaço único") são variação saudável — não precisam do claim-keyword se a abertura já é forte e distinta.
+
 
 - **3 links de afiliado** total (Para quem é + Por que gostamos + Resumo). SEM link em "Pontos de atenção".
 - Formato dos links: `<a href="{amazonUrl}" rel="nofollow" target="_blank">Nome do Produto</a>` onde `amazonUrl` é crua quando tag vazia, com tag quando preenchida.
