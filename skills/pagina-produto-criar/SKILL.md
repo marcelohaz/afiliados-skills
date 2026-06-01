@@ -281,6 +281,29 @@ specs:
 ```
 (Use o `amazonUrl` do contexto — crua quando affiliateTag vazia, com tag quando preenchida.)
 
+**A âncora é SEMPRE o nome do produto (ou parte dele) — NUNCA frase-CTA.**
+A página individual já tem o botão "Ver Preço na Amazon" logo abaixo do review;
+repetir CTA dentro do texto é redundante e vira spam. A âncora contextualiza no
+nome ("a [Produto] mira quem..."), não vende de novo.
+
+- ❌ `<a ...>Ver preço na Amazon</a>` · `<a ...>Conferir oferta</a>` · `<a ...>é só acessar aqui</a>` · `<a ...>verificar a disponibilidade</a>` · `<a ...>Comprar na Amazon</a>`
+- ✅ `<a ...>Dux Creatina Monohidratada</a>` · `<a ...>Creatina Creapure</a>` (nome ou pedaço dele)
+
+**AUTO-CHECK 1 (âncora = nome)** antes de escrever: cada `<a>…</a>` do fullReview
+deve conter o nome do produto (ou parte). Se a âncora contém "ver / conferir /
+comprar / acessar / oferta / aqui / disponibilidade / preço na Amazon" e NÃO o
+nome → ERRADO, reescreva ancorando no nome.
+
+**AUTO-CHECK 2 (prefixo em negrito)**: os 4 prefixos DEVEM sair exatamente como
+`<p><strong>Para quem é:</strong>`, `<p><strong>Por que gostamos:</strong>`,
+`<p><strong>Pontos de atenção:</strong>`, `<p><strong>Resumo:</strong>`. Se
+algum sair `<p>Para quem é:` (sem `<strong>`) → ERRADO. Render é `set:html`
+fiel: sem `<strong>` no source = sem negrito na tela.
+
+> Caso real 2026-06-01 (creatinasaprovadas): 5 de 9 páginas geradas em batch
+> falharam aqui — 2 com prefixo sem negrito + nome do produto ausente + âncoras
+> "é só acessar aqui"; 3 com âncoras "Ver preço na Amazon" em vez do nome.
+
 **Tags HTML permitidas**: `<p>`, `<strong>`, `<em>`, `<a>`.
 
 **Proibido**:

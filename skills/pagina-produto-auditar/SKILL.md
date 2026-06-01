@@ -326,6 +326,36 @@ Detecta bugs de substituição mecânica que vazam pro output:
 
 **Exceção CANÔNICA** (não flag): "rende 4.500 páginas, segundo a Epson" — claim só-fabricante + qualifica expectativa.
 
+### 18. `fullReview-prefixo-e-ancoras` (régua v1.20.1, severidade: 🔴 Crítico)
+
+Três sub-checks no `fullReview` da página individual. **Caso real 2026-06-01**
+(creatinasaprovadas): 5 de 9 páginas geradas em batch falharam aqui e o audit
+**não pegou** — o check 6a só confere allowlist (vê `<strong>` presente nas
+ênfases inline e aprova), sem nunca verificar prefixo nem âncora. Estes 3
+sub-checks fecham esse furo.
+
+**18a `prefixo-sem-negrito`**: cada um dos 4 prefixos DEVE estar em `<strong>`.
+Flag se aparecer `<p>Para quem é:` / `<p>Por que gostamos:` / `<p>Pontos de
+atenção:` / `<p>Resumo:` SEM o `<strong>` (regex: `<p>\s*(Para quem é|Por que
+gostamos|Pontos de atenção|Resumo):` que NÃO seja precedido de `<strong>`).
+Render é `set:html` fiel — sem `<strong>` no source = sem negrito na tela.
+
+**18b `ancora-cta-em-vez-de-nome`**: a página já tem o botão "Ver Preço na
+Amazon"; âncora-CTA no texto é redundante/spam. Flag qualquer `<a>…</a>` cujo
+texto contenha "ver / conferir / comprar / acessar / oferta / aqui /
+disponibilidade / preço na amazon" E **não** contenha o nome do produto. Ex
+reais: `<a>é só acessar aqui</a>`, `<a>Ver preço na Amazon</a>`, `<a>Comprar na
+Amazon</a>`. Âncora certa = nome do produto (ou pedaço dele).
+
+**18c `nome-produto-nao-linkado`**: o nome do produto (ou parte ≥2 palavras
+significativas) DEVE aparecer como texto de pelo menos 1 `<a>` do `fullReview`.
+Flag se nenhuma âncora contém o nome — sinal de que os links viraram CTA
+genérico em vez de linkar o produto (igual nos reviews de artigo).
+
+**Fix proposto pros 3**: reescrever os 3 links pra ancorar no nome do produto
+em Para quem é / Por que gostamos / Resumo, e garantir os 4 prefixos em
+`<strong>`. Não adicionar link no parágrafo "Pontos de atenção".
+
 ## Filtros editoriais — flag se aparecer nos campos curados
 
 Também sinalizar (severidade `aviso`):
@@ -370,7 +400,7 @@ Template exato — use blocos idênticos pro painel parsear visualmente:
 
 ## Classificação de severidade
 
-- **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4), **tamanho-fora-de-faixa LONGO demais** (régua v1.16.0 — shortDescription >250, pros/cons >180 texto puro; cards viram parágrafos).
+- **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4), **tamanho-fora-de-faixa LONGO demais** (régua v1.16.0 — shortDescription >250, pros/cons >180 texto puro; cards viram parágrafos), **fullReview-prefixo-e-ancoras** (régua v1.20.1 — 18a prefixo sem negrito, 18b âncora-CTA em vez do nome, 18c nome do produto não linkado).
 - **🟡 Aviso**: superlativo sem evidência, conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content, voz-citação ficha-técnica burocrática.
 - **🔵 Info**: nota que vale registrar mas não exige ação (ex: "subtitle no limite mínimo de 10 chars, considere expandir").
 

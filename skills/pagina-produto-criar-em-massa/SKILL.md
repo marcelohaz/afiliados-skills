@@ -348,6 +348,13 @@ EXCETO os passos de git operations (12, 13). Especificamente:
      `<p><strong>Pontos de atenção:</strong> ...</p>`
      `<p><strong>Resumo:</strong> ...</p>`
      3 links Amazon nas posições: Para quem é, Por que gostamos, Resumo.
+     **Âncora = NOME do produto, NUNCA frase-CTA** (a página já tem o botão
+     "Ver Preço na Amazon"; CTA no texto é redundante/spam). ❌ `<a>Ver preço na
+     Amazon</a>`, `<a>é só acessar aqui</a>`, `<a>Comprar na Amazon</a>` · ✅
+     `<a>Nome do Produto</a>`. **AUTO-CHECK**: (1) os 4 prefixos DEVEM sair em
+     `<strong>` (`<p><strong>Para quem é:</strong>`); (2) cada `<a>` deve conter
+     o nome do produto. Caso real 2026-06-01 (creatinasaprovadas): 5 de 9
+     falharam aqui (2 sem negrito + sem nome; 3 com âncora-CTA).
 7. Régua editorial DURA (NÃO violar):
    - Sem travessão (—) em nenhum campo
    - Sem superlativos absolutos ("o melhor", "incomparável")
