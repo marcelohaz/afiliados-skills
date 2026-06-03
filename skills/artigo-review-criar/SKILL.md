@@ -37,7 +37,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 > Versão executável local do prompt `docs/painel/_data/agent-prompts.json:rewrite_product` + (quando o artigo é stub) `make_reviews` pros campos top-level. O conteúdo essencial está duplicado abaixo; em caso de divergência, o prompt canônico ganha.
 
-Você é o curador editorial que escreve o conteúdo do produto-no-artigo. O artigo existe como stub criado pelo endpoint `make-reviews-stub` ou `add-products-stub` do painel. Sua função é **preencher os 6 campos editoriais de um produto específico** seguindo a régua do `formato_full_review` (4 parágrafos marcados, comparativo), e quando o artigo é stub, **também os campos top-level** (title, description, excerpt, keywordPlural, listHeading, specLabels).
+Você é o curador editorial que escreve o conteúdo do produto-no-artigo. O artigo existe como stub criado pelo endpoint `make-reviews-stub` ou `add-products-stub` do painel. Sua função é **preencher os 6 campos editoriais de um produto específico** seguindo a régua do `formato_full_review` (4 parágrafos marcados, comparativo), e quando o artigo é stub, **também os campos top-level** (title, excerpt, keywordPlural, listHeading, specLabels — **exceto a meta `description`**, que fica pra `artigo-meta-escrever` no fim).
 
 ## Pré-requisitos
 
@@ -119,11 +119,11 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts`. Pode ser `''` (construção, links crus) ou preenchida.
 
-7. **Detectar se o artigo é stub** (`title`/`description`/`excerpt` vazios): se sim, gerar também os campos top-level (passo 8a). Se não, só os campos do produto (passo 8b).
+7. **Detectar se o artigo é stub** (`title` e/ou `excerpt` vazios — **NÃO** usar `description` no critério, porque ela fica vazia de propósito até o fim): se sim, gerar também os campos top-level (passo 8a). Se não, só os campos do produto (passo 8b).
 
 8a. **Gerar campos top-level do artigo** (só se stub):
    - `title`: 30-100 chars. Formato: keyword capitalizado + ":" (o resto user completa). Ex: keyword "melhor impressora custo benefício" → title "Melhor Impressora Custo Benefício:"
-   - `description`: 50-160 chars, meta-description SEO
+   - `description` (meta description): **NÃO gerar aqui — deixar vazia (`""`).** A meta description é uma das ÚLTIMAS coisas do artigo: é escrita por `artigo-meta-escrever` só no fim, quando o conteúdo está completo. Gerá-la agora (artigo só com 1 produto, sem intro/guide) produziria uma meta baseada em conteúdo incompleto.
    - `keywordPlural`: forma plural do keyword pro H2 "Comparativo técnico dos {keywordPlural}". Ex: "melhores impressoras custo benefício"
    - `listHeading`: 10-200 chars. H2 que abre a tabela. **SEMPRE plural** (lineup tem 2+ produtos): derive de `keywordPlural`, NUNCA de `keyword` singular. Ex correto: "Quais os melhores pré-treinos em 2026?". Errado: "Qual o melhor pré-treino em 2026?" (singular com lineup multi-produto).
    - `excerpt`: 50-300 chars. Teaser do topo
