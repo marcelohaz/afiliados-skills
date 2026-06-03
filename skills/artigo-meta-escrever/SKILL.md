@@ -130,7 +130,8 @@ Reescreva a META DESCRIPTION (tag SEO que aparece na busca do Google) do artigo 
 
 ## Convenções
 - 50 a 160 caracteres (Google trunca em ~155, toleramos 160)
-- 1 sentença completa, sem reticências, sem cortes
+- 1 a 2 sentenças completas, sem reticências nem cortes (pergunta + resposta funciona bem para CTR)
+- BENEFÍCIO-FIRST, não ficha técnica: vende o ganho do leitor, não uma lista de specs (ver régua abaixo)
 - Mencionar a keyword principal do title nos primeiros 60 chars
 - Linguagem direta, factual; sem superlativos sem evidência
 - Sem travessão (—); use vírgula ou ponto
@@ -138,28 +139,40 @@ Reescreva a META DESCRIPTION (tag SEO que aparece na busca do Google) do artigo 
 - Single line, sem quebras (\n)
 ```
 
-**Estrutura típica que funciona** (não obrigatória, só pattern):
+### Benefício-first, NÃO ficha técnica (régua v1.20.0, canon 2026-06-03)
 
-`{Keyword principal} para {perfil de uso}, com {ângulo concreto 1}, {ângulo concreto 2} e {ângulo concreto 3}.`
+A meta vende o **GANHO do leitor** (o que ele economiza, resolve ou consegue), não a lista de critérios técnicos. O erro mais comum é virar **cabeçalho de planilha**: keyword + 3-4 specs encadeados por vírgula. Caso real (melhorimpressora, 2026-06-03): `"Melhor impressora tanque de tinta em 2026: comparativo com custo por página, rendimento por kit, velocidade ISO e frente e verso automático."` (4 specs em fila, zero gancho) — Marcelo flagou como "muito ficha técnica".
 
-Exemplos bons:
+- ❌ **Ficha técnica (PROIBIDO)**: não encadeie 3 ou mais specs/critérios por vírgula ("custo por página, rendimento por kit, velocidade ISO e duplex").
+- ✅ **Abra com 1**: a dúvida do leitor (pergunta), a dor (ex: cartucho caro), o objetivo (ex: imprimir muito gastando pouco) ou o resultado (ex: escolher sem erro).
+- **No máximo 1-2 termos técnicos**, e sempre ancorados num benefício (`rende milhares de páginas` em vez de `rendimento por kit`).
 
-- ✓ `"Análise das impressoras com melhor custo-benefício para uso doméstico e home office, com foco em tanque de tinta, velocidade ISO e rendimento por kit."` (155 chars)
-- ✓ `"Comparativo das melhores creatinas em 2026, com análise de pureza Creapure, custo por dose e tempo de dissolução."` (113 chars)
-- ✓ `"Guia para escolher tablet barato em 2026: tela, processador, RAM e bateria comparados em 8 modelos populares na Amazon."` (118 chars)
+**3 moldes que funcionam (varie entre eles):**
+
+- Pergunta + resposta: `Qual a melhor {keyword} em {ano}? {benefício/ganho concreto}.`
+- Dor → solução: `{Dor do leitor}? {Keyword}: {como resolve}.`
+- Benefício + alcance: `As melhores {keywordPlural} de {ano} pra {objetivo}, de {X} a {Y}.`
+
+Exemplos bons (benefício-first):
+
+- ✓ `"Qual a melhor impressora tanque de tinta em 2026? Comparamos os modelos pra você imprimir muito gastando pouco com tinta, sem voltar ao cartucho."` (~146 chars)
+- ✓ `"Cansou do cartucho caro? Veja as melhores impressoras de 2026 que rendem milhares de páginas com tinta barata, da básica à fotográfica."` (~134 chars)
+- ✓ `"Qual a melhor creatina em 2026? Veja quais valem o preço pra ganho de força, com pureza Creapure e bom custo por dose."` (~116 chars)
+- ✓ `"Tablet travando ou tela pequena? Os melhores tablets baratos de 2026 pra estudo, vídeo e leitura sem pesar no bolso."` (~114 chars)
 
 Exemplos ruins:
 
-- ❌ `"As melhores impressoras."` (24 chars — muito curto)
-- ❌ `"As melhores impressoras de custo benefício do mercado brasileiro em 2026, com análise completa de tanque de tinta, velocidade ISO, rendimento por kit, conectividade Wi-Fi, capacidade de papel e duplex."` (200 chars — passa do limite)
-- ❌ `"Análise das melhores impressoras — a melhor seleção do mercado."` (tem travessão + superlativo sem evidência)
+- ❌ `"Melhor impressora tanque de tinta em 2026: comparativo com custo por página, rendimento por kit, velocidade ISO e frente e verso automático."` (ficha técnica: 4 specs encadeados, zero benefício)
+- ❌ `"As melhores impressoras."` (24 chars, muito curto e vago)
+- ❌ `"...com análise completa de tanque de tinta, velocidade ISO, rendimento por kit, conectividade Wi-Fi, capacidade de papel e duplex."` (passa de 160 + ficha técnica)
+- ❌ `"Análise das melhores impressoras — a melhor seleção do mercado."` (travessão + superlativo)
 - ❌ `"Análise das "melhores" impressoras..."` (aspa dupla interna)
 
 ## Voz editorial
 
 - **Factual, não promocional**: não promete que o usuário vai encontrar a "perfeita". Promete análise/comparativo.
 - **Verbos de análise**: "comparativo", "análise", "guia para escolher", "panorama das opções".
-- **Concreto, não vago**: dois ou três ângulos específicos (specs, perfis, critérios) batem mais que "tudo o que você precisa saber".
+- **Concreto, mas não ficha técnica**: um benefício ou ganho concreto (economia, perfil, resultado) bate mais que "tudo o que você precisa saber". Não encadeie specs como lista.
 
 ## Tom conversacional (CRÍTICO)
 
