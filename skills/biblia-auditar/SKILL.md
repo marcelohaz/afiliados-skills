@@ -42,6 +42,16 @@ Você é o auditor de bíblias de produto. O usuário passa um ASIN (ou nome de 
 1. **Carregar**: `Read docs/biblias-v2/<ASIN>.json`. Se não existir, abortar com mensagem clara.
 2. **Rodar as 5 categorias de checagem** (abaixo). Anote achados em memória.
 3. **Verificação externa opcional**: Se houver claims numéricos específicos (wattagem, dpi, capacidade) e dúvida, use `WebFetch` em `identidade.urlFabricante` pra cruzar. Não navegue em sites aleatórios; priorize fabricante oficial > Amazon ao vivo > nada.
+3.5. **Auto-baixar imagem pendente** (régua 2026-06-03 — a auditoria FECHA o gap, não só sugere): se `identidade.imagemAmazon` está preenchido **e** `docs/biblias-v2/<ASIN>.webp` NÃO existe, baixe agora antes de escrever o relatório:
+   ```bash
+   bun scripts/baixar-imagens.ts <ASIN>           # baixa → docs/biblias-v2/<ASIN>.webp + grava imagemLocal
+   bun scripts/sync-biblias-r2.ts --apply --push  # persiste webp + JSON no R2 (senão o auto-sync sobrescreve)
+   ```
+   - **Sucesso** → a imagem deixou de ser pendência; **NÃO** flague "imagemLocal vazia" no relatório (resolvido).
+   - **Falha** (ex: `imagemAmazon` é URL de página de produto `/dp/...`, não de imagem direta) → flague 🟡 `imagem-url-invalida`: "imagemAmazon não é uma imagem direta; cole a `https://m.media-amazon.com/images/...` real no editor e rebaixe".
+   - `imagemAmazon` **null** → flague 🟡 "sem fonte de imagem" (não há o que baixar).
+   - `.webp` já existe → nada a fazer (idempotente).
+   Bíblia travada (`locked: true`): pule o download e flague pra destravar.
 4. **Escrever relatório**: `Write docs/biblias-v2/.audits/<ASIN>-<YYYY-MM-DD-HHMM>.md` + `Write docs/biblias-v2/.audits/<ASIN>-last.md` (mesmo conteúdo, caminho fixo pro painel ler). Crie o diretório `.audits/` se não existir.
 5. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
    ```bash
@@ -73,7 +83,7 @@ Claims numéricos ou categóricos específicos que podem ser checados:
 
 ### 4. Completude crítica
 Campos vazios que comprometem review:
-- `identidade.imagemLocal === null` → review vai sem imagem local.
+- `identidade.imagemLocal === null` → imagem pendente. **Resolva no passo 3.5 (auto-download)** em vez de só flaggar: se `imagemAmazon` existe, baixe; se a URL for inválida ou null, flague conforme o passo 3.5. Só sobra como achado se o download não for possível.
   - **Path canônico desde 2026-05-17**: `docs/biblias-v2/<ASIN>.webp` (gerado pelo `scripts/baixar-imagens.ts` ou pelo botão "Baixar imagem" do painel). NÃO flaggar como problema se o `imagemLocal` aponta pra esse caminho — é o esperado. O fluxo atual é "bíblia central detém a webp; sites copiam dela na hora de criar artigo/página de produto".
   - **Path legado**: `sites/{site}/public/images/products/<slug>.webp` ainda aparece em bíblias antigas (pré-migração). Aceitar sem flag — funciona, só não é o padrão atual.
 - `specsAmazon === null && conteudoBrutoFornecedor === null` → agente não tem ficha técnica pra trabalhar.
