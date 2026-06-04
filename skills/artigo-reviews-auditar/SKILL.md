@@ -251,7 +251,7 @@ Régua: voz-citação OK SÓ quando atende AS DUAS condições:
 1. **(a)** qualifica claim que SÓ o fabricante pode fazer (rendimento, garantia interna, certificação proprietária)
 2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica útil)
 
-**✓ Editorial OK** (não flag): "rende até 4.500 páginas em preto, segundo a Epson" — claim só-fabricante + qualifica rendimento.
+**❌ Agora flag** (régua v1.21.1): "rende até 4.500 páginas em preto, segundo a Epson" — atribuir spec de fabricante (rendimento) é muleta; fix = afirmar direto "rende até 4.500 páginas em preto". Atribuição só vale pra recomendação/calibração ("a HP recomenda 50-100 págs/mês").
 
 **❌ Burocrática** (flag): "alérgenos da Amazon confirmam ausência de glúten" → propor "sem glúten".
 
@@ -540,7 +540,7 @@ for produto in products:
 - ❌ "sem mg declarada" → ✓ "sem dose específica" / "embutida sem detalhamento"
 
 **Exceção CANÔNICA** (não flag):
-- ✅ "rende 4.500 páginas, segundo a Epson" — claim só-fabricante (leitor não verifica sem teste) + qualifica expectativa (ver `voz-citacao-ficha-tecnica` critério 8 acima — mesma régua aplicada com mais rigor pra "declarado")
+- ❌ "rende 4.500 páginas, segundo a Epson" — atribuir spec de fabricante é muleta (régua v1.21.1); fix = "rende até 4.500 páginas" direto. Atribuição só pra recomendação/calibração ("a HP recomenda 50-100 págs/mês").
 
 ## Filtros de severidade
 

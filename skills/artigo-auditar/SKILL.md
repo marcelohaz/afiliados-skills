@@ -219,7 +219,7 @@ Marcadores de procedência **burocráticos** no .mdx — quando o modelo copiou 
 1. **(a)** qualifica claim que SÓ o fabricante pode fazer (rendimento, garantia interna, certificação proprietária)
 2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica útil)
 
-**✓ Editorial OK** (não flag): "rende até 4.500 páginas em preto, segundo a Epson" — claim só-fabricante + qualifica rendimento.
+**❌ Agora flag** (régua v1.21.1): "rende até 4.500 páginas em preto, segundo a Epson" — atribuir spec de fabricante (rendimento) é muleta; fix = afirmar direto "rende até 4.500 páginas em preto". Atribuição só vale pra recomendação/calibração ("a HP recomenda 50-100 págs/mês").
 
 **❌ Burocrática** (flag warn): "alérgenos da Amazon confirmam ausência de glúten" → sugerir "sem glúten".
 
@@ -600,7 +600,7 @@ Fix sugerido: qualificar sempre — "Tolerado pela maioria, consulte um profissi
 | `sem-mg-declarado` | `sem mg declarad[ao]` |
 | `conforme-declaracao` | `conforme (?:declaração\|declarado\|declarada)` |
 
-**Exceção CANÔNICA** (não flag): "rende 4.500 páginas, segundo a Epson" — claim só-fabricante (leitor não verifica sem teste) + qualifica expectativa.
+**FLAG "segundo a [marca]" em spec factual** (régua v1.21.1): "rende 4.500 páginas, segundo a Epson" -> atribuir rendimento/economia/velocidade é muleta; o fix é afirmar direto ("rende até 4.500 páginas"). Atribuição só passa em recomendação/calibração do fabricante (ex: "a HP recomenda 50-100 págs/mês").
 
 **Bloqueia readyToLock?** Sim — categoria `error`.
 

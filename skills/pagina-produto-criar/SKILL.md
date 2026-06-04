@@ -494,7 +494,7 @@ A #6 reforça: *"Integre os dados no texto como quem conhece o produto: não cit
 Se NÃO atende as duas → drop. Régua editorial, não checklist mecânico.
 
 **✓ EDITORIAL OK** (referência canônica: `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`):
-- "rende até 4.500 páginas em preto, **segundo a Epson**" → claim só-fabricante + qualifica rendimento (não dá pra um reviewer testar 4.500 páginas)
+- "rende até 4.500 páginas em preto" → spec de fabricante afirmado DIRETO, sem "segundo a Epson" (atribuir rendimento/economia vira muleta)
 - "número de marketing 33 ppm, mas a **velocidade ISO (padrão da indústria)** é mais realista" → crítica útil, separa marketing de fato
 - "a HP recomenda volume de 50 a 100 páginas mensais" → claim só-fabricante + ajuda leitor calibrar uso
 
@@ -531,7 +531,7 @@ Caso suplemento (B07L5W6GVC + B09S3YDC6H + B081VQZ1YK, ômega 3):
 **Quando referenciar marca/fabricante É OK**:
 - ✓ "cadastro no site da HP em até 60 dias" *(informação prática)*
 - ✓ "app HP Smart centraliza configuração" *(nome do app)*
-- ✓ "rende até 4.500 páginas segundo a Epson" *(claim só-fabricante + qualifica rendimento)*
+- ✓ "rende até 4.500 páginas" *(spec de fabricante afirmado direto, sem muleta de fonte)*
 - ❌ "sem glúten confirmado nos alérgenos da Amazon" *(fato trivial + marcação burocrática)*
 
 **Antes de gravar, faça grep mental**: se aparece "confirmado", "declarado", "apontada", "conforme X", "segundo Y", "relato recorrente", "atributos de material" — reescreva. Exceção: passou nos 2 critérios editoriais acima.
@@ -634,7 +634,7 @@ c) **Alérgeno com "declarado"** (rotulagem é obrigatória por lei):
 - ❌ "A fórmula contém glúten declarado pelo fabricante" → ✓ "Contém glúten"
 - ❌ "Sem mg declarada de creatina" → ✓ "Sem creatina específica na fórmula"
 
-**Exceção CANÔNICA** (não flag): "rende até 4.500 páginas, segundo a Epson" — claim só-fabricante (leitor não verifica sem teste próprio) + qualifica expectativa.
+**FLAG "segundo a [marca]" em spec factual** (régua v1.21.1): "rende 4.500 páginas, segundo a Epson" -> atribuir rendimento/economia/velocidade é muleta; o fix é afirmar direto ("rende até 4.500 páginas"). Atribuição só passa em recomendação/calibração do fabricante (ex: "a HP recomenda 50-100 págs/mês").
 
 **Auto-check**: grep `\d+\s*(mg|g|µg|ml)\s+declarad`, `declarad\w+ pelo fabricante`, `(todos|todas|doses) declarad` antes de gravar. Achou → drop "declarad*" e verifique se a frase ainda faz sentido.
 

@@ -307,7 +307,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - "declarado pelo fabricante" → drop sempre
 - "todos/todas/doses declaradas pelo fabricante" → "fórmula transparente" ou drop
 - Alérgeno: "contém glúten declarado pelo fabricante" → "contém glúten"
-- **Exceção**: "rende X páginas, segundo a Epson" (claim só-fabricante OK)
+- **Spec de fabricante = fato, afirme direto** (régua v1.21.1): rendimento, economia e velocidade da ficha (ex: "rende até 4.500 páginas") vão SEM "segundo a Epson"/"segundo o fabricante" (atribuir a cada spec vira muleta repetitiva, igual "declarado pelo fabricante"). Atribuição só vale pra recomendação/calibração do fabricante (ex: "a HP recomenda 50 a 100 páginas/mês").
 
 ### Chavões por nicho (carregar `docs/painel/_data/chavoes-por-nicho.json`)
 

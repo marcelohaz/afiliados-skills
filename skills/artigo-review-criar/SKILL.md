@@ -86,7 +86,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    - `ingles_max` → não passar do número
    - `linguagem_artificial_max` → calibrar/empilhar/pico-e-queda/energia metabólica = 0; pico nervoso cap 4 (v1.19.0)
    - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
-   - `voz_eximir_responsabilidade` (v1.19.1) → ban "X mg declarados" parentético, "declarado pelo fabricante", "todos/todas/doses declaradas pelo fabricante", "sem mg declarado". Exceção: "rende X páginas, segundo a Epson" (claim só-fabricante + qualifica)
+   - `voz_eximir_responsabilidade` (v1.19.1) → ban "X mg declarados" parentético, "declarado pelo fabricante", "todos/todas/doses declaradas pelo fabricante", "sem mg declarado". Inclui "segundo a [marca]" em spec factual: rendimento/economia/velocidade afirme direto, sem atribuir (atribuição só pra recomendação tipo "a HP recomenda 50-100 págs/mês")
    - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano" = 0 (YMYL, v1.19.0)
    - `chavoes_estruturais_max` → "ocupa o papel" cap 2, "rotina de emagrecimento" cap 4, "sustenta intensidade" cap 4 (v1.19.0)
    - `concordancia_quebrada_regex` → composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX" = 0 (v1.19.0)
@@ -157,6 +157,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 **Limite duro**: máximo **2 produtos por artigo** podem usar "ocupa o papel de [badge]" (já está no JSON como `chavoes_estruturais_max.ocupa o papel: 2`). Os demais variam.
 
 **Auto-check antes de gravar**: grep `ocupa o papel` no review gerado. Se aparecer + outros 2 produtos do artigo já usam — reescreve abertura.
+
 **Adendo PT-BR — title case mid-sentence (v1.20.0)**: posicionadores como "é o melhor para X", "ganha o título de X", "entra como X" são ok — mas X deve ir em **minúsculo** em PT-BR, pois a frase continua no meio de um parágrafo. O campo `subtitle` do produto usa title case (exibido no card), mas ao adaptá-lo para prosa, converta para lowercase.
 
 ❌ "é o **M**elhor para **G**astar mais **E**nergia porque..."
@@ -181,7 +182,6 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 Ângulos que não encaixam em "para X" usam "de X" / "com X" / adjetivo: "o melhor pré-treino premium", "o melhor pré-treino de fórmula natural", "o melhor pré-treino clean label".
 
 **Não force nos 100%**: 1-2 produtos com abertura narrativa própria ("o X sobe um degrau", "o X ocupa espaço único") são variação saudável — não precisam do claim-keyword se a abertura já é forte e distinta.
-
 
 - **3 links de afiliado** total (Para quem é + Por que gostamos + Resumo). SEM link em "Pontos de atenção".
 - Formato dos links: `<a href="{amazonUrl}" rel="nofollow" target="_blank">Nome do Produto</a>` onde `amazonUrl` é crua quando tag vazia, com tag quando preenchida.
@@ -544,7 +544,7 @@ Régua: voz-citação do fabricante OK SÓ quando atende AS DUAS condições:
 2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica)
 
 **✓ EDITORIAL OK** (referência: `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`):
-- "rende até 4.500 páginas em preto, **segundo a Epson**" → claim só-fabricante + qualifica rendimento
+- "rende até 4.500 páginas em preto" → spec de fabricante afirmado direto, sem "segundo a Epson"
 - "número de marketing 33 ppm, mas a **velocidade ISO (padrão da indústria)** é mais realista" → crítica útil
 - "a HP recomenda volume de 50 a 100 páginas mensais" → claim só-fabricante + ajuda leitor calibrar
 
@@ -801,7 +801,7 @@ Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evi
 | "Sem mg declarada de creatina" | "Sem creatina específica na fórmula" / "Creatina embutida sem dose declarada" (se for o caso) |
 
 **Exceção CANÔNICA** (não flag):
-- ✅ "rende até 4.500 páginas em preto, **segundo a Epson**" — claim só-fabricante (rendimento de impressora não tem como leitor verificar sem teste próprio) + qualifica expectativa
+- ✅ "rende até 4.500 páginas em preto" — spec de fabricante (rendimento) afirmado direto; dropar "segundo a Epson" (muleta repetitiva, igual "declarado pelo fabricante")
 
 **Régua mental antes de gravar**: se a frase tem `\d+ mg declarad` ou `declarad\w+ pelo fabricante` ou `(todas|todos|doses) declarad`, drop "declarad*" e veja se a frase ainda faz sentido. Se sim, era redundância — drop sempre.
 

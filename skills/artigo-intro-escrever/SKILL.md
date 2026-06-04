@@ -457,7 +457,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - "declarado pelo fabricante" → drop sempre
 - "todos/todas/doses declaradas pelo fabricante" → "fórmula totalmente transparente" ou drop
 - Alérgeno "contém X declarado pelo fabricante" → "contém X" direto
-- **Exceção**: "rende X páginas, segundo a Epson" (claim só-fabricante que qualifica expectativa) OK
+- **Spec de fabricante = fato, afirme direto** (régua v1.21.1): rendimento, economia e velocidade da ficha (ex: "rende até 4.500 páginas") vão SEM "segundo a Epson"/"segundo o fabricante" (atribuir a cada spec vira muleta repetitiva, igual "declarado pelo fabricante"). Atribuição só vale pra recomendação/calibração do fabricante (ex: "a HP recomenda 50 a 100 páginas/mês").
 ## Armadilhas recorrentes
 
 ### 1. Mais de 2 bolds

@@ -185,7 +185,7 @@ Voz-citação OK SÓ quando atende AS DUAS condições:
 2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica útil)
 
 **✓ Exemplos editorial OK** (não flagar, ou flagar como info):
-- "rende até 4.500 páginas em preto, segundo a Epson" *(rendimento é claim só-fabricante + qualifica)*
+- "rende até 4.500 páginas em preto, segundo a Epson" *(agora FLAG: atribuir spec de fabricante é muleta; afirmar direto)*
 - "número de marketing 33 ppm, mas a velocidade ISO é mais realista" *(crítica útil)*
 - "a HP recomenda volume de 50 a 100 páginas mensais" *(claim só-fabricante)*
 
@@ -324,7 +324,7 @@ Detecta bugs de substituição mecânica que vazam pro output:
 
 **Fix proposto**: drop "declarad*" e verifique se a frase ainda faz sentido — se sim, era redundância. Para alérgenos: "Contém X" direto (rotulagem é obrigatória por lei).
 
-**Exceção CANÔNICA** (não flag): "rende 4.500 páginas, segundo a Epson" — claim só-fabricante + qualifica expectativa.
+**FLAG "segundo a [marca]" em spec factual** (régua v1.21.1): "rende 4.500 páginas, segundo a Epson" -> atribuir rendimento/economia/velocidade é muleta; o fix é afirmar direto ("rende até 4.500 páginas"). Atribuição só passa em recomendação/calibração do fabricante (ex: "a HP recomenda 50-100 págs/mês").
 
 ### 18. `fullReview-prefixo-e-ancoras` (régua v1.20.3, severidade: 🔴 Crítico)
 
