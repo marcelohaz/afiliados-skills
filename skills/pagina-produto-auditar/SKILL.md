@@ -181,7 +181,7 @@ Detecta marcadores de procedência **burocráticos** no .mdx — quando o modelo
 **Severidade: 🟡 Aviso** (não crítico) — porque "segundo X" pode ser **editorial OK** em casos específicos. Verificar contra a régua:
 
 Voz-citação OK SÓ quando atende AS DUAS condições:
-1. **(a)** qualifica claim que SÓ o fabricante pode fazer (rendimento, garantia interna, certificação proprietária)
+1. **(a)** é recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês"), NÃO spec factual — rendimento/economia/velocidade vão direto, sem atribuir
 2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica útil)
 
 **✓ Exemplos editorial OK** (não flagar, ou flagar como info):

@@ -372,8 +372,9 @@ EXCETO os passos de git operations (12, 13). Especificamente:
      `set:html` ali; só não pode `<strong>` DENTRO do texto após o `:`.)
    - Tag-aware nos links Amazon (formato acima)
    - Sem comparações com concorrentes (página individual é sobre o produto sozinho)
-   - Voz-citação ("segundo X", "alérgenos confirmam") drop sempre EXCETO
-     quando qualifica claim só-fabricante + adiciona valor editorial
+   - Voz-citação ("segundo X", "alérgenos confirmam") drop sempre; spec
+     factual (rendimento/velocidade) vai direto. Atribuição só pra
+     recomendação/calibração do fabricante ("a HP recomenda 50-100 págs/mês")
    - Operação de destilação bíblia → .mdx (drop marcadores burocráticos)
 
    - **DESTILAÇÃO CATEGORIA D (operação OBRIGATÓRIA pra cada claim da bíblia)**:

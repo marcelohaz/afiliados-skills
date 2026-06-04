@@ -227,7 +227,7 @@ Formato: `<strong>Título</strong>: explicação`. A explicação **SEMPRE com d
 **HARD CAP em 180 chars/item** (texto puro, descontando markup). Canon `melhoraspirador`: média 65 chars/item. Bullet > 180 chars vira parágrafo e quebra escanabilidade.
 
 Exemplos bons:
-- ✓ `"<strong>Rendimento elevado</strong>: 4.500 páginas em preto por kit T544 segundo o fabricante."` *(usa "segundo o fabricante" — OK porque rendimento é claim só-fabricante e qualifica o número; ver Armadilha 7)*
+- ✓ `"<strong>Rendimento elevado</strong>: 4.500 páginas em preto por kit T544."` *(spec factual afirmado direto, sem "segundo o fabricante"; ver Armadilha 7)*
 - ✓ `"<strong>MicroPiezo Heat-Free</strong>: não aquece a tinta no processo, com consumo de cerca de 12W em operação."` *(descrição própria, sem citação)*
 - ✓ `"<strong>Sistema sem cartuchos</strong>: tanque de tinta com abastecimento frontal por garrafas, sem dependência de cartuchos descartáveis."` *(descrição própria simples)*
 
@@ -360,7 +360,7 @@ Os reviews têm voz de **quem testou/analisou** o produto. Tom: "nós identifica
 - ✓ "Um trade-off identificado é..."
 - ✓ "O equipamento entrega {feature} em {condição}"
 
-> **Sobre citar o fabricante**: regra diferente de citar comprador/Amazon. Citar fabricante pode ser editorial OK em casos específicos (rendimento, garantia interna, certificação proprietária). Ver Armadilha 7 abaixo pra régua completa.
+> **Sobre citar o fabricante**: regra diferente de citar comprador/Amazon. Spec factual (rendimento, velocidade, economia) vai afirmado direto, sem "segundo X". Atribuir só vale pra recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês"). Ver Armadilha 7 abaixo pra régua completa.
 
 ## Tom conversacional (CRÍTICO)
 
@@ -411,7 +411,7 @@ A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conf
 | **C) Claim institucional / PR** | "Marca tradicional brasileira segundo o próprio fabricante" | "Marca brasileira" (ou omite se não agrega) |
 | **D) Voz comprador implícita** | "Cápsulas sem sabor segundo relatos de compradores" | "Cápsulas sem sabor" |
 
-**Exceção (raro, mas existe)**: claim do fabricante VERIFICÁVEL SÓ por ele (rendimento, garantia interna, certificação proprietária) pode manter "segundo X" se adiciona valor editorial — ver Armadilha 7 abaixo.
+**Exceção (raro, mas existe)**: recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês") pode manter "segundo X". Spec factual (rendimento, velocidade) NÃO — vai direto. Ver Armadilha 7 abaixo.
 
 ## Peso por fonte
 
@@ -488,7 +488,7 @@ A #6 reforça: *"Integre os dados no texto como quem conhece o produto: não cit
 
 **Régua editorial — voz-citação OK SÓ quando atende AS DUAS condições:**
 
-1. **(a) qualifica claim que SÓ o fabricante pode fazer** (rendimento, garantia interna, certificação proprietária, política de suporte)
+1. **(a) é recomendação/calibração/política do fabricante** (ex: "a HP recomenda 50-100 págs/mês", garantia estendida com registro) — NÃO spec factual: rendimento/economia/velocidade vão direto, sem atribuir
 2. **(b) adiciona valor editorial ao leitor** (calibra expectativa, sinaliza honestidade, faz crítica útil)
 
 Se NÃO atende as duas → drop. Régua editorial, não checklist mecânico.

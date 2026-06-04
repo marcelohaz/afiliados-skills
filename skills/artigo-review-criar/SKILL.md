@@ -187,7 +187,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 - Formato dos links: `<a href="{amazonUrl}" rel="nofollow" target="_blank">Nome do Produto</a>` onde `amazonUrl` é crua quando tag vazia, com tag quando preenchida.
 
 - **pros** (3-8 itens): formato `<strong>Título</strong>: explicação com dado concreto`.
-  - ✓ "<strong>Rendimento elevado</strong>: 4.500 páginas em preto por kit T544 segundo o fabricante"
+  - ✓ "<strong>Rendimento elevado</strong>: 4.500 páginas em preto por kit T544" (spec factual direto, sem "segundo o fabricante")
   - ❌ "<strong>Rendimento alto</strong>: a impressora rende muito" (sem dado)
 
 - **cons** (1-5 itens): mesma formatação.
@@ -211,7 +211,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
    - Sem travessão
    - Tag correta nos links (ou cruas se config vazia)
    - Voz analítica (zero "compradores", "reviews", "avaliações", "posicionamento Amazon")
-   - Voz-citação ficha-técnica (zero "alérgenos confirmam", "atributos declaram", "conforme tipo de dieta", "apontada pelo fabricante como") — exceção: claim só-fabricante que adiciona valor editorial, ver Armadilha 4
+   - Voz-citação ficha-técnica (zero "alérgenos confirmam", "atributos declaram", "conforme tipo de dieta", "apontada pelo fabricante como") — spec factual vai direto; atribuição só pra recomendação/calibração do fabricante, ver Armadilha 4
    - Anti-duplicate vs página individual (frases não-repetidas)
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-prod-{ASIN}.mdx`. Pattern paralelo ao do painel pra aparecer no card "Histórico de versões".
@@ -389,7 +389,7 @@ Idêntica à da página individual (mesma régua):
 - NUNCA cite **compradores, reviews, avaliações, estrelas, posicionamento Amazon**
 - Reescreva insights de `sentimentoCompradores` como observação editorial direta
 
-> **Sobre citar o fabricante**: regra diferente. Citar fabricante pode ser editorial OK em casos específicos (rendimento, garantia interna, certificação proprietária). Ver Armadilha 4 abaixo pra régua completa.
+> **Sobre citar o fabricante**: regra diferente. Spec factual (rendimento, velocidade, economia) vai afirmado direto, sem "segundo X". Atribuir só vale pra recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês"). Ver Armadilha 4 abaixo pra régua completa.
 
 ## Tom conversacional (CRÍTICO)
 
@@ -430,7 +430,7 @@ A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conf
 | **C) Claim institucional / PR** | "Marca tradicional brasileira segundo o próprio fabricante" | "Marca brasileira" (ou omite se não agrega) |
 | **D) Voz comprador implícita** | "Cápsulas sem sabor segundo relatos de compradores" | "Cápsulas sem sabor" |
 
-**Exceção (raro, mas existe)**: claim do fabricante VERIFICÁVEL SÓ por ele (rendimento, garantia interna, certificação proprietária) pode manter "segundo X" se adiciona valor editorial — ver Armadilha 4 abaixo.
+**Exceção (raro, mas existe)**: recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês") pode manter "segundo X". Spec factual (rendimento, velocidade) NÃO — vai direto. Ver Armadilha 4 abaixo.
 
 ### AUTO-CHECK categoria D — voz-comprador IMPLÍCITA (régua v1.11.4, canon 2026-05-26)
 
@@ -540,7 +540,7 @@ Confere antes de salvar. Se uma frase específica está na página individual, r
 **C) Citar fabricante → CONDICIONAL (editorial OK em casos específicos)**
 
 Régua: voz-citação do fabricante OK SÓ quando atende AS DUAS condições:
-1. **(a)** qualifica claim que SÓ o fabricante pode fazer (rendimento, garantia interna, certificação proprietária)
+1. **(a)** é recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês"), NÃO spec factual — rendimento/economia/velocidade vão direto, sem atribuir
 2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica)
 
 **✓ EDITORIAL OK** (referência: `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`):
