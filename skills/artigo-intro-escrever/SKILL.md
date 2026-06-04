@@ -37,7 +37,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 
 ## Invariantes
 
-- **Nunca toque em nada além do body do .mdx.** Frontmatter (title, description, keyword, products, etc), guideContent, products[] — tudo intacto. Só substitui o conteúdo após o `---` final do frontmatter.
+- **Toca em até DOIS lugares: o body do .mdx (intro) E a linha `title:` do frontmatter.** O `title:` só é reescrito quando não está no padrão canônico (ver "## Régua do título do artigo" abaixo). Todo o resto (description, keyword, keywordPlural, listHeading, products, guideContent) fica intacto.
 - **Body é puro markdown.** Verificado: zero artigos do monorepo têm componentes MDX no body — toda a estrutura (TabelaTop, ProductSection, ReviewLayout, etc) é montada pelo `<SlugPage>` via thin-wrapper em `pages/[slug].astro`. Skill nunca insere `<TabelaTop>` ou similar.
 - **2 a 3 parágrafos** (obrigatório). Cada parágrafo separado por linha em branco. 4 parágrafos é EXCESSO — intro vira ensaio.
 - **300 a 800 chars no total** (todo o body somado). Alvo: 500-700 chars. Antes era 300-1500 e sub-agents miravam 900-1400, tornando a intro cansativa — apertado em 2026-05-26 após feedback "muito longa, muito explicativa".
@@ -104,6 +104,8 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 
 8. **Gerar a intro** seguindo a régua editorial (ver seção abaixo). 2-3 parágrafos markdown.
 
+8.5. **Avaliar/arrumar o título** (ver "## Régua do título do artigo" abaixo pra detalhe): se o `title:` NÃO estiver no padrão canônico `{Keyword Title Case}: {os|as} {N} melhores em {ano}` (ou no fallback sem contagem pra N<3), gere o título novo e marque pra aplicar no passo 11. Se já estiver no padrão, só atualiza a contagem N se o lineup mudou; senão deixa intacto. Respeita `contentLocked` (não mexe se travado).
+
 9. **Validar mentalmente** antes de salvar:
    - 300-800 chars total (alvo 500-700)
    - 2-3 parágrafos (separados por linha em branco)
@@ -115,6 +117,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
    - Sem heading de nenhum nível: nem markdown (`# `, `## `, `### `) nem HTML (`<h1>`, `<h2>`, `<h3>`)
    - Sem menção a marca/modelo/ASIN específico (linguagem geral)
    - Se tag preenchida + intro tem links Amazon (raro mas possível): validar `?tag={tag}&linkCode=ogi&th=1&psc=1`
+   - **Título** (só se foi reescrito no passo 8.5): 30-100 chars, contém a keyword (case-insensitive), gênero `os/as` correto, contagem N batendo com `products[]`, sem travessão, sem ponto final
 
 10. **Backup** ANTES de sobrescrever:
     ```bash
@@ -127,6 +130,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 11. **Substituir body via Edit tool**:
     - `old_string` = body atual (texto exato após o segundo `---`, incluindo placeholder ou intro velha)
     - `new_string` = nova intro gerada (sem `---` na frente — Edit substitui APÓS o último `---` do frontmatter)
+    - **Se o título foi reescrito (passo 8.5)**: faça um Edit ADICIONAL na linha `title: "..."` do frontmatter (string única). NÃO toque em description/keyword/keywordPlural/listHeading/products. São 2 Edits no mesmo arquivo: 1 no body (intro), 1 na linha do title.
 
     Se body atual é muito curto (ex: só `[a escrever: ...]`), `old_string` é único na file. Edit funciona direto.
     Se body atual é a intro velha (300-800 chars), também é único.
@@ -147,6 +151,56 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
     Falha graciosamente se `.env.painel-skills` não existir.
 
 14. **Reportar no chat**: char count + número de parágrafos + preview da intro inteira (curta o suficiente pra colar) + path do arquivo.
+
+## Régua do título do artigo (v1.21.0, canon 2026-06-04)
+
+Além da intro, a skill **arruma o `title` do frontmatter** quando ele não está no padrão canônico da rede. Motivo: o `make_reviews` cria o title só como "Keyword Capitalizado:" e o "as X melhores em ANO" sempre foi um passo manual que quase nunca era feito, deixando títulos fracos tipo "Melhor impressora epson". Como a intro roda no fim do artigo, é o momento natural de fechar o título com a contagem real de produtos.
+
+### Padrão canônico (já usado em melhoraspirador/melhorestablets)
+
+`{Keyword em Title Case}: {os|as} {N} melhores em {ano}`
+
+Exemplos reais da rede:
+- `Melhor Impressora Epson: as 9 melhores em 2026`
+- `Melhor Aspirador de Pó Vertical: os 9 melhores em 2026`
+- `Melhor iPad: os 5 Melhores em 2026`
+
+Componentes:
+- **Keyword em Title Case PT-BR**: capitaliza palavras de conteúdo; **preserva marca/sigla** (Epson, HP, iPad, A3, EcoTank); mantém **minúsculas** as preposições/artigos curtos (`de`, `e`, `para`, `com`, `da`, `do`, `em`, `a`, `o`). Ex: "melhor impressora tanque de tinta" → "Melhor Impressora Tanque de Tinta".
+- **{os|as}**: concordância de gênero do substantivo-núcleo da keyword. impressora/creatina/mesa → **as**; tablet/aspirador/iPad/robô → **os**.
+- **{N}**: número de produtos do lineup (`products[]`), em algarismo.
+- **{ano}**: ano atual.
+- **Sem ponto final.**
+
+### Quando arrumar (conservador — decisão Marcelo 2026-06-04)
+
+Só reescreve se o título **NÃO** já estiver no padrão. Detecção:
+- **Já-no-padrão (NÃO toca)**: bate o regex `:\s*(os|as)\s+\d+\s+melhores\s+em\s+\d{4}` OU, no fallback sem contagem, termina com ` em \d{4}` sem placeholder.
+- **Stub/fraco (arruma)**: minúsculo, sem ano, sem contagem, ou == keyword cru (ex: "Melhor impressora epson", "Melhor Impressora Custo Benefício").
+- **Já-no-padrão mas N mudou**: se o lineup cresceu/encolheu, atualiza só o número (a contagem no título não pode envelhecer — mesmo cuidado da auditoria cross-produto).
+
+### Fallback N<3 (decisão Marcelo)
+
+Se o lineup tem menos de 3 produtos, "as 2 melhores" soa fraco. Use:
+`{Keyword em Title Case} em {ano}` (sem contagem). Ex: "Melhor Impressora Epson em 2026".
+
+### Limite de tamanho (auditor `title-qualidade`)
+
+30-100 chars (alvo 40-70). O Zod do schema é só `z.string()` (não trava build), mas o `artigo-auditar` flagra <30 ou >100 como warn. Se a keyword for longa e o padrão estourar 100, caia no fallback sem contagem; se ainda assim passar de 100, mantenha só "{Keyword em Title Case}".
+
+### Guard `contentLocked`
+
+Se o artigo está `contentLocked: true`, **NÃO mexe no título** (título é H1 + `<title>` SEO; mudar artigo travado pode quebrar ranking). Avisa o user e segue só com a intro, se ele tiver destravado.
+
+### O que NÃO confundir
+
+- O `title` é DIFERENTE do `listHeading` (H2 da TabelaTop, ex "Quais as melhores impressoras Epson em 2026?"). A skill só mexe no `title`; `listHeading` tem régua própria e fica intacto.
+- A keyword e a keywordPlural do frontmatter NÃO mudam — o título deriva da keyword, não a substitui.
+
+### Exemplo antes/depois (melhor-impressora-epson, 9 produtos)
+
+- ❌ `title: "Melhor impressora epson"` (minúsculo, sem contagem, sem ano)
+- ✅ `title: "Melhor Impressora Epson: as 9 melhores em 2026"`
 
 ## Régua editorial — ESTRUTURA OBRIGATÓRIA
 
@@ -311,6 +365,12 @@ Por que está OK:
 - **NÃO dar recomendações com número** ("X recomenda N mg/dia"). Números só nos reviews (são features dos produtos comparados, não recomendações).
 - **NÃO entrar em critérios técnicos detalhados** (forma química, distinções acadêmicas, listas tipo "três fatores"). Esse trabalho é do `guideContent` H2 "Como escolher". Intro fica em PERFIL DE USO + PANORAMA.
 - **Tom conversacional, NÃO científico-médico**. Escreve como amigo que pesquisou, não como consultor. Use os reviews do mesmo artigo como referência tonal — intro NÃO pode soar mais formal que eles.
+
+### Título (quando reescrito)
+- Padrão `{Keyword Title Case}: {os|as} {N} melhores em {ano}` (N≥3) ou fallback `{Keyword Title Case} em {ano}` (N<3). **Sem ponto final.**
+- 30-100 chars; contém a keyword (case-insensitive); gênero `os/as` correto; N = `products[]`; sem travessão.
+- **Só reescreve se fora do padrão** (conservador). Já-no-padrão só atualiza N se o lineup mudou.
+- **Nunca** mexe no título de artigo `contentLocked: true`.
 
 ## Como usar as bíblias (contexto, não citação)
 
