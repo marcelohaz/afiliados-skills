@@ -372,6 +372,7 @@ EXCETO os passos de git operations (12, 13). Especificamente:
      `set:html` ali; só não pode `<strong>` DENTRO do texto após o `:`.)
    - Tag-aware nos links Amazon (formato acima)
    - Sem comparações com concorrentes (página individual é sobre o produto sozinho)
+   - **NÃO comparar nem "divergir o ângulo" contra outros sites nossos.** Mesmo que o mesmo produto exista num site irmão, escreva a MELHOR página pela bíblia, sem tentar ser diferente de propósito (forçar divergência contorce e piora o texto). Dedup cross-site é trabalho da AUDITORIA (`pagina-produto-auditar` mede a similaridade real e flagga só o que de fato colou). Regra: criação escreve livre, audit mede, fix corrige o que colou.
    - Voz-citação ("segundo X", "alérgenos confirmam") drop sempre; spec
      factual (rendimento/velocidade) vai direto. Atribuição só pra
      recomendação/calibração do fabricante ("a HP recomenda 50-100 págs/mês")

@@ -69,6 +69,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
   **AUTO-CHECK obrigatório**: ANTES de gravar `.mdx`, faça uma busca por `<strong>`, `<em>`, `<a `, `<p>` em subtitle/shortDescription/specs.value. Se achar — ERRADO. Reescreva como texto puro destacando via vocabulário, não markup. Caso real 2026-05-26 Bárbara: sub-agent escreveu `<strong>energia com foco preservado</strong>` na shortDescription do Integralmédica Huger; Astro escapou → texto literal pro usuário (não negrito).
 - **Tag-aware nos links Amazon.** Se `siteConfig.affiliateTag` está preenchida, usar `?tag={tag}&linkCode=ogi&th=1&psc=1`. Se está vazia (`''`, estado de construção), usar **URL crua** sem `?tag=...`.
 - **Não listar concorrentes.** É função do artigo comparativo, não da página individual.
+- **NÃO comparar nem "divergir o ângulo" contra outros sites nossos.** Mesmo que o mesmo produto exista num site irmão (estratégia SERP-monopoly), escreva a MELHOR página pela bíblia, sem tentar ser diferente de propósito — forçar divergência contorce e piora o texto. A comparação cross-site (e a reescrita do que de fato colar) é trabalho da `pagina-produto-auditar`, que mede a similaridade real. Regra: criação escreve livre, audit mede, fix corrige.
 - **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.
 
 ## Fluxo

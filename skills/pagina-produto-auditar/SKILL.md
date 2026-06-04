@@ -54,6 +54,12 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 6. **Read reviews que citam o ASIN** (anti-duplicate): `Grep` em `sites/{site}/src/content/reviews/*.mdx` por `asin:.*{asin}`. Se houver, leia o `fullReview` do produto-no-artigo pra comparar com o `fullReview` da página individual — flag se for muito parecido (parágrafo inteiro idêntico, frases-chave repetidas).
 
+6.5. **Comparar duplicata cross-site** (mede, não adivinha): a criação escreve a página livremente pela bíblia, sem tentar "ser diferente" de outros sites. **É AQUI que a comparação acontece.** Rode o comparador (auto-descobre páginas do MESMO ASIN em outros sites nossos):
+   ```bash
+   python3 .claude/skills/pagina-produto-auditar/compare-cross-site.py sites/{site}/src/content/products/{slug}.mdx
+   ```
+   Lê o JSON: `duplicata_acionavel` + por par (`frases_exatas`, `near_dup_0.8`, `overlap_8gram_pct`). Se `duplicata_acionavel: true` (frases idênticas > 0 OU near-dup ≥ 0.8 contra algum irmão), abra a categoria `duplicata-cross-site` (abaixo) com os trechos sobrepostos do JSON. Se `peers_encontrados: 0` (produto só existe neste site) ou tudo abaixo do limite, nada a flaggar. NÃO é erro ter o mesmo produto em 2 sites (estratégia SERP-monopoly) — o problema é o TEXTO ser quase igual.
+
 7. **Rodar as 12 categorias de checagem** (abaixo).
 
 8. **Escrever relatório**:
@@ -355,6 +361,32 @@ genérico em vez de linkar o produto (igual nos reviews de artigo).
 **Fix proposto pros 3**: reescrever os 3 links pra ancorar no nome do produto
 em Para quem é / Por que gostamos / Resumo, e garantir os 4 prefixos em
 `<strong>`. Não adicionar link no parágrafo "Pontos de atenção".
+
+### 19. `duplicata-cross-site` (régua v1.17.0, severidade: 🟡 Aviso)
+
+Página individual deste produto com texto quase idêntico ao de OUTRO site nosso
+que vende o mesmo ASIN. Múltiplos sites no mesmo nicho são estratégia deliberada
+(SERP-monopoly); o problema NÃO é existir o mesmo produto em 2 sites, é o **texto
+ser duplicado** (canibaliza ranqueamento por conteúdo duplicado).
+
+**Como detectar** (passo 6.5 do fluxo, medição objetiva, não palpite): rodar
+`python3 .claude/skills/pagina-produto-auditar/compare-cross-site.py sites/{site}/src/content/products/{slug}.mdx`.
+O tool auto-descobre irmãos pelo ASIN e compara. Flag quando, contra algum irmão:
+- `frases_exatas > 0` (frase de ≥6 palavras idêntica), OU
+- `near_dup_0.8 > 0` (frase com jaccard ≥ 0.8), OU
+- `overlap_8gram_pct` alto (ex: > 25%).
+
+**Evidência**: citar o `peer` (site/slug do irmão) + os trechos de `exatas_lista`
+/ `near_lista` que colaram.
+
+**Fix proposto**: reescrever SÓ os trechos sobrepostos divergindo o fraseado
+(mesmos fatos, redação distinta) — não a página inteira. A reescrita é a hora
+certa de "ficar diferente"; a criação escreve livre, o audit mede, o fix corrige
+o que de fato colou. Frases factuais rígidas (specs, rendimento) que aparecem
+iguais por serem dado bruto não contam como duplicata acionável.
+
+**Não flag** se `peers_encontrados: 0` (produto só existe neste site) ou se tudo
+ficou abaixo dos limites.
 
 ## Filtros editoriais — flag se aparecer nos campos curados
 
