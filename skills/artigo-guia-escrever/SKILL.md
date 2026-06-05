@@ -18,11 +18,11 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 **Instrução opcional**: se o prompt natural do user contém algo tipo "mais conciso", "enfatize tanque de tinta", "sem subseções" → eu extraio como instrução adicional e uso no prompt. Se for só "escreve o guia do X" → modo padrão.
 
-**Concorrentes (texto completo do "Como escolher") opcionais**: 2 modos:
+**Concorrentes (texto completo do "Como escolher") — OBRIGATÓRIOS pra gerar o guia.** O guia é a peça SEO que precisa BATER a SERP da keyword exata; sem os concorrentes reais dela, sai genérico e gera retrabalho. Há 2 formas de supri-los:
 
-1. **Análise existente**: se já existe `docs/painel/_data/competitor-analyses/{keyword-slug}.md`, eu CARREGO automaticamente — você não precisa colar nada de novo. Isso permite reuso entre sites diferentes que miram a mesma keyword (a SERP é igual, os concorrentes são iguais).
+1. **Análise existente da keyword EXATA**: se já existe `docs/painel/_data/competitor-analyses/{keyword-slug}.md` (slug do `keyword` deste artigo, **match EXATO**), eu CARREGO automaticamente — você não precisa colar nada. O reuso só vale entre artigos que miram **a MESMA keyword** (mesma SERP, mesmos concorrentes), inclusive em sites diferentes. **NUNCA** reuso a análise de uma keyword vizinha/parecida: "melhor impressora" ≠ "melhor impressora custo benefício" ≠ "melhor impressora tanque de tinta" são keywords DIFERENTES (intenção de busca, SERP e concorrentes diferentes).
 
-2. **Primeira vez** (análise ainda não existe pra essa keyword): você cola 1-3 textos completos de "Como escolher" de concorrentes. Eu **analiso** (tópicos, palavras-chave, ângulos, gaps, o que evitar), **gero o guia**, e **salvo a análise** em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` pra reuso futuro.
+2. **Não existe análise da keyword exata**: você cola 1-3 textos completos de "Como escolher" dos concorrentes que aparecem ao buscar **essa keyword** no Google. Eu **analiso** (tópicos, palavras-chave, ângulos, gaps, o que evitar), **gero o guia**, e **salvo a análise** em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` pra reuso futuro. **Sem os concorrentes eu PARO e peço — não gero genérico nem reuso de outra keyword** (ver Cenário C).
 
 **Override**: se a análise existe mas você quer regenerar com concorrentes novos (SERP mudou), cole textos novos junto com o comando — eu sobrescrevo (backup antes).
 
@@ -102,7 +102,8 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 
 8. **Análise de concorrentes** (3 cenários):
 
-   ### Cenário A — análise existe E user NÃO colou novos concorrentes
+   ### Cenário A — análise da keyword EXATA existe E user NÃO colou novos concorrentes
+   - **Match EXATO do slug é obrigatório.** `{keyword-slug}` = slugify do `keyword` do frontmatter DESTE artigo (ver função abaixo). Se o arquivo do slug exato NÃO existe, isto **NÃO é Cenário A** — vá pro **Cenário C** (pedir concorrentes). **NUNCA** carregar a análise de uma keyword vizinha/parecida (ex: usar `melhor-impressora-custo-beneficio.md` pra keyword "melhor impressora", ou `-epson`/`-tanque-de-tinta`): keywords diferentes têm intenção, SERP e concorrentes diferentes. "Mesma categoria" ≠ "mesma keyword".
    - `Read docs/painel/_data/competitor-analyses/{keyword-slug}.md` (slugify do `keyword` do frontmatter — ver função slugify abaixo)
    - Carrega como contexto rico (topical map, gaps, o que evitar, ângulos)
    - **NÃO regera a análise** (preserva a existente)
@@ -114,14 +115,12 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    - Usa como topical map pra gerar o guide
    - Cria o `.md` da análise depois (passo 10b)
 
-   ### Cenário C — análise NÃO existe E user NÃO colou nada
-   - **PAUSAR antes de gerar.** Padrão do projeto: usar concorrentes pra otimizar SEO + criar análise reusável é o caminho preferido. Antes de cair no fallback, perguntar ao user:
-     > "Análise de concorrentes pra essa keyword ainda não existe. Você quer:
-     > **(a)** Colar 1-3 'Como escolher' de concorrentes agora (Buscapé, Zoom, Canaltech, Mundo Conectado, etc) — recomendado, gera análise reusável pra próximos artigos com a mesma keyword
-     > **(b)** Rodar fallback sem análise (genérico, baseado só nas bíblias dos produtos do lineup)"
-   - Se user escolher (a): aguarda os textos colados, depois processa como cenário B
-   - Se user escolher (b): segue gerando sem análise + avisa no log: "⚠ Sem análise de concorrentes pra essa keyword (rodado em modo fallback). Pra otimizar SEO depois, regenere colando concorrentes."
-   - **Razão**: experiência mostrou que cair em fallback silencioso desperdiça oportunidade de SEO e gera retrabalho (user gera, vê output genérico, pede pra refazer com concorrentes). Pausar evita o ciclo.
+   ### Cenário C — não existe análise da keyword EXATA E user NÃO colou nada
+   - **PARAR e PEDIR os concorrentes. OBRIGATÓRIO, sem exceção.** NÃO gerar o guia sem análise da keyword exata. Não há mais opção de "fallback genérico", e é **PROIBIDO reusar a análise de outra keyword** (mesmo do mesmo site/categoria — ver Cenário A). Mensagem ao user:
+     > "Pra escrever o guia de **{keyword}** eu preciso dos concorrentes DESSA keyword. Não reuso a análise de keyword parecida (intenção/SERP/concorrentes diferentes) nem gero genérico. Cole 1-3 'Como escolher' dos resultados que aparecem ao buscar **'{keyword}'** no Google (Buscapé, Zoom, Canaltech, Mundo Conectado, TechTudo, etc). Eu analiso, gero o guia e salvo a análise pra reuso futuro nessa mesma keyword."
+   - **AGUARDAR os textos colados.** Depois processa como Cenário B (analisa, gera, salva `{keyword-slug}.md`).
+   - Se o user insistir em gerar SEM concorrentes: avisar explicitamente que o guia ficará fraco em SEO (não bate a SERP da keyword) e **exigir confirmação explícita** antes de prosseguir só com as bíblias. Nunca seguir sem concorrentes em silêncio.
+   - **Razão**: experiência real (2026-06-05) mostrou que reusar a análise de uma keyword vizinha ("melhor impressora custo benefício" pra "melhor impressora") ou cair em fallback silencioso desperdiça a oportunidade de SEO e gera retrabalho. Pedir os concorrentes da keyword EXATA é o único caminho.
 
    ### Slugify do keyword
    ```js
