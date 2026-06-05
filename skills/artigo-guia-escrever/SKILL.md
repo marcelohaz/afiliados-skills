@@ -512,6 +512,7 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 
 - Distribua os links ao longo do texto (não concentrar no fim), cada um num contexto que justifique a visita.
 - Pense no grafo do site: linke os **irmãos mais relevantes** (ex: o guia do termo-head linka custo-benefício + tanque + barata; cada sub-artigo aponta de volta pra home via `/`). Evita artigo órfão/sub-linkado.
+- **A home é um peer como qualquer artigo.** Ela é o `homeReviewSlug`, servida na raiz (`/` = dominio.com.br), âncora = a keyword dela (ex: "melhor impressora"). Os outros artigos DEVEM linká-la via `<a href="/">{keyword da home}</a>` (NUNCA `/{homeReviewSlug}/`, que é 404) — **não deixe a home órfã**. O `href="/"` CONTA como peer link (vale pros ≥2 distintos).
 - Atributos: SEM `target="_blank"`, SEM `rel="nofollow"` (interno passa autoridade).
 - Quantidade: **mínimo 2 peer ARTICLES DISTINTOS** (NUNCA repita o mesmo destino 2×), até 3, + os links de PRODUTO (hub-and-spoke, quantos forem naturais).
 - **Só no guia**: todos os links internos (peer + produto) vivem **só no `guideContent`** (Como escolher / FAQ / Conclusão). **NUNCA** na introdução nem nos reviews dos produtos (lá só vai link Amazon).

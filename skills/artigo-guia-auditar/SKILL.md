@@ -175,7 +175,7 @@ Peer article = outro `.mdx` em `reviews/` que compartilha 2+ palavras iniciais d
 Era `info`; subiu pra `warn` porque âncora errada é perda de SEO real e foi recorrente (melhorimpressora, 2026-06-05). Não bloqueia readyToLock.
 
 ### 9b. `linkagem-fraca` (level=`warn`, v1.22.0)
-O artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). Flag se: <2 peers distintos no guia, OU o mesmo peer linkado 2+ vezes, OU algum link interno na intro/review. Fix: adicionar peer(s) relevante(s) em FAQ/Conclusão (âncora = keyword do destino, singular) ou remover a repetição. Não bloqueia readyToLock.
+O artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). **A home é peer**: `href="/"` conta como link pro `homeReviewSlug`, e a própria home NÃO pode ficar órfã (deve receber ≥2 entradas dos outros artigos). Flag se: <2 peers distintos no guia, OU o mesmo peer linkado 2+ vezes, OU algum link interno na intro/review, OU a home órfã. Fix: adicionar peer(s) relevante(s) em FAQ/Conclusão (âncora = keyword do destino, singular) ou remover a repetição. Não bloqueia readyToLock.
 
 ### 10. `travessao` (level=`warn`)
 `—` ou `–` em qualquer lugar do guia. Fix: trocar por `:`, `,`, `()` ou `.`.

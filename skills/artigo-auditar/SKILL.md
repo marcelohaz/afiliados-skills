@@ -449,7 +449,7 @@ O slug do arquivo (`reviews/{slug}.mdx`) deve ser igual ao `slugify(keyword)` do
 
 ### `linkagem-fraca` (level=`warn`, régua v1.22.0)
 
-Cada artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). Flag se: <2 peers distintos, peer repetido, ou link interno na intro/review. Fix: adicionar peer(s) relevante(s) no guia (FAQ/Conclusão, âncora = keyword singular do destino). Não bloqueia readyToLock (SEO interno, não defeito funcional).
+Cada artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). **A home é peer como qualquer artigo**: `href="/"` conta como link pro `homeReviewSlug`, e a home NÃO pode ficar órfã (deve receber ≥2 entradas). Flag se: <2 peers distintos, peer repetido, link interno na intro/review, ou a home órfã. Fix: adicionar peer(s) relevante(s) no guia (FAQ/Conclusão, âncora = keyword singular do destino). Não bloqueia readyToLock (SEO interno, não defeito funcional).
 
 ### `peer-article-nao-linkado` (level=`warn`, régua v1.20.0)
 
