@@ -87,6 +87,17 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 
 9. **Reportar em chat** (formato abaixo) + esperar aprovação granular.
 
+9.5. **Gravar marcador de auditoria** (registra QUANDO o guia foi auditado — alimenta a pill "Guia auditado", o chip "Auditar Guia" da barra FALTAM e o log de atividade do editor-artigo). Roda **SEMPRE**, logo após o relatório, mesmo que o user depois rejeite todas as correções (auditar é o evento; aplicar é outro):
+   - `Write` em `docs/biblias-v2/.audits/guide/{site}-{slug}-last.md` com: título (`# Auditoria do guia: {site}/{slug}`), `- Critérios checados: {N}`, `- Achados: {M}` (+ lista curta dos critérios disparados, ou "nenhum"). A data é só pra leitura humana — **NÃO** invente timestamp pra sort (a fonte de tempo é o commit do git; `Date().toISOString()` cai no bug de timezone). Crie o diretório se não existir.
+   - Commit + push + VPS pull:
+     ```bash
+     git add docs/biblias-v2/.audits/guide/{site}-{slug}-last.md
+     git commit --no-verify -m "audit-guia({site}): {slug} ({M} achados)"
+     git push origin main
+     bash scripts/painel-vps-pull.sh
+     ```
+   - **Por quê:** o nome `-last.md` (sem dígitos de data) NÃO cai no `.gitignore` de audits timestampados → fica TRACKED e sincroniza. O editor lê via `git log` (`/article/:site/:slug/activity`), então o evento aparece em qualquer máquina. O prefixo `audit-guia(` faz o editor classificar como auditoria de guia (chip "Auditar Guia" some, pill "Guia auditado" registra). Sem este passo, "Guia auditado" fica "sem registro" pra sempre.
+
 10. **Backup** antes de aplicar: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-guide.mdx`.
 
 11. **Aplicar** os fixes aprovados via `Edit` cirúrgico no `guideContent` (preservar indentação de 2 espaços do block scalar; um bloco por linha).
