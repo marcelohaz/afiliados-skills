@@ -13,9 +13,14 @@ Usos:
 Auto-descoberta: lê o asin do target e varre sites/*/src/content/products/*.mdx
 por outras páginas (sites diferentes) com o MESMO asin. Roda a partir da raiz do repo.
 
-Saída: JSON com frases idênticas (>=6 palavras), near-dup (jaccard), overlap n-grama
-por par comparado. Exit 1 se houver duplicata acionável (exatas > 0 OU near>=0.8),
-pra a auditoria decidir flaggar.
+PROSA vs SPEC: a colisão que importa é de PROSA (subtitle/shortDescription/fullReview/
+pros/cons). Valores de `specs[].value` são dado bruto de ficha e repetem entre sites
+por serem fato (rendimento/dpi/ppm) — NÃO contam como duplicata acionável (variá-los
+à toa é contorção). Por isso `duplicata_acionavel` se baseia SÓ em prosa; colisões de
+spec são reportadas à parte (`specs_identicas`) como informação.
+
+Saída: JSON. Exit 1 se houver duplicata de PROSA acionável (prosa_exatas > 0 OU
+prosa_near_0.8 > 0), pra a auditoria decidir flaggar 🟡.
 """
 import sys, re, json, glob, os
 
@@ -39,17 +44,17 @@ def clean(s):
     return re.sub(r'\s+', ' ', s).strip()
 
 
-def product_text_parts(fm):
-    """Blocos de texto editorial de uma página de produto (frontmatter flat)."""
-    parts = [
-        clean(fm.get("subtitle", "")),
-        clean(fm.get("shortDescription", "")),
-        clean(fm.get("fullReview", "")),
-    ]
+def prose_parts(fm):
+    """Texto editorial AUTORAL (o que conta pra duplicata acionável)."""
+    parts = [clean(fm.get("subtitle", "")), clean(fm.get("shortDescription", "")), clean(fm.get("fullReview", ""))]
     parts += [clean(x) for x in (fm.get("pros") or [])]
     parts += [clean(x) for x in (fm.get("cons") or [])]
-    parts += [clean(s.get("value")) for s in (fm.get("specs") or []) if isinstance(s, dict)]
     return [p for p in parts if p]
+
+
+def spec_parts(fm):
+    """Valores de specs[].value — dado bruto de ficha (colisão = info, não acionável)."""
+    return [clean(s.get("value")) for s in (fm.get("specs") or []) if isinstance(s, dict) and clean(s.get("value"))]
 
 
 def sentences(parts):
@@ -76,9 +81,9 @@ def shingles(parts, n):
     return set(tuple(w[i:i+n]) for i in range(len(w) - n + 1))
 
 
-def compare(target_fm, peer_fm):
-    pt, ps = product_text_parts(target_fm), product_text_parts(peer_fm)
-    st, ss = sentences(pt), sentences(ps)
+def collisions(parts_t, parts_s):
+    """Frases idênticas (>=6 palavras) e near-dup (jaccard>=0.6) entre dois conjuntos."""
+    st, ss = sentences(parts_t), sentences(parts_s)
     sset_s = set(ss)
     exatas = sorted(set(st) & sset_s)
     near = []
@@ -89,18 +94,37 @@ def compare(target_fm, peer_fm):
         if best[0] >= 0.6:
             near.append((round(best[0], 2), a, best[1]))
     near.sort(reverse=True)
+    return exatas, near
+
+
+def compare(target_fm, peer_fm):
+    pt_prose, ps_prose = prose_parts(target_fm), prose_parts(peer_fm)
+    pt_spec, ps_spec = spec_parts(target_fm), spec_parts(peer_fm)
+
+    prose_exatas, prose_near = collisions(pt_prose, ps_prose)
+    spec_exatas, spec_near = collisions(pt_spec, ps_spec)
+
+    # overlap n-grama só da PROSA (specs inflam artificialmente o overlap)
     ov = {}
     for n in (5, 8):
-        A, B = shingles(pt, n), shingles(ps, n)
+        A, B = shingles(pt_prose, n), shingles(ps_prose, n)
         ov[n] = round(len(A & B) / max(1, len(A | B)) * 100, 1)
+
+    prose_near_08 = sum(1 for s, _, _ in prose_near if s >= 0.8)
     return {
-        "frases_exatas": len(exatas),
-        "near_dup_0.8": sum(1 for s, _, _ in near if s >= 0.8),
-        "near_dup_0.6": len(near),
-        "overlap_5gram_pct": ov[5],
-        "overlap_8gram_pct": ov[8],
-        "exatas_lista": exatas[:30],
-        "near_lista": [{"jaccard": s, "a": a[:160], "b": b[:160]} for s, a, b in near[:30]],
+        # PROSA — o que conta pra acionável
+        "prosa_exatas": len(prose_exatas),
+        "prosa_near_0.8": prose_near_08,
+        "prosa_near_0.6": len(prose_near),
+        "overlap_prosa_5gram_pct": ov[5],
+        "overlap_prosa_8gram_pct": ov[8],
+        "prosa_exatas_lista": prose_exatas[:30],
+        "prosa_near_lista": [{"jaccard": s, "a": a[:160], "b": b[:160]} for s, a, b in prose_near[:30]],
+        # SPECS — info, não acionável
+        "specs_identicas": len(spec_exatas) + sum(1 for s, _, _ in spec_near if s >= 0.8),
+        "specs_identicas_lista": (spec_exatas + [a for s, a, _ in spec_near if s >= 0.8])[:20],
+        # acionável = SÓ prosa
+        "acionavel": len(prose_exatas) > 0 or prose_near_08 > 0,
     }
 
 
@@ -140,14 +164,14 @@ def main():
         rep = compare(target_fm, peer_fm)
         rep["peer"] = peer_path
         results.append(rep)
-        if rep["frases_exatas"] > 0 or rep["near_dup_0.8"] > 0:
+        if rep["acionavel"]:
             actionable = True
 
     out = {
         "target": target_path,
         "asin": str(target_fm.get("asin") or ""),
         "peers_encontrados": len(peers),
-        "duplicata_acionavel": actionable,
+        "duplicata_acionavel": actionable,   # SÓ por colisão de PROSA
         "comparacoes": results,
     }
     print(json.dumps(out, ensure_ascii=False, indent=2))

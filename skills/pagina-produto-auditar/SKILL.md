@@ -58,9 +58,9 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    ```bash
    python3 .claude/skills/pagina-produto-auditar/compare-cross-site.py sites/{site}/src/content/products/{slug}.mdx
    ```
-   Lê o JSON: `duplicata_acionavel` + por par (`frases_exatas`, `near_dup_0.8`, `overlap_8gram_pct`). Se `duplicata_acionavel: true` (frases idênticas > 0 OU near-dup ≥ 0.8 contra algum irmão), abra a categoria `duplicata-cross-site` (abaixo) com os trechos sobrepostos do JSON. Se `peers_encontrados: 0` (produto só existe neste site) ou tudo abaixo do limite, nada a flaggar. NÃO é erro ter o mesmo produto em 2 sites (estratégia SERP-monopoly) — o problema é o TEXTO ser quase igual.
+   Lê o JSON. **`duplicata_acionavel` se baseia SÓ em colisão de PROSA** (subtitle/shortDescription/fullReview/pros/cons) — por par: `prosa_exatas`, `prosa_near_0.8`, `overlap_prosa_8gram_pct`. Se `duplicata_acionavel: true` (prosa idêntica > 0 OU prosa near-dup ≥ 0.8 contra algum irmão), abra a categoria `duplicata-cross-site` (abaixo) com os trechos de `prosa_exatas_lista` / `prosa_near_lista`. **Colisões de spec** (`specs_identicas`/`specs_identicas_lista`) NÃO são acionáveis — são dado bruto de ficha (dpi/ppm/rendimento) que repete entre sites por ser fato; no máximo registre como 🔵 info, NUNCA contorça spec pra fugir do match. Se `peers_encontrados: 0` (produto só existe neste site) ou prosa abaixo do limite, nada a flaggar. NÃO é erro ter o mesmo produto em 2 sites (estratégia SERP-monopoly) — o problema é a PROSA ser quase igual.
 
-7. **Rodar as 12 categorias de checagem** (abaixo).
+7. **Rodar as categorias de checagem** (abaixo).
 
 8. **Escrever relatório**:
    - `docs/biblias-v2/.audits/products/{site}-{slug}-{YYYY-MM-DD-HHMM}.md` (histórico)
@@ -78,7 +78,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 10. **Reportar no chat**: 3-5 linhas com total de findings por severidade + path do relatório. Não cole o relatório inteiro no chat.
 
-## As 12 categorias de check
+## As categorias de check
 
 ### 1. `claim-vs-bible`
 Afirmação em qualquer campo (subtitle, shortDescription, pros, cons, specs, fullReview) que não tem origem rastreável na bíblia (specs, números, certificações, marca).
@@ -371,22 +371,28 @@ ser duplicado** (canibaliza ranqueamento por conteúdo duplicado).
 
 **Como detectar** (passo 6.5 do fluxo, medição objetiva, não palpite): rodar
 `python3 .claude/skills/pagina-produto-auditar/compare-cross-site.py sites/{site}/src/content/products/{slug}.mdx`.
-O tool auto-descobre irmãos pelo ASIN e compara. Flag quando, contra algum irmão:
-- `frases_exatas > 0` (frase de ≥6 palavras idêntica), OU
-- `near_dup_0.8 > 0` (frase com jaccard ≥ 0.8), OU
-- `overlap_8gram_pct` alto (ex: > 25%).
+O tool auto-descobre irmãos pelo ASIN e separa PROSA de SPEC. Flag quando, contra
+algum irmão, houver colisão de **PROSA**:
+- `prosa_exatas > 0` (frase autoral de ≥6 palavras idêntica), OU
+- `prosa_near_0.8 > 0` (frase autoral com jaccard ≥ 0.8), OU
+- `overlap_prosa_8gram_pct` alto (ex: > 25%).
 
-**Evidência**: citar o `peer` (site/slug do irmão) + os trechos de `exatas_lista`
-/ `near_lista` que colaram.
+**`duplicata_acionavel` do tool já reflete isso** (só prosa). **Colisão de spec
+NÃO conta** — `specs_identicas`/`specs_identicas_lista` (dpi, ppm, rendimento) é
+dado bruto de ficha que repete entre sites por ser fato; no máximo 🔵 info,
+**nunca reescreva spec só pra fugir do match** (isso é a contorção que queremos
+evitar).
 
-**Fix proposto**: reescrever SÓ os trechos sobrepostos divergindo o fraseado
-(mesmos fatos, redação distinta) — não a página inteira. A reescrita é a hora
-certa de "ficar diferente"; a criação escreve livre, o audit mede, o fix corrige
-o que de fato colou. Frases factuais rígidas (specs, rendimento) que aparecem
-iguais por serem dado bruto não contam como duplicata acionável.
+**Evidência**: citar o `peer` (site/slug do irmão) + os trechos de
+`prosa_exatas_lista` / `prosa_near_lista` que colaram.
 
-**Não flag** se `peers_encontrados: 0` (produto só existe neste site) ou se tudo
-ficou abaixo dos limites.
+**Fix proposto**: reescrever SÓ os trechos de prosa sobrepostos divergindo o
+fraseado (mesmos fatos, redação distinta) — não a página inteira. A reescrita é a
+hora certa de "ficar diferente"; a criação escreve livre, o audit mede, o fix
+corrige só a prosa que de fato colou.
+
+**Não flag** se `peers_encontrados: 0` (produto só existe neste site), se só
+houver `specs_identicas`, ou se a prosa ficou abaixo dos limites.
 
 ## Filtros editoriais — flag se aparecer nos campos curados
 
