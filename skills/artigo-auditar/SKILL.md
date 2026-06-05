@@ -440,6 +440,17 @@ Audit dos links internos no `guideContent` contra arquivos REAIS no filesystem E
 - Slug = homeReviewSlug → trocar `href="/{slug}/"` por `href="/"`
 - Outros → ajustar `href` pra slug real (slugify canon: lowercase + sem acento + ponto entre dígitos → hífen + demais pontos removidos)
 
+### `slug-vs-keyword` (level=`error`, régua v1.22.0)
+
+O slug do arquivo (`reviews/{slug}.mdx`) deve ser igual ao `slugify(keyword)` do frontmatter. Quando divergem, links internos pra esse artigo derivados do keyword viram **404** e a âncora-keyword não bate com a URL. Caso real (melhorimpressora 2026-06-05): `impressora-barata.mdx` com keyword "impressora boa e barata" (slugify → `impressora-boa-e-barata`) gerou o link quebrado `/impressora-boa-e-barata/`.
+
+**Como verificar**: `slugify(keyword) === slug-do-arquivo`? (slugify canon: lowercase, sem acento, `+`→`-plus`, `[^a-z0-9]+`→`-`, trim `-`). Se não → 🔴 error.
+**Fix**: alinhar a `keyword` ao slug (preferir — mantém a URL e geralmente é o termo de maior busca) OU renomear o arquivo pro slugify(keyword). Bloqueia readyToLock (causa 404 + âncora errada).
+
+### `linkagem-fraca` (level=`warn`, régua v1.22.0)
+
+Cada artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). Flag se: <2 peers distintos, peer repetido, ou link interno na intro/review. Fix: adicionar peer(s) relevante(s) no guia (FAQ/Conclusão, âncora = keyword singular do destino). Não bloqueia readyToLock (SEO interno, não defeito funcional).
+
 ### `peer-article-nao-linkado` (level=`warn`, régua v1.20.0)
 
 Audit cross-article: detecta quando o site tem **2+ artigos comparativos** sobre temas relacionados (peer articles) MAS o `guideContent` do artigo auditado não referencia nenhum.

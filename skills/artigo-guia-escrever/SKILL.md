@@ -513,7 +513,8 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 - Distribua os links ao longo do texto (não concentrar no fim), cada um num contexto que justifique a visita.
 - Pense no grafo do site: linke os **irmãos mais relevantes** (ex: o guia do termo-head linka custo-benefício + tanque + barata; cada sub-artigo aponta de volta pra home via `/`). Evita artigo órfão/sub-linkado.
 - Atributos: SEM `target="_blank"`, SEM `rel="nofollow"` (interno passa autoridade).
-- Quantidade: **0-3 links pra peer ARTICLES** + os links de PRODUTO (hub-and-spoke, quantos forem naturais em FAQ/Conclusão).
+- Quantidade: **mínimo 2 peer ARTICLES DISTINTOS** (NUNCA repita o mesmo destino 2×), até 3, + os links de PRODUTO (hub-and-spoke, quantos forem naturais).
+- **Só no guia**: todos os links internos (peer + produto) vivem **só no `guideContent`** (Como escolher / FAQ / Conclusão). **NUNCA** na introdução nem nos reviews dos produtos (lá só vai link Amazon).
 
 ### Hard-validation (antes de salvar)
 
