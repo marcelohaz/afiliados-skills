@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 30 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
+description: Audita artigo inteiro read-only. Combina 31 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
 ---
 
 ## Parse de input
@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 30 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
+7. **Rodar auditoria IA** nas 31 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -150,7 +150,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (30 categorias)
+## Critérios de auditoria (31 categorias)
 
 Use exatamente esses valores em `rule`:
 
@@ -416,6 +416,21 @@ Audit dos links no `guideContent`. Régua hub-and-spoke (canon v1.10.0 da skill 
 
 Fix sugerido: rodar skill `artigo-guia-escrever` (aplica hub-and-spoke automaticamente).
 
+### `peer-link-na-conclusao` (level=`info`, régua v1.24.0)
+
+Links de **navegação peer-article/home** concentrados na seção **Conclusão** do `guideContent`. Régua (Marcelo, 2026-06-05): "evitar colocar na conclusão (ou não colocar mesmo). tem que ser contextual." Link de navegação inter-artigo jogado no fecho é decorativo, não contextual — o leitor que chegou na Conclusão já decidiu.
+
+**Como verificar**:
+1. Isolar a seção `<h2>Conclusão</h2>` até o fim do `guideContent`.
+2. Pra cada `<a href="...">` nessa seção:
+   - `href="/"` (home) → 🔵 info
+   - `href="/{slug}/"` onde `{slug}` existe em `reviews/` (peer ARTICLE) → 🔵 info
+3. **NÃO flag**: `href="/{slug}/"` onde `{slug}` existe em `products/` (página de produto) nem Amazon `/dp/` — links de produto/compra são função legítima do fecho.
+
+**Fix sugerido**: mover o link peer/home pro spot onde o tema do irmão aparece naturalmente (FAQ que toca no assunto, H3 de "Como escolher", H3 de marca, ou "Vale a pena" pra apontar a categoria-mãe/home). Se não há encaixe natural fora da Conclusão, remover. Aplicável via `artigo-guia-auditar` (cirúrgico).
+
+**Bloqueia readyToLock?** Não — refinamento de SEO/UX, não defeito funcional.
+
 ### `link-interno-quebrado` (level=`error`, régua v1.20.1)
 
 Audit dos links internos no `guideContent` contra arquivos REAIS no filesystem E contra o padrão `homeReviewSlug` do site. URLs internas que viram 404 em produção — seja por arquivo inexistente, seja por slug excluído do `getStaticPaths`.
@@ -449,7 +464,7 @@ O slug do arquivo (`reviews/{slug}.mdx`) deve ser igual ao `slugify(keyword)` do
 
 ### `linkagem-fraca` (level=`warn`, régua v1.22.0)
 
-Cada artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). **A home é peer como qualquer artigo**: `href="/"` conta como link pro `homeReviewSlug`, e a home NÃO pode ficar órfã (deve receber ≥2 entradas). Flag se: <2 peers distintos, peer repetido, link interno na intro/review, ou a home órfã. Fix: adicionar peer(s) relevante(s) no guia (FAQ/Conclusão, âncora = keyword singular do destino). Não bloqueia readyToLock (SEO interno, não defeito funcional).
+Cada artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). **A home é peer como qualquer artigo**: `href="/"` conta como link pro `homeReviewSlug`, e a home NÃO pode ficar órfã (deve receber ≥2 entradas). Flag se: <2 peers distintos, peer repetido, link interno na intro/review, ou a home órfã. Fix: adicionar peer(s) relevante(s) no guia em spot **contextual** (FAQ/Marca/Vale a pena/Como escolher — **NÃO na Conclusão**, v1.24.0; navegação peer/home no fecho é decorativa), âncora = keyword singular do destino. Não bloqueia readyToLock (SEO interno, não defeito funcional).
 
 ### `peer-article-nao-linkado` (level=`warn`, régua v1.20.0)
 
@@ -468,7 +483,7 @@ Audit cross-article: detecta quando o site tem **2+ artigos comparativos** sobre
 5. Se nenhum link pro peer → 🟡 warn `peer-article-nao-linkado`
 
 **Sugestão editorial** (não auto-aplicada, só relatório):
-- Lugar natural: FAQ (nova H3) ou Conclusão (último ¶)
+- Lugar natural: **contextual** — FAQ (nova H3) que toca no tema, H3 de "Como escolher", H3 de marca, ou "Vale a pena". **NÃO a Conclusão** (v1.24.0 — navegação peer/home no fecho é decorativa).
 - Anchor sugerida: `peer.keyword` exata (não plural, não com qualificador no anchor)
 - Exemplo de inserção:
   ```html

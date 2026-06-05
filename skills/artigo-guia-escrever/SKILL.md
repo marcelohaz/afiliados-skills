@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-escrever
-description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Quando user cola "Como escolher" de 1-3 concorrentes, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + SALVA análise em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` pra reuso (qualquer site na mesma keyword auto-carrega). Régua: 5 H2 obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + 1 opcional (Por que confiar), 6000-25000 chars (alvo 12-18k), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 0-3 só pra peer articles reais. Carrega chavões nicho-específicos. Substitui só o campo guideContent. Backup + commit + push + sync VPS.
+description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Quando user cola "Como escolher" de 1-3 concorrentes, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + SALVA análise em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` pra reuso (qualquer site na mesma keyword auto-carrega). Régua: 5 H2 obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + 1 opcional (Por que confiar), 6000-25000 chars (alvo 12-18k), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 0-3 só pra peer articles reais (peer/home contextuais, NÃO na Conclusão; produto pode na Conclusão). Carrega chavões nicho-específicos. Substitui só o campo guideContent. Backup + commit + push + sync VPS.
 ---
 
 ## Parse de input
@@ -459,12 +459,12 @@ Pra um guide de 18k chars, isso significa ~70-90 tags `<strong>` distribuídas. 
 
 | Seção | Links | Tipo | Por quê |
 |---|---|---|---|
-| Vale a pena | **0** | — | Educativa-introdutória, sem CTA. Citações de modelo como âncora de preço (P2) em texto SIMPLES |
-| Como escolher (H3s) | **0** | — | 100% educativa sobre critérios |
-| Quais as melhores marcas (H3s) | **1 por marca** | Amazon search `/s?k=...` | Não há páginas internas de "marca" — usa search Amazon mesmo |
-| Perguntas Frequentes | **2-4** | **Internos `/slug/`** (se peer page existe) ou Amazon `/dp/` (fallback) | FAQs comparativas/recomendativas |
-| Conclusão | **5-8** | **Internos `/slug/`** (se peer pages existem) ou Amazon `/dp/` (fallback) | Lista por nicho |
-| **Total alvo** | **~10-15** | majoritariamente internos, com 3-5 search Amazon nas Marcas | |
+| Vale a pena | **0 Amazon** (pode ter peer/home interno) | Peer/home `/slug/` ou `/` | Sem CTA Amazon. Bom spot pra ligar a categoria-mãe/home contextualmente. Citações de modelo como âncora de preço (P2) em texto SIMPLES |
+| Como escolher (H3s) | **0 Amazon** (pode ter peer interno) | Peer `/slug/` | Sem CTA Amazon. Pode cross-linkar critério com artigo-irmão (ex: H3 "tanque vs cartucho" → guia de tanque) |
+| Quais as melhores marcas (H3s) | **1 por marca** + peer | Amazon search `/s?k=...` ou peer `/slug/` da marca | Search Amazon por marca; ou link pro guia-da-marca se existir como peer |
+| Perguntas Frequentes | **2-4** | Peer `/slug/`, produto `/slug/` ou Amazon `/dp/` | FAQs comparativas/recomendativas — spot natural pra link peer contextual |
+| Conclusão | **PRODUTO: 5-8** · **peer/home: evitar** | Produto `/slug/` ou Amazon `/dp/` (recomendação) | Recomendação de compra por nicho. **Links de navegação peer/home NÃO entram aqui** (decorativo) — eles vão nos spots contextuais acima |
+| **Total alvo** | **~10-15** | majoritariamente internos, com 3-5 search Amazon nas Marcas | peer/home distribuídos contextualmente (NÃO na Conclusão); produto concentrado em FAQ/Conclusão |
 
 **Como decidir entre interno vs Amazon `/dp/`:**
 
@@ -488,8 +488,8 @@ Antes de inserir <a> pra produto no guide (FAQ/Conclusão):
 #### Links internos (peer articles)
 
 - **0-3 links totais** no guide inteiro (já documentado em "Linkagem interna")
-- Distribuir ao longo do texto (não concentrar no fim)
-- Bom encaixe: dentro de H3 de "Como escolher" pra cross-linkar critério com outro artigo do site (ex: H3 "Com fio ou sem fio" linka pra "/melhor-aspirador-sem-fio-vertical/")
+- **Contextual, NÃO na Conclusão (v1.24.0):** distribuir ao longo do texto, cada um no spot onde o tema do artigo-irmão aparece naturalmente. **Evite a Conclusão** pra links peer/home — fecho com link de navegação é decorativo. Melhor não forçar do que enfiar no fim.
+- Bons encaixes: dentro de H3 de "Como escolher" pra cross-linkar critério com outro artigo (ex: H3 "Com fio ou sem fio" → "/melhor-aspirador-sem-fio-vertical/"); resposta de FAQ que toca no tema do irmão; "Vale a pena" pra apontar a categoria-mãe/home; H3 de marca pra apontar o guia daquela marca.
 
 ## Linkagem interna — contextual, estratégica, âncora = keyword (v1.22.0)
 
@@ -515,7 +515,9 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 - **A home é um peer como qualquer artigo.** Ela é o `homeReviewSlug`, servida na raiz (`/` = dominio.com.br), âncora = a keyword dela (ex: "melhor impressora"). Os outros artigos DEVEM linká-la via `<a href="/">{keyword da home}</a>` (NUNCA `/{homeReviewSlug}/`, que é 404) — **não deixe a home órfã**. O `href="/"` CONTA como peer link (vale pros ≥2 distintos).
 - Atributos: SEM `target="_blank"`, SEM `rel="nofollow"` (interno passa autoridade).
 - Quantidade: **mínimo 2 peer ARTICLES DISTINTOS** (NUNCA repita o mesmo destino 2×), até 3, + os links de PRODUTO (hub-and-spoke, quantos forem naturais).
-- **Só no guia**: todos os links internos (peer + produto) vivem **só no `guideContent`** (Como escolher / FAQ / Conclusão). **NUNCA** na introdução nem nos reviews dos produtos (lá só vai link Amazon).
+- **Só no guia**: todos os links internos (peer + produto) vivem **só no `guideContent`** (Como escolher / FAQ / Marca / Vale a pena / Conclusão). **NUNCA** na introdução nem nos reviews dos produtos (lá só vai link Amazon).
+- **Onde colocar o link peer/home — contextual, EVITAR a Conclusão (v1.24.0):** cada link pra artigo-irmão ou pra home entra no spot onde o assunto aparece **naturalmente no meio do texto** — uma resposta de FAQ que toca no tema do artigo-irmão, a seção "Qual a melhor marca" (pra apontar o guia daquela marca), ou "Vale a pena" / "Como escolher" (pra ligar a categoria-mãe/home). **NÃO concentre links de navegação peer/home na Conclusão.** Link de navegação jogado no fecho é decorativo, não contextual; o ideal é evitar a Conclusão de vez pra esses links. Se não houver encaixe natural fora da Conclusão, **melhor não forçar o link** do que enfiá-lo no fecho.
+  - ⚠ **Distinção importante:** essa régua é pra links **peer-article + home** (navegação entre artigos). Links de **PRODUTO** (hub-and-spoke `/{slug-produto}/` ou Amazon `/dp/`) **continuam OK na Conclusão** — ali são recomendação direta de compra, que é a função do fecho. O que sai da Conclusão é só a navegação inter-artigo.
 
 ### Hard-validation (antes de salvar)
 
@@ -597,7 +599,7 @@ Referência canônica pra calibrar tom + densidade visual: `sites/melhoraspirado
 - **6.000-25.000 chars** total no HTML (alvo típico 8-18k).
 - HTML allowlist: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Nada mais.
 - **Links Amazon**: PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca", "FAQ" e "Conclusão" (formato `?tag={tag}&...` tag-aware do site; também pode ser link de busca de marca `/s?k=...`).
-- **Linkagem interna**: 0-3 links pra peer articles reais (slug REAL, NUNCA derivado do keyword), âncora = keyword do destino (singular preferido); link de produto = nome completo COM marca. Sem `target`/`rel`.
+- **Linkagem interna**: 0-3 links pra peer articles reais (slug REAL, NUNCA derivado do keyword), âncora = keyword do destino (singular preferido); link de produto = nome completo COM marca. Sem `target`/`rel`. **Links peer/home são contextuais e NÃO entram na Conclusão** (v1.24.0) — vão no spot onde o tema aparece (FAQ/Marca/Vale a pena/Como escolher). Links de PRODUTO podem ficar na Conclusão (recomendação).
 - Sem travessão `—` nem `–`.
 - Sem superlativos sem evidência ("o melhor disponível", "incomparável", "imbatível").
 - **Citação de produto específico**: PROIBIDA em "Vale a pena" (exceto âncoras de preço — *"R$ X do Modelo Y a R$ Z do Modelo W"*) e "Como escolher" (exceto exceções editoriais pontuais, ex: *"Procreate é exclusivo do iPadOS"*). PERMITIDA em "Melhor marca" (1 H3 por marca), "FAQ" (recomendação direta) e "Conclusão" (recomendação central).
@@ -791,6 +793,13 @@ manobras.</p>
 Régua dura: links Amazon SÓ em Quais as melhores marcas + FAQ + Conclusão. Modelo violou várias vezes na prática (2026-05) colocando links de "Modelo Y" como âncora em Vale a pena P2 quando a régua é texto SIMPLES sem link. Fix: em Vale a pena, citar modelos como referência de preço *"Os preços vão de R$ X (Modelo Y) a R$ Z (Modelo W)"* mas com **Modelo Y / Modelo W em texto puro, sem `<a>`**. Em Como escolher, mesmo critério: produto se for citado vira texto simples.
 
 Verificação antes de salvar: `grep -c 'amazon\.com\.br' nas seções 1-2 do guide` deve retornar **0**.
+
+### 20. Links peer/home concentrados na Conclusão (v1.24.0)
+Tentação: jogar todos os links de navegação inter-artigo ("veja também o guia de X") na Conclusão, como um rodapé de "leia mais". É **decorativo, não contextual** — o leitor no fecho já decidiu, e link de navegação genérico ali não ajuda. Régua (Marcelo, 2026-06-05): "o ideal é evitar colocar na conclusão (ou não colocar mesmo). tem que ser contextual." Fix: cada link peer/home vai no spot onde o tema do irmão aparece naturalmente — FAQ que toca no assunto, H3 de "Como escolher", H3 de marca, ou "Vale a pena" pra apontar a categoria-mãe/home. Se não há encaixe natural fora da Conclusão, **não force** o link.
+
+Distinção: links de **PRODUTO** (hub-and-spoke `/{slug-produto}/` ou Amazon `/dp/`) continuam OK na Conclusão (recomendação de compra é a função do fecho). Só a **navegação peer/home** sai.
+
+Verificação antes de salvar: na seção Conclusão, nenhum `<a href="/{slug}/">` aponta pra peer ARTICLE (`reviews/`) nem `<a href="/">` pra home. Links de produto (`products/`) e Amazon ali são OK.
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 

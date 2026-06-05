@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-auditar
-description: Audita o guideContent ("Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") de um artigo E aplica correções CIRÚRGICAS por seção (nunca rewrite do guia inteiro). Contraparte do `artigo-reviews-auditar`, mas pro guide. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Critérios: produto-no-lineup-fora-do-guide (lineup mudou e o guia não acompanhou), claim-vs-lineup-stale, guide-estrutura (5 H2 na ordem), guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, travessao, voz-comprador, chavoes-por-nicho, concordancia-pt-br. Output: relatório em chat com diffs por seção, user aprova granular ("aplica 1,3" / "aplica tudo"). Aplica via Edit cirúrgico preservando o resto do guideContent. Usa `artigo-guia-escrever` (rewrite total) só quando o guia está ausente/stub ou estruturalmente quebrado (3+ H2 faltando).
+description: Audita o guideContent ("Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") de um artigo E aplica correções CIRÚRGICAS por seção (nunca rewrite do guia inteiro). Contraparte do `artigo-reviews-auditar`, mas pro guide. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Critérios: produto-no-lineup-fora-do-guide (lineup mudou e o guia não acompanhou), claim-vs-lineup-stale, guide-estrutura (5 H2 na ordem), guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa, mover pra spot contextual), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, travessao, voz-comprador, chavoes-por-nicho, concordancia-pt-br. Output: relatório em chat com diffs por seção, user aprova granular ("aplica 1,3" / "aplica tudo"). Aplica via Edit cirúrgico preservando o resto do guideContent. Usa `artigo-guia-escrever` (rewrite total) só quando o guia está ausente/stub ou estruturalmente quebrado (3+ H2 faltando).
 ---
 
 ## Parse de input
@@ -157,8 +157,14 @@ Permitidas: `<h2> <h3> <p> <ul> <ol> <li> <strong> <em> <a href rel target> <br>
 
 ### 6. `guide-links-hub-and-spoke` (level=`warn` p/ tag errada, `info` p/ posição)
 - Links Amazon (`/dp/`) tag-aware: tag preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`; tag vazia → cru. Severity contextual igual `artigo-auditar` (live=true → error; live=false → warn).
-- "Vale a pena" e "Como escolher" devem ter **0 links** (seções educativas). Link nelas → info.
-- FAQ/Marca/Conclusão: links OK; preferir link interno pra peer sobre Amazon (info).
+- "Vale a pena" e "Como escolher" devem ter **0 links AMAZON** (seções educativas, sem CTA de compra). Link Amazon nelas → info. (Link interno peer/home contextual nessas seções É permitido — é navegação, não CTA.)
+- FAQ/Marca/Conclusão: links de produto/Amazon OK; preferir link interno pra peer sobre Amazon (info).
+
+### 6b. `peer-link-na-conclusao` (level=`info`, v1.24.0)
+Links de **navegação peer-article/home** concentrados na **Conclusão** → flag info. Régua (Marcelo, 2026-06-05): "evitar colocar na conclusão (ou não colocar mesmo). tem que ser contextual." Link de navegação no fecho é decorativo. Fix: **mover** o link peer/home pro spot onde o tema do irmão aparece naturalmente (FAQ que toca no assunto, H3 de "Como escolher", H3 de marca, ou "Vale a pena" pra apontar a categoria-mãe/home). Se não há encaixe natural fora da Conclusão, **remover** o link em vez de mantê-lo no fecho.
+- **Detecção**: na seção `<h2>Conclusão</h2>`, qualquer `<a href="/{slug}/">` onde `{slug}` é um peer ARTICLE (existe em `reviews/`), OU `<a href="/">` (home). 
+- **NÃO flag**: links de PRODUTO na Conclusão (`<a href="/{slug}/">` onde `{slug}` existe em `products/`) nem Amazon `/dp/` — esses são recomendação de compra, função legítima do fecho.
+- Não bloqueia readyToLock.
 
 ### 7. `link-interno-quebrado` (level=`error`)
 Pra cada `<a href="/{slug}/">` interno:
@@ -166,7 +172,7 @@ Pra cada `<a href="/{slug}/">` interno:
 - Se não existe `reviews/{slug}.mdx` NEM `products/{slug}.mdx` → error (404). Fix: corrigir o slug (slugify canon: lowercase, sem acento, ponto entre dígitos → hífen, demais pontos removidos) ou apontar pro arquivo real.
 
 ### 8. `peer-article-nao-linkado` (level=`warn`)
-Peer article = outro `.mdx` em `reviews/` que compartilha 2+ palavras iniciais do `keyword`. Se existe peer e o guia não o linka → propor 1 link interno (FAQ nova H3 ou Conclusão), anchor = `peer.keyword`. Não bloqueia.
+Peer article = outro `.mdx` em `reviews/` que compartilha 2+ palavras iniciais do `keyword`. Se existe peer e o guia não o linka → propor 1 link interno **contextual** (FAQ que toca no tema, H3 de "Como escolher", H3 de marca, ou "Vale a pena"), anchor = `peer.keyword` (singular preferido). **NÃO propor na Conclusão** (v1.24.0 — navegação peer/home é contextual, não vai no fecho). Não bloqueia.
 
 ### 9. `anchor-nao-keyword` (level=`warn`, v1.22.0)
 Âncora de link interno fora da régua. Dois sub-casos:
@@ -175,7 +181,7 @@ Peer article = outro `.mdx` em `reviews/` que compartilha 2+ palavras iniciais d
 Era `info`; subiu pra `warn` porque âncora errada é perda de SEO real e foi recorrente (melhorimpressora, 2026-06-05). Não bloqueia readyToLock.
 
 ### 9b. `linkagem-fraca` (level=`warn`, v1.22.0)
-O artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). **A home é peer**: `href="/"` conta como link pro `homeReviewSlug`, e a própria home NÃO pode ficar órfã (deve receber ≥2 entradas dos outros artigos). Flag se: <2 peers distintos no guia, OU o mesmo peer linkado 2+ vezes, OU algum link interno na intro/review, OU a home órfã. Fix: adicionar peer(s) relevante(s) em FAQ/Conclusão (âncora = keyword do destino, singular) ou remover a repetição. Não bloqueia readyToLock.
+O artigo deve linkar **≥2 peer articles DISTINTOS** (outros `.mdx` de `reviews/`), **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). **A home é peer**: `href="/"` conta como link pro `homeReviewSlug`, e a própria home NÃO pode ficar órfã (deve receber ≥2 entradas dos outros artigos). Flag se: <2 peers distintos no guia, OU o mesmo peer linkado 2+ vezes, OU algum link interno na intro/review, OU a home órfã. Fix: adicionar peer(s) relevante(s) em spot **contextual** (FAQ/Marca/Vale a pena/Como escolher — **NÃO na Conclusão**, v1.24.0), âncora = keyword do destino (singular), ou remover a repetição. Não bloqueia readyToLock.
 
 ### 10. `travessao` (level=`warn`)
 `—` ou `–` em qualquer lugar do guia. Fix: trocar por `:`, `,`, `()` ou `.`.
