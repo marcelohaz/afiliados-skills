@@ -49,7 +49,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 - **6.000 a 25.000 chars** no total do HTML (alvo típico 8-18k — vide canônicos do projeto).
 - **Estrutura: 5 H2 obrigatórios** + 1 opcional. Faltar qualquer obrigatório = ERRO. Ver "Régua editorial — ESTRUTURA OBRIGATÓRIA" abaixo.
 - **Links Amazon: tag-aware.** PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca" (link de busca da marca), "FAQ" e "Conclusão" (recomendações de produto). Formato: `?tag={tag}&linkCode=ogi&th=1&psc=1` se tag preenchida; URL crua se vazia.
-- **Linkagem interna 0-3 links** pra **peer articles reais do mesmo site** — slugs verificados antes. Formato: `<a href="/{slug}/">texto descritivo</a>`. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade).
+- **Linkagem interna 0-3 links** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
 - **Sem travessão (—).** Use vírgula, ponto, dois pontos ou parênteses.
 - **Sem superlativos sem evidência** ("o melhor disponível", "incomparável", "imbatível"). "Excelente", "ótimo" OK se contextualizado.
 - **Citação de produto específico: contextual.** PROIBIDA em "Como escolher" (linguagem GERAL — critérios, perfis). PERMITIDA em "Melhor marca" (1 H3 por marca), "FAQ" (recomendação direta), "Conclusão" (recomendação central) e como âncoras de preço em "Vale a pena" (P2). Ver matriz completa em "Como usar a bíblia".
@@ -92,8 +92,8 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 
 6. **Listar peer articles** do site (pra linkagem interna):
    - `ls sites/{site}/src/content/reviews/*.mdx` (ou Glob)
-   - Pra cada `.mdx` (excluindo o próprio): `Read` rápido pra extrair `title` e `slug` (= filename sem `.mdx`)
-   - Resultado: array `[{slug, title}]` dos OUTROS artigos do site
+   - Pra cada `.mdx` (excluindo o próprio): `Read` rápido pra extrair `title`, `keyword`, `keywordPlural` e `slug` (= filename sem `.mdx`)
+   - Resultado: array `[{slug, title, keyword, keywordPlural}]` dos OUTROS artigos do site (a `keyword` vira a ÂNCORA do link interno — ver "Linkagem interna")
    - Se vazio (este é o 1º artigo do site): NÃO incluir links internos no guide gerado
 
 7. **Detectar instrução opcional** no prompt do user (paridade com outras skills):
@@ -491,42 +491,37 @@ Antes de inserir <a> pra produto no guide (FAQ/Conclusão):
 - Distribuir ao longo do texto (não concentrar no fim)
 - Bom encaixe: dentro de H3 de "Como escolher" pra cross-linkar critério com outro artigo do site (ex: H3 "Com fio ou sem fio" linka pra "/melhor-aspirador-sem-fio-vertical/")
 
-## Linkagem interna — peer articles do site
+## Linkagem interna — contextual, estratégica, âncora = keyword (v1.22.0)
 
-A skill carrega `[{slug, title}]` dos OUTROS artigos do mesmo site (passo 6). **0-3 links** no guide inteiro, distribuídos ao longo do texto (não concentrar no fim).
+A skill carrega `[{slug, title, keyword, keywordPlural}]` dos OUTROS artigos do site (passo 6) + a lista de páginas de produto (`products/*.mdx`). Linkar é **contextual e estratégico**, não decorativo.
 
-### Formato exato
+### Regra de OURO da âncora
 
-```html
-<a href="/{slug}/">texto âncora descritivo</a>
-```
+- **Link pra ARTIGO peer**: a âncora é a **keyword do artigo de destino**, com **preferência pela forma SINGULAR** (plural só quando a frase exige). NUNCA âncora descritiva/genérica.
+  - ✅ `<a href="/melhor-impressora-tanque-de-tinta/">melhor impressora tanque de tinta</a>`
+  - ❌ `<a href="/melhor-impressora-tanque-de-tinta/">opções de tanque de tinta</a>` (âncora ≠ keyword)
+- **Link pra PÁGINA DE PRODUTO** (hub-and-spoke): a âncora é o **nome COMPLETO do produto, COM a marca** (nunca só o modelo).
+  - ✅ `<a href="/epson-ecotank-l4360/">Epson EcoTank L4360</a>`
+  - ❌ `<a href="/epson-ecotank-l4360/">L4360</a>` ou `<a ...>EcoTank L4360</a>` (sem marca)
 
-- Slug entre barras (`/` no início, `/` no fim) — path absoluto
-- Texto âncora descritivo, NÃO "clique aqui" / "veja aqui" / "saiba mais"
-- SEM `target="_blank"` (links internos abrem no mesmo tab)
-- SEM `rel="nofollow"` (queremos passar autoridade SEO)
+### Slug REAL — NUNCA derivar do keyword
 
-### Exemplos bons
+O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `products/`), copiado verbatim. **NUNCA derive o slug do keyword** (slugify do título). Foi exatamente assim que nasceu `/impressora-boa-e-barata/` (keyword "impressora boa e barata") quando o arquivo real é `impressora-barata.mdx` → 404 em produção. Se o destino é o `homeReviewSlug` do site, o href é `/` (a home), **não** `/{homeReviewSlug}/` (esse é filtrado do getStaticPaths → 404).
 
-```html
-<p>Para uso doméstico leve, o foco muda pra cartucho — veja nossa análise das <a href="/melhor-impressora-multifuncional/">multifuncionais</a>.</p>
+### Estratégia (contextual + sem órfão)
 
-<p>Quem busca rendimento extremo deve considerar também as <a href="/melhor-impressora-laser/">impressoras laser</a>, que cobrimos em separado.</p>
-```
+- Distribua os links ao longo do texto (não concentrar no fim), cada um num contexto que justifique a visita.
+- Pense no grafo do site: linke os **irmãos mais relevantes** (ex: o guia do termo-head linka custo-benefício + tanque + barata; cada sub-artigo aponta de volta pra home via `/`). Evita artigo órfão/sub-linkado.
+- Atributos: SEM `target="_blank"`, SEM `rel="nofollow"` (interno passa autoridade).
+- Quantidade: **0-3 links pra peer ARTICLES** + os links de PRODUTO (hub-and-spoke, quantos forem naturais em FAQ/Conclusão).
 
-### Exemplos ruins
+### Hard-validation (antes de salvar)
 
-❌ `<a href="/melhor-aspirador-robo/">veja aqui</a>` (âncora não-descritiva)
+1. Cada `href="/{slug}/"` existe em `reviews/` OU `products/`? Se não → 404, **regenerar com o slug real**. Nenhum aponta pro `homeReviewSlug` (esse vira `/`).
+2. Âncora de peer == keyword do destino (singular preferido)? Âncora de produto contém a marca + é o nome completo?
+Se algo falhar, **corrijo o trecho antes de aplicar**. Não passa link inventado nem âncora fora da régua.
 
-❌ `<p>Veja também: <a>X</a>, <a>Y</a>, <a>Z</a>.</p>` (concentração no fim)
-
-❌ `<a href="/melhor-impressora-laser-barata/">laser barata</a>` quando esse slug NÃO está na peer list (link inventado — IA "alucinando" artigo que não existe)
-
-### Hard-validation (eu faço antes de salvar)
-
-Extraio todos os `href="/..."` do HTML e confiro contra a lista de peer articles. Se algum slug não bate, **regenero** o trecho antes de aplicar. Não passa link inventado.
-
-Se peer list está vazia (este é o 1º artigo do site), **ZERO links internos**. Não tenta linkar pra fora do site, não inventa slug.
+Se peer list está vazia (1º artigo do site), **ZERO links de peer**.
 
 ## Concorrentes (opcional)
 
@@ -600,7 +595,7 @@ Referência canônica pra calibrar tom + densidade visual: `sites/melhoraspirado
 - **6.000-25.000 chars** total no HTML (alvo típico 8-18k).
 - HTML allowlist: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Nada mais.
 - **Links Amazon**: PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca", "FAQ" e "Conclusão" (formato `?tag={tag}&...` tag-aware do site; também pode ser link de busca de marca `/s?k=...`).
-- **Linkagem interna**: 0-3 links totais pra peer articles reais, distribuídos ao longo do texto. Formato `<a href="/{slug}/">texto descritivo</a>` sem `target`/`rel`.
+- **Linkagem interna**: 0-3 links pra peer articles reais (slug REAL, NUNCA derivado do keyword), âncora = keyword do destino (singular preferido); link de produto = nome completo COM marca. Sem `target`/`rel`.
 - Sem travessão `—` nem `–`.
 - Sem superlativos sem evidência ("o melhor disponível", "incomparável", "imbatível").
 - **Citação de produto específico**: PROIBIDA em "Vale a pena" (exceto âncoras de preço — *"R$ X do Modelo Y a R$ Z do Modelo W"*) e "Como escolher" (exceto exceções editoriais pontuais, ex: *"Procreate é exclusivo do iPadOS"*). PERMITIDA em "Melhor marca" (1 H3 por marca), "FAQ" (recomendação direta) e "Conclusão" (recomendação central).
@@ -716,8 +711,8 @@ Se o `guideContent: |` tem linha com 4 spaces ou 0 spaces ou tab, YAML quebra �
 ### 9. Edit tool com bloco old_string ambíguo
 Se o `guideContent` atual tem alguma frase EXATA que aparece também em outro lugar do `.mdx` (ex: title repetido literal), Edit pode confundir. Mitigação: incluir 1-2 linhas de contexto antes (ex: a linha do `products:` ou similar) no `old_string` pra forçar match único.
 
-### 10. Texto âncora não-descritivo
-`<a href="/X/">clique aqui</a>` — SEO ruim. Texto âncora deve descrever DESTINO: `<a href="/melhor-impressora-multifuncional/">multifuncionais</a>`.
+### 10. Âncora ≠ keyword / slug derivado do keyword
+Três erros: (1) âncora descritiva em vez da keyword do destino (`<a href="/melhor-impressora-tanque-de-tinta/">opções de tanque</a>` → use `melhor impressora tanque de tinta`, singular); (2) âncora de produto sem marca (`<a>L4360</a>` → `Epson EcoTank L4360`); (3) derivar o slug do keyword → 404 (`/impressora-boa-e-barata/` quando o arquivo é `impressora-barata.mdx`). Use sempre o slug REAL e a keyword/nome completo como âncora.
 
 ### 11. Concorrente parafraseado óbvio
 Se user colou texto da Buscapé e o guide reusa frase quase literal, é cópia (mesmo sem aspas). Reescrever com ângulo próprio.

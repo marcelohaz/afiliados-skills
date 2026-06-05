@@ -168,8 +168,11 @@ Pra cada `<a href="/{slug}/">` interno:
 ### 8. `peer-article-nao-linkado` (level=`warn`)
 Peer article = outro `.mdx` em `reviews/` que compartilha 2+ palavras iniciais do `keyword`. Se existe peer e o guia não o linka → propor 1 link interno (FAQ nova H3 ou Conclusão), anchor = `peer.keyword`. Não bloqueia.
 
-### 9. `anchor-nao-keyword` (level=`info`)
-Link interno cujo anchor ≠ `keyword` exata do destino. Fix: ajustar o anchor (qualificadores ficam FORA do `<a>`). Só SEO, não bloqueia.
+### 9. `anchor-nao-keyword` (level=`warn`, v1.22.0)
+Âncora de link interno fora da régua. Dois sub-casos:
+- **peer (artigo)**: âncora ≠ `keyword` do destino. Régua: âncora = **keyword do destino, preferência SINGULAR** (`keywordPlural` só se a frase exigir). Fix: trocar o anchor pela keyword (qualificadores ficam FORA do `<a>`).
+- **produto**: âncora não contém a **marca** OU não é o **nome completo** (ex: `L4360`/`EcoTank L4360` em vez de `Epson EcoTank L4360`). Fix: usar o `name` completo do produto.
+Era `info`; subiu pra `warn` porque âncora errada é perda de SEO real e foi recorrente (melhorimpressora, 2026-06-05). Não bloqueia readyToLock.
 
 ### 10. `travessao` (level=`warn`)
 `—` ou `–` em qualquer lugar do guia. Fix: trocar por `:`, `,`, `()` ou `.`.

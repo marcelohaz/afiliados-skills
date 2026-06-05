@@ -467,17 +467,17 @@ Audit cross-article: detecta quando o site tem **2+ artigos comparativos** sobre
 
 **Bloqueia readyToLock?** Não — é melhoria editorial/SEO, mas o artigo é válido sem ela.
 
-### `anchor-nao-keyword` (level=`info`, régua v1.20.0)
+### `anchor-nao-keyword` (level=`warn`, régua v1.22.0)
 
-Audit SEO: links internos (peer products/articles) cujo **anchor text** não bate com a `keyword` exata do destino.
+Audit SEO: links internos cujo **anchor text** não bate com a identidade do destino. **Artigo peer**: âncora = `keyword` do destino (preferência SINGULAR; `keywordPlural` aceito). **Produto**: âncora = `name` completo COM a marca (nunca só o modelo). Subiu de `info` pra `warn` em v1.22.0 (recorrente no melhorimpressora 2026-06-05).
 
 **Por que importa SEO**: anchor text = sinal forte pra ranking do destino. Anchor "melhor pré-treino do mercado" passa autoridade pra "melhor pré-treino do mercado" (não pra "melhor pré-treino"). Quando o destino tem `keyword: "Melhor Pré-Treino"`, melhor usar anchor = "melhor pré-treino" puro.
 
 **Como verificar**:
 1. Pra cada `<a href="/{slug}/"texto</a>` interno
 2. Achar a entry correspondente em `content/reviews/{slug}.mdx` ou `content/products/{slug}.mdx`
-3. Comparar `anchor.toLowerCase()` com `entry.data.keyword.toLowerCase()`
-4. Se diferente → 🔵 info `anchor-nao-keyword`
+3. **Artigo peer**: comparar `anchor` com a `keyword` do destino (preferência SINGULAR; `keywordPlural` aceito). **Produto**: a âncora deve conter a MARCA e ser o `name` completo (ex: `Epson EcoTank L4360`, nunca `L4360`/`EcoTank L4360`).
+4. Se fora da régua → 🟡 warn `anchor-nao-keyword`
 
 **Tolerância**: anchor pode ter qualificadores FORA do `<a>` tag — `<a href="...">melhor pré-treino</a> do mercado` é OK. Só flagga se o qualificador está DENTRO do anchor.
 
