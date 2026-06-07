@@ -397,6 +397,8 @@ Reviews afiliados são **especialista explicando pra amigo ou vizinho**: claro, 
 - `dicasAcionaveis`: incorpore se fizer sentido no `fullReview` ou como item em `cons` (quando for limitação contextual).
 - `dadosInconsistentes` + `decisaoEditorial`: SE existir, **RESPEITE**. A decisão editorial diz qual valor usar e qual ignorar.
 - `observacoesAgente`: notas internas pra você. Leia.
+- `avisosAoAgente`: instruções imperativas do humano sobre ESTE produto. **RESPEITE** (ex: "descontinuado", "não mencionar defeito X").
+- `descontinuado` (campo estruturado `{asin, nome}`): se presente, o produto **saiu de linha**. (1) **PRESERVE o campo no frontmatter** — o stub do `create-from-bible` já o traz, e ele dispara o banner "produto descontinuado" + schema.org Discontinued + link pra sucessora; nunca remova. (2) Escreva a review **honesta**: não venda como a compra atual; deixe claro que saiu de linha e que a sucessora (`{nome}`) é a recomendação corrente. Descontinuado é descontinuado — sem hedge de "confirmar disponibilidade".
 - `specsAmazon` + `doFabricante` + `conteudoBrutoFabricante`: fontes pra `specs` e claims numéricos no `fullReview`. Peso editorial varia por fonte — ver "Peso por fonte" abaixo.
 
 ## Operação de destilação bíblia → .mdx (CRÍTICO)
