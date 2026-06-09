@@ -406,7 +406,7 @@ Também sinalizar (severidade `aviso`):
 Template exato — use blocos idênticos pro painel parsear visualmente:
 
 ```markdown
-# Auditoria: {productName} — {site}/{slug}
+# Auditoria: {productName} ({site}/{slug})
 
 - **Data:** {YYYY-MM-DD HH:MM}
 - **ASIN:** {ASIN}
