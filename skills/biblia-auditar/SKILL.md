@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar
-description: Audita bíblia v2 procurando inconsistências factuais, contradições internas, claims não verificáveis, frescor de dados e problemas editoriais. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Usa as diretrizes editoriais embutidas na bíblia como régua. Gera relatório em docs/biblias-v2/.audits/<ASIN>-last.md (o que o painel lê).
+description: Audita E CORRIGE bíblia v2 no estilo propor→aprovar (igual artigo-guia-auditar/linkagem-auditar). Procura inconsistências factuais, contradições internas, claims não verificáveis, frescor de dados e problemas editoriais; gera o relatório; propõe fixes cirúrgicos NOS CAMPOS CURADOS (nunca nos brutos) e aplica os que você aprovar. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Usa as diretrizes editoriais embutidas na bíblia como régua. Gera relatório em docs/biblias-v2/.audits/<ASIN>-last.md (o que o painel lê). Ao aplicar, bumpa lastModified via toISOString (UTC) pra o push do R2 vencer o uploadedAt remoto.
 ---
 
 ## Parse de input
@@ -22,11 +22,14 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 > **Regras canônicas em `docs/painel/_data/regras-biblia.md`** — abra antes de começar. As categorias de auditoria e os filtros editoriais (ex: specs ambientais, origem de fabricação) que você precisa flaggar vivem lá (single source da verdade). Esta skill é a versão executável pra Claude Code; conteúdo essencial duplicado abaixo, mas em caso de divergência o `regras-biblia.md` ganha.
 
-Você é o auditor de bíblias de produto. O usuário passa um ASIN (ou nome de produto que você precisa mapear pra um ASIN dos arquivos em `docs/biblias-v2/`). Sua função é **verificar** o conteúdo da bíblia — não regerar, não reescrever, só encontrar e reportar problemas.
+Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou nome de produto que você precisa mapear pra um ASIN dos arquivos em `docs/biblias-v2/`). Sua função é **verificar** o conteúdo da bíblia, **gerar o relatório** e, no estilo **propor→aprovar**, **propor e aplicar fixes cirúrgicos** nos achados acionáveis (igual `artigo-guia-auditar`/`linkagem-auditar` fazem pro guide/grafo). Auditar é sempre o evento; corrigir é on-approval.
 
 ## Invariantes
 
-- **Nunca edite o JSON da bíblia.** Seu output é um relatório em `.audits/`. O humano decide o que fazer com os achados.
+- **PROPOR → APROVAR.** O relatório sai SEMPRE (read-only é o default). Os fixes são PROPOSTOS com diff; só aplica com aprovação granular do user ("aplica tudo" / "aplica 1,3" / "rejeita 2"). Nunca aplica sem aprovar.
+- **Só toca nos CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`). **NUNCA edita os campos BRUTOS** (`sobreEsteItem`, `doFabricante`, `descricaoProduto`, `specsAmazon`, `conteudoBrutoFabricante`) — eles são a fonte factual; achado neles é report-only (o humano corrige no editor). **NUNCA toca em `lastAuthor`.**
+- **`lastModified`: ao APLICAR, bumpe via `new Date().toISOString()` (UTC correto).** Sem isso, o push do R2 NÃO vence: o sync compara `lastModified` embutido (local) vs `uploadedAt` do objeto R2 (remoto), e um objeto R2 enviado depois do timestamp embutido faz o pull CLOBBERAR o seu edit (incidente real 2026-06-09 na B0D21JPCF9). **NUNCA hand-rolle o timestamp via getHours/pad** (bug de timezone: vira 2-3h no futuro e quebra o audit-stale). `toISOString()` é UTC real, sem esse bug. Se NÃO aplicar nada (só auditar), NÃO toque em lastModified.
+- **O que é auto-fixável** (propor): higiene editorial nos campos curados (travessão, spec ambiental/origem que vazou pro curado, capitalização, muleta "declarado pelo fabricante", concordância PT-BR), `dadosInconsistentes.decisaoEditorial` quando a verificação externa resolveu o número, e adicionar aos curados um fato CONFIRMADO por fonte externa. **Report-only** (não auto-fixar): contradição no raw sem valor certo conhecido, frescor (precisa re-captura), claim que exige verificação externa não feita, qualquer coisa nos campos brutos.
 - **Nunca invente achados.** Se não encontrou problema numa categoria, diga "nenhum". Mentir gera retrabalho pior do que um audit vazio.
 - **Toda afirmação precisa de evidência.** Cite trecho literal da bíblia (use blockquote curto < 15 palavras) OU URL externa que consultou. Achado sem evidência é descartado.
 - **Respeite as diretrizes da bíblia.** O array `diretrizesEditoriais` dentro da bíblia é a régua editorial. Use-o como critério — se a bíblia tem "nunca dizer #1 mais vendido" e você achar isso num campo, é violação.
@@ -62,6 +65,17 @@ Você é o auditor de bíblias de produto. O usuário passa um ASIN (ou nome de 
    ```
    `painel-vps-pull.sh` propaga pro painel da VPS via Basic Auth (creds em `.env.painel-skills`). Sem isso, Bárbara não vê o audit no painel até alguém puxar manualmente.
 6. **Reportar no chat**: 3-5 linhas com total de achados por severidade + caminho do relatório. Não cole o relatório inteiro no chat — só o resumo.
+
+7. **Propor fixes (propor→aprovar)**: pros achados **auto-fixáveis** (ver invariante), liste numerado com diff `ANTES → DEPOIS` apontando o campo curado exato (ex: `pontosFortes[+]`, `dadosInconsistentes[flag].decisaoEditorial`). Achados report-only (raw, frescor, claim não-verificado) ficam só no relatório. Se não houver fix auto-fixável, pule pra o fim (audit read-only, como antes).
+
+8. **Esperar aprovação granular**: "aplica tudo" / "aplica 1,3" / "rejeita 2" / "refaz 1". NÃO aplica sem isso.
+
+9. **Aplicar os aprovados** (backup → Edit cirúrgico):
+   - Backup: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/$(date +%Y-%m-%d)/<ASIN>-v2-$(date +%H%M%S).json`.
+   - Editar APENAS os campos curados aprovados (script que lê o JSON, muta os campos, escreve `JSON.stringify(b, null, 2) + '\n'`). NUNCA tocar nos campos brutos.
+   - **Bumpar `b.lastModified = new Date().toISOString()`** (ver invariante — sem isso o push é clobberado). Manter `lastAuthor`.
+
+10. **Sync R2 + confirmar**: `bun scripts/sync-biblias-r2.ts --apply --push`. Conferir que a linha do ASIN é `enviado` (local mais novo) e não `recebido` (clobber). Re-rodar o sync: deve dar `0 enviadas, 0 recebidas` (steady-state = local==R2). Reportar o que foi aplicado + status do push.
 
 ## As 5 categorias
 
