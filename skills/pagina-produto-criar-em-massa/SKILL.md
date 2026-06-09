@@ -145,7 +145,7 @@ Detecção:
 
    ```bash
    git commit --no-verify -m "feat({site}): preenche {N} páginas individuais em batch via skill" \
-     -m "Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+     -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
    ```
 
    `--no-verify` é necessário porque hook pre-commit bloqueia edits direto de .mdx (skill batch passa por esse mesmo bypass que a skill individual já usa — exceção documentada na memória do projeto).

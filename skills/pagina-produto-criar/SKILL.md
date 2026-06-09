@@ -150,7 +150,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
     ```bash
     git add sites/{site}/src/content/products/{slug}.mdx
     git commit -m "feat({site}): preenche página individual {slug} via skill" \
-      -m "Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
     git push origin main
     ```
 

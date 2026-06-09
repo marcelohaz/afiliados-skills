@@ -138,7 +138,7 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
     ```bash
     git add sites/{site}/src/config.ts
     git commit -m "chore({site}): atualiza descrição categoria {categorySlug} via skill" \
-      -m "Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
     git push origin main
     ```
     Mensagem é `chore` (não `feat`) — paridade com o handler do painel (`category-desc.ts:288`).

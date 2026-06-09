@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 19 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 20 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -83,9 +83,20 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Vazia → links Amazon devem ser crus. Preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`.
 
-7. **Analisar cross-produto** pelos 8 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
+7. **Analisar cross-produto** pelos 20 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
 8. **Reportar em chat** no formato canônico (seção "Formato do relatório").
+
+8.5. **Gravar marcador de auditoria** (registra QUANDO os reviews foram auditados — alimenta a barra "Reviews auditados" + o log de atividade do editor-artigo). Roda **SEMPRE**, logo após o relatório, mesmo que o user depois rejeite todas as mudanças (auditar é o evento; aplicar é outro):
+   - `Write` em `docs/biblias-v2/.audits/reviews/{site}-{slug}-last.md` com: título (`# Auditoria de reviews: {site}/{slug}`), `- Produtos auditados: {N}`, `- Achados: {M}` (+ lista curta das rules disparadas, ou "nenhum"). A data é só pra leitura humana — **NÃO** invente timestamp pra sort (a fonte de tempo é o commit do git; e gerar `Date().toISOString()` cai no bug de timezone). Crie o diretório se não existir.
+   - Commit + push + VPS pull:
+     ```bash
+     git add docs/biblias-v2/.audits/reviews/{site}-{slug}-last.md
+     git commit --no-verify -m "audit-reviews({site}): {slug} ({M} achados)"
+     git push origin main
+     bash scripts/painel-vps-pull.sh
+     ```
+   - **Por quê:** o nome `-last.md` (sem dígitos de data) NÃO cai no `.gitignore` de audits timestampados → fica TRACKED e sincroniza. O editor-artigo lê via `git log` (endpoint `/article/:site/:slug/activity`), então o evento aparece em qualquer máquina. Prefixo `audit-reviews(` faz o log classificar como auditoria de reviews (ícone 🔍). Sem este passo, "Reviews auditados" fica "sem registro" pra sempre.
 
 9. **Esperar resposta do user**: granularidade per-produto. Possíveis comandos:
    - `aplica tudo` / `aplica todos` → todas as mudanças
@@ -115,7 +126,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 12 critérios da análise
+## Os 20 critérios da análise
 
 ### 1. `tone-clone` — abertura/frase idêntica entre produtos
 
@@ -280,6 +291,24 @@ Reportar com sugestão de reformulação destilada. User decide se aceita.
 
 **Severidade: Crítico** (sempre propor mudança) — voz-citação implícita quebra confiança editorial igual à explícita; só é mais difícil de detectar.
 
+### 10. `termos-tecnico-industriais` — termos de rotulagem técnica (régua v1.11.4)
+
+Termos de **rotulagem industrial** soam burocráticos e quebram voz editorial (especialista→amigo). Régua existia em audits desde 2026-05-17 mas só formalizada em 2026-05-26.
+
+**Termos proibidos pra grep**:
+- "contaminação cruzada"
+- "linha de produção compartilhada" (sem contexto editorial)
+- "padrões de fabricação ISO XXXX" (sem agregar valor)
+- "boas práticas de fabricação" (BPF — só técnico)
+- "rastreabilidade do lote", "lote de fabricação" (regulatório)
+
+**Substituições editoriais**:
+- ❌ "Pode ter contaminação cruzada com glúten" → ✓ "Pode conter traços de glúten. Leia a rotulagem antes do uso."
+- ❌ "Linha de produção compartilhada com produtos com lactose" → ✓ "Pode conter traços de lactose. Confira a rotulagem se você é sensível."
+- ❌ "Atende padrões ISO 22000 de segurança alimentar" → drop ou "produto seguindo padrões reconhecidos da categoria" (se agregar)
+
+**Severidade: Crítico** — quebra voz editorial direta. Auditoria deve sempre propor fix.
+
 ### 10b. `jargao-tecnico-vazado` (régua v1.17.3, severidade: CRÍTICO)
 
 Termos de dev/estoque/regulatório que vazaram pro texto público — usuário não entende e quebra confiança editorial. Gap real descoberto no melhorpretreino: "E o SKU avaliado vem só em Laranja", "o ASIN com cafeína só vem em Pink Lemonade".
@@ -304,24 +333,6 @@ Termos de dev/estoque/regulatório que vazaram pro texto público — usuário n
 | "o rótulo cita possíveis traços" | "pode conter traços" |
 
 **Severidade: Crítico** — usuário casual vê SKU/ASIN e fica confuso, quebra confiança editorial direto.
-
-### 10. `termos-tecnico-industriais` — termos de rotulagem técnica (régua v1.11.4)
-
-Termos de **rotulagem industrial** soam burocráticos e quebram voz editorial (especialista→amigo). Régua existia em audits desde 2026-05-17 mas só formalizada em 2026-05-26.
-
-**Termos proibidos pra grep**:
-- "contaminação cruzada"
-- "linha de produção compartilhada" (sem contexto editorial)
-- "padrões de fabricação ISO XXXX" (sem agregar valor)
-- "boas práticas de fabricação" (BPF — só técnico)
-- "rastreabilidade do lote", "lote de fabricação" (regulatório)
-
-**Substituições editoriais**:
-- ❌ "Pode ter contaminação cruzada com glúten" → ✓ "Pode conter traços de glúten. Leia a rotulagem antes do uso."
-- ❌ "Linha de produção compartilhada com produtos com lactose" → ✓ "Pode conter traços de lactose. Confira a rotulagem se você é sensível."
-- ❌ "Atende padrões ISO 22000 de segurança alimentar" → drop ou "produto seguindo padrões reconhecidos da categoria" (se agregar)
-
-**Severidade: Crítico** — quebra voz editorial direta. Auditoria deve sempre propor fix.
 
 ### 11. `html-texto-puro` — HTML literal em campos texto-puro (régua v1.11.5)
 
