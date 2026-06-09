@@ -49,7 +49,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 - **6.000 a 25.000 chars** no total do HTML (alvo típico 8-18k — vide canônicos do projeto).
 - **Estrutura: 5 H2 obrigatórios** + 1 opcional. Faltar qualquer obrigatório = ERRO. Ver "Régua editorial — ESTRUTURA OBRIGATÓRIA" abaixo.
 - **Links Amazon: tag-aware.** PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca" (link de busca da marca), "FAQ" e "Conclusão" (recomendações de produto). Formato: `?tag={tag}&linkCode=ogi&th=1&psc=1` se tag preenchida; URL crua se vazia.
-- **Linkagem interna 0-3 links** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
+- **Linkagem interna: 2 a 4 links (ideal ~3), contextuais e naturais** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (ou o total de peers, se o site tiver menos de 2; 0 só se for o 1º artigo do site, sem peers ainda). Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
 - **Sem travessão (—).** Use vírgula, ponto, dois pontos ou parênteses.
 - **Sem superlativos sem evidência** ("o melhor disponível", "incomparável", "imbatível"). "Excelente", "ótimo" OK se contextualizado.
 - **Citação de produto específico: contextual.** PROIBIDA em "Como escolher" (linguagem GERAL — critérios, perfis). PERMITIDA em "Melhor marca" (1 H3 por marca), "FAQ" (recomendação direta), "Conclusão" (recomendação central) e como âncoras de preço em "Vale a pena" (P2). Ver matriz completa em "Como usar a bíblia".
@@ -167,7 +167,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     - **5 H2 obrigatórios presentes na ordem**: `Vale a pena` → `Como escolher` → `Melhor marca` → `Perguntas Frequentes` → `Conclusão` (6º opcional: `Por que confiar` entre FAQ e Conclusão)
     - Primeiro tag = `<h2>` (NÃO `<h1>`, NÃO `<p>`)
     - HTML allowlist OK (Grep mental por tags fora da lista)
-    - 0-3 links internos: cada `href="/{slug}/"` aponta pra slug REAL da peer articles list
+    - 2-4 links internos (ideal ~3; 0 só sem peers): cada `href="/{slug}/"` aponta pra slug REAL da peer articles list
     - Links Amazon: ZERO em "Vale a pena" e "Como escolher"; PERMITIDOS em "Melhor marca" (busca), "FAQ" e "Conclusão" (recomendação). Tag-aware do site.
     - Sem travessão `—` nem `–`
     - Sem `<h1>` (artigo já tem H1 no title)
@@ -487,7 +487,7 @@ Antes de inserir <a> pra produto no guide (FAQ/Conclusão):
 
 #### Links internos (peer articles)
 
-- **0-3 links totais** no guide inteiro (já documentado em "Linkagem interna")
+- **2-4 links totais (ideal ~3)** no guide inteiro — régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (0 só se o site não tiver peers ainda). Já documentado em "Linkagem interna".
 - **Contextual, NÃO na Conclusão (v1.24.0):** distribuir ao longo do texto, cada um no spot onde o tema do artigo-irmão aparece naturalmente. **Evite a Conclusão** pra links peer/home — fecho com link de navegação é decorativo. Melhor não forçar do que enfiar no fim.
 - Bons encaixes: dentro de H3 de "Como escolher" pra cross-linkar critério com outro artigo (ex: H3 "Com fio ou sem fio" → "/melhor-aspirador-sem-fio-vertical/"); resposta de FAQ que toca no tema do irmão; "Vale a pena" pra apontar a categoria-mãe/home; H3 de marca pra apontar o guia daquela marca.
 
@@ -599,7 +599,7 @@ Referência canônica pra calibrar tom + densidade visual: `sites/melhoraspirado
 - **6.000-25.000 chars** total no HTML (alvo típico 8-18k).
 - HTML allowlist: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Nada mais.
 - **Links Amazon**: PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca", "FAQ" e "Conclusão" (formato `?tag={tag}&...` tag-aware do site; também pode ser link de busca de marca `/s?k=...`).
-- **Linkagem interna**: 0-3 links pra peer articles reais (slug REAL, NUNCA derivado do keyword), âncora = keyword do destino (singular preferido); link de produto = nome completo COM marca. Sem `target`/`rel`. **Links peer/home são contextuais e NÃO entram na Conclusão** (v1.24.0) — vão no spot onde o tema aparece (FAQ/Marca/Vale a pena/Como escolher). Links de PRODUTO podem ficar na Conclusão (recomendação).
+- **Linkagem interna**: 2-4 links (ideal ~3) pra peer articles reais (slug REAL, NUNCA derivado do keyword), âncora = keyword do destino (singular preferido); link de produto = nome completo COM marca. Sem `target`/`rel`. **Links peer/home são contextuais e NÃO entram na Conclusão** (v1.24.0) — vão no spot onde o tema aparece (FAQ/Marca/Vale a pena/Como escolher). Links de PRODUTO podem ficar na Conclusão (recomendação).
 - Sem travessão `—` nem `–`.
 - Sem superlativos sem evidência ("o melhor disponível", "incomparável", "imbatível").
 - **Citação de produto específico**: PROIBIDA em "Vale a pena" (exceto âncoras de preço — *"R$ X do Modelo Y a R$ Z do Modelo W"*) e "Como escolher" (exceto exceções editoriais pontuais, ex: *"Procreate é exclusivo do iPadOS"*). PERMITIDA em "Melhor marca" (1 H3 por marca), "FAQ" (recomendação direta) e "Conclusão" (recomendação central).

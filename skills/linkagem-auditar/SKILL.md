@@ -1,6 +1,6 @@
 ---
 name: linkagem-auditar
-description: Audita E MELHORA a linkagem interna do SITE INTEIRO (cross-artigo), no estilo propor→aprovar (igual artigo-guia-auditar). Roda os núcleos determinísticos (scripts/audit-linkagem.ts = régua SEO + scripts/audit-links.ts = validade) + a camada de julgamento LLM (placement genuinamente contextual + oportunidades de links NOVOS naturais). Propõe os fixes, você aprova granular, e a skill aplica via Edit cirúrgico nos guideContent. Escopo: CONSERTAR (link-quebrado 404, link-home-errado /{homeReviewSlug}/→/, anchor-nao-keyword, anchor-produto-sem-nome, peer/home na Conclusão) + ADICIONAR links novos contextuais. NÃO faz hub-and-spoke. Aceita `site` OU URL do painel (linkagem-{site}.html). Fecho: commit --no-verify + push + painel-vps-pull (regenera linkagem-{site}.html = sincroniza no painel) + marcador `.audits/linkagem/{site}-last.md` (commit `audit-linkagem(...)`).
+description: Audita E MELHORA a linkagem interna do SITE INTEIRO (cross-artigo), no estilo propor→aprovar (igual artigo-guia-auditar). Roda os núcleos determinísticos (scripts/audit-linkagem.ts = régua SEO + scripts/audit-links.ts = validade) + a camada de julgamento LLM (placement genuinamente contextual + oportunidades de links NOVOS naturais). Propõe os fixes, você aprova granular, e a skill aplica via Edit cirúrgico nos guideContent. Régua de QUANTIDADE (canon Marcelo): 2 mínimo / ~3 ideal / 4 máximo peers distintos por artigo; o HUB (homeReviewSlug ou frontmatter pillar:true) é isento do teto (linka todos os filhos). Escopo: CONSERTAR (link-quebrado 404, link-home-errado /{homeReviewSlug}/→/, anchor-nao-keyword, anchor-produto-sem-nome, peer/home na Conclusão, linkagem-excesso >4 não-hub) + ADICIONAR links novos contextuais (reforçando órfão/sublinkado como meta de qualidade padrão, no spot mais relevante pro tema). É contentLocked-aware (não edita artigo travado: rerroteia a fonte). slug-vs-keyword é só INFO (convenção comum na rede; 404 já coberto por link-quebrado/home-errado). NÃO faz hub-and-spoke. Aceita `site` OU URL do painel (linkagem-{site}.html). Fecho: commit --no-verify + push + painel-vps-pull (regenera linkagem-{site}.html = sincroniza no painel) + marcador `.audits/linkagem/{site}-last.md` (commit `audit-linkagem(...)`).
 ---
 
 ## Parse de input
@@ -43,8 +43,9 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 - **PROPOR → APROVAR.** NUNCA aplica sem aprovação granular do user ("aplica tudo" / "aplica 1,3" / "aplica canon"). Antes de aplicar, imprime os diffs.
 - **EDIÇÃO CIRÚRGICA, nunca rewrite.** Só toca no trecho do `guideContent` com o fix aprovado (um `<a>`/`<p>` por vez). Resto do `.mdx` byte-a-byte intacto. Preserva o block scalar `|` (NUNCA parseYaml/stringify do frontmatter — sempre `Edit` no trecho-alvo).
 - **NÃO inventa.** Findings determinísticos vêm dos scripts (verbatim). Os de julgamento (placement/oportunidade) citam o trecho real do guideContent. Link novo só com âncora = keyword real do destino + href = slug REAL (nunca derivado do keyword).
-- **Escopo fechado.** CONSERTAR (404/home-errado/âncora/slug/Conclusão) + ADICIONAR links novos contextuais. **NÃO faz hub-and-spoke** (linkar produto órfão é decisão editorial à parte). **NÃO mexe em tag Amazon** (isso é `scripts/fill-affiliate-tag.ts`).
-- **Régua de linkagem canônica** (igual artigo-guia-escrever/auditar): âncora de peer = keyword do destino (singular preferido); âncora de produto = nome completo COM marca; href = slug REAL; peer/home links contextuais e NUNCA na Conclusão (produto/Amazon na Conclusão = OK); ≥2 peers distintos de saída; home linkada via `href="/"` (nunca `/{homeReviewSlug}/`).
+- **Escopo fechado.** CONSERTAR (404/home-errado/âncora/Conclusão/excesso>4) + ADICIONAR links novos contextuais (incl. reforçar órfão/sublinkado). `slug-vs-keyword` é só INFO (convenção, não se conserta — ver Critérios). **NÃO faz hub-and-spoke** (linkar produto órfão é decisão editorial à parte). **NÃO mexe em tag Amazon** (isso é `scripts/fill-affiliate-tag.ts`).
+- **Régua de linkagem canônica** (igual artigo-guia-escrever/auditar): âncora de peer = keyword do destino (singular preferido); âncora de produto = nome completo COM marca; href = slug REAL; peer/home links contextuais e NUNCA na Conclusão (produto/Amazon na Conclusão = OK); home linkada via `href="/"` (nunca `/{homeReviewSlug}/`).
+- **Régua de QUANTIDADE (canon Marcelo 2026-06-09): 2 mínimo · ~3 ideal · 4 máximo** peers DISTINTOS de saída, sempre **contextuais e naturais** (nunca decorativos). Não linkar o mesmo peer 2× no mesmo artigo. O **HUB** (artigo-cabeça: `homeReviewSlug` ou frontmatter `pillar: true`) é **isento do teto de 4** — ele linka todos os filhos (hub-and-spoke ideal). O script emite `linkagem-fraca` (<2) e `linkagem-excesso` (>4 não-hub); a régua "~3 ideal" é alvo de julgamento (mire 3 ao ADICIONAR), não um flag por-artigo.
 - **Sem travessão.** Português brasileiro editorial.
 
 ## Fluxo
@@ -70,10 +71,11 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
    ```
    Use SÓ pra contexto (tag/404 interno). **Não conserte tag aqui** — só reporte que `fill-affiliate-tag.ts` resolve.
 
-5. **Camada de julgamento LLM** (o valor que script não dá). Read os `.mdx` dos artigos com links peer/home + os com FAQ/seções relevantes. Avalie:
-   - **Placement genuinamente contextual?** Para cada link peer/home existente, o parágrafo onde ele está fala MESMO do tema do destino? "Fora da Conclusão" é necessário mas não suficiente. Sinalize os fracos com spot melhor.
+5. **Camada de julgamento LLM** (o valor que script não dá). O JSON do `audit-linkagem.ts` traz `lockedArticles[]` (fontes travadas) e `pillarArticles[]` (hubs isentos do teto) — use os dois. Read os `.mdx` dos artigos com links peer/home + os com FAQ/seções relevantes. Avalie:
+   - **Placement genuinamente contextual?** Para cada link peer/home existente, o parágrafo onde ele está fala MESMO do tema do destino? "Fora da Conclusão" é necessário mas não suficiente. Sinalize os fracos com spot melhor. **Régua de spot (canon Marcelo): o link cai na MELHOR posição do artigo pro tema** — ex: link pro "melhor impressora para fotos" entra no parágrafo/H3 que fala de fotografia, não num lugar genérico.
    - **Oportunidades de links NOVOS.** Há FAQ/H3/seção que toca no tema de um peer ainda não-linkado (ou pouco-linkado), onde um link cairia natural? Liste só as genuinamente naturais — NUNCA force link decorativo. Para cada: artigo origem, peer destino, **spot exato** (cite a frase âncora), **âncora sugerida** (= keyword singular do destino), e o **Edit proposto** (frase antes → depois).
-   - **Balanço do grafo.** Algum artigo órfão/sublinkado/hub-demais? Sugira 1-2 links que equilibram (respeitando contextualidade).
+   - **`contentLocked`-aware (régua D):** se a FONTE natural de um link novo está em `lockedArticles[]`, NÃO proponha editá-la (artigo travado = SEO estável). Em vez disso **rerroteie**: ache outra fonte NÃO-travada que cubra o mesmo tema do destino, ou registre a oportunidade como "bloqueada (fonte travada — destravar p/ aplicar)" sem aplicar. Nunca edite travado sem destrave explícito do user.
+   - **Balanço do grafo — `sublinkado` é PADRÃO, não opcional (régua E, canon 2026-06-09).** Todo artigo deve receber **≥2 inbounds**. `orfao` (0 inbound) e `sublinkado` (1 inbound) são metas de QUALIDADE da skill, no mesmo nível dos consertos — não trate como "info ignorável". Para cada órfão/sublinkado, proponha 1-2 links contextuais de fontes que tocam o tema (respeitando contextualidade e o teto de 4 da fonte). Caso real: na 1ª passada do impressoraideal tratei sublinkado como opcional e só consertei defeitos — a barra de qualidade certa é reforçar autoridade de todo nó sublinkado.
 
 6. **Montar o relatório de propostas** (formato abaixo) com TODOS os fixes numerados (consertos + links novos), cada um com o diff `ANTES → DEPOIS`. **Imprime inline. NÃO aplica nada ainda.**
 
@@ -98,7 +100,7 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 
 11. **Build** (gate): `pnpm --filter {site} build`. Se Zod/Astro falhar, reverter do backup e reportar.
 
-12. **Re-rodar `bun scripts/audit-linkagem.ts {site}`** pós-fix pra confirmar que os findings aprovados sumiram e nada regrediu (≥2 peers, 0 na Conclusão, 0 broken/home-errado).
+12. **Re-rodar `bun scripts/audit-linkagem.ts {site}`** pós-fix pra confirmar que os findings aprovados sumiram e nada regrediu (cada artigo 2-4 peers — hub isento; 0 `linkagem-excesso`; 0 órfãos e idealmente 0 sublinkados; 0 na Conclusão; 0 broken/home-errado).
 
 13. **Git add + commit (`--no-verify`) + push + VPS pull**:
     ```bash
@@ -144,7 +146,7 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 
 ## Critérios (referência — vêm dos scripts)
 
-- `link-quebrado` (error), `link-home-errado` (error), `slug-vs-keyword` (warn), `linkagem-fraca` (warn, <2 peers distintos de saída), `peer-repetido` (warn), `anchor-nao-keyword` (warn), `anchor-produto-sem-nome` (warn), `peer-link-na-conclusao` (info), `hub-and-spoke-incompleto` (info — **fora de escopo desta skill**), `orfao`/`sublinkado`.
+- `link-quebrado` (error), `link-home-errado` (error), `linkagem-fraca` (warn, <2 peers distintos de saída), `linkagem-excesso` (warn, >4 peers distintos num artigo NÃO-hub — enxugar pros 3-4 contextuais ou marcar `pillar:true`), `peer-repetido` (warn), `anchor-nao-keyword` (warn), `anchor-produto-sem-nome` (warn), `slug-vs-keyword` (**info** — convenção comum na rede, ~23% dos artigos; o 404 real já é coberto por link-quebrado/link-home-errado; NÃO é defeito a consertar), `peer-link-na-conclusao` (info), `hub-and-spoke-incompleto` (info, **1 linha-resumo colapsada** — **fora de escopo desta skill**), `orfao` (warn)/`sublinkado` (info, mas **acionável** — ver régua E no passo 5).
 
 ## Armadilhas
 
