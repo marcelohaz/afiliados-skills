@@ -136,7 +136,7 @@ Template exato — use blocos idênticos pra o painel parsear visualmente:
 - **Campo:** `<path.no.json>`
 - **Evidência:** "<trecho literal < 15 palavras>" (ou URL externa se for verificação)
 - **Problema:** <descrição em 1-2 frases>
-- **Sugestão:** <o que fazer — humano decide se aceita>
+- **Sugestão:** <o que fazer — se for auto-fixável num campo curado, vira proposta de fix no passo 7 (você aprova); senão fica report-only>
 
 ## 🟡 Avisos (<M>)
 
