@@ -1,6 +1,6 @@
 ---
 name: artigo-intro-escrever
-description: Escreve a introdução do artigo (body markdown que vai logo após o frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Régua dura — §1 abre com pergunta + keyword em bold, §final fecha com keywordPlural em bold + ✅, 2-3 parágrafos, 300-800 chars, tom conversacional (não consultor científico), sem critérios técnicos detalhados (isso é função do guideContent), sem travessão, sem mencionar marcas/modelos específicos. Substitui o body (intro) e, quando o título está fora do padrão canônico, também a linha title do frontmatter (descrição, keyword e produtos ficam intactos). Backup + commit + push + sync VPS. Régua v1.18.0 (2026-05-28) — carrega `docs/painel/_data/chavoes-por-nicho.json` baseado em `niche` do site pra respeitar chavões nicho-específicos.
+description: Escreve a introdução do artigo (body markdown que vai logo após o frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. Régua dura — §1 abre com pergunta + keyword em bold COMEÇANDO nas primeiras ~5 palavras (v1.31.0), §final fecha com keywordPlural em bold + `. ✅` ou `! ✅`, 2-3 parágrafos, 300-800 chars, tom conversacional NATURAL (máx 1 coloquialismo leve, sem analogias decorativas), sem critérios técnicos detalhados (função do guideContent), sem travessão, sem marcas/modelos específicos. ANTI-CLONE INTRA-SITE (v1.31.0): lê as intros dos OUTROS artigos do site antes de gerar; slots rotativos (pergunta/arremate/miolo/CTA) — a mesma família não repete no site, zero frases ≥6 palavras compartilhadas. Substitui o body (intro) e, quando o título está fora do padrão canônico, também a linha title do frontmatter. Backup + commit + push + sync VPS. Carrega `docs/painel/_data/chavoes-por-nicho.json` baseado em `niche` do site.
 ---
 
 ## Parse de input
@@ -41,6 +41,9 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 - **Body é puro markdown.** Verificado: zero artigos do monorepo têm componentes MDX no body — toda a estrutura (TabelaTop, ProductSection, ReviewLayout, etc) é montada pelo `<SlugPage>` via thin-wrapper em `pages/[slug].astro`. Skill nunca insere `<TabelaTop>` ou similar.
 - **2 a 3 parágrafos** (obrigatório). Cada parágrafo separado por linha em branco. 4 parágrafos é EXCESSO — intro vira ensaio.
 - **300 a 800 chars no total** (todo o body somado). Alvo: 500-700 chars. Antes era 300-1500 e sub-agents miravam 900-1400, tornando a intro cansativa — apertado em 2026-05-26 após feedback "muito longa, muito explicativa".
+- **KEYWORD CEDO (v1.31.0, canon Marcelo 2026-06-10)**: o `**{keyword}**` começa dentro das **primeiras ~5 palavras** do §1. A abertura é um verbo de busca curto ("Procurando a", "Precisa de uma", "Quer saber qual a"); TODO o enriquecimento da pergunta (cenário, dor, benefício) vem DEPOIS da keyword, na mesma frase.
+- **ANTI-CLONE INTRA-SITE (v1.31.0)**: gerar SÓ depois de ler as intros dos outros artigos do site (passo 6.5). Proibido: qualquer sequência de ≥6 palavras igual a uma intro irmã; repetir a família de abertura/arremate/miolo/CTA já usada no site. Incidente-origem: 3 intros idênticas no melhorimpressora (2026-06-10) porque a skill copiava o exemplo canônico.
+- **TOM NATURAL (v1.31.0)**: no máximo **1 expressão coloquial leve por intro** (pode ser zero); analogia só quando EXPLICA algo (não pra enfeitar); sem apelidos fofos ("faz-tudo"). Teste: ler em voz alta como se explicasse pra um cliente — soou personagem, simplifica.
 - **Tom conversacional alinhado com os reviews** (NOVA régua 2026-05-26). Escreva como amigo que pesquisou explicando, NÃO como consultor científico/médico ditando. Linguagem cotidiana, sem registro acadêmico. Os reviews do mesmo artigo são o padrão tonal — intro NÃO pode soar mais formal que eles.
 - **NÃO citar instituições científicas** (OMS, FAO, ANVISA, FDA, INMETRO, IFOS). Esse tipo de menção quebra o tom de comparador editorial e vira página de saúde. Se a info importa, ela aparece nos reviews (como feature de produto certificado) ou no guide.
 - **NÃO dar recomendações com número** ("X recomenda N mg/dia"). Números OK quando aparecem nos reviews depois (são features dos produtos comparados). Na intro, números viram recomendação acadêmica e quebram o tom.
@@ -94,6 +97,14 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
    - Texto markdown de uma intro anterior (se já foi escrita antes e tá sendo reescrita)
    - Linhas em branco (raro)
 
+6.5. **Ler as intros IRMÃS do site (ANTI-CLONE — v1.31.0, OBRIGATÓRIO)**: extrair o body de TODOS os outros artigos do site:
+   ```bash
+   for f in sites/{site}/src/content/reviews/*.mdx; do
+     echo "── $(basename $f)"; awk 'BEGIN{c=0} /^---$/{c++; next} c>=2{print}' "$f"
+   done
+   ```
+   Anotar de cada irmã: a ABERTURA (primeiras palavras), a família do MIOLO e o CTA do fecho. A intro nova não pode repetir nenhuma dessas famílias nem qualquer sequência de ≥6 palavras. Foi a ausência deste passo que produziu 3 intros idênticas no melhorimpressora.
+
 7. **Compor contexto pra geração**:
    - Title + description do artigo
    - Keyword (singular, vai pro §1) + KeywordPlural (vai pro §final)
@@ -109,8 +120,10 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 9. **Validar mentalmente** antes de salvar:
    - 300-800 chars total (alvo 500-700)
    - 2-3 parágrafos (separados por linha em branco)
-   - §1 contém `?` (pergunta) E `**{keyword}**` bold
-   - §final contém `**{keywordPlural}**` bold E termina com `. ✅`
+   - §1 contém `?` (pergunta) E `**{keyword}**` bold — e a keyword COMEÇA dentro das primeiras ~5 palavras do §1 (v1.31.0)
+   - §final contém `**{keywordPlural}**` bold E termina com `. ✅` ou `! ✅`
+   - ANTI-CLONE: zero sequências de ≥6 palavras iguais a qualquer intro irmã (passo 6.5); famílias de abertura/arremate/miolo/CTA inéditas no site
+   - TOM NATURAL: máx 1 expressão coloquial leve; sem analogia decorativa; sem apelido fofo
    - **Exatamente 2 bolds no body inteiro** (keyword no §1, keywordPlural no §final). NADA mais em bold — sem `**ano**`, sem `**marca**`, sem nenhum outro destaque.
    - Sem travessão `—` nem `–`
    - Sem `<b>` ou `<strong>` (só `**markdown**`)
@@ -205,115 +218,102 @@ Se o artigo está `contentLocked: true`, **NÃO mexe no título** (título é H1
 
 ## Régua editorial — ESTRUTURA OBRIGATÓRIA
 
-### §1 — abertura com pergunta + keyword bold
+A fórmula é fixa; o RECHEIO de cada slot RODA entre os artigos do site. **Slots: [pergunta com keyword cedo] → [arremate de acolhimento] → [miolo] → [fechamento + CTA]**. A mesma família de recheio NÃO repete em outra intro do mesmo site (por isso o passo 6.5 lê as irmãs antes de gerar).
 
-Começa com uma **pergunta** contendo `**{keyword}**` em bold markdown. Variantes aceitas — TOM padrão é EMPÁTICO (estilo blog afiliados brasileiro), não consultor frio:
+### §1 — pergunta com a keyword CEDO + arremate de acolhimento
 
-**Empáticas (preferidas — canon 2026-05-26)**:
-- `Está em dúvida sobre qual a **{keyword}**?`
-- `Cansou de procurar a **{keyword}** sem decidir?`
-- `Procurando a **{keyword}** sem complicação?`
-- `Quer saber qual a **{keyword}** em {ano}?`
+**Regra dura (v1.31.0, canon Marcelo 2026-06-10): o `**{keyword}**` começa dentro das primeiras ~5 palavras.** Molde:
 
-**Neutras (OK quando o site tem tom mais sóbrio)**:
-- `Qual a **{keyword}**?` / `Qual é a **{keyword}**?` / `Qual o **{keyword}**?`
-- `Procurando a **{keyword}**?`
-- `Quer comprar a **{keyword}**?`
+`[abertura curta de busca] + **{keyword}** + [enriquecimento com intenção de uso]?`
 
-Após a pergunta, **1-2 frases curtas** com **promessa de ajuda** (canon 2026-05-26):
-- "Preparamos uma seleção pra ajudar você a {benefício}"
-- "Te ajudamos a comparar e decidir sem perder tempo"
-- "Reunimos os melhores modelos pra você {investir bem | economizar | escolher com segurança}"
+**Aberturas curtas (pool — NÃO repetir a mesma em duas intros do site):**
+- `Procurando a **{keyword}**...`
+- `Quer saber qual a **{keyword}**...` / `Quer acertar na **{keyword}**...`
+- `Precisa de uma **{keyword}**...`
+- `Está buscando a **{keyword}**...`
+- `Em busca da **{keyword}**...`
+- `Cansou de procurar a **{keyword}**...`
 
-A promessa não deve ser vaga ("vamos te ajudar") — sempre amarrada a um benefício concreto pro leitor (economizar, investir bem, decidir rápido, escolher com confiança).
+**Enriquecimento (DEPOIS da keyword — é ele que diferencia artigos vizinhos):**
+- intenção de uso: "...pra imprimir, copiar e digitalizar com um aparelho só?"
+- cenário concreto: "...para imprimir o trabalho da escola, o boleto e uns documentos de vez em quando?"
+- dor da categoria: "...pra imprimir à vontade sem medo da conta de cartucho?"
+- objeção/custo: "...sem pagar por função que você nunca vai usar?"
+- intenção de marca (keyword com marca): "...agora que a marca já está decidida e só falta o modelo?"
 
-**SEM mencionar marcas/modelos/ASINs específicos.** Linguagem geral.
+❌ **Pergunta SECA proibida como padrão**: "Está em dúvida sobre qual a **{keyword}** em {ano}?" sem enriquecimento — foi este template que clonou 3 intros do melhorimpressora (incidente 2026-06-10).
 
-### §s do meio (opcional — só se for 3 parágrafos)
+**Arremate de acolhimento (1 frase curta após a pergunta — pool, varie):**
+- "Então você está no lugar certo!"
+- "Então este guia/comparativo é pra você!"
+- "Boa notícia: ela existe, e a gente encontrou!"
+- "Esse comparativo nasceu pra resolver exatamente essa dúvida!"
+- "A gente fez essa conta pra você!"
 
-Aprofundamento PANORÂMICO, NÃO técnico. Estrutura canônica (canon 2026-05-26): **CONJUGAR aplicações de uso + perfis concretos** — começa abrindo onde a categoria se aplica (acolhedor) e termina com perfis de decisão concretos (informativo).
+**SEM mencionar marcas/modelos/ASINs específicos** (exceto marca que faz parte da keyword, ex: "melhor impressora Epson").
 
-**Estrutura ideal**:
-```
-Para {aplicação 1}, {aplicação 2} ou {aplicação 3}, a decisão começa pelo
-perfil de uso: quem {perfil A} se dá bem com {opção X}; quem {perfil B}
-recupera o investimento de {opção Y}; e quem {perfil C} economiza mais
-com {opção Z}.
-```
+### §2 (miolo) — substância concreta, UMA família por site
 
-**Exemplos válidos**:
-- **Aplicações** (acolhe o leitor): "Para uso em casa, home office ou pequenas empresas" / "Pra treino, estudos ou rotina corrida" / "Em quartos, salas ou ambientes pequenos"
-- **Perfis técnicos** (informa decisão): "quem imprime pouco vs todo dia", "quem treina pesado vs casual", "quem tem alergia a X"
-- **Panorama da categoria** (alternativa): "o mercado oferece duas tecnologias principais (cartucho e tanque)"
-- **Tecnologias específicas OK quando informam decisão** (cartucho/tanque/laser, monohydrate/HCl, óleo de peixe/krill) — esses termos comprador busca e diferenciam decisão. NÃO confundir com critérios técnicos detalhados de guide (forma química, certificações, mg específicos).
+Escolha uma família AINDA NÃO usada nas intros irmãs (passo 6.5):
 
-**NÃO entrar em**:
-- ❌ Critérios técnicos detalhados ("três fatores: concentração, certificação, forma química")
-- ❌ Recomendações com números ("OMS recomenda 250-500mg/dia")
-- ❌ Siglas de instituições científicas (OMS, FAO, ANVISA, FDA, IFOS, etc — termos certificadores OK quando aparecem nos reviews como feature)
-- ❌ Jargão médico/científico ("manutenção cardiovascular", "posologia", "forma química do óleo")
-- ❌ Distinções acadêmicas ("triglicerídeo é considerado mais próximo do natural que éster etílico")
+1. **Contexto-da-categoria** — o que a categoria mudou/resolve: "o tanque de tinta mudou a conta da impressão em casa: em vez de trocar cartucho toda hora, você reabastece com garrafas que custam pouco e rendem milhares de páginas."
+2. **Cenário-que-não-basta** — o improviso atual falha em situações concretas: "fotografar documento com o celular até resolve, mas tem hora que não basta: uma cópia legível do RG, um contrato digitalizado em boa qualidade, dez páginas pra entregar amanhã."
+3. **Quebra-de-objeção** — valida o orçamento/receio do leitor: "mesmo com um orçamento limitado, ainda é possível encontrar modelos eficientes..." / "a etiqueta engana nos dois sentidos: tem modelo barato que sai caro em um ano, e opção mais cara que se paga em meses."
+4. **Panorama-da-linha** (keywords de marca) — os modelos parecem iguais e se separam no uso: "um foi pensado pra documento todo dia, outro pra quem copia e digitaliza, outro pra foto."
+5. **Tricolon de perfis** — "quem A...; quem B...; e quem C...": PERMITIDO, mas no máximo 1 artigo por site (era o esqueleto repetido em 3+ intros antes da v1.31.0).
+6. **Cenário-dor** (estilo impressora-para-fotos) — a cena ruim que motiva a compra. Pode até abrir o §1, DESDE que a pergunta com a keyword cedo venha logo em seguida no mesmo parágrafo.
 
-Isso tudo é função do `guideContent` H2 "Como escolher" que vem depois. Intro **abre a porta**, guide **ensina a escolher**, reviews **comparam os produtos específicos**.
+Regras do miolo: **concreto > genérico** ("rendem milhares de páginas" informa; "são muito econômicas" não). SEM bold. SEM critérios técnicos detalhados, recomendações com número, siglas de instituição (OMS/FAO/ANVISA/FDA), jargão médico ou distinções acadêmicas — isso é função do `guideContent`. Intro **abre a porta**, guide **ensina a escolher**, reviews **comparam**.
 
-**SEM bold em nenhuma palavra** — bold é EXCLUSIVO de §1 e §final.
+### §final — keywordPlural + critérios + CTA
 
-### §final — fechamento com keywordPlural bold + ✅
+`[ponte] + **{keywordPlural}** de {ano} + [2-3 critérios de comparação] + [CTA convidando]`
 
-Use `**{keywordPlural}**` em bold markdown. Variantes de abertura aceitas:
+**Pontes (pool, varie):** "Pra facilitar sua escolha, reunimos..." / "Pra te ajudar a escolher bem, comparamos..." / "Por isso, colocamos as ... lado a lado" / "Separamos as ..." / "No comparativo abaixo você encontra as ..."
 
-- `Esta seleção reúne as **{keywordPlural}**...`
-- `Para te ajudar na escolha, reunimos as **{keywordPlural}**...`
-- `Neste guia, reunimos as **{keywordPlural}**...`
-- `Confira agora nossa seleção exclusiva das **{keywordPlural}**...`
-- `Por isso, reunimos uma lista com as **{keywordPlural}**...`
-- `A seguir, reunimos as **{keywordPlural}**...`
+**Critérios**: 2-3, concretos da categoria ("rendimento da tinta, qualidade do scanner e facilidade de uso" / "preço de compra, gasto com tinta e funções extras").
 
-**2 estilos de fechamento** (escolher conforme ângulo do artigo):
+**CTA final (pool, varie — convite direto em 1 frase):** "Confira qual faz mais sentido pra sua casa ou trabalho!" / "Confira qual combina com a sua rotina de impressão!" / "Confira antes de fechar negócio!" / "Descubra qual delas atende melhor o seu dia a dia!" / "Dá uma olhada e escolha a sua gastando pouco!"
 
-**a) Valores qualificativos (canon 2026-05-26 — preferido pra produtos "decisão por benefício")**:
-> "...destacando as que realmente entregam {valor 1}, {valor 2} e {valor 3} no dia a dia."
+Termina **OBRIGATORIAMENTE** com `. ✅` ou `! ✅` (pontuação, espaço, emoji, nada depois).
 
-Exemplos: "qualidade, economia e praticidade", "potência, autonomia e custo-benefício", "pureza, concentração e absorção". 2-3 valores no máximo. Adjetivo "realmente" OK (qualificador conforme régua dos qualificadores positivos).
+## Exemplos bons — famílias DIFERENTES (régua de FORMA, não texto-fonte)
 
-**b) Critérios de comparação técnicos (OK pra produtos "decisão por specs")**:
-> "...comparadas por {critério 1}, {critério 2} e {critério 3}."
+> ⚠️ **PROIBIDO reusar frases destes exemplos verbatim.** Eles mostram forma e tom; cada intro nova nasce do zero com recheios próprios e família inédita no site. Copiar o "exemplo canônico" antigo foi o que gerou 3 intros idênticas no melhorimpressora (incidente 2026-06-10).
 
-Exemplos: "tecnologia, rendimento e custo por página", "concentração, certificação e custo por dose", "tela, processador e duração de bateria".
-
-Termina **OBRIGATORIAMENTE** com `. ✅` (ponto, espaço, emoji, sem nada depois).
-
-## Exemplos bons (do prompt canônico)
-
-### Exemplo 1 — impressora custo benefício (3 parágrafos, **CANON MEIO-TERMO**)
-
-Este é o **canon visual de referência** desde 2026-05-26. Padrão do "blog afiliados brasileiro" — empático + perfis concretos + promessa enfática. Cobre os 3 padrões aprovados em sessão: §1 empático com promessa de ajuda, §2 aplicações de uso conjugadas com perfis técnicos de decisão, §final com 3 valores qualificativos.
+### Exemplo A — multifuncional (CANON DE TOM, aprovado Marcelo 2026-06-10 · família "cenário-que-não-basta")
 
 ```
-Está em dúvida sobre qual a **melhor impressora custo benefício** em 2026? Preparamos uma seleção pra ajudar você a investir bem e economizar nas suas impressões.
+Procurando a **melhor impressora multifuncional** pra imprimir, copiar e digitalizar com um aparelho só? Então você está no lugar certo!
 
-Para uso em casa, home office ou pequenas empresas, a decisão começa pelo perfil de uso: quem imprime pouco se dá bem com modelos a cartucho; quem imprime todo dia recupera o investimento de uma tanque de tinta em poucos meses; e quem precisa de volume alto em preto e branco economiza mais com a laser monocromática.
+Fotografar documento com o celular até resolve, mas tem hora que não basta: uma cópia legível do RG, um contrato digitalizado em boa qualidade, dez páginas de apostila pra entregar amanhã. A multifuncional cobre essas três situações em um único aparelho, sem ocupar muito espaço na mesa.
 
-Esta seleção reúne as **melhores impressoras custo benefício** disponíveis em 2026, destacando as que realmente entregam qualidade, economia e praticidade no dia a dia. ✅
+Pra facilitar sua escolha, reunimos as **melhores impressoras multifuncionais** de 2026, comparando rendimento da tinta, qualidade do scanner e facilidade de uso. Confira qual faz mais sentido pra sua casa ou trabalho! ✅
 ```
 
-**Por que este é o canon**:
-- §1: pergunta empática ("Está em dúvida sobre...") + promessa concreta de ajuda ("investir bem e economizar")
-- §2: aplicações de uso ("em casa, home office ou pequenas empresas") + 3 perfis CONCRETOS com tecnologias ("cartucho/tanque/laser") — informa decisão sem invadir o guideContent
-- §3: fechamento com 3 valores qualificativos ("qualidade, economia, praticidade") em vez de critérios de comparação fria
-- ~610 chars, 3 §, 2 bolds, ✅
+**Por quê funciona**: keyword na 3ª palavra; o enriquecimento da pergunta ecoa o produto (imprimir/copiar/digitalizar = o 3-em-1); miolo com 3 situações CONCRETAS (RG, contrato, apostila) e zero gíria; CTA convidando sem forçar. ~650 chars, 3 §, 2 bolds.
 
-### Exemplo 2 — creatina (3 parágrafos)
+### Exemplo B — barata (família "cenário concreto + quebra de objeção")
 
 ```
-Qual é a **melhor creatina** para comprar em 2026? O mercado oferece dezenas de opções com pureza, qualidade e preços muito diferentes entre si, e nem todo produto entrega o que promete.
+Precisa de uma **impressora barata** para imprimir o trabalho da escola, o boleto e uns documentos de vez em quando? Boa notícia: ela existe, e a gente encontrou!
 
-Neste guia, analisamos as principais creatinas disponíveis por tipo, custo-benefício e solubilidade, para diferentes perfis de uso.
+Cada folha impressa fora de casa parece custar pouco, até a semana em que aparecem dez de uma vez. Pra quem imprime pouco, não faz sentido investir em uma máquina cheia de recursos: o que resolve é um modelo simples, que conecta no celular e imprime sem complicação.
 
-Se você quer encontrar as **melhores creatinas** do mercado sem perder tempo com pesquisa, está no lugar certo. Confira o ranking completo abaixo. ✅
+Separamos as **impressoras baratas** de 2026 que valem o que custam, comparando preço, facilidade de instalação e impressão direto do celular. Dá uma olhada e escolha a sua gastando pouco! ✅
 ```
 
-### Exemplo 3 — ômega 3 (BAD vs GOOD pareado, caso real 2026-05-26)
+### Exemplo C — Epson (família "intenção de marca + panorama da linha")
+
+```
+Quer saber qual a **melhor impressora Epson** agora que a marca já está decidida e só falta o modelo? Esse comparativo nasceu pra resolver exatamente essa dúvida!
+
+Dentro da mesma marca, os modelos se parecem na vitrine e se separam no uso: um foi pensado pra documento todo dia, outro pra quem copia e digitaliza com frequência, outro pra foto com cores fiéis. E a diferença que mais pesa no bolso, o quanto rende cada recarga de tinta, é justamente a que não aparece na etiqueta.
+
+No comparativo abaixo você encontra as **melhores impressoras Epson** de 2026, separadas por perfil de uso, rendimento e custo da recarga. Descubra qual delas atende melhor o seu dia a dia! ✅
+```
+
+### Exemplo D — ômega 3 (BAD vs GOOD pareado, caso real 2026-05-26)
 
 **❌ BAD** (924c, registro científico-médico, invade conteúdo de guia):
 
@@ -351,8 +351,10 @@ Por que está OK:
 
 ## Regras duras (bloqueiam audit)
 
-- §1 contém `?` (pergunta) E `**{keyword}**` em bold markdown
-- §final contém `**{keywordPlural}**` em bold markdown E termina com `✅`
+- §1 contém `?` (pergunta) E `**{keyword}**` em bold markdown, com a keyword começando dentro das primeiras ~5 palavras (v1.31.0)
+- §final contém `**{keywordPlural}**` em bold markdown E termina com `. ✅` ou `! ✅`
+- ANTI-CLONE intra-site: zero sequências de ≥6 palavras iguais a intro irmã; família de abertura/arremate/miolo/CTA inédita no site (v1.31.0)
+- Tom natural: máx 1 expressão coloquial leve por intro; analogia só quando explica; sem apelidos (v1.31.0)
 - **Apenas 2 bolds totais no body**: keyword no §1 + keywordPlural no §final. NADA mais em bold.
 - Bold em markdown `**texto**`. NUNCA `<b>` ou `<strong>`.
 - Começa direto com prosa, SEM heading. NÃO use `## Introdução` nem qualquer h2/h3.
@@ -408,7 +410,7 @@ Pergunta-teste antes de salvar: *"Um amigo que não entende disso entenderia?"* 
 Evite jargão corporativo (❌ "alinhado à narrativa", "perfil favorável", "posicionamento de mercado", "uma rotina X séria"). Use linguagem direta (✓ "se você imprime em casa", "boa dose pra rotina contínua"). NUNCA cite procedência burocrática ("alérgenos da Amazon confirmam", "atributos declaram") — destila o claim direto.
 
 Referência canônica pra calibrar tom:
-- `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx` (intro do artigo é bom exemplo)
+- `sites/melhorimpressora/src/content/reviews/melhor-impressora-multifuncional.mdx` (intro = canon de tom aprovado pelo Marcelo em 2026-06-10; ver Exemplo A)
 
 
 ## Régua editorial PT-BR (v1.19.2, 2026-05-28)
@@ -479,8 +481,8 @@ Travessão (`—` ou `–`) é proibido em todos os campos editoriais. Usa vírg
 ### 6. `<b>` em vez de `**`
 Editores antigos usavam `<b>` (verificável em alguns artigos legados do repo). Skill SEMPRE usa `**markdown**`. Audit do painel pega isso.
 
-### 7. Não terminar com `. ✅`
-Padrão: ponto + espaço + emoji. `...selecionadas abaixo. ✅` ✓. `...abaixo ✅` ❌ (sem ponto).
+### 7. Não terminar com `. ✅` ou `! ✅`
+Padrão: pontuação (ponto ou exclamação) + espaço + emoji. `...pra sua casa ou trabalho! ✅` ✓ · `...selecionadas abaixo. ✅` ✓ · `...abaixo ✅` ❌ (sem pontuação).
 
 ### 8. Esquecer de gerar keywordPlural se ausente no frontmatter
 Se o frontmatter não tem `keywordPlural`, abortar e avisar — NÃO inventar plural (gera erro). User precisa preencher manualmente (ou rodar `artigo-review-criar` que gera keywordPlural junto).
@@ -490,6 +492,15 @@ Por hábito de outras frameworks, IA pode tentar emitir `<TabelaTop products={da
 
 ### 10. Edit tool com old_string ambíguo
 Se a intro velha for muito curta (ex: `[a escrever: ...]`), o `old_string` é único. Mas se for uma intro velha de 1500 chars, partes dela podem repetir outros trechos do .mdx (raro mas possível). Mitigação: incluir 1-2 linhas de contexto antes (ex: `---\n\n[body]`) no `old_string` pra forçar match no body especificamente.
+
+### 11. Clonar o exemplo da skill (incidente 2026-06-10)
+O maior bug histórico desta skill: o "exemplo canônico" único virou texto-fonte e 3 intros do melhorimpressora saíram idênticas (só a keyword trocada). Exemplo é régua de FORMA. Se a intro gerada compartilha qualquer frase de ≥6 palavras com um exemplo desta skill OU com uma intro irmã do site — reescreva antes de gravar.
+
+### 12. Keyword tarde no §1
+"Cansou de gastar com cartucho e está procurando a **{keyword}**..." enterra a keyword na 8ª palavra. Inverta: abertura curta + keyword + enriquecimento ("Procurando a **{keyword}** pra imprimir sem medo da conta de cartucho?").
+
+### 13. Empilhar coloquialismos (feedback Marcelo 2026-06-10)
+"Quebra um galho", "pra ontem", "gambiarra", "faz-tudo" na MESMA intro = personagem forçado. Máximo 1 expressão coloquial leve por intro; corte apelidos e analogias decorativas ("mostra a que veio"). Trocas: "quebra um galho"→"até resolve" · "pra ontem"→"pra amanhã" · "máquina parruda"→"modelo mais avançado" · "sem drama"→"sem complicação".
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
@@ -521,43 +532,41 @@ Exemplos com instrução inline:
 
 Args canônico que invoco: `Skill(skill="artigo-intro-escrever", args="melhorimpressora/melhor-impressora-custo-beneficio")` (instrução vai pelo contexto do prompt natural)
 
-### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
-
-**Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
-
-**Auto-check obrigatório ANTES de gravar**:
+### Auto-check final antes de gravar (v1.31.0 — específico de INTRO)
 
 ```python
-import re
+import re, glob
 
-# Para cada campo gerado (shortDescription, fullReview, pros, cons, specs.value):
+novo = BODY_NOVO  # intro gerada (texto após o 2º ---)
 
-# 14a) Duplicação contígua (>=8 chars repetidos em sequência)
-for m in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
-    print(f"⚠ duplicação: {m.group(0)}")
-    # → Reescreve removendo a metade duplicada
+# 1) KEYWORD CEDO: o primeiro ** começa nas primeiras ~5 palavras
+prefixo = novo.strip().split('**')[0].strip()
+assert len(prefixo.split()) <= 5, f"keyword tarde; abertura: '{prefixo}'"
 
-# 14b) Bullet começa com minúscula (em pros/cons)
-for bullet in pros + cons:
-    if re.match(r'<strong>[a-záéíóúâêôãõàèìòùç]', bullet):
-        print(f"⚠ bullet minúsculo: {bullet[:60]}")
-        # → Capitalize primeira letra dentro de <strong>...</strong>
+# 2) Exatos 2 bolds (= 4 marcadores **)
+assert novo.count('**') == 4, f"{novo.count('**')//2} bolds (régua: exatos 2)"
 
-# 14c) Minúscula após ponto (texto editorial — excluir URLs)
-for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
-    ctx = campo[max(0,m.start()-30):m.end()+30]
-    if 'http' in ctx or 'amazon.com.br' in ctx: continue
-    if re.search(r'\d+\. \w', ctx[:50]): continue  # lista numerada
-    print(f"⚠ minúsc após ponto: ...{ctx}...")
-    # → Capitalize a letra (.+ espaço + Letra)
+# 3) Fecho: pontuação + espaço + ✅
+assert re.search(r'[.!] ✅\s*$', novo.strip()), "fecho deve ser '. ✅' ou '! ✅'"
+
+# 4) ANTI-CLONE: nenhuma sequência de 6 palavras igual a intro irmã
+def frases6(t):
+    t = re.sub(r'\*\*|<[^>]+>', ' ', t).lower()
+    p = re.findall(r'[a-zà-ÿ0-9]+', t)
+    return {' '.join(p[i:i+6]) for i in range(max(0, len(p)-5))}
+minhas = frases6(novo)
+for f in glob.glob(f'sites/{SITE}/src/content/reviews/*.mdx'):
+    if f.endswith(f'{SLUG}.mdx'): continue
+    corpo = open(f).read().split('---', 2)[2]
+    rep = minhas & frases6(corpo)
+    assert not rep, f"CLONE com {f}: {sorted(rep)[:3]}"
+
+# 5) Duplicação contígua (bug-class a72e7d9) + minúscula após ponto
+assert not re.search(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', novo), "duplicação contígua"
+# '\. [a-z]' fora de URL → capitalizar
 ```
 
-**Exemplos reais** (commit a72e7d9, melhorpretreino):
-- 14a: `"sem empilhar suplementos sem empilhar suplementos"`
-- 14b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
-- 14c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
-
-Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
+Checagem de olho (não-greppável): família de abertura/arremate/miolo/CTA inédita vs as irmãs lidas no passo 6.5 · máx 1 coloquialismo leve · nenhuma frase reusada dos Exemplos A-D · 300-800 chars · 2-3 §.
 
 ## Limitação intrínseca conhecida
 

@@ -350,7 +350,7 @@ drop "todos declarados pelo fabricante", drop "preço médio em torno", drop pú
   - **Exceção CANÔNICA**: 2 frases da intro do body (`artigo-intro-escrever`):
     - Abertura: "Preparamos uma seleção pra..."
     - Fechamento: "Esta seleção reúne os melhores X disponíveis... ✅"
-    - Essas 2 são exigidas pela régua de intro e **não contam** como chavão
+    - Essas 2 são frases LEGADAS permitidas pela régua de intro (padrão até v1.30; a v1.31+ não as empurra mais) e **não contam** como chavão
 - ❌ Listar mais de 2 peers num único trecho (ver Armadilha 7 abaixo)
 
 Substitua:

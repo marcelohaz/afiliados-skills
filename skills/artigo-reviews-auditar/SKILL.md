@@ -164,7 +164,7 @@ Conta ocorrências no `.mdx` inteiro (reviews + intro + guide). Flag se passar d
 | `preço médio` | ≤ 15 | 31+29 |
 | `parestesia` + `formigamento` | ≤ 20 combinados | 43+52 (cada review repete os 2 termos) |
 
-**Exceção canônica pra "seleção"** (não contar como chavão — exigida pela `artigo-intro-escrever`):
+**Exceção canônica pra "seleção"** (não contar como chavão — frases LEGADAS permitidas pela `artigo-intro-escrever`; até a v1.30 eram o padrão, a v1.31+ não as empurra mais):
 - Abertura do body: "Preparamos uma **seleção** pra..."
 - Fechamento do body: "Esta **seleção** reúne os melhores X disponíveis... ✅"
 - Total acceptable: 2 ocorrências de "seleção" por artigo (= 4 totais em 2 artigos).
