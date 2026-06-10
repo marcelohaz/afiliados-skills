@@ -83,17 +83,17 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    ```
    Use o bloco `_genericos` + o bloco do nicho específico (ex: `Pré Treino`, `Creatinas`). Durante geração, **respeite os limites como guard rail editorial**:
    - `termos_banidos_absoluto` → 0 ocorrências (inclui peers/claim/stack/SKU/ASIN/lineup)
-   - `ingles_max` → não passar do número
+   - `ingles_max` (vive nos blocos de NICHO, não em `_genericos`) → não passar do número
    - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0 corrige drift) → calibrar/empilhar/pico-e-queda = 0 QUANDO o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada pra rotina" → "feita pra")
    - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
    - `voz_eximir_responsabilidade` (v1.19.1) → ban "X mg declarados" parentético, "declarado pelo fabricante", "todos/todas/doses declaradas pelo fabricante", "sem mg declarado". Inclui "segundo a [marca]" em spec factual: rendimento/economia/velocidade afirme direto, sem atribuir (atribuição só pra recomendação tipo "a HP recomenda 50-100 págs/mês")
    - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano" = 0 (YMYL, v1.19.0)
    - `chavoes_estruturais_max` → "ocupa o papel" cap 2, "rotina de emagrecimento" cap 4, "sustenta intensidade" cap 4 (v1.19.0)
    - `concordancia_quebrada_regex` → composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX" = 0 (v1.19.0)
-   - `comparacoes_max.max_valores_numericos_por_frase` → max 2 valores mg/g/R$ por frase (v1.19.0)
-   - `medico_tecnico_max` → variar léxico após atingir limite
+   - `comparacoes_max.max_valores_numericos_por_frase` (por nicho) → max 2 valores mg/g/R$ por frase (v1.19.0)
+   - `medico_tecnico_max` (por nicho) → variar léxico após atingir limite
    - `industrial_max` → variar com sinônimos PT-BR
-   - `indicacao_medica_max` → não repetir advertência médica em N produtos
+   - `indicacao_medica_max` (por nicho) → não repetir advertência médica em N produtos
 
    Se nicho não listado: usa só `_genericos` (limites menos restritivos).
 

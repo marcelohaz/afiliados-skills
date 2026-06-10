@@ -570,4 +570,4 @@ Checagem de olho (não-greppável): família de abertura/arremate/miolo/CTA iné
 
 ## Limitação intrínseca conhecida
 
-Sem schema Zod programático no output (diferente do painel), validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (3 bolds em vez de 2, char count em 1510, etc). Mitigação: contar bolds (`**`) e chars depois de gerar e ajustar antes de aplicar.
+Sem schema Zod programático no output (diferente do painel), validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (3 bolds em vez de 2, char count em 810, etc). Mitigação: contar bolds (`**`) e chars depois de gerar e ajustar antes de aplicar.

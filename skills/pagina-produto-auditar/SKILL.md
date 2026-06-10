@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 17 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 20 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, antropomorfismo, jargão financeiro — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
 ---
 
 ## Parse de input
@@ -393,6 +393,30 @@ corrige só a prosa que de fato colou.
 
 **Não flag** se `peers_encontrados: 0` (produto só existe neste site), se só
 houver `specs_identicas`, ou se a prosa ficou abaixo dos limites.
+
+### 20. `naturalidade` (régua v1.33.0, canon Marcelo 2026-06-10, severidade: 🔴 a/b · 🟡 c/d)
+
+Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já aplica
+`naturalidade_banidos` e `naturalidade_max` quando o bloco do nicho os define, ex.
+`Impressoras`). Estes pegam o que lista nenhuma cobre:
+
+- **20a — rótulo de categoria inventado** (🔴): teste-da-Amazon — o rótulo usado
+  existe no varejo (alguém digitaria na busca)? ❌ "máquina de trabalho" → ✓
+  "impressora de escritório" · ❌ "impressora para imagem" → ✓ "impressora
+  fotográfica" · ❌ "preço de custo-benefício" → ✓ "preço justo".
+- **20b — meta-SEO** (🔴): NUNCA comentar a busca/intenção do leitor no texto
+  ("tem gente que digita X na busca", "quem pesquisa por Y quer..."). O texto
+  fala do produto, não do Google.
+- **20c — antropomorfismo com gíria** (🟡): "no batente", "se reconserta",
+  "trabalha sem reclamar" = 0. Máximo 1 coloquialismo leve por página.
+- **20d — jargão financeiro/burocrático** (🟡): "desembolso" → "preço" ·
+  "reprografia" → "cópia e digitalização" · "aquisição" → "compra".
+
+**LIBERADAS (NÃO flagrar — falso-positivo já cometido e corrigido 1x)**:
+- **Elipse de categoria com adjetivo real**: "a barata da lista", "a doméstica",
+  "a laser" são português natural (teste: o leitor tropeça NO contexto? não).
+- "calibrada/calibrado" só é banida se o bloco do NICHO listar (hoje: Pré Treino).
+  Não é regra genérica.
 
 ## Filtros editoriais — flag se aparecer nos campos curados
 

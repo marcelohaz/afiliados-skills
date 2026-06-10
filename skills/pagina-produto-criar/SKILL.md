@@ -154,6 +154,8 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
     git push origin main
     ```
 
+    Sem `--no-verify` de propósito: o hook pre-commit só bloqueia `.mdx` de `reviews/` — `products/` passa limpo. Não "conserte" adicionando a flag.
+
 13. **Disparar git pull no painel da VPS** (propaga pro painel da Bárbara/produção):
     ```bash
     bash scripts/painel-vps-pull.sh

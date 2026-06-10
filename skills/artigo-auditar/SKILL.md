@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 31 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
+description: Audita artigo inteiro read-only. Combina 34 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
 ---
 
 ## Parse de input
@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 31 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
+7. **Rodar auditoria IA** nas 34 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -455,12 +455,12 @@ Audit dos links internos no `guideContent` contra arquivos REAIS no filesystem E
 - Slug = homeReviewSlug → trocar `href="/{slug}/"` por `href="/"`
 - Outros → ajustar `href` pra slug real (slugify canon: lowercase + sem acento + ponto entre dígitos → hífen + demais pontos removidos)
 
-### `slug-vs-keyword` (level=`error`, régua v1.22.0)
+### `slug-vs-keyword` (level=`info`, régua v1.33.0 — rebaixado de error, decisão Marcelo 2026-06-09)
 
-O slug do arquivo (`reviews/{slug}.mdx`) deve ser igual ao `slugify(keyword)` do frontmatter. Quando divergem, links internos pra esse artigo derivados do keyword viram **404** e a âncora-keyword não bate com a URL. Caso real (melhorimpressora 2026-06-05): `impressora-barata.mdx` com keyword "impressora boa e barata" (slugify → `impressora-boa-e-barata`) gerou o link quebrado `/impressora-boa-e-barata/`.
+O slug do arquivo (`reviews/{slug}.mdx`) difere do `slugify(keyword)` do frontmatter. É **convenção comum na rede (~23% dos artigos) e NÃO é defeito a consertar**: o 404 real (link interno escrito com o slug derivado da keyword) já é coberto pelo `link-interno-quebrado`, que continua `error`. Foi o que pegou o caso real do melhorimpressora 2026-06-05 (`impressora-barata.mdx` + keyword "impressora boa e barata" → link quebrado `/impressora-boa-e-barata/`) — o defeito era o LINK, não o slug.
 
-**Como verificar**: `slugify(keyword) === slug-do-arquivo`? (slugify canon: lowercase, sem acento, `+`→`-plus`, `[^a-z0-9]+`→`-`, trim `-`). Se não → 🔴 error.
-**Fix**: alinhar a `keyword` ao slug (preferir — mantém a URL e geralmente é o termo de maior busca) OU renomear o arquivo pro slugify(keyword). Bloqueia readyToLock (causa 404 + âncora errada).
+**Como verificar**: `slugify(keyword) === slug-do-arquivo`? (slugify canon: lowercase, sem acento, `+`→`-plus`, `[^a-z0-9]+`→`-`, trim `-`). Se não → 🔵 info.
+**NÃO sugerir renomear o arquivo nem allowlist** (decisão canônica; renomear muda URL estabelecida). **Não bloqueia readyToLock.** Mesma severidade do núcleo determinístico `scripts/audit-linkagem.ts` e da `linkagem-auditar`.
 
 ### `linkagem-fraca` (level=`warn`, régua v1.22.0)
 

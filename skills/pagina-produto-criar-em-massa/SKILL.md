@@ -144,11 +144,11 @@ Detecção:
    Antes do add, confirmar com `git status --short` que os paths esperados estão modificados. Se algum sucesso reportado não está modificado, alertar (sub-agent reportou ok mas não escreveu?).
 
    ```bash
-   git commit --no-verify -m "feat({site}): preenche {N} páginas individuais em batch via skill" \
+   git commit -m "feat({site}): preenche {N} páginas individuais em batch via skill" \
      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
    ```
 
-   `--no-verify` é necessário porque hook pre-commit bloqueia edits direto de .mdx (skill batch passa por esse mesmo bypass que a skill individual já usa — exceção documentada na memória do projeto).
+   Sem `--no-verify` (corrigido v1.33.0): o hook pre-commit só bloqueia `.mdx` de `reviews/` (e `.html` de guides/pages) — páginas individuais vivem em `products/` e passam limpo, igual na skill individual `pagina-produto-criar`.
 
 10. **Pull rebase + push**:
     ```bash
