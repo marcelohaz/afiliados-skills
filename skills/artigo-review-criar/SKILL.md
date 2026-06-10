@@ -445,6 +445,17 @@ Conversacional ≠ personagem. Caso real: a home do melhorimpressora acumulou "m
 
 **7. Máximo 1 expressão coloquial leve por review** (pode ser zero); analogia só quando explica algo. Teste final: leia em voz alta como se explicasse pra um cliente — soou personagem ou corporativo, simplifica.
 
+## Subtitle humano = ângulo do review (v1.34.0, canon Marcelo 2026-06-10)
+
+Quando o stub já vem com `subtitle` (e/ou `badge`) preenchido pelo editor humano (modal "+ Adicionar produto" do painel), isso NÃO é placeholder: **é a direção editorial** — "normalmente é o ângulo que queremos que você aborde o produto" (Marcelo).
+
+1. **Ângulo VINCULANTE**: o review inteiro aborda o produto por esse ângulo — o "Para quem é" deriva dele (reforça a régua v1.20.1, que já manda derivar o claim do subtitle), os pros priorizam o que o sustenta.
+2. **Texto MELHORÁVEL**: você tem liberdade de polir o subtitle (concisão, clareza, régua 10-150 chars, title case) — mas o SENTIDO não muda. Trocar "tanque pra alto volume" por "multifuncional compacta" = violação; polir "boa pra muito volume" → "Tanque de alto volume pra rotina pesada" = ok.
+3. **Subtitle vazio** = comportamento atual (criar do zero a partir da bíblia + badge).
+4. **NUNCA descartar silenciosamente** o ângulo humano. Se a bíblia CONTRADIZ o ângulo (ex: subtitle diz "a mais rápida" e a bíblia mostra que não é), NÃO grave nada conflitante: pare e pergunte ao usuário.
+
+Histórico: até v1.33 a skill regenerava o subtitle sem ler o existente (~80% dos subtitles humanos sobrescritos; os ~20% "mantidos" eram convergência por acaso). O badge sempre teve esse tratamento (var + hint editorial) — esta régua espelha pro subtitle.
+
 ## Operação de destilação bíblia → .mdx (CRÍTICO)
 
 A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conforme declarado pelo fabricante", "confirmado nos alérgenos"). É correto e útil internamente — rastreabilidade evita invenção. **O .mdx público é destilado**: droppa marcadores que viraram ruído burocrático.
