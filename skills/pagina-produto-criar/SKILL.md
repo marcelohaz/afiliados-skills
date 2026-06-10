@@ -80,7 +80,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
    - Use `_genericos` + bloco do nicho (ex: `Pré Treino`, `Creatinas`, `Tablets`)
    - Limites aplicam como guard rail editorial:
      - `termos_banidos_absoluto` → 0 ocorrências (peers/claim/stack/SKU/ASIN/lineup)
-     - `linguagem_artificial_max` → calibrar/empilhar/pico-e-queda = 0 (v1.19.0)
+     - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0) → aplicar quando o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada pra rotina" → "feita pra")
      - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
      - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura" = 0 (YMYL, v1.19.0)
      - `concordancia_quebrada_regex` → composiçãos/combinaçãos/"a produto"/"a formigamento" = 0 (v1.19.0)
@@ -388,6 +388,18 @@ Reviews afiliados são **especialista explicando pra amigo ou vizinho**: claro, 
 **Referências canônicas do projeto pra calibrar tom** (leia se desconfia que o output está formal demais):
 - `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`
 - `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx`
+
+## Tom natural e rótulos REAIS (v1.32.0, canon Marcelo 2026-06-10)
+
+Conversacional ≠ personagem. Caso real: a home do melhorimpressora acumulou "máquina de trabalho", "impressora para imagem", "no batente", "se reconserta", "desembolso" — 16 trechos não-naturais num artigo só. Régua:
+
+1. **Teste-da-Amazon pros rótulos**: só use rótulo de categoria que EXISTE no varejo (digitaria na busca?). ❌ "máquina de trabalho"→✓ "impressora de escritório" · ❌ "impressora para imagem"→✓ "fotográfica" · ❌ "preço de custo-benefício"→✓ "preço justo".
+2. **Elipse de categoria LIBERADA**: "a barata", "a doméstica", "a laser", "as de tanque" são português natural — não invente substituto.
+3. **PROIBIDO meta-SEO**: nunca mencionar a busca/keyword do leitor ("tem gente que digita X...").
+4. **Antropomorfismo com gíria = 0**: "no batente", "se reconserta", aparelho que "quer". Personificação só quando explica ("se conserta sozinho" ✓).
+5. **Jargão financeiro/burocrático**: "desembolso"→"preço" · "comprometer dinheiro"→"gastar" · "reprografia"→"cópia e digitalização".
+6. **Atribuição elíptica = muleta** (v1.21.1): "conta da Epson" → número direto.
+7. **Máx 1 coloquialismo leve por página**; analogia só quando explica. Teste: ler em voz alta pra um cliente.
 
 ## Como usar a bíblia
 

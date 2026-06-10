@@ -84,7 +84,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    Use o bloco `_genericos` + o bloco do nicho específico (ex: `Pré Treino`, `Creatinas`). Durante geração, **respeite os limites como guard rail editorial**:
    - `termos_banidos_absoluto` → 0 ocorrências (inclui peers/claim/stack/SKU/ASIN/lineup)
    - `ingles_max` → não passar do número
-   - `linguagem_artificial_max` → calibrar/empilhar/pico-e-queda/energia metabólica = 0; pico nervoso cap 4 (v1.19.0)
+   - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0 corrige drift) → calibrar/empilhar/pico-e-queda = 0 QUANDO o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada pra rotina" → "feita pra")
    - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
    - `voz_eximir_responsabilidade` (v1.19.1) → ban "X mg declarados" parentético, "declarado pelo fabricante", "todos/todas/doses declaradas pelo fabricante", "sem mg declarado". Inclui "segundo a [marca]" em spec factual: rendimento/economia/velocidade afirme direto, sem atribuir (atribuição só pra recomendação tipo "a HP recomenda 50-100 págs/mês")
    - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano" = 0 (YMYL, v1.19.0)
@@ -213,6 +213,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
    - Voz analítica (zero "compradores", "reviews", "avaliações", "posicionamento Amazon")
    - Voz-citação ficha-técnica (zero "alérgenos confirmam", "atributos declaram", "conforme tipo de dieta", "apontada pelo fabricante como") — spec factual vai direto; atribuição só pra recomendação/calibração do fabricante, ver Armadilha 4
    - Anti-duplicate vs página individual (frases não-repetidas)
+   - Tom natural (v1.32.0): rótulos passam no teste-da-Amazon, zero meta-SEO, máx 1 coloquialismo, sem antropomorfismo com gíria
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-prod-{ASIN}.mdx`. Pattern paralelo ao do painel pra aparecer no card "Histórico de versões".
 
@@ -417,6 +418,32 @@ Reviews afiliados são **especialista explicando pra amigo ou vizinho**: claro, 
 **Referências canônicas do projeto pra calibrar tom** (leia se desconfia que o output está formal demais):
 - `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`
 - `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx`
+
+## Tom natural e rótulos REAIS (v1.32.0, canon Marcelo 2026-06-10)
+
+Conversacional ≠ personagem. Caso real: a home do melhorimpressora acumulou "máquina de trabalho", "impressora para imagem", "no batente", "se reconserta", "desembolso" — 16 trechos não-naturais num artigo só.
+
+**1. Teste-da-Amazon pros rótulos de categoria**: só use rótulo que EXISTE no varejo (você digitaria isso na busca da Amazon?).
+
+| ❌ Inventado | ✓ Real |
+|---|---|
+| "máquina de trabalho" | "impressora de escritório" |
+| "impressora para imagem" | "impressora fotográfica" |
+| "faixa fotográfica" | "conjunto de 6 tintas" |
+| "cadência de negócio" | "velocidade pra escritório" |
+| "preço de custo-benefício" | "preço justo" |
+
+**2. Elipse de categoria é LIBERADA** (não invente substituto): "a barata", "a doméstica", "a laser", "as de tanque", "a fotográfica" são português natural — use-as pra não repetir o nome da categoria 40 vezes.
+
+**3. PROIBIDO meta-SEO**: nunca mencionar a busca/keyword do leitor ("tem gente que digita X na busca...", "quando a busca esconde..."). O leitor não veio ler sobre a própria pesquisa — reescreva pelo cenário direto ("Nem toda impressora é pra casa...").
+
+**4. Antropomorfismo com gíria = 0**: aparelho "no batente", rede que "se reconserta" (verbo inventado), impressora que "quer um canto". Personificação leve SÓ quando explica ("o Wi-Fi se conserta sozinho" ✓).
+
+**5. Jargão financeiro/burocrático**: "desembolso"→"preço" · "comprometer dinheiro"→"gastar" · "reprografia"→"cópia e digitalização" · "na frente do consumível"→"no consumível".
+
+**6. Atribuição elíptica é a mesma muleta de "segundo a [marca]"** (v1.21.1): "tinta pra milhares de páginas, conta da Epson" → afirme o número direto ("tinta pra 6.600 páginas em preto").
+
+**7. Máximo 1 expressão coloquial leve por review** (pode ser zero); analogia só quando explica algo. Teste final: leia em voz alta como se explicasse pra um cliente — soou personagem ou corporativo, simplifica.
 
 ## Operação de destilação bíblia → .mdx (CRÍTICO)
 

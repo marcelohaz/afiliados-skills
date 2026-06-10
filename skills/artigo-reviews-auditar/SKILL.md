@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 20 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 21 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta), naturalidade (rótulo de categoria inventado, meta-SEO, antropomorfismo, tiques com teto por artigo). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -83,7 +83,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Vazia → links Amazon devem ser crus. Preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`.
 
-7. **Analisar cross-produto** pelos 20 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
+7. **Analisar cross-produto** pelos 21 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
 8. **Reportar em chat** no formato canônico (seção "Formato do relatório").
 
@@ -126,7 +126,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 20 critérios da análise
+## Os 21 critérios da análise
 
 ### 1. `tone-clone` — abertura/frase idêntica entre produtos
 
@@ -553,10 +553,26 @@ for produto in products:
 **Exceção CANÔNICA** (não flag):
 - ❌ "rende 4.500 páginas, segundo a Epson" — atribuir spec de fabricante é muleta (régua v1.21.1); fix = "rende até 4.500 páginas" direto. Atribuição só pra recomendação/calibração ("a HP recomenda 50-100 págs/mês").
 
+### 21. `naturalidade` (v1.32.0, canon Marcelo 2026-06-10, severidade: 🔴/🟡)
+
+**Bug-class** (caso real melhorimpressora/melhor-impressora, home): frases de OCORRÊNCIA ÚNICA que nenhum falante usaria — grep de frequência NÃO pega; exige **leitura frase a frase** de fullReview/pros/cons/shortDescription/subtitle.
+
+**21a — rótulo de categoria inventado** (🔴): locução que não existe no varejo. **Teste-da-Amazon**: digitaria isso na busca? Casos reais: "máquina de trabalho"→"impressora de escritório" · "impressora para imagem"→"impressora fotográfica" · "faixa fotográfica"→"conjunto de 6 tintas" · "cadência de negócio"→"velocidade pra escritório" · "preço de custo-benefício"→"preço justo". **EXCEÇÃO LIBERADA** (NÃO flagrar): elipse com adjetivo real da categoria ("a barata", "a doméstica", "a laser", "as de tanque", "a fotográfica") é português natural.
+
+**21b — meta-SEO / quebra da 4ª parede** (🔴): texto comentando a busca do leitor ("tem gente que digita 'melhor impressora' na busca...", "quando a busca esconde uma necessidade..."). Fix: cenário direto ("Nem toda impressora é pra casa...").
+
+**21c — antropomorfismo com gíria / verbo inventado** (🟡): aparelho "no batente todo dia", rede que "se reconserta", "equipamento que fica parado", impressora que "quer" algo. Fix: ação literal ("usa todo dia", "se conserta sozinha"). Personificação leve que EXPLICA ("o Wi-Fi se conserta sozinho") não flagra.
+
+**21d — jargão financeiro/burocrático** (🟡): "desembolso", "comprometer dinheiro", "reprografia", "na(s) frente(s) de". Fix: "preço", "gastar", "cópia e digitalização".
+
+**21e — gramática/ambiguidade que trava a leitura** (🔴): casos reais: "só imprime em preto e a laser" (faltou "é"); "que ainda não aquece a tinta" (lê-se "ainda não"); "papel cortado pela metade" (parece papel rasgado); "cabe na escrivaninha sem virar uma estação de trabalho" (sujeito ambíguo); "troca inteligente pela Epson" (direção invertida). Inclui atribuição elíptica "conta da Epson" (= "segundo a Epson", muleta v1.21.1 → número direto).
+
+**21f — tiques com teto por ARTIGO** (🟡): ler `naturalidade_max` do bloco do nicho em `docs/painel/_data/chavoes-por-nicho.json` e contar no artigo INTEIRO. Padrão Impressoras: "daqui" ≤2 · "pede/pedem" (personificação) ≤3 · "trunfo" ≤1 · "fôlego" ≤1 · "telinha" ≤1 · "enxuto/enxuga" ≤2 · abertura "No conjunto," ≤1 · fórmula "O custo de X é Y" ≤1 · "o preço é o filtro" ≤1 · "leva X a sério" ≤1. Caso real: "daqui" 13× e "pede" 9× no impressoraideal/melhor-impressora-multifuncional.
+
 ## Filtros de severidade
 
-- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado")
-- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0)
+- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0)
+- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (antropomorfismo+gíria, jargão financeiro, tiques acima do teto — v1.32.0)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório

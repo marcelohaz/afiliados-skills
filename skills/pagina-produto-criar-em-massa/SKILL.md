@@ -304,7 +304,8 @@ EXCETO os passos de git operations (12, 13). Especificamente:
    - Use `_genericos` + bloco do nicho identificado (se nicho não listado, use só `_genericos`)
    - Aplique limites como guard rail durante geração:
      - `termos_banidos_absoluto` → NUNCA use no output (lineup, SKU, ASIN, trade-off, hardcore, datasheet, notificado, peers, claim, stack)
-     - `linguagem_artificial_max` → calibrar/empilhar/pico-e-queda/energia metabólica = 0 (v1.19.0); pico nervoso cap 4
+     - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0) → aplicar quando o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada"→"feita pra")
+     - Tom natural v1.32.0 (régua completa na `pagina-produto-criar`): rótulo de categoria só se existe no varejo (teste-da-Amazon; "máquina de trabalho"→"impressora de escritório"); elipse "a barata/a doméstica/a laser" LIBERADA; zero meta-SEO (nunca citar a busca do leitor); zero antropomorfismo com gíria ("no batente", "se reconserta"); máx 1 coloquialismo leve
      - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0). Use "o grande ponto é", "categoria premium", "funciona pra quem"
      - `voz_eximir_responsabilidade` (v1.19.1) → ban "X mg declarados" parentético (drop "declarados"), "declarado pelo fabricante" (sobrando), "todos/todas/doses declaradas pelo fabricante" (transfere responsabilidade), alérgeno com "declarado" ("contém glúten declarado pelo fabricante" → "contém glúten"). Inclui "segundo a [marca]" em spec factual: rendimento/economia/velocidade afirme direto, sem atribuir (atribuição só pra recomendação tipo "a HP recomenda 50-100 págs/mês")
      - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano", "totalmente seguro", "sem efeitos colaterais", "cientificamente comprovado" = 0 (YMYL, v1.19.0). Qualifique sempre.
