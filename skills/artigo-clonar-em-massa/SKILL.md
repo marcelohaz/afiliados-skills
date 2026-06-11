@@ -52,14 +52,14 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 ### Etapa 0 — Pré-flight (auto; aborta cedo se faltar)
 1. Git pull no repo de trabalho (evita estado stale; painel/Bárbara commitam em paralelo).
 2. Parse args. Valida `targetSite`/`sourceSite` (`[a-z0-9-]+`).
-3. Lê o `.mdx` fonte → extrai: produtos (ASIN, name, image, imageAlt, badge, schemaPrice, store), keyword, keywordPlural, listHeading, category, e a estrutura de H2/H3 do `guideContent`.
+3. Lê o `.mdx` fonte → extrai: produtos (ASIN, name, image, imageAlt, badge, **rating**, schemaPrice, store), keyword, keywordPlural, listHeading, category, e a estrutura de H2/H3 do `guideContent`. **`rating` é a nota editorial do fonte e DEVE ser preservada — o clone biblia-only NÃO regenera nota, e sem ela o artigo/página perde a fonte de estrela (caso real escritoriocasa 2026-06-11: clones saíram com 0 rating).**
 4. Valida bíblias de TODOS os ASINs: existem em `docs/biblias-v2/{ASIN}.json` + `pontosFortes` não-vazio + `angulosConversao` não-vazio. Falta qualquer → ABORTA listando.
 5. Valida páginas de produto no destino (`sites/{target}/src/content/products/{slug}.mdx`): se existem, links hub-and-spoke do guide resolvem + servem de anti-dup intra-site. Se faltam, AVISA (guide cai pra Amazon /dp/ no fallback) — não bloqueia.
 6. Lê `affiliateTag` do destino (`sites/{target}/src/config.ts`). Vazia = links crus; preenchida = `?tag=...`.
 7. Confere que o artigo destino NÃO existe travado.
 
 ### Etapa 1 — Reviews (gerar + auditar + auto-fix)
-1. **1.0 Lineup + shuffle**: ordem = top-3 do fonte FIXOS + posições 4+ embaralhadas com shuffle determinístico (seed = hash do target+source+slug; FNV-1a + xorshift32, igual `agent-edit.ts`). Badge viaja COM o produto (mapeado por ASIN). Top-3 fixo garante "Melhor Escolha" na posição 1.
+1. **1.0 Lineup + shuffle**: ordem = top-3 do fonte FIXOS + posições 4+ embaralhadas com shuffle determinístico (seed = hash do target+source+slug; FNV-1a + xorshift32, igual `agent-edit.ts`). Badge **e `rating`** viajam COM o produto (mapeados por ASIN). Top-3 fixo garante "Melhor Escolha" na posição 1.
 2. **1.1 Geração**: N sub-agents Opus paralelos (levas de até 10). Cada um gera os campos do review-no-artigo (subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos) — **biblia-only** (vê só a bíblia do produto + a página individual do mesmo produto no destino como "ângulo a NÃO repetir" / anti-dup intra-site). NUNCA vê o texto do fonte (`biblia-only`). Régua = `artigo-review-criar` (destilação categoria D, voz analítica, sem travessão, texto-puro, links tag-aware, chavões por nicho, health YMYL, hard caps). H2 labels dos 4 parágrafos parafraseados.
 3. **1.2 Gate mecânico** (auto): por review — travessão (0), links Amazon (formato + contagem 2-3, tag-aware), texto-puro (subtitle/shortDescription/specs.value sem HTML), 4 parágrafos com prefixos, tamanhos, **voz-comprador com LISTA AMPLA** (incluir "de forma recorrente", bare "recorrente", "aparece como", "parte das opiniões/observações", "citado/citados de forma"; caso real: "de forma recorrente" escapou de uma lista curta). Falha → auto-fix (sub-agent corrige só o campo) → re-valida (máx 3x).
 4. **1.3 Anti-dup intra-site** (auto): cada review ≠ página individual do mesmo produto (jaccard de sentenças). Acima do limite → auto-fix (reescreve trecho divergindo) → re-valida.
@@ -115,7 +115,7 @@ top3 = sourceAsins[0:3]   # fixos
 resto = seededShuffle(sourceAsins[3:], seed=FNV1a(target+source+slug))
 finalOrder = top3 + resto
 ```
-Badge segue o ASIN (cada produto mantém seu badge do fonte). Top-3 fixo mantém "Melhor Escolha" na posição 1 (régua do projeto).
+Badge **e `rating`** seguem o ASIN (cada produto mantém seu badge e sua nota editorial do fonte → preserva a estrela). Top-3 fixo mantém "Melhor Escolha" na posição 1 (régua do projeto).
 
 ## Montagem do .mdx (Etapa 1 fim)
 
