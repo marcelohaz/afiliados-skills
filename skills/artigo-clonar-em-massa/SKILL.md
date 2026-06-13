@@ -14,7 +14,7 @@ melhorpretreino SOURCE=melhorpretreino-com/melhor-pre-treino TITLE="Os 11 melhor
 
 - `targetSite` (obrigatório): site destino (ex: `melhorpretreino`).
 - `SOURCE=` (obrigatório): `site/slug` do artigo fonte (ex: `melhorpretreino-com/melhor-pre-treino`).
-- `TITLE=` (opcional): título do artigo destino. Se omitido, deriva da keyword. **Recomendado variar** vs o fonte (footprint).
+- `TITLE=` (opcional): título do artigo destino. Se omitido, **NÃO reusar o título da fonte nem só "derivar da keyword"** (isso gera `<title>` idêntico ao irmão → dup na SERP). **OBRIGATÓRIO divergir**: aplicar a régua "Divergência cross-site" da `artigo-intro-escrever` — ler os títulos dos irmãos (mesmo slug/keyword nos outros sites), escolher o padrão de ASSINATURA deste site (pool P1-P4, mapa na memória `afiliados.seo.titulos-artigo-3-padroes-anti-dup.md`), lead = campo `keyword` (não forçar "Melhor"), número obrigatório, ≤60 chars. Causa-raiz dos 21 títulos idênticos (auditoria 2026-06-13): a clone reusava o título da fonte.
 - `HOME=` (opcional, default `no`): se `yes`, configura o artigo como home do site (homeReviewSlug).
 - `MODE=` (opcional, default `biblia-only`): `biblia-only` (texto 100% da bíblia, zero leakage do fonte) ou `hybrid` (top-3 da bíblia, 4+ pode considerar o fonte). **Default e recomendado: biblia-only.**
 

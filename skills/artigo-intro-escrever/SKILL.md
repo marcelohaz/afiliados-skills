@@ -37,7 +37,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 
 ## Invariantes
 
-- **Toca em até DOIS lugares: o body do .mdx (intro) E a linha `title:` do frontmatter.** O `title:` só é reescrito quando não está no padrão canônico (ver "## Régua do título do artigo" abaixo). Todo o resto (description, keyword, keywordPlural, listHeading, products, guideContent) fica intacto.
+- **Toca em até DOIS lugares: o body do .mdx (intro) E a linha `title:` do frontmatter.** O `title:` é reescrito quando está stub/fora do padrão **OU colide com um irmão** da rede (ver "## Régua do título do artigo" → "Divergência cross-site" abaixo). Todo o resto (description, keyword, keywordPlural, listHeading, products, guideContent) fica intacto.
 - **Body é puro markdown.** Verificado: zero artigos do monorepo têm componentes MDX no body — toda a estrutura (TabelaTop, ProductSection, ReviewLayout, etc) é montada pelo `<SlugPage>` via thin-wrapper em `pages/[slug].astro`. Skill nunca insere `<TabelaTop>` ou similar.
 - **2 a 3 parágrafos** (obrigatório). Cada parágrafo separado por linha em branco. 4 parágrafos é EXCESSO — intro vira ensaio.
 - **300 a 800 chars no total** (todo o body somado). Alvo: 500-700 chars. Antes era 300-1500 e sub-agents miravam 900-1400, tornando a intro cansativa — apertado em 2026-05-26 após feedback "muito longa, muito explicativa".
@@ -115,7 +115,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 
 8. **Gerar a intro** seguindo a régua editorial (ver seção abaixo). 2-3 parágrafos markdown.
 
-8.5. **Avaliar/arrumar o título** (ver "## Régua do título do artigo" abaixo pra detalhe): se o `title:` NÃO estiver no padrão canônico `{Keyword Title Case}: {os|as} {N} melhores em {ano}` (ou no fallback sem contagem pra N<3), gere o título novo e marque pra aplicar no passo 11. Se já estiver no padrão, só atualiza a contagem N se o lineup mudou; senão deixa intacto. Respeita `contentLocked` (não mexe se travado).
+8.5. **Avaliar/arrumar o título** (ver "## Régua do título do artigo" abaixo): primeiro rode a **checagem cross-site** (passo da "Divergência cross-site") — leia os títulos dos artigos IRMÃOS (mesmo slug/keyword em outros sites). Reescreve o `title:` se: (a) está stub/fraco (fora de qualquer padrão), OU (b) **colide com um irmão** (título igual/quase-igual), OU (c) a contagem N envelheceu. Ao reescrever, use o padrão de ASSINATURA deste site (pool P1-P4), lead = campo `keyword` (não forçar "Melhor"), número obrigatório, ≤60 chars. Se já está no padrão do site E não colide com irmão, só atualiza N se mudou. Respeita `contentLocked` (não mexe se travado).
 
 9. **Validar mentalmente** antes de salvar:
    - 300-800 chars total (alvo 500-700)
@@ -130,7 +130,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
    - Sem heading de nenhum nível: nem markdown (`# `, `## `, `### `) nem HTML (`<h1>`, `<h2>`, `<h3>`)
    - Sem menção a marca/modelo/ASIN específico (linguagem geral)
    - Se tag preenchida + intro tem links Amazon (raro mas possível): validar `?tag={tag}&linkCode=ogi&th=1&psc=1`
-   - **Título** (só se foi reescrito no passo 8.5): 30-100 chars, contém a keyword (case-insensitive), gênero `os/as` correto, contagem N batendo com `products[]`, sem travessão, sem ponto final
+   - **Título** (só se foi reescrito no passo 8.5): **≤60 chars** (corte Google), contém a keyword (case-insensitive) no lead, número N batendo com `products[]`, não colide com irmão, sem travessão, sem ponto final
 
 10. **Backup** ANTES de sobrescrever:
     ```bash
@@ -168,9 +168,29 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 
 ## Régua do título do artigo (v1.21.0, canon 2026-06-04)
 
-Além da intro, a skill **arruma o `title` do frontmatter** quando ele não está no padrão canônico da rede. Motivo: o `make_reviews` cria o title só como "Keyword Capitalizado:" e o "as X melhores em ANO" sempre foi um passo manual que quase nunca era feito, deixando títulos fracos tipo "Melhor impressora epson". Como a intro roda no fim do artigo, é o momento natural de fechar o título com a contagem real de produtos.
+Além da intro, a skill **arruma o `title` do frontmatter** quando ele está stub/fora do padrão **ou quando colide com um título irmão** da rede (divergência cross-site — ver subseção abaixo). Motivo: o `make_reviews` cria o title só como "Keyword Capitalizado:" e o "as X melhores em ANO" sempre foi um passo manual que quase nunca era feito, deixando títulos fracos tipo "Melhor impressora epson". Como a intro roda no fim do artigo, é o momento natural de fechar o título com a contagem real de produtos.
 
-### Padrão canônico (já usado em melhoraspirador/melhorestablets)
+### Divergência cross-site (v1.35.0, canon Marcelo 2026-06-13) — ANTI-DUP SERP
+
+**Problema:** a mesma keyword existe em vários sites da rede (SERP-monopoly). Se todos usam o padrão único, saem com `<title>` IDÊNTICO na SERP → Google colapsa duplicados, CTR repetido. Auditoria 2026-06-13: 21 artigos compartilhados, 100% título idêntico.
+
+**Regra (gatilho = COLISÃO, não "fora do padrão"):** antes de gravar o título, **leia os títulos dos artigos IRMÃOS** — mesmo `slug` em outros sites E mesma `keyword`: `Grep -n "^title:|^keyword:" sites/*/src/content/reviews/{slug}.mdx` (se o slug variar entre sites, procure pelo mesmo valor de `keyword`). Se o seu título sair igual a um irmão, **escolha um padrão/tag diferente**. Irmão `contentLocked` mantém o dele → você diverge dele. Na dúvida, mantenha o site estabelecido/forte e diverja o novo.
+
+**Pool de padrões** (todos: lead = campo `keyword`, número N obrigatório, **≤60 chars**):
+- **P1** `{Keyword}: as {N} melhores (Atualizado 2026)` — fallback `(2026)` se passar de 60
+- **P2** `As {N} {KeywordPlural Title Case} (Guia 2026)`
+- **P3** `{Keyword}: {N} opções para comprar` — ` (Guia Completo)` só se couber ≤60
+- **P4** `{Keyword}: as {N} melhores de 2026`
+
+Tags (encaixe a que couber, **sem dobrar o ano** — título com "em/de 2026" NÃO leva "(2026)/(Atualizado 2026)" junto): `(Atualizado 2026)`, `(Guia 2026)`, `(Guia Completo)`, `(2026)`, `de 2026`, `em 2026`.
+
+**Lead = campo `keyword`, NÃO forçar "Melhor":** se a keyword é "impressora barata" / "impressora para fotos" (sem "melhor"), o título começa "Impressora Barata" / "Impressora para Fotos", NUNCA "Melhor Impressora Barata". Conferir o campo `keyword` do frontmatter, jamais chutar pelo slug.
+
+**Casos especiais:** keyword de pergunta/marca ("creatina black skull", "qual a melhor creatina") mantém a forma de pergunta ("Creatina Black Skull é Boa?", "Qual a Melhor Creatina?") + tail divergente por site.
+
+**Assinatura por site:** cada site usa um padrão fixo, atribuído pra divergir dos irmãos que dividem a keyword. Mapa vivo na memória `afiliados.seo.titulos-artigo-3-padroes-anti-dup.md` (ex.: melhorimpressora=P1, escritoriocasa=P2, impressoraideal=P3; creatinasaprovadas=P1, melhorcreatina=P2, qualamelhorcreatina=P3, melhoressuplementos=P4). Site novo: pegue um padrão livre no cluster.
+
+### Padrão canônico (P1 = default; ver pool de divergência acima)
 
 `{Keyword em Title Case}: {os|as} {N} melhores em {ano}`
 
@@ -186,21 +206,22 @@ Componentes:
 - **{ano}**: ano atual.
 - **Sem ponto final.**
 
-### Quando arrumar (conservador — decisão Marcelo 2026-06-04)
+### Quando arrumar (gatilho = stub OU colisão — v1.35.0)
 
-Só reescreve se o título **NÃO** já estiver no padrão. Detecção:
-- **Já-no-padrão (NÃO toca)**: bate o regex `:\s*(os|as)\s+\d+\s+melhores\s+em\s+\d{4}` OU, no fallback sem contagem, termina com ` em \d{4}` sem placeholder.
+Reescreve se: (a) o título está **stub/fraco**, OU (b) **colide com um irmão** (mesmo slug/keyword em outro site com título igual/quase-igual — ver "Divergência cross-site"), OU (c) a **contagem N envelheceu**. Detecção:
 - **Stub/fraco (arruma)**: minúsculo, sem ano, sem contagem, ou == keyword cru (ex: "Melhor impressora epson", "Melhor Impressora Custo Benefício").
-- **Já-no-padrão mas N mudou**: se o lineup cresceu/encolheu, atualiza só o número (a contagem no título não pode envelhecer — mesmo cuidado da auditoria cross-produto).
+- **Colide com irmão (arruma p/ divergir)**: título idêntico/quase-igual a um irmão → aplica o padrão de assinatura deste site (pool P1-P4). Mesmo que já esteja "no padrão", se colide, troca.
+- **N mudou (atualiza)**: se o lineup cresceu/encolheu, atualiza o número (a contagem não pode envelhecer).
+- **OK (NÃO toca)**: já no padrão de assinatura do site, não colide com irmão, e N certo.
 
 ### Fallback N<3 (decisão Marcelo)
 
 Se o lineup tem menos de 3 produtos, "as 2 melhores" soa fraco. Use:
 `{Keyword em Title Case} em {ano}` (sem contagem). Ex: "Melhor Impressora Epson em 2026".
 
-### Limite de tamanho (auditor `title-qualidade`)
+### Limite de tamanho — **≤60 chars (corte do Google na SERP)**
 
-30-100 chars (alvo 40-70). O Zod do schema é só `z.string()` (não trava build), mas o `artigo-auditar` flagra <30 ou >100 como warn. Se a keyword for longa e o padrão estourar 100, caia no fallback sem contagem; se ainda assim passar de 100, mantenha só "{Keyword em Title Case}".
+Canon Marcelo 2026-06-13: **título não pode passar de ~60 chars** ou o Google corta na SERP. Régua: número SEMPRE presente; depois encaixe a tag que couber (`(Atualizado 2026)` > `(Guia 2026)` > `de 2026` > `(2026)`); se a keyword for longa, use número terso ("10 melhores", "10 opções") e/ou solte a tag. Mínimo ~30 (`artigo-auditar` flagra <30). Contar os chars ANTES de gravar.
 
 ### Guard `contentLocked`
 
@@ -371,7 +392,7 @@ Por que está OK:
 
 ### Título (quando reescrito)
 - Padrão `{Keyword Title Case}: {os|as} {N} melhores em {ano}` (N≥3) ou fallback `{Keyword Title Case} em {ano}` (N<3). **Sem ponto final.**
-- 30-100 chars; contém a keyword (case-insensitive); gênero `os/as` correto; N = `products[]`; sem travessão.
+- **≤60 chars** (corte Google); keyword no lead; número N = `products[]`; não colide com título irmão; sem travessão.
 - **Só reescreve se fora do padrão** (conservador). Já-no-padrão só atualiza N se o lineup mudou.
 - **Nunca** mexe no título de artigo `contentLocked: true`.
 

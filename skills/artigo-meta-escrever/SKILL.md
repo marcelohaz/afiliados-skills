@@ -39,6 +39,7 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 - **Sem aspas duplas internas.** Vai pra YAML single-line entre `"..."` — aspa dupla interna quebra o parse. Use aspas simples ou parafraseie.
 - **Single line.** Sem `\n`. Frontmatter `description:` é single-line por convenção do repo.
 - **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.
+- **Divergir dos IRMÃOS (anti-dup SERP, 2026-06-13).** O mesmo artigo existe em vários sites da rede (SERP-monopoly) e o snippet aparece junto do `<title>` na busca. Antes de gravar, **leia a `description` dos artigos irmãos** (mesmo slug/keyword): `Grep -n "^description:" sites/*/src/content/reviews/{slug}.mdx`. A sua meta deve ter **ângulo/redação distinta** das irmãs (não copiar a frase) — mantém a keyword nos 1ºs 60 chars, mas varia o gancho (ex.: uma foca preço, outra custo-benefício, outra perfil de uso). Irmão `contentLocked` mantém a dele → você diverge. Pareia com a divergência de título da `artigo-intro-escrever` (título sozinho não fecha a SERP).
 
 ## Fluxo
 
