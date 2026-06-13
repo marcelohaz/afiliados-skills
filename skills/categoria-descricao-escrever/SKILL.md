@@ -176,6 +176,34 @@ Chama pra navegar pelos artigos. Pode ser omitido se a descrição fica grande d
 **Exemplo**:
 > `<p>Navegue pelos artigos, leia os prós e contras reais de cada produto e chegue à sua próxima compra com confiança, sabendo exatamente o que esperar antes de o produto chegar na sua casa.</p>`
 
+## Régua ANTI-CLONE (CRÍTICO — v1.20.0, canon 2026-06-12)
+
+Os exemplos acima são **UM** preenchimento possível do esqueleto, **NÃO um template pra copiar verbatim**. Sem variação, categorias diferentes (e pior, sites de **MESMO nicho**) saem com descrição quase idêntica = **duplicate content** — fatal pra estratégia SERP-monopoly (2+ sites no mesmo nicho: impressoras = melhorimpressora+impressoraideal, pré-treino = melhorpretreino+melhorpretreino-com, creatina ×3) e pro guarda-chuva **melhoressuplementos** (que sobrepõe TODOS os nichos: creatinas, whey, ômega-3, pré-treino, suplementos). O `§3` "...antes de o produto chegar na sua casa" é o pior ofensor: niche-agnostic, o modelo copia verbatim em todo lugar.
+
+**Passo OBRIGATÓRIO antes de gerar** — leia as descrições de categoria JÁ existentes de **(a)** outras categorias do mesmo site e **(b)** sites de MESMO nicho (ex: gerando `impressoras` no impressoraideal → leia o `impressoras` do melhorimpressora). Anote a abertura (§1) e o fecho (§3) de cada uma, pra divergir.
+
+**Regras de divergência (hard):**
+1. **Zero sequências de ≥8 palavras** iguais a uma descrição irmã (mesmo site) ou de mesmo nicho (site irmão).
+2. **NÃO reusar a família de abertura** "Escolher [o/a] {X} certo/a pode parecer simples, mas o mercado brasileiro oferece dezenas..." se já usada numa irmã/mesmo-nicho. Rotacione (pool abaixo).
+3. **NUNCA repetir o §3 verbatim** ("...antes de o produto chegar na sua casa"). Varie o fecho ou omita o §3.
+4. Critérios (§1) e perfis (§2) **específicos do nicho** — não a lista genérica reaproveitável.
+
+**Pool de aberturas §1** (rotacione; não repita no site nem entre sites do mesmo nicho):
+- "Escolher [a/o] {X} certo/a pode parecer simples, mas..."
+- "Procurando [a/o] {X} ideal? ..."
+- "O mercado de {X} no Brasil..."
+- "{X} deixaram de ser [coisa rara] e viraram..."
+- "Se o seu objetivo é {benefício do nicho}, ..."
+- "Reunimos aqui os comparativos de {X}..."
+
+**Pool de fechos §3** (rotacione; ou omita — 2 parágrafos bastam):
+- "Navegue pelos artigos e compare os modelos lado a lado..."
+- "Explore os comparativos e decida com base no que mais importa pra você."
+- "Veja as análises completas e escolha com segurança."
+- "Compare as opções e encontre [a/o] {X} ideal pra {contexto}."
+
+**Teste final:** abra a descrição da categoria irmã / mesmo-nicho lado a lado. Se a abertura OU o fecho são da mesma família → reescreva.
+
 ## Restrições críticas (NÃO QUEBRE)
 
 ### 1. Sem tags de bloco além de `<p>`
