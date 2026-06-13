@@ -31,12 +31,36 @@ except ImportError:
 
 
 def parse(path):
+    """Lê frontmatter + body de uma página de produto .mdx.
+
+    Robusto a arquivos SEM o '---' de fechamento (frontmatter-only, ou malformado
+    com fullReview '>-'/'|' que corre até o EOF): nesse caso, tudo após o '---'
+    inicial é tratado como frontmatter e o body fica vazio. NÃO depende de haver
+    conteúdo após o 2º '---'. Loga warning explícito quando não consegue ler o
+    asin, em vez de pular calado (falha silenciosa escondia duplicata cross-site
+    em batches — caso guiaesportivo/black-skull-creatine-turbo, 2026-06-14).
+    """
     raw = open(path, encoding="utf-8").read()
     m = re.search(r'^---\n(.*?)\n---\n?(.*)$', raw, re.S)
-    if not m:
+    if m:
+        fm_text, body = m.group(1), m.group(2)
+    else:
+        m2 = re.match(r'^---\r?\n(.*)$', raw, re.S)   # '---' inicial sem fechamento
+        if not m2:
+            print(f"[compare-cross-site] WARN: {path} sem frontmatter (sem '---' inicial) — pulado", file=sys.stderr)
+            return {}, ""
+        fm_text, body = m2.group(1), ""
+    try:
+        fm = yaml.safe_load(fm_text) or {}
+    except Exception as e:
+        print(f"[compare-cross-site] WARN: {path} frontmatter YAML inválido ({e}) — pulado", file=sys.stderr)
         return {}, ""
-    fm = yaml.safe_load(m.group(1)) or {}
-    return fm, m.group(2)
+    if not isinstance(fm, dict):
+        print(f"[compare-cross-site] WARN: {path} frontmatter não é um mapa — pulado", file=sys.stderr)
+        return {}, ""
+    if not str(fm.get("asin") or "").strip():
+        print(f"[compare-cross-site] WARN: {path} sem 'asin' no frontmatter — checagem de duplicata cross-site pode passar batido", file=sys.stderr)
+    return fm, body
 
 
 def clean(s):
