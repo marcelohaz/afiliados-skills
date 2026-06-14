@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 34 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
+description: Audita artigo inteiro read-only. Combina 35 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade, badge-ausente) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
 ---
 
 ## Parse de input
@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 34 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
+7. **Rodar auditoria IA** nas 35 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -150,7 +150,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (34 categorias)
+## Critérios de auditoria (35 categorias)
 
 Use exatamente esses valores em `rule`:
 
@@ -192,6 +192,9 @@ Só flag tone-clone se houver:
 
 ### `spec-ausente` (level=`info`)
 Produto sem campo de spec que outros do artigo têm (incompletude). Ex: 3 produtos com "Conectividade: Wi-Fi" no specs e 1 sem.
+
+### `badge-ausente` (level=`warn`)
+Produto do `products[]` SEM o campo `badge` (etiqueta do card individual). A convenção da rede é que **TODO produto do comparativo leva badge** (os 2 primeiros = ranking "Melhor Escolha"/"Boa Alternativa"; os demais = descritivos como "Laser Monocromática", "Fotográfica", "Frente e Verso Automático", "Boa e Barata"). Conferir contra os irmãos do site (ex.: melhor-impressora-hp/tanque = 7/7 com badge). Flag cada produto sem badge. **Fix:** atribuir badge descritivo curto derivado do ângulo/categoria (texto livre — renderiza com cor padrão, não precisa registrar no `amazon.ts`). Caso real 2026-06-14: o artigo sublimática tinha badge só nos 2 primeiros; L3250/L1250 saíram sem etiqueta (e o `artigo-clonar-em-massa` propagou pra 2 clones, pois o badge viaja por ASIN). Não bloqueia readyToLock (é completude editorial/UX, não erro factual), mas deve ser sempre proposto.
 
 ### `dado-inconsistente-ignorado` (level=`warn`)
 Bíblia tem `dadosInconsistentes` com `decisaoEditorial`; review não respeita a decisão.
