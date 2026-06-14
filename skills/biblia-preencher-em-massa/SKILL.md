@@ -92,11 +92,12 @@ Conferir que as linhas dos ASINs do lote dizem `enviado`/`local mais novo`, NÃO
 
 ### Etapa 4 — Audit encadeado (`--audit`)
 
-Se `--audit` no args: encadeia a `biblia-auditar-em-massa` no MESMO lote recém-preenchido (o fluxo "preencheu → audita automático, com qualidade"). Ela faz as 2 camadas:
-- **Mecânica (auto-conserta):** pega o resíduo de régua que o preenchimento às vezes deixa (travessão, `<strong>`/HTML na curadoria, termo banido, voz-comprador crua, etc.) e conserta — determinístico, só eleva a qualidade. **Caso real do 1º lote: `<strong>` vazou em `pontosFortes` de uma panela; é exatamente isto que a camada mecânica fecha.**
-- **Julgamento (read-only):** achados factuais/contradição/frescor viram FLAG no relatório consolidado, NUNCA aplicados em silêncio (preserva o propor→aprovar da individual). O humano resolve com `biblia-auditar <ASIN>` nas que pintarem.
+Se `--audit` no args: encadeia a `biblia-auditar-em-massa` no MESMO lote recém-preenchido (o fluxo "preencheu → audita e conserta automático, com qualidade"). Ela:
+- **Auto-aplica** todo conserto de direção CONHECIDA — mecânico/deleção-formato (travessão, `<strong>`/HTML na curadoria, muleta, concordância) E reescrita conhecida (voz-comprador→analítico, superlativo→qualificado, contradição contra a própria `decisaoEditorial`, fonte errada). **Caso real do 1º lote: `<strong>` em `pontosFortes` e crava-de-número contra a decisaoEditorial — é o que isto fecha.**
+- **Re-audita cada conserto** (verifica que ficou limpo e não mudou sentido; não convergiu em ≤3 → reverte do backup + vira flag). Essa re-auditoria substitui a aprovação humana = mesma qualidade da individual.
+- **Report-only** só pro indeterminável (frescor, verificação externa, contradição no bruto sem valor certo).
 
-Default sem `--audit`: não audita (mas é o passo recomendado logo em seguida). A delegação reusa a `biblia-auditar-em-massa` inteira — esta skill NÃO reimplementa a auditoria.
+Default sem `--audit`: não audita (mas é o passo recomendado). A delegação reusa a `biblia-auditar-em-massa` inteira — esta skill NÃO reimplementa a auditoria.
 
 ### Relatório final
 

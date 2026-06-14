@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar-em-massa
-description: Audita VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, SEM passada comparativa entre bíblias). Duas camadas — (1) MECÂNICA por grep, AUTO-CONSERTA só deleção/formato (strip de HTML na curadoria, remover "declarado pelo fabricante", capitalização, typo de concordância, duplicação, travessão→vírgula): determinístico, sem reescrita; (2) tudo que exige REESCRITA ou decisão (voz-comprador, contaminação-cruzada/termo técnico, superlativo absoluto, spec ambiental/origem) + os factuais via sub-agents Opus read-only (≤10) das 5 categorias da biblia-auditar — vira FLAG no relatório, NÃO auto-aplica (preserva o propor→aprovar da individual = mesma qualidade). Aceita lista de ASINs, niche=/sub=, ou "todas". Relatório consolidado 🟢/🟡/🔴 + .audits/<ASIN>-last.md por bíblia. Sync R2 nas 2 pontas. Botão "🔍 Auditar bíblias" do produtos.html copia o comando pra cá.
+description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, SEM passada comparativa entre bíblias). AUTO-APLICA todo conserto de direção CONHECIDA — mecânico/deleção-formato (strip HTML na curadoria, remover "declarado pelo fabricante", capitalização, typo de concordância, travessão→vírgula) E reescrita conhecida (voz-comprador→analítico, superlativo→qualificado, contradição contra a própria decisaoEditorial, fonte atribuída errada). Cada conserto passa por RE-AUDITORIA automática (verifica que ficou limpo e não mudou sentido; não convergiu em ≤3 → reverte do backup + vira flag). REPORT-ONLY só pro indeterminável (frescor, verificação externa não feita, contradição no bruto sem valor certo). Qualidade do texto = skill individual; a re-auditoria + backup substituem a aprovação humana. Roda como 2ª etapa do preencher-em-massa --audit (preenche → audita+conserta) OU sozinha. Sub-agents Opus paralelos (≤10). Sync R2 nas 2 pontas. Botão "🔍 Auditar bíblias" do produtos.html copia o comando.
 ---
 
 ## Parse de input
@@ -9,28 +9,35 @@ Args no `$ARGUMENTS`:
 - **Lista de ASINs** (forma do botão do painel): `B0CH5RSZTP,B01I78MAHW,B093Q7LLD6` (vírgula, sem espaço). Cada um `^[A-Z0-9]{10}$`.
 - **`todas`**: varre `docs/biblias-v2/*.json`, pega as **preenchidas** (coreDone) auditáveis (ver Etapa 0.4).
 - **Filtro** (opcional): `niche=Panela Elétrica` ou `sub=panela-eletrica` → restringe o "todas" àquela subcategoria.
-- **Flag `--fix-only-mecanico`** (default ligado): a camada mecânica auto-conserta; a LLM só reporta. Esse é o comportamento padrão e recomendado (ver "Garantia de qualidade"). NÃO existe modo "auto-aplicar achado de julgamento" — por design.
+- **Flag `--report-only`** (opcional, default DESLIGADO): se passada, NÃO auto-aplica nada — só reporta tudo (modo conservador, vira a antiga triagem). Default é auto-aplicar o conhecível.
 
-# Auditar bíblias em massa (paralelo via sub-agents, isolado)
+# Auditar + corrigir bíblias em massa (paralelo, isolado, auto-apply + re-audit)
 
-> Esta skill é **orquestrador leve**. A auditoria real (as 5 categorias) é a régua canônica do `biblia-auditar` (fonte editorial: aquela skill + `docs/painel/_data/regras-biblia.md`). Esta skill NÃO reimplementa a régua — ela fan-out + camada mecânica grep + consolida + sincroniza. Análoga à `biblia-preencher-em-massa`, mas pra auditar em vez de preencher.
+> Esta skill é **orquestrador**. A régua de auditoria (as 5 categorias) é a canônica do `biblia-auditar` (fonte editorial: aquela skill + `docs/painel/_data/regras-biblia.md`). Esta NÃO reimplementa a régua — ela fan-out + camada mecânica grep + auto-apply + re-auditoria + sincroniza. Análoga à `biblia-preencher-em-massa`, mas pra auditar+corrigir.
 
-## O que esta skill É (e não é)
+## O que esta skill É
 
-- **É** o auditor em massa: roda em N bíblias **já preenchidas**, cada uma isolada, e entrega triagem consolidada.
-- **NÃO é** auto-corretor de julgamento. A camada mecânica conserta o **determinístico** (travessão, HTML, termo banido — onde não há o que julgar); os achados de **julgamento** (claim factual, contradição, frescor) **viram flag no relatório**, NUNCA são aplicados em silêncio. O conserto de julgamento é da `biblia-auditar` individual (propor→aprovar) nas bíblias que a triagem apontar.
+- **É** o auditor-corretor em massa: roda em N bíblias **já preenchidas**, cada uma isolada, **conserta o que tem solução conhecida**, e lista só o que precisa de você.
+- **NÃO** delega o conserto pra outra skill. A `biblia-auditar` individual vira **fallback** pra mexer numa bíblia só — não é etapa obrigatória depois desta.
 - **NÃO é a IA do painel** (botão "✨ Auditar"). Roda na assinatura (Claude Code), Opus 4.8.
 
-## Garantia de qualidade (igual à individual)
+## Garantia de qualidade (= skill individual)
 
-A `biblia-auditar` individual é **propor→aprovar**: você aprova cada conserto, e essa aprovação faz parte da qualidade. Esta skill preserva isso separando achado por tipo. **A linha divisória é REESCRITA: o que se conserta por DELEÇÃO ou FORMATO (sem reescrever prosa) é auto-aplicável; o que exige reescrever o texto é julgamento → flag.**
+A `biblia-auditar` individual é propor→aprovar: o sub-agent redige o conserto, você aprova. Esta skill **redige o mesmo conserto (mesma régua, mesmo modelo)** e, no lugar da sua aprovação manual, põe **uma re-auditoria automática + backup**:
 
-| Tipo | Exemplos | Ação | Por quê é seguro |
-|---|---|---|---|
-| **Auto-fixável (deleção/formato puro)** | strip de HTML/`<strong>` na curadoria; remover "declarado pelo fabricante"/"declarados" (parentético); capitalizar 1ª letra de bullet; typo de concordância (mapa fixo, ex: `composiçãos`→`composições`); duplicação contígua; travessão→vírgula | **auto-conserta** | não há reescrita nem escolha de sinônimo: é apagar/normalizar. Auto-aplicar = exatamente o que você aprovaria 100% das vezes. Só eleva a qualidade. |
-| **Julgamento (exige REESCRITA ou decisão)** | voz-comprador implícita ("um comprador relata X" → prosa analítica); "contaminação cruzada" / termo técnico-industrial → linguagem editorial; superlativo absoluto → qualificado; spec ambiental/origem nos curados (remover ou manter por ângulo?); + os factuais: claim-vs-bible, contradição interna, frescor, verificação externa | **flag no relatório, NÃO aplica** | reescrever prosa ou decidir é julgamento. As MESMAS decisões chegam até você — num relatório no fim, em vez de inline. Você resolve com a `biblia-auditar` individual nas marcadas. |
+| | Individual (`biblia-auditar`) | Em massa (esta) |
+|---|---|---|
+| Quem redige o conserto | sub-agent Opus, régua canônica | **mesmo** sub-agent, mesma régua |
+| Texto do conserto | idêntico | **idêntico** |
+| Trava antes de "ficar" | você aprova | **re-auditoria automática** (desfaz se piorar) + backup + diff no relatório (você revê depois) |
 
-Resultado: **mesma qualidade final** da individual. O que é deleção/formato sai consertado; o que exige reescrita ou decisão chega pra você. **Nada que precise de reescrita é alterado em silêncio** (era exatamente a regressão de qualidade a evitar).
+O texto sai igual; a fiscalização vira **automática (re-audit) + pós-fato (relatório/git)**. Caveat honesto: o caso raro de um conserto sutilmente ruim passar é pego no relatório/backup, não num gate antes. Quem quer paridade 100% literal usa `--report-only` (não aplica, só lista pra aprovar 1-a-1 na individual).
+
+## Classificação de cada achado (3 grupos — decide o destino)
+
+- **(A) Mecânico — deleção/formato puro → AUTO-APLICA.** Sem reescrita, sem julgamento.
+- **(B) Reescrita/correção de direção CONHECIDA → AUTO-APLICA + re-audita.** Há uma resposta certa sabida.
+- **(C) Indeterminável sem dado novo → REPORT-ONLY (flag).** Não há valor certo pra aplicar; chutar seria pior.
 
 ## Modelo
 
@@ -38,135 +45,116 @@ Opus 4.8 (ou mais novo). Sub-agents fixados com `model: opus` no Agent tool. NUN
 
 ## ⚠️ Playbook anti-contaminação (o coração desta skill)
 
-Auditar em massa é estruturalmente AINDA MAIS seguro que preencher, porque:
-
-1. **A maior parte é grep, não IA.** A camada mecânica (Etapa 1) é busca de texto determinística — **zero LLM, zero chance de contaminação**.
-2. **Auditar lê, não cria.** A contaminação do preencher vinha do risco de a IA *escrever* a spec de um produto na bíblia de outro. Auditar só **confere** o que já está lá — não há o momento de "escrever do zero".
-3. **Isolamento estrito.** 1 sub-agent por bíblia, conversa fresh, vê **SÓ** aquela bíblia. NUNCA um prompt com várias bíblias, NUNCA contexto compartilhado.
-4. **SEM etapa comparativa entre bíblias.** O único vetor de contaminação seria a IA **comparar uma bíblia com outra**. **Esta skill NÃO faz isso** — cada bíblia é julgada só contra os próprios dados brutos + a régua. Sem justaposição = sem confusão. (Lembrete: "rita lobo" aparecendo em 2 Electrolux NÃO é contaminação — cada bíblia tirou isso dos próprios dados; veja `afiliados.regras.criacao-escreve-livre-dedup-no-audit`.)
-5. **Conserto serial, 1 arquivo por vez.** A camada mecânica edita bíblia por bíblia, chaveada por ASIN (igual a Etapa 2 do preencher). Sem race de escrita.
-6. **Trava de ASIN.** O sub-agent devolve o `asin` no JSON; confere `asin_retornado == asin_pedido` antes de usar o resultado.
+1. **A maior parte mecânica é grep, não IA** (Etapa 1) — zero contaminação ali.
+2. **Auditar lê o que já existe**; a reescrita (B) é feita pelo sub-agent ISOLADO daquela bíblia, vendo SÓ ela.
+3. **Isolamento estrito.** 1 sub-agent por bíblia, conversa fresh, vê **SÓ** aquela bíblia. NUNCA prompt com várias, NUNCA contexto compartilhado.
+4. **SEM etapa comparativa entre bíblias.** Cada uma é julgada só contra os próprios dados brutos + régua. (Lembrete: "rita lobo" em 2 Electrolux NÃO é contaminação — cada bíblia tirou dos próprios dados.)
+5. **Conserto serial, 1 arquivo por vez**, chaveado por ASIN. Sem race de escrita.
+6. **Trava de ASIN.** Sub-agent devolve o `asin`; confere `asin_retornado == asin_pedido` antes de aplicar.
 
 ## Invariantes
 
-- **NUNCA aplica achado de JULGAMENTO** (factual/contradição/frescor/verificação). Esses são report-only — vão pro relatório, o humano resolve na `biblia-auditar` individual.
-- **Camada mecânica só toca CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`). **NUNCA edita campos BRUTOS** (`sobreEsteItem`, `doFabricante`, `descricaoProduto`, `specsAmazon`, `conteudoBrutoFabricante`) nem `lastAuthor`.
-- **`lastModified` bumpado via `new Date().toISOString()`** SÓ quando a camada mecânica aplicou algo (UTC real). NUNCA hand-roll via getHours/pad (armadilha de timezone). Se não consertou nada numa bíblia, NÃO toca lastModified dela (senão push desnecessário).
-- **NUNCA compartilha contexto entre bíblias** (Etapa 2) nem faz passada comparativa — isolamento é a regra dura.
-- **Só audita bíblia PREENCHIDA** (coreDone). Pendente → pula com aviso "preencha primeiro" (use `biblia-preencher-em-massa`). Contaminada-hard → exclui (corrigir à mão via `biblia-auditar` individual). Sem-dados-brutos → exclui.
-- **Sync R2 nas 2 pontas**: pull no começo (bíblias podem estar só no R2), push no fim SÓ se a camada mecânica aplicou fixes.
-- **Full-auto, sem checkpoint humano no meio.** Confirmação só ANTES do disparo (lista + estimativa).
-- **NÃO faz deploy** (bíblia não é deployada).
-- **Cap de paralelismo: 10 sub-agents** simultâneos. Acima → levas.
-- **Nunca inventa achados.** Categoria sem problema = "nenhum". Toda flag precisa de evidência (trecho literal < 15 palavras).
+- **AUTO-APLICA (A) e (B)**; **(C) é report-only** (não há o que aplicar sem dado novo). `--report-only` desliga todo auto-apply.
+- **Todo conserto passa por re-auditoria** (Etapa 3.5). Não convergiu em ≤3 tentativas → **reverte do backup** + vira (C) no relatório. Nada fica aplicado sem ter sido re-conferido.
+- **Backup ANTES de qualquer escrita** (`.painel-backups/<dia>/`). Tudo reversível.
+- **Só toca CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`). **NUNCA edita BRUTOS** (`sobreEsteItem`/`doFabricante`/`descricaoProduto`/`specsAmazon`/`conteudoBrutoFabricante`) nem `lastAuthor`.
+- **`lastModified` bumpado via `new Date().toISOString()`** SÓ nas bíblias que tiveram conserto aplicado. NUNCA hand-roll (timezone). Sem fix → não toca.
+- **NUNCA compartilha contexto entre bíblias** nem faz passada comparativa.
+- **Só audita PREENCHIDA** (coreDone). Pendente → pula ("preencha primeiro"). Contaminada-hard → exclui (corrigir à mão na individual). Sem-dados-brutos → exclui.
+- **Sync R2**: pull no começo; push no fim SÓ se aplicou algum fix.
+- **NÃO faz deploy.**
+- **Cap de paralelismo: 10 sub-agents.** Acima → levas.
+- **Nunca inventa achado.** Categoria sem problema = "nenhum". Toda flag/conserto precisa de evidência (trecho literal < 15 palavras).
 
 ## Pipeline
 
 ### Etapa 0 — Pré-flight (auto; aborta/exclui cedo)
 
-0.1. **Sync R2 pull** (CRÍTICO):
-   ```bash
-   bun scripts/sync-biblias-r2.ts --apply 2>&1 | tail -3
-   ```
-   `--apply` sem `--push` é pull-only (seguro). Se falhar (offline/creds), seguir mesmo assim — avisar que ASINs ausentes localmente vão pular.
-
+0.1. **Sync R2 pull**: `bun scripts/sync-biblias-r2.ts --apply 2>&1 | tail -3` (pull-only). Falhou → seguir, avisar que ausentes pulam.
 0.2. **Parse** dos ASINs (ou expandir `todas`/filtro). Validar `^[A-Z0-9]{10}$`.
+0.3. **Carregar cada bíblia** (`docs/biblias-v2/<ASIN>.json`). Ausente → pular + listar.
+0.4. **Classificar**: Pendente (não coreDone) → **PULA** ("preencha primeiro"). Contaminada-hard (`check-contamination.ts` com `cross-brand-mention`) → **EXCLUI** (corrigir à mão na individual). Sem-dados-brutos → **EXCLUI**. Preenchida + não-hard-contaminada → **ENTRA**.
+0.5. **Mostrar plano + confirmar** (tabela ENTRA/PULA/EXCLUI + nº no lote + estimativa). `S/N` antes do paralelo. (Quando encadeada pelo `preencher-em-massa --audit`, herda o lote recém-preenchido, sem nova confirmação.)
 
-0.3. **Carregar cada bíblia** (`docs/biblias-v2/<ASIN>.json`). Ausente local (mesmo após sync) → pular + listar.
+### Etapa 1 — Camada MECÂNICA grupo (A) (grep determinístico, sem IA)
 
-0.4. **Classificar cada uma** (decide quem entra no lote):
-   - **Pendente** (NÃO coreDone: `angulosConversao`/`pontosFortes`/`pontosFracos` algum vazio) → **PULA** + lista "preencha primeiro (biblia-preencher-em-massa)".
-   - **Contaminada-hard** — roda `bun scripts/check-contamination.ts <ASIN>`; se `hasContamination: true` com hard issue (`cross-brand-mention`) → **EXCLUI** + lista "informações erradas, corrigir à mão (biblia-auditar individual)". (Auditar em massa não conserta julgamento, e contaminação hard é exatamente julgamento.)
-   - **Sem dados brutos** (todos vazios) → **EXCLUI** + lista "sem matéria-prima".
-   - **Preenchida + não-hard-contaminada** → **ENTRA no lote**.
-
-0.5. **Mostrar o plano + confirmar**: tabela (ASIN, nome, ENTRA/PULA/EXCLUI + motivo) + nº no lote + estimativa (~1-3 min/leva). Pergunta `S/N` antes do paralelo.
-
-### Etapa 1 — Camada MECÂNICA (grep determinístico, sem IA)
-
-Pra cada bíblia do lote, rode um scan determinístico nos **campos curados** (serializados) e nos campos editoriais. Pega o resíduo de régua (o que o preenchimento em massa às vezes deixa). Sem LLM = sem custo, sem contaminação. Padrões (régua canônica `regras-biblia.md` + `biblia-auditar`), divididos por destino:
-
-**(A) AUTO-FIXÁVEL — deleção/formato puro, a Etapa 3 aplica:**
-- **HTML na curadoria**: qualquer `<\w+[^>]*>` (ex: `<strong>`) em texto de campo curado → **strip da tag** (curadoria é TEXTO PURO; caso real do lote de panela: `<strong>` vazou em `pontosFortes`).
-- **Muleta de fabricante**: `declarado pelo fabricante`, `declarados` (parentético) → **deletar a expressão** (o mg/spec já é fato sem ela).
-- **Travessão** `—`/`–` em campo curado → **trocar por vírgula**. Se estiver em fronteira de sentença (maiúscula depois, ou fim de frase), é ambíguo (podia ser ponto/dois-pontos) → **NÃO auto-troca, vira flag**.
-- **Concordância PT-BR** (mapa fixo): `composiçãos`→`composições`, `combinaçãos`→`combinações`, `porçãos`→`porções`, `a produto`→`o produto`, `o fórmula`→`a fórmula`, `o dose`→`a dose`, `disponíveis no em 2026`→`disponíveis em 2026`.
-- **Capitalização**: bullet de array editorial (`pontosFortes`/`pontosFracos`/`dicasAcionaveis`) começando minúsculo → maiúscula na 1ª letra.
+Scan determinístico nos campos curados. Padrões e o conserto (todos = deleção/formato, sem reescrita):
+- **HTML na curadoria**: `<\w+[^>]*>` em qualquer campo curado → **strip da tag** (vale em TODOS os campos curados).
+- **Muleta**: `declarado pelo fabricante`, `declarados` (parentético) → **deletar a expressão**.
+- **Travessão** `—`/`–` em campo curado → **trocar por vírgula**; em fronteira de sentença (ambíguo) → NÃO troca, vira (C)/flag.
+- **Concordância** (mapa fixo): `composiçãos`→`composições`, `combinaçãos`→`combinações`, `porçãos`→`porções`, `a produto`→`o produto`, `o fórmula`→`a fórmula`, `o dose`→`a dose`, `disponíveis no em 2026`→`disponíveis em 2026`.
+- **Capitalização**: bullet de array editorial começando minúsculo → maiúscula na 1ª letra.
 - **Duplicação contígua** `([a-zA-ZÀ-ÿ\s]{8,40})\1` → remover a 2ª cópia.
 
-**(B) FLAG (exige REESCRITA ou decisão) — vai pro relatório, a Etapa 3 NÃO aplica:**
-- **Voz-comprador implícita**: `opiniões`, `comentários`, `um comprador relata`, `divide opiniões`, `avaliações` (sentido Amazon), `elogiado nas opiniões`, `recepção [mista/dividida]`, `queixa recorrente`. (Nuance: em `sentimentoCompradores` a destilação "é recorrente"/"é citado" é OK; flag só voz-comprador CRUA.) → exige reescrever a frase.
-- **Termo técnico-industrial / banido**: `contaminação cruzada`, `linha de produção compartilhada`, `peers`, `claim`, `stack`, `trade-off`, `hardcore`, `datasheet`, `SKU`, `ASIN`, `UPC`, `EAN`, `notificado`, `calibrar/calibrada/calibragem`, `empilhar`, `energia metabólica/adrenérgica` → exige sinônimo/reescrita no contexto.
-- **Superlativo absoluto**: `o melhor`, `o mais \w+` sem qualificador, `o único`, `imbatível`, `incomparável` → exige qualificar. (Qualificadores positivos "excelente/ótimo" NÃO são flag; "o mais leve da categoria" é qualificado → OK.)
-- **Spec ambiental nos curados**: `plástico reciclado`, `Energy Star`, `EPEAT`, `RoHS`, `FSC`, `Planet Partners`, `neutralidade de carbono` → decisão (remover, ou manter se há ângulo `sustentabilidade`).
-- **Origem nos curados**: `fabricado no Brasil`, `made in`, `produto nacional` → decisão (salvo ângulo `produto-nacional`).
+**Escopo de campos (aprendizado 1º run):** termo-banido/voz-comprador/superlativo (grupo B abaixo) valem só nos campos que ALIMENTAM o review (`sentimentoCompradores`/`angulosConversao`/`pontosFortes`/`pontosFracos`/`dicasAcionaveis`). NÃO nos internos (`dadosInconsistentes`/`observacoesAgente`) — `EAN`/`ASIN`/`specsAmazon`/`127V` ali é legítimo (caso real: "EAN" deu falso-positivo). **HTML-strip vale em todos.**
 
-**Escopo dos campos (aprendizado do 1º run):** as regras de **termo-banido, voz-comprador e superlativo** valem só nos campos que ALIMENTAM o review publicado (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`). **NÃO** aplique essas regras em `dadosInconsistentes` e `observacoesAgente` — são notas INTERNAS (o review nunca as publica verbatim), e vocabulário como `EAN`/`ASIN`/`specsAmazon`/`127V` ali é legítimo. (Caso real: "EAN" em `dadosInconsistentes` deu falso-positivo de termo-banido.) Exceção: **strip de HTML** vale em TODOS os campos curados (não pode haver tag em lugar nenhum).
+### Etapa 2 — Camada LLM: achar + redigir conserto (sub-agents ISOLADOS)
 
-**Importante**: o grep só sinaliza candidatos. Antes de auto-consertar um item (A), **confirme que é mesmo violação no contexto**. Falso-positivo NÃO conserta — vira no máximo info no relatório. Na dúvida entre (A) e (B), trate como (B) (flag) — nunca reescreva em silêncio.
+N sub-agents Opus, levas ≤10. Cada um (Agent tool, `model: opus`, fresh) vê SÓ sua bíblia. Anti-contaminação no prompt: "Você vê SÓ esta bíblia. NÃO mencione/leia outra. NÃO compare com outras." Roda as 5 categorias da `biblia-auditar` (consistência interna, verificação externa, frescor, completude, higiene editorial-factual). Pra cada achado, **classifica B ou C e, se B, JÁ REDIGE o texto corrigido**:
+- **(B) direção conhecida → redige o fix**: voz-comprador crua → observação analítica; superlativo absoluto → qualificado; termo técnico-industrial → linguagem editorial; contradição contra a **própria `decisaoEditorial`** da bíblia → seguir a decisão; fonte atribuída errada num item curado → corrigir a fonte; claim curado que contradiz o bruto quando o bruto tem o valor certo → alinhar ao bruto.
+- **(C) indeterminável → só aponta**: frescor (precisa re-captura); claim que exige verificação externa não feita; contradição no dado BRUTO sem valor certo nem `decisaoEditorial`; qualquer coisa que dependa de dado que a bíblia não tem.
+- **Retorna SÓ JSON**: `{ asin, fixes_B: [{categoria, campo, evidencia, problema, antes, depois}], report_C: [{categoria, campo, evidencia, problema, sugestao}] }`. NÃO grava arquivo, NÃO aplica.
 
-### Etapa 2 — Camada LLM (sub-agents paralelos, ISOLADOS, read-only)
+### Etapa 3 — Aplicar (A) + (B) (skill-mãe, SERIAL, chaveada por ASIN)
 
-N sub-agents Opus, levas de ≤10. Cada sub-agent (Agent tool, `model: opus`, conversa fresh):
-- **Input**: APENAS o ASIN + o conteúdo da bíblia daquele ASIN (cole o JSON no prompt) + as 5 categorias da `biblia-auditar` (consistência interna, verificação externa, frescor, completude crítica, higiene editorial-factual) + a régua (`regras-biblia.md`).
-- **Anti-contaminação no prompt**: "Você vê SÓ esta bíblia. NÃO mencione nenhum outro produto/marca/modelo que não seja o deste ASIN. NÃO compare com outras bíblias. Comece o JSON com `\"asin\": \"<ASIN>\"`."
-- **Tarefa**: achar problemas FACTUAIS/de julgamento (não os mecânicos da Etapa 1 — esses já foram). Read-only: NÃO propõe reescrita de campo inteiro, só aponta o achado com evidência e sugestão.
-- **Retorna**: SÓ o JSON `{ asin, criticos: [{categoria, campo, evidencia, problema, sugestao}], avisos: [...], info: [...] }`. NÃO grava arquivo, NÃO conserta nada.
+Pra cada bíblia com fix (A) confirmado ou (B) retornado:
+3.1. **Trava de ASIN**: `json.asin == pedido`? Não → descarta + re-dispara isolado.
+3.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`.
+3.3. **Aplicar (A)** (deleção/formato) **+ (B)** (substituir `antes`→`depois` no campo curado exato). NUNCA tocar brutos. NUNCA aplicar (C).
+3.4. **Bumpar `lastModified = new Date().toISOString()`**. Manter `lastAuthor`. Write `JSON.stringify(b,null,2)+'\n'`.
 
-### Etapa 3 — Aplicar SÓ o mecânico (skill-mãe, serial, chaveada por ASIN)
+### Etapa 3.5 — RE-AUDITORIA (a trava no lugar da aprovação humana)
 
-Pra cada bíblia que teve achado **do grupo (A)** CONFIRMADO na Etapa 1:
-3.1. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`.
-3.2. **Aplicar SÓ os fixes do grupo (A)** (deleção/formato) nos campos curados (script que lê o JSON, aplica, escreve `JSON.stringify(b, null, 2) + '\n'`). NUNCA tocar nos brutos. **NUNCA aplicar item do grupo (B)** — reescrita é julgamento.
-3.3. **Bumpar `lastModified = new Date().toISOString()`** (só nas que mudaram). Manter `lastAuthor`.
-3.4. **Re-grep** pra confirmar que os padrões (A) sumiram. Se algo resistiu → flag no relatório (não esconde).
+Pra cada bíblia que recebeu conserto, dispare um sub-agent Opus ISOLADO (fresh, vê só essa bíblia + a lista do que foi consertado) pra verificar:
+1. **Os achados originais sumiram?** (o conserto resolveu de fato)
+2. **Não introduziu violação nova de régua?** (travessão, HTML, voz-comprador, superlativo, etc.)
+3. **Não mudou o SENTIDO factual** vs os dados brutos? (a reescrita não inventou nem distorceu fato)
+- **Passou** → mantém o conserto. ✅
+- **Reprovou** → re-redige o(s) item(ns) problemático(s) e re-aplica → re-audita (máx **3** ciclos no total).
+- **Não convergiu em 3** → **reverte aquela bíblia do backup** + move os itens dela pra (C) no relatório (flag "conserto não convergiu, revisar à mão"). Nada ruim fica gravado.
 
-Os achados (B) da Etapa 1 + os de julgamento da Etapa 2 **NÃO são aplicados** — vão direto pro relatório.
-
-⚠️ **Ordem importa (senão o painel marca "stale"):** o painel deriva "auditada" pelo **mtime do `.audits/<ASIN>-last.md`** e marca **stale se `auditedAt < lastModified`** (`biblia-status.ts`). Então o relatório (Etapa 4) tem que ser escrito **DEPOIS** do bump de `lastModified` desta etapa. A ordem do pipeline (Etapa 3 conserta+bumpa → Etapa 4 escreve relatório) já garante isso; não inverta.
+⚠️ **Ordem (senão painel marca stale):** o painel deriva "auditada" pelo mtime de `.audits/<ASIN>-last.md` e marca stale se `auditedAt < lastModified` (`biblia-status.ts`). A Etapa 3 bumpa `lastModified`; o relatório (Etapa 4) é escrito DEPOIS → mtime > lastModified → não-stale. Não inverta.
 
 ### Etapa 4 — Relatório (por bíblia + consolidado)
 
-4.1. **Por bíblia**: escrever `docs/biblias-v2/.audits/<ASIN>-last.md` (formato idêntico ao da `biblia-auditar` individual — o painel lê esse arquivo pra marcar "auditada"). Inclui o que foi auto-consertado (mecânico) + os achados de julgamento pendentes.
-4.2. **Consolidado no chat**: tabela por bíblia com selo 🟢 limpa / 🟡 avisos / 🔴 crítico + contagem + top issues. Resumo de: quantas auto-consertadas (mecânico) e o que ficou pendente de decisão humana (com o ASIN pra rodar `biblia-auditar` individual).
-4.3. **Commit dos relatórios**: `.audits/<ASIN>-last.md` são tracked; commitar + push + `bash scripts/painel-vps-pull.sh`.
+4.1. **Por bíblia**: `docs/biblias-v2/.audits/<ASIN>-last.md` (formato `biblia-auditar`; painel lê). Lista o que foi **auto-consertado** (A+B, com antes→depois) + os **report-only (C)** pendentes.
+4.2. **Consolidado no chat**: tabela por bíblia 🟢/🟡/🔴 + nº consertado + nº report-only. Resumo: X auto-consertadas, Y itens report-only (com o porquê de não dar pra aplicar).
+4.3. **Commit dos relatórios** (`.audits/<ASIN>-last.md` tracked) + push + `bash scripts/painel-vps-pull.sh`.
 
-### Etapa 5 — Sync R2 push (só se a camada mecânica aplicou fixes)
+### Etapa 5 — Sync R2 push (só se aplicou fix)
 
-```bash
-bun scripts/sync-biblias-r2.ts --apply --push 2>&1 | tail -5
-```
-Conferir que as bíblias que tiveram fix mecânico dizem `enviado`, NÃO `recebido`. Se nenhuma teve fix, PULAR esta etapa (não há o que subir; só os relatórios .md já foram commitados no git).
+`bun scripts/sync-biblias-r2.ts --apply --push 2>&1 | tail -5`. Conferir `enviado` (não `recebido`) nas bíblias consertadas. Nenhum fix → PULAR (só os .md já foram commitados no git).
 
 ## Relatório final (consolidado)
 
-- **Auditadas** (N): por ASIN, selo 🟢/🟡/🔴 + nº de achados por severidade.
-- **Auto-consertadas (mecânico)**: lista do que foi aplicado por bíblia (ex: "B076HYKFL7: removido `<strong>` de pontosFortes").
-- **Pendentes de decisão humana (julgamento)**: por ASIN, os achados factuais/de contradição/frescor — com a instrução "rode `biblia-auditar <ASIN>` pra resolver no propor→aprovar".
-- **Puladas** (pendentes de preenchimento): lista → `biblia-preencher-em-massa`.
-- **Excluídas**: contaminadas-hard + sem-dados-brutos, com motivo.
-- **Sync R2**: X enviadas (só as com fix mecânico) / 0 esperadas se nada mudou.
+- **Auto-consertadas (N)**: por ASIN, lista de A (deleção/formato) + B (reescrita, antes→depois), todas re-auditadas.
+- **Revertidas (não convergiram na re-auditoria)**: por ASIN, viraram report-only.
+- **Report-only (C)**: por ASIN, o indeterminável + o porquê (frescor/verificação/sem-valor-certo).
+- **Puladas** (pendentes de preenchimento) + **Excluídas** (contaminada-hard/sem-dados).
+- **Sync R2**: X enviadas / 0 se nada mudou.
 
 ## Armadilhas (embutir)
 
-1. **Bíblia só no R2** (não no Mac): o sync 0.1 resolve.
-2. **Clobber do lastModified**: bump via `toISOString()` SÓ quando aplicou fix. Sem isso o `--push` vira `recebido`.
-3. **NÃO comparar bíblias**: o isolamento é a defesa anti-contaminação nº1. Nunca um prompt com 2 bíblias, nunca passada "compare X com Y".
-4. **Falso-positivo do grep**: "o mais leve da categoria" (qualificado) NÃO é superlativo absoluto; "rita lobo" em 2 produtos da mesma marca NÃO é contaminação. Confirmar no contexto antes de auto-consertar.
-5. **Não auto-aplicar julgamento**: a tentação de "já que achou, conserta" quebra a paridade de qualidade com a individual. Julgamento é SEMPRE flag.
-6. **Race de escrita**: sub-agent NUNCA grava; só a skill-mãe (serial) aplica o mecânico.
+1. **Bíblia só no R2**: sync 0.1 resolve.
+2. **Clobber do lastModified**: bump via `toISOString()` SÓ quando aplicou. Sem isso o `--push` vira `recebido`.
+3. **NÃO comparar bíblias**: isolamento é a defesa nº1.
+4. **Falso-positivo do grep**: "o mais leve da categoria" (qualificado) NÃO é superlativo; "rita lobo" em 2 produtos da mesma marca NÃO é contaminação. Confirmar contexto antes de aplicar; na dúvida, (C).
+5. **Re-auditoria é obrigatória**: nunca dar (B) por aplicado sem o passo 3.5. É ela que substitui sua aprovação.
+6. **(C) não é preguiça**: é ausência de valor certo. NUNCA chutar um conserto (C) — flag.
+7. **Race de escrita**: sub-agent NUNCA grava; só a skill-mãe (serial).
 
 ## Limites de segurança (NUNCA faz)
 
 - Deploy.
-- Aplicar achado de julgamento (factual/contradição/frescor).
+- Aplicar (C) (indeterminável) — sempre flag.
+- Manter (B) aplicado sem re-auditoria (3.5).
 - Tocar campos brutos ou `lastAuthor`.
 - Comparar/compartilhar contexto entre bíblias.
 - Auditar bíblia pendente (pula) ou contaminada-hard (exclui).
 
 ## Disciplina de release
 
-Nasce no project repo. Vai pro marketplace (`marcelohaz/afiliados-skills`) DEPOIS de validada num run real (1º lote). Padrão: fazer + validar → release (ver `feedback_skill_regua_release_junto`).
+Nasce no project repo. Vai pro marketplace DEPOIS de validada num run real. Padrão: fazer + validar → release (ver `feedback_skill_regua_release_junto`).
 
 ## Invocação
 
@@ -174,4 +162,5 @@ Nasce no project repo. Vai pro marketplace (`marcelohaz/afiliados-skills`) DEPOI
 /biblia-auditar-em-massa B0CH5RSZTP,B01I78MAHW,B093Q7LLD6
 /biblia-auditar-em-massa todas
 /biblia-auditar-em-massa sub=panela-eletrica
+/biblia-auditar-em-massa B0CH5RSZTP --report-only     # só lista, não aplica
 ```
