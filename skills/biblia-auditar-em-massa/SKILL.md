@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar-em-massa
-description: Audita VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada). Duas camadas — (1) MECÂNICA por grep (travessão, HTML na curadoria, termo banido, voz-comprador, superlativo absoluto, concordância PT-BR, muleta "declarado pelo fabricante", spec ambiental/origem nos curados): auto-conserta (determinístico, só eleva qualidade); (2) LLM read-only por sub-agents Opus paralelos (≤10): as 5 categorias da biblia-auditar (consistência interna, verificação externa, frescor, completude, higiene factual) — NÃO auto-aplica, vira flag pro humano decidir (preserva a qualidade do propor→aprovar da skill individual). Aceita lista de ASINs, niche=/sub=, ou "todas". Relatório consolidado 🟢/🟡/🔴 + .audits/<ASIN>-last.md por bíblia. Sync R2 nas 2 pontas. Botão "🔍 Auditar bíblias" do produtos.html copia o comando pra cá.
+description: Audita VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, SEM passada comparativa entre bíblias). Duas camadas — (1) MECÂNICA por grep, AUTO-CONSERTA só deleção/formato (strip de HTML na curadoria, remover "declarado pelo fabricante", capitalização, typo de concordância, duplicação, travessão→vírgula): determinístico, sem reescrita; (2) tudo que exige REESCRITA ou decisão (voz-comprador, contaminação-cruzada/termo técnico, superlativo absoluto, spec ambiental/origem) + os factuais via sub-agents Opus read-only (≤10) das 5 categorias da biblia-auditar — vira FLAG no relatório, NÃO auto-aplica (preserva o propor→aprovar da individual = mesma qualidade). Aceita lista de ASINs, niche=/sub=, ou "todas". Relatório consolidado 🟢/🟡/🔴 + .audits/<ASIN>-last.md por bíblia. Sync R2 nas 2 pontas. Botão "🔍 Auditar bíblias" do produtos.html copia o comando pra cá.
 ---
 
 ## Parse de input
@@ -23,14 +23,14 @@ Args no `$ARGUMENTS`:
 
 ## Garantia de qualidade (igual à individual)
 
-A `biblia-auditar` individual é **propor→aprovar**: você aprova cada conserto, e essa aprovação faz parte da qualidade. Esta skill preserva isso separando achado por tipo:
+A `biblia-auditar` individual é **propor→aprovar**: você aprova cada conserto, e essa aprovação faz parte da qualidade. Esta skill preserva isso separando achado por tipo. **A linha divisória é REESCRITA: o que se conserta por DELEÇÃO ou FORMATO (sem reescrever prosa) é auto-aplicável; o que exige reescrever o texto é julgamento → flag.**
 
-| Tipo | Ação | Por quê é seguro |
-|---|---|---|
-| **Mecânico** (travessão, HTML na curadoria, termo banido, voz-comprador, superlativo absoluto, concordância PT-BR, muleta "declarado pelo fabricante", spec ambiental/origem nos curados) | **auto-conserta** | determinístico: não há julgamento. Auto-aplicar = exatamente o que você aprovaria 100% das vezes. Só eleva a qualidade. |
-| **Julgamento** (claim-vs-bible, contradição interna, frescor, verificação externa) | **flag no relatório, NÃO aplica** | conserto factual exige julgamento. As MESMAS decisões chegam até você — só que num relatório no fim, em vez de inline. Você resolve com a `biblia-auditar` individual nas marcadas. |
+| Tipo | Exemplos | Ação | Por quê é seguro |
+|---|---|---|---|
+| **Auto-fixável (deleção/formato puro)** | strip de HTML/`<strong>` na curadoria; remover "declarado pelo fabricante"/"declarados" (parentético); capitalizar 1ª letra de bullet; typo de concordância (mapa fixo, ex: `composiçãos`→`composições`); duplicação contígua; travessão→vírgula | **auto-conserta** | não há reescrita nem escolha de sinônimo: é apagar/normalizar. Auto-aplicar = exatamente o que você aprovaria 100% das vezes. Só eleva a qualidade. |
+| **Julgamento (exige REESCRITA ou decisão)** | voz-comprador implícita ("um comprador relata X" → prosa analítica); "contaminação cruzada" / termo técnico-industrial → linguagem editorial; superlativo absoluto → qualificado; spec ambiental/origem nos curados (remover ou manter por ângulo?); + os factuais: claim-vs-bible, contradição interna, frescor, verificação externa | **flag no relatório, NÃO aplica** | reescrever prosa ou decidir é julgamento. As MESMAS decisões chegam até você — num relatório no fim, em vez de inline. Você resolve com a `biblia-auditar` individual nas marcadas. |
 
-Resultado: **mesma qualidade final** da individual. O que é óbvio sai consertado; o que é debatível chega pra você decidir. Nada duvidoso é alterado escondido.
+Resultado: **mesma qualidade final** da individual. O que é deleção/formato sai consertado; o que exige reescrita ou decisão chega pra você. **Nada que precise de reescrita é alterado em silêncio** (era exatamente a regressão de qualidade a evitar).
 
 ## Modelo
 
@@ -84,20 +84,26 @@ Auditar em massa é estruturalmente AINDA MAIS seguro que preencher, porque:
 
 ### Etapa 1 — Camada MECÂNICA (grep determinístico, sem IA)
 
-Pra cada bíblia do lote, rode um scan determinístico nos **campos curados** (serializados) e nos campos editoriais. Pega o resíduo de régua (o que o preenchimento em massa às vezes deixa). Sem LLM = sem custo, sem contaminação. Padrões (régua canônica `regras-biblia.md` + `biblia-auditar`):
+Pra cada bíblia do lote, rode um scan determinístico nos **campos curados** (serializados) e nos campos editoriais. Pega o resíduo de régua (o que o preenchimento em massa às vezes deixa). Sem LLM = sem custo, sem contaminação. Padrões (régua canônica `regras-biblia.md` + `biblia-auditar`), divididos por destino:
 
-- **Travessão** `—` ou `–` em qualquer campo curado.
-- **HTML na curadoria**: qualquer `<\w+[^>]*>` (ex: `<strong>`) em texto de campo curado — curadoria é TEXTO PURO (caso real do lote de panela: `<strong>` vazou em `pontosFortes`).
-- **Termos banidos**: `contaminação cruzada`, `linha de produção compartilhada`, `peers`, `claim`, `stack`, `trade-off`, `hardcore`, `datasheet`, `SKU`, `ASIN`, `UPC`, `EAN`, `notificado`, `calibrar/calibrada/calibragem`, `empilhar`, `energia metabólica/adrenérgica`.
-- **Voz-comprador implícita**: `opiniões`, `comentários`, `um comprador relata`, `divide opiniões`, `avaliações` (sentido Amazon), `elogiado nas opiniões`, `recepção [mista/dividida]`, `queixa recorrente`. (Nuance: em `sentimentoCompradores` a destilação "é recorrente"/"é citado" é OK; flag só voz-comprador CRUA do tipo "um comprador relata".)
-- **Superlativo absoluto**: `o melhor`, `o mais \w+` sem qualificador, `o único`, `imbatível`, `incomparável`. (Qualificadores positivos "excelente/ótimo" NÃO são flag.)
-- **Muleta**: `declarado pelo fabricante`, `declarados` (parentético), `segundo o fabricante`/`segundo a <marca>` colado em spec factual (rendimento/velocidade/economia).
-- **Spec ambiental nos curados**: `plástico reciclado`, `Energy Star`, `EPEAT`, `RoHS`, `FSC`, `Planet Partners`, `neutralidade de carbono` — salvo se houver ângulo `sustentabilidade` em `angulosConversao`.
-- **Origem nos curados**: `fabricado no Brasil`, `made in`, `produto nacional` — salvo ângulo `produto-nacional`.
-- **Concordância PT-BR** (bug de substituição mecânica): `composiçãos`/`combinaçãos`/`porçãos`, `a produto`, `o fórmula`/`o dose`, `disponíveis no em 2026`.
-- **Capitalização/duplicação**: bullet de array editorial começando minúsculo; duplicação contígua `([a-zA-ZÀ-ÿ\s]{8,40})\1`.
+**(A) AUTO-FIXÁVEL — deleção/formato puro, a Etapa 3 aplica:**
+- **HTML na curadoria**: qualquer `<\w+[^>]*>` (ex: `<strong>`) em texto de campo curado → **strip da tag** (curadoria é TEXTO PURO; caso real do lote de panela: `<strong>` vazou em `pontosFortes`).
+- **Muleta de fabricante**: `declarado pelo fabricante`, `declarados` (parentético) → **deletar a expressão** (o mg/spec já é fato sem ela).
+- **Travessão** `—`/`–` em campo curado → **trocar por vírgula**. Se estiver em fronteira de sentença (maiúscula depois, ou fim de frase), é ambíguo (podia ser ponto/dois-pontos) → **NÃO auto-troca, vira flag**.
+- **Concordância PT-BR** (mapa fixo): `composiçãos`→`composições`, `combinaçãos`→`combinações`, `porçãos`→`porções`, `a produto`→`o produto`, `o fórmula`→`a fórmula`, `o dose`→`a dose`, `disponíveis no em 2026`→`disponíveis em 2026`.
+- **Capitalização**: bullet de array editorial (`pontosFortes`/`pontosFracos`/`dicasAcionaveis`) começando minúsculo → maiúscula na 1ª letra.
+- **Duplicação contígua** `([a-zA-ZÀ-ÿ\s]{8,40})\1` → remover a 2ª cópia.
 
-**Importante**: o grep só sinaliza candidatos. Antes de auto-consertar, **confirme que é mesmo violação no contexto** (ex: "o mais leve da categoria" é qualificado → NÃO é superlativo absoluto; "Energy Star" dentro de uma citação de ângulo sustentabilidade → OK). Falso-positivo NÃO conserta — vira no máximo info no relatório.
+**(B) FLAG (exige REESCRITA ou decisão) — vai pro relatório, a Etapa 3 NÃO aplica:**
+- **Voz-comprador implícita**: `opiniões`, `comentários`, `um comprador relata`, `divide opiniões`, `avaliações` (sentido Amazon), `elogiado nas opiniões`, `recepção [mista/dividida]`, `queixa recorrente`. (Nuance: em `sentimentoCompradores` a destilação "é recorrente"/"é citado" é OK; flag só voz-comprador CRUA.) → exige reescrever a frase.
+- **Termo técnico-industrial / banido**: `contaminação cruzada`, `linha de produção compartilhada`, `peers`, `claim`, `stack`, `trade-off`, `hardcore`, `datasheet`, `SKU`, `ASIN`, `UPC`, `EAN`, `notificado`, `calibrar/calibrada/calibragem`, `empilhar`, `energia metabólica/adrenérgica` → exige sinônimo/reescrita no contexto.
+- **Superlativo absoluto**: `o melhor`, `o mais \w+` sem qualificador, `o único`, `imbatível`, `incomparável` → exige qualificar. (Qualificadores positivos "excelente/ótimo" NÃO são flag; "o mais leve da categoria" é qualificado → OK.)
+- **Spec ambiental nos curados**: `plástico reciclado`, `Energy Star`, `EPEAT`, `RoHS`, `FSC`, `Planet Partners`, `neutralidade de carbono` → decisão (remover, ou manter se há ângulo `sustentabilidade`).
+- **Origem nos curados**: `fabricado no Brasil`, `made in`, `produto nacional` → decisão (salvo ângulo `produto-nacional`).
+
+**Escopo dos campos (aprendizado do 1º run):** as regras de **termo-banido, voz-comprador e superlativo** valem só nos campos que ALIMENTAM o review publicado (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`). **NÃO** aplique essas regras em `dadosInconsistentes` e `observacoesAgente` — são notas INTERNAS (o review nunca as publica verbatim), e vocabulário como `EAN`/`ASIN`/`specsAmazon`/`127V` ali é legítimo. (Caso real: "EAN" em `dadosInconsistentes` deu falso-positivo de termo-banido.) Exceção: **strip de HTML** vale em TODOS os campos curados (não pode haver tag em lugar nenhum).
+
+**Importante**: o grep só sinaliza candidatos. Antes de auto-consertar um item (A), **confirme que é mesmo violação no contexto**. Falso-positivo NÃO conserta — vira no máximo info no relatório. Na dúvida entre (A) e (B), trate como (B) (flag) — nunca reescreva em silêncio.
 
 ### Etapa 2 — Camada LLM (sub-agents paralelos, ISOLADOS, read-only)
 
@@ -109,13 +115,15 @@ N sub-agents Opus, levas de ≤10. Cada sub-agent (Agent tool, `model: opus`, co
 
 ### Etapa 3 — Aplicar SÓ o mecânico (skill-mãe, serial, chaveada por ASIN)
 
-Pra cada bíblia que teve achado mecânico CONFIRMADO na Etapa 1:
+Pra cada bíblia que teve achado **do grupo (A)** CONFIRMADO na Etapa 1:
 3.1. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`.
-3.2. **Aplicar os fixes mecânicos** nos campos curados (script que lê o JSON, conserta os padrões determinísticos, escreve `JSON.stringify(b, null, 2) + '\n'`). NUNCA tocar nos brutos.
+3.2. **Aplicar SÓ os fixes do grupo (A)** (deleção/formato) nos campos curados (script que lê o JSON, aplica, escreve `JSON.stringify(b, null, 2) + '\n'`). NUNCA tocar nos brutos. **NUNCA aplicar item do grupo (B)** — reescrita é julgamento.
 3.3. **Bumpar `lastModified = new Date().toISOString()`** (só nas que mudaram). Manter `lastAuthor`.
-3.4. **Re-grep** pra confirmar que os padrões mecânicos sumiram. Se algo resistiu → flag no relatório (não esconde).
+3.4. **Re-grep** pra confirmar que os padrões (A) sumiram. Se algo resistiu → flag no relatório (não esconde).
 
-Os achados da Etapa 2 (julgamento) **NÃO são aplicados** — vão direto pro relatório.
+Os achados (B) da Etapa 1 + os de julgamento da Etapa 2 **NÃO são aplicados** — vão direto pro relatório.
+
+⚠️ **Ordem importa (senão o painel marca "stale"):** o painel deriva "auditada" pelo **mtime do `.audits/<ASIN>-last.md`** e marca **stale se `auditedAt < lastModified`** (`biblia-status.ts`). Então o relatório (Etapa 4) tem que ser escrito **DEPOIS** do bump de `lastModified` desta etapa. A ordem do pipeline (Etapa 3 conserta+bumpa → Etapa 4 escreve relatório) já garante isso; não inverta.
 
 ### Etapa 4 — Relatório (por bíblia + consolidado)
 
