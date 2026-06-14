@@ -27,7 +27,7 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 3. **Trava de ASIN.** O sub-agent devolve o `asin` no JSON. A skill-mãe **confere `asin_retornado == asin_pedido` ANTES de gravar**. Mismatch → descarta aquele resultado, re-dispara (pega qualquer mix-up A→B).
 4. **Exclusão na entrada (Etapa 0.4):** bíblia **contaminada** (`contaminado: true` no painel = `check-contamination.ts` com hard issue tipo `cross-brand-mention`) **NÃO entra no lote** — preencher com info de outro produto propaga o erro. Vai pra lista "corrigir à mão antes" (a singular `biblia-preencher` tem o tratamento por-campo + revisão humana). Idem bíblia **sem dados brutos** (nada pra destilar).
 5. **Post-check de leak por bíblia (Etapa 2.5):** a curadoria gravada não pode citar **nome/marca/modelo de OUTRO produto do lote**. Se vazar → flag no relatório + não grava aquele (re-dispara isolado).
-6. **Gate opcional `--audit`:** encadeia `biblia-auditar` por bíblia (pega vazamento residual de régua: voz-comprador, travessão, etc.).
+6. **Gate opcional `--audit`:** encadeia a `biblia-auditar-em-massa` no lote (camada mecânica auto-conserta resíduo de régua: voz-comprador, travessão, `<strong>` vazado; camada de julgamento vira flag pro humano). É o fluxo "preencheu → audita automático".
 
 ## Invariantes
 
@@ -90,9 +90,13 @@ bun scripts/sync-biblias-r2.ts --apply --push 2>&1 | tail -5
 ```
 Conferir que as linhas dos ASINs do lote dizem `enviado`/`local mais novo`, NÃO `recebido` (com o bump do lastModified o push vence). Se vier `recebido` em algum → o pull clobberou (timestamp não bumpado): re-aplicar o bump + re-push.
 
-### Etapa 4 — Audit opcional (`--audit`)
+### Etapa 4 — Audit encadeado (`--audit`)
 
-Se `--audit` no args: encadeia `biblia-auditar` por bíblia (pode ser em paralelo, levas ≤10). Auto-aplica fixes que ela propõe? NÃO — só roda e reporta (auditoria de bíblia é propor→aprovar; deixa pro humano decidir). Default sem `--audit`: não audita.
+Se `--audit` no args: encadeia a `biblia-auditar-em-massa` no MESMO lote recém-preenchido (o fluxo "preencheu → audita automático, com qualidade"). Ela faz as 2 camadas:
+- **Mecânica (auto-conserta):** pega o resíduo de régua que o preenchimento às vezes deixa (travessão, `<strong>`/HTML na curadoria, termo banido, voz-comprador crua, etc.) e conserta — determinístico, só eleva a qualidade. **Caso real do 1º lote: `<strong>` vazou em `pontosFortes` de uma panela; é exatamente isto que a camada mecânica fecha.**
+- **Julgamento (read-only):** achados factuais/contradição/frescor viram FLAG no relatório consolidado, NUNCA aplicados em silêncio (preserva o propor→aprovar da individual). O humano resolve com `biblia-auditar <ASIN>` nas que pintarem.
+
+Default sem `--audit`: não audita (mas é o passo recomendado logo em seguida). A delegação reusa a `biblia-auditar-em-massa` inteira — esta skill NÃO reimplementa a auditoria.
 
 ### Relatório final
 
@@ -101,7 +105,7 @@ Se `--audit` no args: encadeia `biblia-auditar` por bíblia (pode ser em paralel
 - **Excluídas**: contaminadas (corrigir à mão) + sem-dados-brutos (capturar antes) — com motivo.
 - **Leaks pegos** (Etapa 2.5): se houver, quais.
 - **Sync R2**: X enviadas / Y recebidas (esperado: todas enviadas).
-- **Próximo passo**: revisar no editor-v2 / rodar `biblia-auditar` se não usou `--audit`.
+- **Próximo passo**: revisar no editor-v2 / rodar `biblia-auditar-em-massa <asins>` (ou `--audit` na próxima vez) se não auditou agora.
 
 ## Armadilhas (embutir)
 
