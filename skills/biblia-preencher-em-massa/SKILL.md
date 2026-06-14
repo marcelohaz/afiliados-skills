@@ -92,10 +92,10 @@ Conferir que as linhas dos ASINs do lote dizem `enviado`/`local mais novo`, NÃO
 
 ### Etapa 4 — Audit encadeado (`--audit`)
 
-Se `--audit` no args: encadeia a `biblia-auditar-em-massa` no MESMO lote recém-preenchido (o fluxo "preencheu → audita e conserta automático, com qualidade"). Ela:
-- **Auto-aplica** todo conserto de direção CONHECIDA — mecânico/deleção-formato (travessão, `<strong>`/HTML na curadoria, muleta, concordância) E reescrita conhecida (voz-comprador→analítico, superlativo→qualificado, contradição contra a própria `decisaoEditorial`, fonte errada). **Caso real do 1º lote: `<strong>` em `pontosFortes` e crava-de-número contra a decisaoEditorial — é o que isto fecha.**
-- **Re-audita cada conserto** (verifica que ficou limpo e não mudou sentido; não convergiu em ≤3 → reverte do backup + vira flag). Essa re-auditoria substitui a aprovação humana = mesma qualidade da individual.
-- **Report-only** só pro indeterminável (frescor, verificação externa, contradição no bruto sem valor certo).
+Se `--audit` no args: encadeia a `biblia-auditar-em-massa` no MESMO lote recém-preenchido (o fluxo "preencheu → audita e conserta automático, com qualidade"). Escopo = FATO + DADO LIMPO + NAMING (voz editorial como travessão/muleta é do review, NÃO da bíblia). Ela:
+- **Auto-aplica** conserto de direção CONHECIDA — lixo de dado (strip `<strong>`/HTML na curadoria, caractere invisível/BOM, espaço duplo, marca duplicada) E reescrita/correção conhecida (voz-comprador→observação analítica, contradição contra a própria `decisaoEditorial`, fonte errada, claim que contradiz o bruto). **Caso real do 1º lote: `<strong>` em `pontosFortes` e crava-de-número contra a decisaoEditorial — é o que isto fecha.**
+- **Re-audita cada conserto** (resolveu? não quebrou? não mudou sentido?; não convergiu em ≤3 → reverte do backup + vira flag). Substitui a aprovação humana = mesma qualidade da individual.
+- **Report-only** pro indeterminável (frescor, verificação externa, contradição no bruto sem valor certo, naming que precisa de decisão).
 
 Default sem `--audit`: não audita (mas é o passo recomendado). A delegação reusa a `biblia-auditar-em-massa` inteira — esta skill NÃO reimplementa a auditoria.
 

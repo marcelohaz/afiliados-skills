@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar-em-massa
-description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, SEM passada comparativa entre bíblias). AUTO-APLICA todo conserto de direção CONHECIDA — mecânico/deleção-formato (strip HTML na curadoria, remover "declarado pelo fabricante", capitalização, typo de concordância, travessão→vírgula) E reescrita conhecida (voz-comprador→analítico, superlativo→qualificado, contradição contra a própria decisaoEditorial, fonte atribuída errada). Cada conserto passa por RE-AUDITORIA automática (verifica que ficou limpo e não mudou sentido; não convergiu em ≤3 → reverte do backup + vira flag). REPORT-ONLY só pro indeterminável (frescor, verificação externa não feita, contradição no bruto sem valor certo). Qualidade do texto = skill individual; a re-auditoria + backup substituem a aprovação humana. Roda como 2ª etapa do preencher-em-massa --audit (preenche → audita+conserta) OU sozinha. Sub-agents Opus paralelos (≤10). Sync R2 nas 2 pontas. Botão "🔍 Auditar bíblias" do produtos.html copia o comando.
+description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, SEM passada comparativa). Escopo = FATO + DADO LIMPO + NAMING (a bíblia é fonte de fato e nunca é renderizada direto; voz editorial é do review/página, que reescreve). AUTO-APLICA conserto de direção CONHECIDA — lixo de dado (strip HTML na curadoria, remover caractere invisível/BOM, espaço duplo, marca duplicada no nome) + reescrita/correção conhecida (voz-comprador→observação analítica, contradição contra a própria decisaoEditorial, fonte atribuída errada, claim curado que contradiz o bruto). Cada conserto passa por RE-AUDITORIA automática (resolveu? não quebrou? não mudou sentido?; não convergiu em ≤3 → reverte do backup + vira flag). NÃO mexe em voz editorial (travessão/muleta "declarado pelo fabricante"/superlativo/concordância = trabalho do review). REPORT-ONLY pro indeterminável (frescor, verificação externa, contradição no bruto sem valor certo, naming que precisa de decisão: marca vazia/placeholder, nome linha-vs-fabricante). Re-auditoria + backup substituem a aprovação humana. Roda como 2ª etapa do preencher-em-massa --audit OU sozinha. Sub-agents Opus paralelos (≤10). Sync R2 nas 2 pontas. Botão "🔍 Auditar bíblias" do produtos.html copia o comando.
 ---
 
 ## Parse de input
@@ -78,21 +78,22 @@ Opus 4.8 (ou mais novo). Sub-agents fixados com `model: opus` no Agent tool. NUN
 
 ### Etapa 1 — Camada MECÂNICA grupo (A) (grep determinístico, sem IA)
 
-Scan determinístico nos campos curados. Padrões e o conserto (todos = deleção/formato, sem reescrita):
-- **HTML na curadoria**: `<\w+[^>]*>` em qualquer campo curado → **strip da tag** (vale em TODOS os campos curados).
-- **Muleta**: `declarado pelo fabricante`, `declarados` (parentético) → **deletar a expressão**.
-- **Travessão** `—`/`–` em campo curado → **trocar por vírgula**; em fronteira de sentença (ambíguo) → NÃO troca, vira (C)/flag.
-- **Concordância** (mapa fixo): `composiçãos`→`composições`, `combinaçãos`→`combinações`, `porçãos`→`porções`, `a produto`→`o produto`, `o fórmula`→`a fórmula`, `o dose`→`a dose`, `disponíveis no em 2026`→`disponíveis em 2026`.
-- **Capitalização**: bullet de array editorial começando minúsculo → maiúscula na 1ª letra.
-- **Duplicação contígua** `([a-zA-ZÀ-ÿ\s]{8,40})\1` → remover a 2ª cópia.
+Scan determinístico nos campos curados. **Só LIXO DE DADO + NAMING** (não voz editorial — ver escopo abaixo). Padrões e o conserto:
+- **HTML na curadoria**: `<\w+[^>]*>` em qualquer campo curado → **strip da tag** (curadoria é texto puro; tag = ruído, não info). Vale em TODOS os campos curados.
+- **Caractere invisível / BOM** (`﻿`, zero-width) no `nome`/`marca`/curado → **remover**.
+- **Espaço duplo** no `nome`/`marca` → **colapsar pra um**.
+- **Marca duplicada no nome** ("Epson Epson L3250") → **remover a 2ª**.
+- **Duplicação contígua** `([a-zA-ZÀ-ÿ\s]{8,40})\1` em campo curado → remover a 2ª cópia.
 
-**Escopo de campos (aprendizado 1º run):** termo-banido/voz-comprador/superlativo (grupo B abaixo) valem só nos campos que ALIMENTAM o review (`sentimentoCompradores`/`angulosConversao`/`pontosFortes`/`pontosFracos`/`dicasAcionaveis`). NÃO nos internos (`dadosInconsistentes`/`observacoesAgente`) — `EAN`/`ASIN`/`specsAmazon`/`127V` ali é legítimo (caso real: "EAN" deu falso-positivo). **HTML-strip vale em todos.**
+⛔ **FORA do escopo da bíblia (NÃO scaneia, NÃO conserta — é do review/página):** travessão, muleta "declarado pelo fabricante", superlativo/claim absoluto, concordância PT-BR. Essas regras de VOZ são aplicadas pelas skills de criação sobre o texto reescrito (régua + auto-check próprios). Enforçar aqui é trabalho dobrado.
+
+**Escopo de campos:** voz-comprador (grupo B) vale só nos campos que ALIMENTAM o review (`sentimentoCompradores`/`angulosConversao`/`pontosFortes`/`pontosFracos`/`dicasAcionaveis`). NÃO nos internos (`dadosInconsistentes`/`observacoesAgente`) — `EAN`/`ASIN`/`specsAmazon`/`127V` ali é legítimo. **HTML-strip vale em todos.**
 
 ### Etapa 2 — Camada LLM: achar + redigir conserto (sub-agents ISOLADOS)
 
-N sub-agents Opus, levas ≤10. Cada um (Agent tool, `model: opus`, fresh) vê SÓ sua bíblia. Anti-contaminação no prompt: "Você vê SÓ esta bíblia. NÃO mencione/leia outra. NÃO compare com outras." Roda as 5 categorias da `biblia-auditar` (consistência interna, verificação externa, frescor, completude, higiene editorial-factual). Pra cada achado, **classifica B ou C e, se B, JÁ REDIGE o texto corrigido**:
-- **(B) direção conhecida → redige o fix**: voz-comprador crua → observação analítica; superlativo absoluto → qualificado; termo técnico-industrial → linguagem editorial; contradição contra a **própria `decisaoEditorial`** da bíblia → seguir a decisão; fonte atribuída errada num item curado → corrigir a fonte; claim curado que contradiz o bruto quando o bruto tem o valor certo → alinhar ao bruto.
-- **(C) indeterminável → só aponta**: frescor (precisa re-captura); claim que exige verificação externa não feita; contradição no dado BRUTO sem valor certo nem `decisaoEditorial`; qualquer coisa que dependa de dado que a bíblia não tem.
+N sub-agents Opus, levas ≤10. Cada um (Agent tool, `model: opus`, fresh) vê SÓ sua bíblia. Anti-contaminação no prompt: "Você vê SÓ esta bíblia. NÃO mencione/leia outra. NÃO compare com outras." Roda as categorias de FATO da `biblia-auditar` (consistência interna, verificação externa, frescor, completude, naming). **NÃO audita voz editorial** (travessão/muleta/superlativo/concordância — é do review). Pra cada achado, **classifica B ou C e, se B, JÁ REDIGE o texto corrigido**:
+- **(B) direção conhecida → redige o fix**: voz-comprador crua → observação analítica (vira fato usável); contradição contra a **própria `decisaoEditorial`** da bíblia → seguir a decisão; fonte atribuída errada num item curado → corrigir a fonte; claim curado que contradiz o bruto quando o bruto tem o valor certo → alinhar ao bruto.
+- **(C) indeterminável / precisa de decisão → só aponta**: frescor (precisa re-captura); claim que exige verificação externa não feita; contradição no dado BRUTO sem valor certo nem `decisaoEditorial`; naming que precisa de decisão (`marca` vazia/placeholder `—` — não sabemos a marca; nome linha-vs-fabricante — convenção); spec ambiental/origem nos curados (remover ou manter por ângulo?); qualquer coisa que dependa de dado que a bíblia não tem.
 - **Retorna SÓ JSON**: `{ asin, fixes_B: [{categoria, campo, evidencia, problema, antes, depois}], report_C: [{categoria, campo, evidencia, problema, sugestao}] }`. NÃO grava arquivo, NÃO aplica.
 
 ### Etapa 3 — Aplicar (A) + (B) (skill-mãe, SERIAL, chaveada por ASIN)
@@ -107,7 +108,7 @@ Pra cada bíblia com fix (A) confirmado ou (B) retornado:
 
 Pra cada bíblia que recebeu conserto, dispare um sub-agent Opus ISOLADO (fresh, vê só essa bíblia + a lista do que foi consertado) pra verificar:
 1. **Os achados originais sumiram?** (o conserto resolveu de fato)
-2. **Não introduziu violação nova de régua?** (travessão, HTML, voz-comprador, superlativo, etc.)
+2. **Não introduziu lixo nem voz-comprador novo?** (HTML/tag, voz-comprador crua). Voz editorial (travessão/superlativo) NÃO é checada aqui — fora do escopo da bíblia.
 3. **Não mudou o SENTIDO factual** vs os dados brutos? (a reescrita não inventou nem distorceu fato)
 - **Passou** → mantém o conserto. ✅
 - **Reprovou** → re-redige o(s) item(ns) problemático(s) e re-aplica → re-audita (máx **3** ciclos no total).
@@ -138,7 +139,7 @@ Pra cada bíblia que recebeu conserto, dispare um sub-agent Opus ISOLADO (fresh,
 1. **Bíblia só no R2**: sync 0.1 resolve.
 2. **Clobber do lastModified**: bump via `toISOString()` SÓ quando aplicou. Sem isso o `--push` vira `recebido`.
 3. **NÃO comparar bíblias**: isolamento é a defesa nº1.
-4. **Falso-positivo do grep**: "o mais leve da categoria" (qualificado) NÃO é superlativo; "rita lobo" em 2 produtos da mesma marca NÃO é contaminação. Confirmar contexto antes de aplicar; na dúvida, (C).
+4. **Falso-positivo do grep**: "EAN" em `dadosInconsistentes` (campo interno) NÃO é problema; "rita lobo" em 2 produtos da mesma marca NÃO é contaminação. Confirmar contexto antes de aplicar; na dúvida, (C).
 5. **Re-auditoria é obrigatória**: nunca dar (B) por aplicado sem o passo 3.5. É ela que substitui sua aprovação.
 6. **(C) não é preguiça**: é ausência de valor certo. NUNCA chutar um conserto (C) — flag.
 7. **Race de escrita**: sub-agent NUNCA grava; só a skill-mãe (serial).
