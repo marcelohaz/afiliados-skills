@@ -135,6 +135,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 11. **Write `.mdx`**: monta o novo conteúdo:
     - **Frontmatter**: preserva todos os campos base existentes (asin, name, image, imageAlt, category, categorySlug, publishDate, contentLocked se existir). **Adiciona** os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview).
     - **Body**: remove o marker de stub (`{/* STUB GERADO POR ... [TODO: preencher] */}`). Body fica vazio ou com 1 linha em branco.
+    - **AUTO-CHECK DE FENCE (OBRIGATÓRIO pós-Write)**: rode `grep -c '^---$'` no `.mdx` — tem que dar **exatamente 2** (abre+fecha o frontmatter). Se der **1**, faltou a fence de fechamento (o block scalar `>-` do `fullReview`, último campo, correu até o EOF) → **anexe `\n---\n` no fim do arquivo** e re-confira. Sem isso o build quebra com `asin: Required / name: Required` (caso real Bárbara 2026-06-15).
 
     Use YAML válido. Strings com aspas duplas (escape `\"` interno). Arrays multi-linha:
     ```yaml

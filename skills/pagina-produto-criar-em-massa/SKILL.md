@@ -143,6 +143,8 @@ Detecção:
 
    Antes do add, confirmar com `git status --short` que os paths esperados estão modificados. Se algum sucesso reportado não está modificado, alertar (sub-agent reportou ok mas não escreveu?).
 
+   **GUARDA DE FENCE (OBRIGATÓRIO, antes do commit) — canon 2026-06-15:** pra CADA path com sucesso, rode `grep -c '^---$' {path}`. Deve ser **exatamente 2** (abertura + fechamento do frontmatter). Se vier **1**, o sub-agent gravou sem a fence de fechamento (o block scalar do `fullReview` correu até o EOF) → **anexe `\n---\n` no fim do arquivo** e re-confira == 2. Se vier 0 ou >2, não commite aquele: re-dispare o sub-agent isolado. **Caso real (Bárbara, melhoressuplementos/flora-nativa-b12, 2026-06-15): 1 de 6 saiu sem a fence, quebrou o build com `asin: Required / name: Required` e passou silencioso porque o sub-agent reportou `ok:true`.** Esta guarda na skill-mãe é o que pega isso (o sub-agent pode falhar o próprio auto-check).
+
    ```bash
    git commit -m "feat({site}): preenche {N} páginas individuais em batch via skill" \
      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
@@ -430,6 +432,13 @@ EXCETO os passos de git operations (12, 13). Especificamente:
 10. Write o .mdx novo: preserva frontmatter base (asin, name, image, etc),
     adiciona os 6 campos editoriais, remove o marker `{/* STUB GERADO POR ... */}`
     do body.
+11. **AUTO-CHECK DE FENCE (OBRIGATÓRIO pós-Write)**: rode `grep -c '^---$'` no
+    arquivo gravado. Tem que ser **exatamente 2** (abre+fecha o frontmatter).
+    Se for **1**, faltou a fence de fechamento (o block scalar `>-` do `fullReview`,
+    sendo o último campo, correu até o EOF sem fechar) → **anexe `\n---\n` no fim
+    do arquivo** e re-confira == 2. Sem isso o build do Astro quebra com
+    `asin: Required / name: Required` (caso real Bárbara 2026-06-15: 1 em 6 saiu
+    assim). NÃO reporte `ok:true` sem o arquivo ter 2 fences.
 
 ❌ NÃO FAÇA: git add / git commit / git push / painel-vps-pull.sh.
 Esses são responsabilidade da skill mãe que vai aggregar todos os
