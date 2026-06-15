@@ -58,7 +58,8 @@ Opus 4.8 (ou mais novo). Sub-agents fixados com `model: opus` no Agent tool. NUN
 - **Todo conserto passa por re-auditoria** (Etapa 3.5). Não convergiu em ≤3 tentativas → **reverte do backup** + vira (C) no relatório. Nada fica aplicado sem ter sido re-conferido.
 - **Backup ANTES de qualquer escrita** (`.painel-backups/<dia>/`). Tudo reversível.
 - **Só toca CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`). **NUNCA edita BRUTOS** (`sobreEsteItem`/`doFabricante`/`descricaoProduto`/`specsAmazon`/`conteudoBrutoFabricante`) nem `lastAuthor`.
-- **`lastModified` bumpado via `new Date().toISOString()`** SÓ nas bíblias que tiveram conserto aplicado. NUNCA hand-roll (timezone). Sem fix → não toca.
+- **`lastAuditedAt` carimbado via `new Date().toISOString()` em TODAS as bíblias auditadas** (com ou sem fix) — é o que faz o painel parar de marcar "auditar de novo" (compara `lastFilledAt > lastAuditedAt`; regra Marcelo 2026-06-15). Ver Etapa 3.6.
+- **`lastModified` bumpado via `new Date().toISOString()`** sempre que gravar a bíblia (todo conserto E todo carimbo de auditoria → toda bíblia do lote). NUNCA hand-roll (timezone). NUNCA toca `lastAuthor`.
 - **NUNCA compartilha contexto entre bíblias** nem faz passada comparativa.
 - **Só audita PREENCHIDA** (coreDone). Pendente → pula ("preencha primeiro"). Contaminada-hard → exclui (corrigir à mão na individual). Sem-dados-brutos → exclui.
 - **Sync R2**: pull no começo; push no fim SÓ se aplicou algum fix.
@@ -114,7 +115,11 @@ Pra cada bíblia que recebeu conserto, dispare um sub-agent Opus ISOLADO (fresh,
 - **Reprovou** → re-redige o(s) item(ns) problemático(s) e re-aplica → re-audita (máx **3** ciclos no total).
 - **Não convergiu em 3** → **reverte aquela bíblia do backup** + move os itens dela pra (C) no relatório (flag "conserto não convergiu, revisar à mão"). Nada ruim fica gravado.
 
-⚠️ **Ordem (senão painel marca stale):** o painel deriva "auditada" pelo mtime de `.audits/<ASIN>-last.md` e marca stale se `auditedAt < lastModified` (`biblia-status.ts`). A Etapa 3 bumpa `lastModified`; o relatório (Etapa 4) é escrito DEPOIS → mtime > lastModified → não-stale. Não inverta.
+### Etapa 3.6 — Carimbar auditoria em TODAS as bíblias do lote (mesmo sem fix)
+
+Pra **cada** bíblia auditada (consertada ou não), grave o carimbo da auditoria: backup (se ainda não fez na 3.2), script que seta **`b.lastAuditedAt = new Date().toISOString()`** + **`b.lastModified = new Date().toISOString()`** (mantém `lastAuthor`; não toca curados/brutos além do que a 3.3 já fez), e escreve `JSON.stringify(b,null,2)+'\n'`. É isto que zera o "auditar de novo" no painel — o `lastAuditedAt` passa a ser ≥ `lastFilledAt`. (As bíblias com fix já foram gravadas na 3.4; aqui você só garante o carimbo nas SEM fix também.)
+
+ℹ️ **Stale agora é por `lastFilledAt`, não por mtime** (regra 2026-06-15): `biblia-status.ts` marca stale quando `lastFilledAt > lastAuditedAt` (re-preenchida depois da auditoria), não comparando mtime do `.md` com `lastModified`. Então a antiga preocupação de "ordem do report vs lastModified" não vale mais — o carimbo `lastAuditedAt` no JSON é a fonte.
 
 ### Etapa 4 — Relatório (por bíblia + consolidado)
 
@@ -122,9 +127,9 @@ Pra cada bíblia que recebeu conserto, dispare um sub-agent Opus ISOLADO (fresh,
 4.2. **Consolidado no chat**: tabela por bíblia 🟢/🟡/🔴 + nº consertado + nº report-only. Resumo: X auto-consertadas, Y itens report-only (com o porquê de não dar pra aplicar).
 4.3. **Commit dos relatórios** (`.audits/<ASIN>-last.md` tracked) + push + `bash scripts/painel-vps-pull.sh`.
 
-### Etapa 5 — Sync R2 push (só se aplicou fix)
+### Etapa 5 — Sync R2 push (SEMPRE — todas levam carimbo)
 
-`bun scripts/sync-biblias-r2.ts --apply --push 2>&1 | tail -5`. Conferir `enviado` (não `recebido`) nas bíblias consertadas. Nenhum fix → PULAR (só os .md já foram commitados no git).
+`bun scripts/sync-biblias-r2.ts --apply --push 2>&1 | tail -5`. Roda sempre: a Etapa 3.6 carimba `lastAuditedAt` em toda bíblia do lote, então TODAS têm algo pra subir (não só as consertadas). Conferir `enviado` (não `recebido`) em cada ASIN do lote.
 
 ## Relatório final (consolidado)
 

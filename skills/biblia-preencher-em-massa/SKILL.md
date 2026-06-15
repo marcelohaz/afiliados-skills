@@ -33,7 +33,7 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 
 - **NUNCA preenche bíblia `contaminado`** (hard) nem sem dados brutos — exclui na Etapa 0.4, lista no relatório.
 - **NUNCA compartilha contexto entre bíblias** (Etapa 1) — isolamento é a régra dura.
-- **`lastModified` bumpado via `new Date().toISOString()`** ao gravar (UTC real); NUNCA `lastAuthor`, NUNCA hand-roll via getHours/pad (armadilha de timezone). Sem o bump, o pull do R2 CLOBBERA o edit.
+- **`lastModified` E `lastFilledAt` bumpados via `new Date().toISOString()`** ao gravar (UTC real); NUNCA `lastAuthor`, NUNCA hand-roll via getHours/pad (armadilha de timezone). Sem o bump do `lastModified`, o pull do R2 CLOBBERA o edit. O `lastFilledAt` é o carimbo de re-preenchimento (painel marca "auditar de novo" via `lastFilledAt > lastAuditedAt`; regra Marcelo 2026-06-15).
 - **Sync R2 nas 2 pontas**: pull no começo (as bíblias cruas podem estar SÓ no R2 — caso real: lote de panela elétrica criado no painel, ausente no Mac local), push no fim (uma vez, batch).
 - **Idempotente**: pula bíblia já preenchida (coreDone) — re-rodar o lote não retrabalha.
 - **Full-auto, sem checkpoint humano no meio** (igual aos outros em-massa). Confirmação só ANTES do disparo (lista + estimativa).
@@ -76,7 +76,7 @@ N sub-agents Opus, levas de ≤10. Cada sub-agent (Agent tool, `model: opus`, co
 Pra cada JSON retornado:
 2.1. **Trava de ASIN**: `json.asin === asin_pedido`? Não → descarta + re-dispara aquele isolado (anti-mix-up).
 2.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`.
-2.3. **Merge**: objeto inteiro da bíblia + substitui SÓ os 7 campos + (se veio) `conteudoBrutoFabricante` limpo + **`lastModified = new Date().toISOString()`**. NÃO toca `lastAuthor` nem resto.
+2.3. **Merge**: objeto inteiro da bíblia + substitui SÓ os 7 campos + (se veio) `conteudoBrutoFabricante` limpo + **`lastModified = new Date().toISOString()`** + **`lastFilledAt = new Date().toISOString()`** (carimbo de re-preenchimento → painel marca "auditar de novo"). NÃO toca `lastAuthor` nem resto.
 2.4. **Write** `JSON.stringify(obj, null, 2) + '\n'`.
 
 ### Etapa 2.5 — Post-check de leak (auto)
