@@ -60,6 +60,7 @@ Opus 4.8 (ou mais novo). Sub-agents fixados com `model: opus` no Agent tool. NUN
 - **Só toca CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`). **NUNCA edita BRUTOS** (`sobreEsteItem`/`doFabricante`/`descricaoProduto`/`specsAmazon`/`conteudoBrutoFabricante`) nem `lastAuthor`.
 - **`lastAuditedAt` carimbado via `new Date().toISOString()` em TODAS as bíblias auditadas** (com ou sem fix) — é o que faz o painel parar de marcar "auditar de novo" (compara `lastFilledAt > lastAuditedAt`; regra Marcelo 2026-06-15). Ver Etapa 3.6.
 - **`lastModified` bumpado via `new Date().toISOString()`** sempre que gravar a bíblia (todo conserto E todo carimbo de auditoria → toda bíblia do lote). NUNCA hand-roll (timezone). NUNCA toca `lastAuthor`.
+- **`auditFlags` gravado junto do `lastAuditedAt`** (Etapa 3.6): avisos semânticos `{type,label}` pro chip do painel (`'wrong-info'`/`'off-niche'`/`'review'`) — vêm dos `report_C` que sobraram. **Esvaziar (`[]`) quando limpo** é obrigatório (chip preso = bug). É o que surfaça contaminação cross-produto que o detector mecânico não pega.
 - **NUNCA compartilha contexto entre bíblias** nem faz passada comparativa.
 - **Só audita PREENCHIDA** (coreDone). Pendente → pula ("preencha primeiro"). Contaminada-hard → exclui (corrigir à mão na individual). Sem-dados-brutos → exclui.
 - **Sync R2**: pull no começo; push no fim SÓ se aplicou algum fix.
@@ -92,10 +93,11 @@ Scan determinístico nos campos curados. **Só LIXO DE DADO + NAMING** (não voz
 
 ### Etapa 2 — Camada LLM: achar + redigir conserto (sub-agents ISOLADOS)
 
-N sub-agents Opus, levas ≤10. Cada um (Agent tool, `model: opus`, fresh) vê SÓ sua bíblia. Anti-contaminação no prompt: "Você vê SÓ esta bíblia. NÃO mencione/leia outra. NÃO compare com outras." Roda as categorias de FATO da `biblia-auditar` (consistência interna, verificação externa, frescor, completude, naming). **NÃO audita voz editorial** (travessão/muleta/superlativo/concordância — é do review). Pra cada achado, **classifica B ou C e, se B, JÁ REDIGE o texto corrigido**:
+N sub-agents Opus, levas ≤10. Cada um (Agent tool, `model: opus`, fresh) vê SÓ sua bíblia. Anti-contaminação no prompt: "Você vê SÓ esta bíblia. NÃO mencione/leia outra. NÃO compare com outras." Roda as categorias de FATO da `biblia-auditar` (consistência interna, **contaminação cross-produto** = dado de OUTRO produto em qualquer campo inclusive bruto, verificação externa, frescor, completude, naming). **NÃO audita voz editorial** (travessão/muleta/superlativo/concordância — é do review). Pra cada achado, **classifica B ou C e, se B, JÁ REDIGE o texto corrigido**:
 - **(B) direção conhecida → redige o fix**: voz-comprador crua → observação analítica (vira fato usável); contradição contra a **própria `decisaoEditorial`** da bíblia → seguir a decisão; fonte atribuída errada num item curado → corrigir a fonte; claim curado que contradiz o bruto quando o bruto tem o valor certo → alinhar ao bruto.
-- **(C) indeterminável / precisa de decisão → só aponta**: frescor (precisa re-captura); claim que exige verificação externa não feita; contradição no dado BRUTO sem valor certo nem `decisaoEditorial`; naming que precisa de decisão (`marca` vazia/placeholder `—` — não sabemos a marca; nome linha-vs-fabricante — convenção); spec ambiental/origem nos curados (remover ou manter por ângulo?); qualquer coisa que dependa de dado que a bíblia não tem.
-- **Retorna SÓ JSON**: `{ asin, fixes_B: [{categoria, campo, evidencia, problema, antes, depois}], report_C: [{categoria, campo, evidencia, problema, sugestao}] }`. NÃO grava arquivo, NÃO aplica.
+- **(C) indeterminável / precisa de decisão → só aponta**: frescor (precisa re-captura); claim que exige verificação externa não feita; contradição no dado BRUTO sem valor certo nem `decisaoEditorial`; **contaminação cross-produto num campo BRUTO** (dado de outro produto que não dá pra consertar curando — precisa re-captura); naming que precisa de decisão (`marca` vazia/placeholder `—`; nome linha-vs-fabricante); spec ambiental/origem nos curados; qualquer coisa que dependa de dado que a bíblia não tem.
+- **Marque cada (C) com `flagType`** (vira o chip do painel na Etapa 3.6): `'wrong-info'` (dado de outro produto / contradição factual / claim contra o bruto), `'off-niche'` (tipo de produto do bruto contradiz a `categoria`/`subcategoria` declarada NA PRÓPRIA bíblia — raro; NÃO é "produto no site errado", isso a bíblia não sabe), `'review'` (frescor / verificação externa / sem valor certo). Contaminação cross-produto é sempre `'wrong-info'`.
+- **Retorna SÓ JSON**: `{ asin, fixes_B: [{categoria, campo, evidencia, problema, antes, depois}], report_C: [{categoria, campo, evidencia, problema, sugestao, flagType}] }`. NÃO grava arquivo, NÃO aplica.
 
 ### Etapa 3 — Aplicar (A) + (B) (skill-mãe, SERIAL, chaveada por ASIN)
 
@@ -115,15 +117,23 @@ Pra cada bíblia que recebeu conserto, dispare um sub-agent Opus ISOLADO (fresh,
 - **Reprovou** → re-redige o(s) item(ns) problemático(s) e re-aplica → re-audita (máx **3** ciclos no total).
 - **Não convergiu em 3** → **reverte aquela bíblia do backup** + move os itens dela pra (C) no relatório (flag "conserto não convergiu, revisar à mão"). Nada ruim fica gravado.
 
-### Etapa 3.6 — Carimbar auditoria em TODAS as bíblias do lote (mesmo sem fix)
+### Etapa 3.6 — Carimbar auditoria + gravar `auditFlags` em TODAS as bíblias do lote (mesmo sem fix)
 
-Pra **cada** bíblia auditada (consertada ou não), grave o carimbo da auditoria: backup (se ainda não fez na 3.2), script que seta **`b.lastAuditedAt = new Date().toISOString()`** + **`b.lastModified = new Date().toISOString()`** (mantém `lastAuthor`; não toca curados/brutos além do que a 3.3 já fez), e escreve `JSON.stringify(b,null,2)+'\n'`. É isto que zera o "auditar de novo" no painel — o `lastAuditedAt` passa a ser ≥ `lastFilledAt`. (As bíblias com fix já foram gravadas na 3.4; aqui você só garante o carimbo nas SEM fix também.)
+Pra **cada** bíblia auditada (consertada ou não), no MESMO write: backup (se ainda não fez na 3.2), e setar:
+- **`b.lastAuditedAt = new Date().toISOString()`** + **`b.lastModified = new Date().toISOString()`** (mantém `lastAuthor`; não toca curados/brutos além da 3.3). Zera o "auditar de novo" (`lastAuditedAt` ≥ `lastFilledAt`).
+- **`b.auditFlags`** = avisos SEMÂNTICOS que SOBRARAM pós-conserto, pra acender o chip na coluna Observações do painel (o detector mecânico `contaminado` só pega marca/ASIN; estes são os achados que só a auditoria vê). Cada flag `{ type, label }` (label ≤ ~120 ch, sem aspas duplas, com o motivo concreto):
+  - **`type` = o `flagType` do `report_C`** correspondente (`'wrong-info'` ⚠ / `'off-niche'` 🧭 / `'review'` 🔍).
+  - **Só `report_C` vira flag.** Achado **(B) auto-consertado NÃO vira flag** (já resolvido).
+  - **Se NENHUM `report_C` qualifica → `b.auditFlags = []`** (OBRIGATÓRIO esvaziar — re-auditar depois do conserto APAGA o chip; chip preso = bug).
+- Write `JSON.stringify(b,null,2)+'\n'`.
+
+⚠ `auditFlags` é o que faz o chip ⚠/🧭/🔍 aparecer no painel (server lê `d.auditFlags`; `_pages/biblias.ts` renderiza). NUNCA inventar flag sem evidência. Contaminação cross-produto em campo bruto fica como flag `'wrong-info'` (não dá pra consertar curando — só re-captura limpa) até alguém recapturar.
 
 ℹ️ **Stale agora é por `lastFilledAt`, não por mtime** (regra 2026-06-15): `biblia-status.ts` marca stale quando `lastFilledAt > lastAuditedAt` (re-preenchida depois da auditoria), não comparando mtime do `.md` com `lastModified`. Então a antiga preocupação de "ordem do report vs lastModified" não vale mais — o carimbo `lastAuditedAt` no JSON é a fonte.
 
 ### Etapa 4 — Relatório (por bíblia + consolidado)
 
-4.1. **Por bíblia**: `docs/biblias-v2/.audits/<ASIN>-last.md` (formato `biblia-auditar`; painel lê). Lista o que foi **auto-consertado** (A+B, com antes→depois) + os **report-only (C)** pendentes.
+4.1. **Por bíblia**: `docs/biblias-v2/.audits/<ASIN>-last.md` (formato `biblia-auditar`; painel lê). Lista o que foi **auto-consertado** (A+B, com antes→depois) + os **report-only (C)** pendentes + as **`auditFlags`** gravadas (chip do painel).
 4.2. **Consolidado no chat**: tabela por bíblia 🟢/🟡/🔴 + nº consertado + nº report-only. Resumo: X auto-consertadas, Y itens report-only (com o porquê de não dar pra aplicar).
 4.3. **Commit dos relatórios** (`.audits/<ASIN>-last.md` tracked) + push + `bash scripts/painel-vps-pull.sh`.
 
