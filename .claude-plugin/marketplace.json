@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "[v1.47.0] categoria-descricao-escrever ganha GUARD de slug acentuado/malformado: se um artigo tem categorySlug com acento (ex: pré-treino), maiúscula ou espaço, a skill ABORTA com aviso em vez de escrever descrição órfã (slug acentuado gera /categoria/ 404 E a descrição fica na chave sem-acento = órfã; bug real melhorpretreino-com 2026-06-19) — conserte o slug do .mdx primeiro. Raiz também coberta no painel (article-builder.slugify SEMPRE normaliza o categorySlug na criação, idempotente). Inclui o blindamento anterior do artigo-clonar-em-massa (name-first, image do destino, featuredImage obrigatório, fullReview block-scalar indent 4).",
-    "version": "1.47.0"
+    "version": "1.48.0"
   },
   "plugins": [
     {

@@ -170,6 +170,8 @@ Link Amazon com tag diferente da esperada.
 - `live: true` + tag vazia: 🔴 error crítico **sempre** — site no ar sem afiliação é grave (perda direta de comissão).
 
 ### `travessao` (level=`warn`)
+
+**+ Ponto-e-vírgula (;)** (régua 2026-06-20): mesma família do travessão. Flag `;` em prosa como **warn** (auto-fixável: ;→"." ou ","). Detecção **entity-aware**: remova `&amp;`/`&#..;` e a querystring dos links de afiliado antes de checar, senão todo link falsa-positiva. Só prosa, nunca código.
 Travessão (`—` ou `–`) detectado em qualquer campo editorial: title, description, subtitle, shortDescription, fullReview, pros, cons, intro (body markdown), guideContent.
 
 ### `superlativo-sem-evidencia` (level=`warn`)

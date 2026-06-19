@@ -46,6 +46,7 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
 - **CRÍTICO — sem backtick `` ` `` literal no HTML.** Quebraria o template literal do config.ts. Se precisar de citação, usar aspas ou itálico.
 - **CRÍTICO — sem `${` literal no HTML.** Seria interpretado como interpolação JS no template literal (corrompe config OU pior, executa código). Sanity-check obrigatório: se a IA gerar `${...}`, regenero.
 - **Sem travessão (—).** Use vírgula ou ponto.
+- **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Sem superlativos sem evidência** ("o melhor disponível", "incomparável", "imbatível"). "Excelente", "ótimo" são OK contextualizados.
 - **Sem comentários HTML, sem placeholders `[TODO:...]`.**
 - **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.

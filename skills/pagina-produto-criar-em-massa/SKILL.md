@@ -361,6 +361,7 @@ EXCETO os passos de git operations (12, 13). Especificamente:
      falharam aqui (2 sem negrito + sem nome; 3 com âncora-CTA).
 7. Régua editorial DURA (NÃO violar):
    - Sem travessão (—) em nenhum campo
+   - Sem ponto-e-vírgula (;) em nenhum campo (régua 2026-06-20; troca por "." ou ","; entity-aware: ignora &amp; dos links)
    - Sem superlativos absolutos ("o melhor", "incomparável")
    - Voz analítica (NUNCA cite compradores/reviews/avaliações/estrelas)
    - HTML allowlist em fullReview: só `<p>`, `<strong>`, `<em>`, `<a>`

@@ -35,6 +35,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 - **Nunca invente dados.** Tudo que você escrever precisa ter origem rastreável na bíblia (`pontosFortes`, `pontosFracos`, `angulosConversao`, `sentimentoCompradores`, `specsAmazon`, `doFabricante`, etc).
 - **Conteúdo INDEPENDENTE do produto-no-artigo.** A página individual tem ângulo editorial próprio. Não copie/parafraseie do `fullReview` do review — usa estrutura, voz e ângulo diferentes (anti-duplicate-content). Se o produto aparece em algum review (campo `apareceNosArtigos` da bíblia ou via Grep nos `.mdx` de `sites/{site}/src/content/reviews/`), leia pra saber o que NÃO repetir.
 - **Sem travessão (—).** Em nenhum campo. Use vírgula, ponto, parênteses ou dois pontos.
+- **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Sem superlativos absolutos** sem evidência ("o melhor", "o único", "incomparável").
 - **Voz analítica.** NUNCA cite compradores/reviews/avaliações/estrelas (proibido pela voz editorial). Reescreva insights do `sentimentoCompradores` da bíblia como observação analítica direta.
 

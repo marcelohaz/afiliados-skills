@@ -59,6 +59,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 - **Conteúdo COMPARATIVO** (diferente da página individual): pode comparar com outros produtos do artigo, citar por nome, dizer "vs HP X" se houver dado na bíblia. Pode falar "neste comparativo", "entre os modelos analisados", "aqui". **Banido no output**: "lineup", "desta seleção", "do lineup". Ver ângulo comparativo no campo `fullReview` abaixo.
 - **Anti-duplicate vs página individual**: leia o `fullReview` da página individual antes (`sites/{site}/src/content/products/{slug-do-produto}.mdx`). O texto do produto-no-artigo deve ter ângulo DIFERENTE — comparativo, posicionamento no comparativo, etc.
 - **Sem travessão (—)** em nenhum campo.
+- **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Voz analítica**: NUNCA cite compradores/reviews/avaliações/estrelas/Amazon.
 - **HTML allowlist no `fullReview`**: `<p>`, `<strong>`, `<em>`, `<a>`. Proibido: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<table>`, `<img>`, `<script>`.
 

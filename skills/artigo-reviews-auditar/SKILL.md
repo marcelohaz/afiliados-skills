@@ -56,6 +56,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 - **null É LITERAL** quando inalterado. NUNCA `''` ou `[]`.
 - **Tamanho de pros/cons**: preserve número de itens. Max +1 novo se claro da bíblia. NÃO reordene itens existentes.
 - **Sem travessão (—).**
+- **Sem ponto-e-vírgula (;)** (régua 2026-06-20): tem cara de IA. Auto-fixável (;→"." ou ","). Detecção entity-aware (ignora &amp; e entidades).
 - **Sem superlativo sem evidência.**
 - **Preservar estrutura do `fullReview`**: 4 parágrafos com prefixos exatos (`Para quem é:`, `Por que gostamos:`, `Pontos de atenção:`, `Resumo:`). `Por que gostamos` pode ter 2 parágrafos.
 - **Preservar formato pros/cons**: `<strong>Título</strong>: explicação`.

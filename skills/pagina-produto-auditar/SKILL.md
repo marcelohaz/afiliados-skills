@@ -96,6 +96,8 @@ Texto cita 'compradores', 'reviews', 'avaliações', 'estrelas', 'usuários' (pr
 Procurar por: `comprador`, `compradores`, `usuário(s)`, `cliente(s)`, `avalia`, `review`, `estrela`, `nota`, `Amazon`.
 
 ### 4. `travessao`
+
+**+ Ponto-e-vírgula (;)** (régua 2026-06-20): mesma família do travessão. Flag `;` em prosa como **warn** (auto-fixável: ;→"." ou ","). Detecção **entity-aware**: remova `&amp;`/`&#..;` e a querystring dos links de afiliado antes de checar, senão todo link falsa-positiva. Só prosa, nunca código.
 Presença de `—` (U+2014) ou `–` (U+2013) em qualquer campo. Proibido por PADROES.
 
 ### 5. `superlativo-sem-evidencia`

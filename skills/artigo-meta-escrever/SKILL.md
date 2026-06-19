@@ -36,6 +36,7 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 - **Keyword principal nos primeiros 60 chars.** Extrai do `title` (H1) ou do campo `keyword` se existir no frontmatter. Ex: title "Melhor Impressora Custo Benefício:" → keyword "melhor impressora custo benefício" → primeiros 60 chars da description devem incluir isso.
 - **Linguagem direta, factual.** Sem superlativos sem evidência ("a melhor opção", "incomparável", "imbatível").
 - **Sem travessão (—).** Use vírgula ou ponto.
+- **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Sem aspas duplas internas.** Vai pra YAML single-line entre `"..."` — aspa dupla interna quebra o parse. Use aspas simples ou parafraseie.
 - **Single line.** Sem `\n`. Frontmatter `description:` é single-line por convenção do repo.
 - **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.

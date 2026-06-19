@@ -184,6 +184,8 @@ Era `info`; subiu pra `warn` porque âncora errada é perda de SEO real e foi re
 O artigo deve linkar peer articles DISTINTOS (outros `.mdx` de `reviews/`) seguindo a **régua de quantidade canon (Marcelo 2026-06-09): 2 mínimo · ~3 ideal · 4 máximo**, **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). O **HUB** (artigo-cabeça: `homeReviewSlug` ou frontmatter `pillar: true`) é **isento do teto de 4** (linka todos os filhos). **A home é peer**: `href="/"` conta como link pro `homeReviewSlug`, e a própria home NÃO pode ficar órfã (deve receber ≥2 entradas dos outros artigos). Flag se: <2 peers distintos no guia, OU >4 peers distintos num artigo NÃO-hub, OU o mesmo peer linkado 2+ vezes, OU algum link interno na intro/review, OU a home órfã. Fix: adicionar/enxugar peer(s) em spot **contextual** (FAQ/Marca/Vale a pena/Como escolher — **NÃO na Conclusão**, v1.24.0), âncora = keyword do destino (singular), ou remover a repetição. Não bloqueia readyToLock.
 
 ### 10. `travessao` (level=`warn`)
+
+**+ Ponto-e-vírgula (;)** (régua 2026-06-20): mesma família do travessão. Flag `;` em prosa como **warn** (auto-fixável: ;→"." ou ","). Detecção **entity-aware**: remova `&amp;`/`&#..;` e a querystring dos links de afiliado antes de checar, senão todo link falsa-positiva. Só prosa, nunca código.
 `—` ou `–` em qualquer lugar do guia. Fix: trocar por `:`, `,`, `()` ou `.`.
 
 ### 11. `voz-comprador` (level=`error`)
