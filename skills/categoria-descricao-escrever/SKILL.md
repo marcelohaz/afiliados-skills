@@ -76,6 +76,12 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
    - Buscar artigo com `categorySlug === {param categorySlug}`; se achar, `categoryName = category`
    - Se nenhum artigo tem esse `categorySlug` (categoria órfã), fallback: `categoryName = categorySlug` (slug cru, sem capitalizar — paridade com `category-desc.ts:420`: `fromReviews.get(slug)?.name ?? slug`)
 
+5.1. **GUARD de slug acentuado/malformado (canon 2026-06-19) — OBRIGATÓRIO antes de gravar:**
+   - Ao listar os `categorySlug` dos artigos, **normalize acento pra comparar** (`s.normalize('NFD').replace(/[̀-ͯ]/g,'')`).
+   - **Se algum artigo tem `categorySlug` com acento/maiúscula/espaço** (ex: `pré-treino`, `Tablets`, `whey protein`) → é **slug malformado**: gera `/categoria/{slug}/` 404 E faz a descrição (que fica na chave sem-acento do config) virar **órfã** (bug real: melhorpretreino-com `pré-treino` vs config `pre-treino`, 2026-06-19). **NÃO escreva a descrição** nesse caso — **ABORTE com aviso**: "categorySlug malformado nos artigos [arquivos]: `{slug-cru}`. Conserte o slug nos `.mdx` pra `{slug-normalizado}` ANTES (mesma normalização do `article-builder.slugify`), senão a descrição nasce órfã. (Se o artigo está `contentLocked`, destrave via painel primeiro.)"
+   - **Se o `categorySlug` PARAM passado tem acento** → normalize-o (sem-acento) e use a versão limpa como chave da descrição (a chave do `categoryDescriptions` é SEMPRE sem-acento).
+   - Só prossiga quando o slug-param normalizado **bater** com o `categorySlug` (já normalizado) de ≥1 artigo, OU for órfã legítima do config. Mismatch acento ≠ órfã legítima.
+
 6. **Detectar instrução opcional** no prompt do user (paridade com outras skills):
    - "mais conciso" / "enfatize X" / "sem chamada pra ação" → extrai como instrução
    - Sem instrução clara → modo padrão
