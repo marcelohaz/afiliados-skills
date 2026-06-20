@@ -110,6 +110,7 @@ Colar o conteúdo do marcador (`bun scripts/clone-log.ts show ...`) no relatóri
    - Registra `melhorpretreino`/target em `TEMPLATE_KNOWN_DIVERGENCES` (index.astro) no server.ts + scripts/template-diff.ts se o site virar homeReviewSlug e ainda não estiver lá (senão o chip "Template" acusa falso drift).
 3. **6.3 Build** (`pnpm --filter {target} build`): gate Zod/YAML. Falha → conserta (YAML do .mdx) → rebuild.
 4. **6.4 Commit + push** (`--no-verify`, hook bloqueia .mdx direto) + **regen `gen.ts`** (senão painel mostra "0 artigos") + **restart do dev server** do target (senão getStaticPaths fica stale e a rota nova dá 404 — armadilha conhecida).
+   - **Incluir o marcador do clone-log no `git add`**: `git add docs/biblias-v2/.audits/clone-runs/{target}-{slug}-last.md` (commit prefixo `clone-log(...)` OU junto do `feat(...): clona artigo ...`). SEM commitar o marcador, o painel não enxerga a pill 🧬 Clone cross-máquina (a timeline lê via `git log`). O `verify` da Etapa final roda no arquivo local; o commit é só pra surfar no painel.
 5. **6.5 Verifica infra** (auto): build OK + dev serve a home + `/{slug}/` 200 + painel lista o artigo.
 
 ### Relatório final (o que o humano lê)

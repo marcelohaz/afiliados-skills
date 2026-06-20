@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.48.2] artigo-clonar-em-massa com GATE EXECUTAVEL (scripts/clone-log.ts init/check/verify): checklist da run em docs/biblias-v2/.audits/clone-runs/{site}-{slug}-last.md (git-tracked, NUNCA vai live). verify sai exit-1 enquanto faltar etapa — Etapas 1.4 (artigo-reviews-auditar) e 4 (artigo-auditar->readyToLock) sao HARD GATES verificaveis: PROIBIDO reportar concluido com verify falhando (igual pnpm build falhar). Pill Clone no painel. Mantem o guard de categoria-descricao (slug acentuado) e a blindagem de montagem (name-first, image do destino, featuredImage, fullReview block-scalar indent 4).",
-    "version": "1.48.2"  },
+    "description": "[v1.48.3] artigo-clonar-em-massa com GATE EXECUTAVEL (+ Etapa 6.4 commita o marcador clone-runs p/ a pill do painel aparecer cross-maquina) (scripts/clone-log.ts init/check/verify): checklist da run em docs/biblias-v2/.audits/clone-runs/{site}-{slug}-last.md (git-tracked, NUNCA vai live). verify sai exit-1 enquanto faltar etapa — Etapas 1.4 (artigo-reviews-auditar) e 4 (artigo-auditar->readyToLock) sao HARD GATES verificaveis: PROIBIDO reportar concluido com verify falhando (igual pnpm build falhar). Pill Clone no painel. Mantem o guard de categoria-descricao (slug acentuado) e a blindagem de montagem (name-first, image do destino, featuredImage, fullReview block-scalar indent 4).",
+    "version": "1.48.3"  },
   "plugins": [
     {
       "name": "afiliados-skills",
