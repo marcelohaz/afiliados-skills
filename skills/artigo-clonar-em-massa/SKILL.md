@@ -53,9 +53,20 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 - **Português brasileiro editorial**, voz analítica.
 - **Idempotência defensiva:** se o artigo destino já existe e está `contentLocked: true`, ABORTAR (não sobrescrever trabalho travado). Se existe sem lock, perguntar/abortar conforme contexto.
 
+## Checklist executável (clone-log) — OBRIGATÓRIO
+
+Pra GARANTIR que nenhuma etapa (em especial os hard-gates 1.4 e 4) seja pulada, o pipeline é rastreado por um gate executável: `scripts/clone-log.ts`. Ele escreve `docs/biblias-v2/.audits/clone-runs/{target}-{slug}-last.md` (git-tracked via exceção `!**/*-last.md`; fora de `sites/` → NUNCA vai pro `.mdx`/live).
+
+- **Início (dentro da Etapa 0):** `bun scripts/clone-log.ts init {target} {slug} --source={sourceSite}/{sourceSlug}`
+- **Fim de CADA etapa:** `bun scripts/clone-log.ts check {target} {slug} <etapa> "<detalhe curto>"` (etapas: `0 1.1 1.2 1.3 1.4 2 2.2 3 3.2 4 5 6`). Etapa não-aplicável: detalhe começando com "N/A: ..." (proibido em hard-gate).
+- **ANTES do relatório final (TRAVA DURA):** `bun scripts/clone-log.ts verify {target} {slug}`. Se sair com **exit 1**, a run é INVÁLIDA — É PROIBIDO reportar "concluído/pronto". Rode as etapas pendentes (tipicamente 1.4/4) e só feche quando `verify` passar (exit 0). Trate igual ao `pnpm build` falhar.
+
+Colar o conteúdo do marcador (`bun scripts/clone-log.ts show ...`) no relatório final.
+
 ## Pipeline (full-auto, etapa por etapa)
 
 ### Etapa 0 — Pré-flight (auto; aborta cedo se faltar)
+0. **`clone-log init`** (cria o checklist da run). Ao fim da Etapa 0, `clone-log check {t} {s} 0 "..."`.
 1. Git pull no repo de trabalho (evita estado stale; painel/Bárbara commitam em paralelo).
 2. Parse args. Valida `targetSite`/`sourceSite` (`[a-z0-9-]+`).
 3. Lê o `.mdx` fonte → extrai: produtos (ASIN, name, image, imageAlt, badge, **rating**, schemaPrice, store), keyword, keywordPlural, listHeading, category, e a estrutura de H2/H3 do `guideContent`. **`rating` é a nota editorial do fonte e DEVE ser preservada — o clone biblia-only NÃO regenera nota, e sem ela o artigo/página perde a fonte de estrela (caso real escritoriocasa 2026-06-11: clones saíram com 0 rating).**
@@ -102,6 +113,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 5. **6.5 Verifica infra** (auto): build OK + dev serve a home + `/{slug}/` 200 + painel lista o artigo.
 
 ### Relatório final (o que o humano lê)
+- **TRAVA: rodar `bun scripts/clone-log.ts verify {target} {slug}` ANTES de escrever este relatório.** Exit 1 = run inválida, NÃO reportar concluído (volte e feche as etapas pendentes). Colar o `clone-log show` no relatório.
 - Artigo criado: site/slug, título, N produtos (ordem final + badges), home sim/não.
 - Por etapa: o que cada audit pegou, o que foi auto-corrigido, **o que NÃO convergiu** (⚠ revisar).
 - Comparação vs fonte: frases idênticas, near-dup, overlap, specs — antes e depois da reescrita.

@@ -5,9 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.47.0] categoria-descricao-escrever ganha GUARD de slug acentuado/malformado: se um artigo tem categorySlug com acento (ex: pré-treino), maiúscula ou espaço, a skill ABORTA com aviso em vez de escrever descrição órfã (slug acentuado gera /categoria/ 404 E a descrição fica na chave sem-acento = órfã; bug real melhorpretreino-com 2026-06-19) — conserte o slug do .mdx primeiro. Raiz também coberta no painel (article-builder.slugify SEMPRE normaliza o categorySlug na criação, idempotente). Inclui o blindamento anterior do artigo-clonar-em-massa (name-first, image do destino, featuredImage obrigatório, fullReview block-scalar indent 4).",
-    "version": "1.48.1"
-  },
+    "description": "[v1.48.2] artigo-clonar-em-massa com GATE EXECUTAVEL (scripts/clone-log.ts init/check/verify): checklist da run em docs/biblias-v2/.audits/clone-runs/{site}-{slug}-last.md (git-tracked, NUNCA vai live). verify sai exit-1 enquanto faltar etapa — Etapas 1.4 (artigo-reviews-auditar) e 4 (artigo-auditar->readyToLock) sao HARD GATES verificaveis: PROIBIDO reportar concluido com verify falhando (igual pnpm build falhar). Pill Clone no painel. Mantem o guard de categoria-descricao (slug acentuado) e a blindagem de montagem (name-first, image do destino, featuredImage, fullReview block-scalar indent 4).",
+    "version": "1.48.2"  },
   "plugins": [
     {
       "name": "afiliados-skills",
