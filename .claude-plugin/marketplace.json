@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.49.1] biblia-auditar + biblia-auditar-em-massa: regra do auditFlags afinada (mecanica). O campo specsAmazon so gera 'informacoes erradas' (wrong-info) quando o ASIN que aparece DENTRO da ficha tecnica e DIFERENTE do asin da biblia (teste de igualdade de ASIN, sem julgamento de conteudo). Atributo capturado errado (CPU/tela/RAM/SO/peso) com ASIN conferindo NUNCA e wrong-info -> vira review/nada, mais ainda com dadosInconsistentes resolvendo. wrong-info segue valendo p/ fato errado em campo CURADO e contaminacao cross-produto (texto de produto genuinamente diferente). Ancora Marcelo: specsAmazon so 'informacoes erradas' se o ASIN la for diferente do da biblia.",
-    "version": "1.49.1"  },
+    "description": "[v1.49.2] biblia-auditar + biblia-auditar-em-massa: divergencia de ATRIBUTO do specsAmazon (CPU/tela/RAM/SO/peso/Wi-Fi capturado errado, atributos espurios de listagem, variante-irma no bruto) COM O ASIN CONFERINDO NAO acende chip NENHUM (nem wrong-info, nem review) -> registra em dadosInconsistentes e segue; e ruido de captura, nao problema. wrong-info SO por: ASIN dentro do specsAmazon diferente do asin da biblia, OU fato errado em campo CURADO, OU contaminacao cross-produto (texto de produto genuinamente diferente). review SO p/ frescor/verificacao externa real; nunca duplicar chips operacionais (sem opinioes/sem preco/indisponivel). Ancora Marcelo: specsAmazon so 'informacoes erradas' se o ASIN la for diferente, e atributo divergente com ASIN certo nem 'revisar' gera.",
+    "version": "1.49.2"  },
   "plugins": [
     {
       "name": "afiliados-skills",
