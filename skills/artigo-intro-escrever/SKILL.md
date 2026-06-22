@@ -207,13 +207,14 @@ Componentes:
 - **{ano}**: ano atual.
 - **Sem ponto final.**
 
-### Quando arrumar (gatilho = stub OU colisão — v1.35.0)
+### Quando arrumar (gatilho = stub OU colisão — v1.36.0)
 
 Reescreve se: (a) o título está **stub/fraco**, OU (b) **colide com um irmão** (mesmo slug/keyword em outro site com título igual/quase-igual — ver "Divergência cross-site"), OU (c) a **contagem N envelheceu**. Detecção:
 - **Stub/fraco (arruma)**: minúsculo, sem ano, sem contagem, ou == keyword cru (ex: "Melhor impressora epson", "Melhor Impressora Custo Benefício").
+- **⚠ "Sem contagem" com N≥3 é SEMPRE stub — gatilho OBJETIVO, não inferência (v1.36.0):** se o lineup tem 3+ produtos e o título NÃO tem `\d+ (melhores|opções|Melhores)`, é stub a corrigir **mesmo que o título esteja bem-formado** (Title Case + ano, ex: "Melhor Tablet para Estudar em 2026") **e mesmo que artigos IRMÃOS do site estejam iguais sem contagem**. Irmão sem contagem com N≥3 é **straggler não-corrigido, NÃO assinatura do site** — NUNCA inferir "padrão" a partir de stubs. Contagem só é dispensável com **N<3** (ver Fallback). Caso real (2026-06-22, escritorioecasa/melhor-tablet-para-estudar, N=8): a intro deixou o título sem contagem inferindo que o cluster "para X" (desenho N=7, trabalho N=7, ambos também stubs) era a assinatura. Era armadilha: o gatilho "sem contagem com N≥3" vence qualquer aparência de consistência.
 - **Colide com irmão (arruma p/ divergir)**: título idêntico/quase-igual a um irmão → aplica o padrão de assinatura deste site (pool P1-P4). Mesmo que já esteja "no padrão", se colide, troca.
 - **N mudou (atualiza)**: se o lineup cresceu/encolheu, atualiza o número (a contagem não pode envelhecer).
-- **OK (NÃO toca)**: já no padrão de assinatura do site, não colide com irmão, e N certo.
+- **OK (NÃO toca)**: já no padrão de assinatura do site **com contagem presente** (ou N<3), não colide com irmão, e N certo. "N certo" pressupõe que **a contagem EXISTE** — título sem contagem com N≥3 nunca cai no "OK".
 
 ### Fallback N<3 (decisão Marcelo)
 
@@ -559,7 +560,9 @@ Args canônico que invoco: `Skill(skill="artigo-intro-escrever", args="melhorimp
 ```python
 import re, glob
 
-novo = BODY_NOVO  # intro gerada (texto após o 2º ---)
+novo = BODY_NOVO        # intro gerada (texto após o 2º ---)
+TITLE = TITLE_FINAL     # título que vai ser gravado (reescrito ou o atual)
+PRODUCTS = FRONTMATTER_PRODUCTS  # lista products[] do frontmatter
 
 # 1) KEYWORD CEDO: o primeiro ** começa nas primeiras ~5 palavras
 prefixo = novo.strip().split('**')[0].strip()
@@ -586,6 +589,12 @@ for f in glob.glob(f'sites/{SITE}/src/content/reviews/*.mdx'):
 # 5) Duplicação contígua (bug-class a72e7d9) + minúscula após ponto
 assert not re.search(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', novo), "duplicação contígua"
 # '\. [a-z]' fora de URL → capitalizar
+
+# 6) TÍTULO: sem contagem com N≥3 é stub (v1.36.0) — gatilho objetivo, não inferência
+N = len(PRODUCTS)  # produtos do lineup
+if N >= 3 and not re.search(r'\d+\s+([Mm]elhores|opções)', TITLE):
+    raise AssertionError(f"título sem contagem com N={N} (>=3) = stub; reescreva com a contagem. "
+                         f"NÃO tratar irmão sem contagem como assinatura: {TITLE!r}")
 ```
 
 Checagem de olho (não-greppável): família de abertura/arremate/miolo/CTA inédita vs as irmãs lidas no passo 6.5 · máx 1 coloquialismo leve · nenhuma frase reusada dos Exemplos A-D · 300-800 chars · 2-3 §.
