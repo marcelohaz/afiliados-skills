@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.48.3] artigo-clonar-em-massa com GATE EXECUTAVEL (+ Etapa 6.4 commita o marcador clone-runs p/ a pill do painel aparecer cross-maquina) (scripts/clone-log.ts init/check/verify): checklist da run em docs/biblias-v2/.audits/clone-runs/{site}-{slug}-last.md (git-tracked, NUNCA vai live). verify sai exit-1 enquanto faltar etapa — Etapas 1.4 (artigo-reviews-auditar) e 4 (artigo-auditar->readyToLock) sao HARD GATES verificaveis: PROIBIDO reportar concluido com verify falhando (igual pnpm build falhar). Pill Clone no painel. Mantem o guard de categoria-descricao (slug acentuado) e a blindagem de montagem (name-first, image do destino, featuredImage, fullReview block-scalar indent 4).",
-    "version": "1.48.3"  },
+    "description": "[v1.49.0] biblia-auditar + biblia-auditar-em-massa: regua de classificacao do auditFlags afinada. wrong-info passa a ser SO p/ erro de IDENTIDADE do produto (captura da Amazon de OUTRO produto / ASIN na ficha tecnica diverge do ASIN da biblia, OU fato errado em campo CURADO). Divergencia de atributo entre captura-Amazon e fabricante (CPU/tela/RAM/SO/peso capturado errado), erro de captura/listagem, ou material de variante-irma no bruto — com ASIN/produto CORRETO — vira 'review', nao bloqueia, mais ainda quando ja ha dadosInconsistentes.decisaoEditorial resolvendo. Ancora: bloqueia (wrong-info) so se o ASIN/produto capturado esta errado.",
+    "version": "1.49.0"  },
   "plugins": [
     {
       "name": "afiliados-skills",
