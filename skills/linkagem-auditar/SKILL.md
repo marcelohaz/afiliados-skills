@@ -102,9 +102,9 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 
 11.5. **AUTO-CHECK de concordância artigo↔âncora (OBRIGATÓRIO, canon 2026-06-23):** o `audit-linkagem.ts` valida âncora=keyword mas NÃO olha a gramática da frase em volta — então um conserto de âncora pode passar verde e mesmo assim deixar "no guia **das** melhor impressora". Pra cada artigo tocado, grep:
     ```bash
-    grep -nE '\b(das|dos|nas|nos|aos|pelas|pelos|essas|esses|umas|uns) +<a [^>]*>(o |a |melhor|impressora|tablet|opç)' sites/{site}/src/content/reviews/*.mdx
+    grep -nE '\b(das|dos|nas|nos|aos|pelas|pelos) +<a [^>]*>\s*(melhor|impressora|tablet|opção)\b' sites/{site}/src/content/reviews/*.mdx
     ```
-    Qualquer match = artigo plural regendo âncora singular → corrigir o artigo (`das→da` etc). Esse check pega a regressão clássica do anchor-fix isolado. Sem matches → ok.
+    Qualquer match = artigo plural regendo âncora singular → corrigir o artigo (`das→da` etc). **O `\b` é OBRIGATÓRIO:** sem ele, `melhor` casa `melhores` e `tablet` casa `tablets`, e "das melhores creatinas"/"nos tablets Lenovo" (plural+plural, CORRETO) viram falso-positivo. Com `\b`, só pega `das melhor` / `nos tablet` singular. Esse check pega a regressão clássica do anchor-fix isolado. Sem matches → ok.
 
 12. **Re-rodar `bun scripts/audit-linkagem.ts {site}`** pós-fix pra confirmar que os findings aprovados sumiram e nada regrediu (cada artigo 2-4 peers — hub isento; 0 `linkagem-excesso`; 0 órfãos e idealmente 0 sublinkados; 0 na Conclusão; 0 broken/home-errado).
 

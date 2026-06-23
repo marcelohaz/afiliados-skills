@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "[v1.50.0] artigo-guia-auditar ganha criterio faq-order-shuffle (anti-footprint cross-site): artigos da mesma keyword em sites irmaos convergem nas MESMAS perguntas de FAQ (mesma analise de concorrentes); as RESPOSTAS ja divergem (jaccard 0.25-0.45), entao o footprint e so a ordem/identidade das perguntas. O criterio reordena a FAQ por seed determinístico (site+slug) e IDEMPOTENTE (ordena canonico -> fixa a money-question no topo -> Fisher-Yates seedado), via scripts/faq-shuffle.ts. NAO mexe na redacao (bater PAA literal tem valor). level=info, nao bloqueia readyToLock. A clone NAO embaralha sozinha (lembrete no relatorio final pra rodar guia-auditar/faq-shuffle no artigo novo).",
-    "version": "1.51.0"
+    "version": "1.51.1"
   },
   "plugins": [
     {
