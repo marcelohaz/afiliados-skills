@@ -119,6 +119,7 @@ Colar o conteúdo do marcador (`bun scripts/clone-log.ts show ...`) no relatóri
 - Por etapa: o que cada audit pegou, o que foi auto-corrigido, **o que NÃO convergiu** (⚠ revisar).
 - Comparação vs fonte: frases idênticas, near-dup, overlap, specs — antes e depois da reescrita.
 - Build/infra: status. Commit hash.
+- **Lembrete anti-footprint (FAQ):** esta clone NÃO embaralha a FAQ. Se o artigo tem irmão(s) na mesma keyword em outro(s) site(s), rode `bun scripts/faq-shuffle.ts {target}/{slug} --apply` (ou o `artigo-guia-auditar`, que já inclui o critério `faq-order-shuffle`) pra divergir a ordem da FAQ cross-site. Determinístico/idempotente — pode rodar agora ou em lote no cluster depois.
 - Próximo passo: revisar a home renderizada; se aprovar, travar (contentLocked) + deploy (ambos manuais).
 
 ## Prompt do sub-agent de review (Etapa 1.1) — resumo

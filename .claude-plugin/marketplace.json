@@ -5,8 +5,9 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.49.2] biblia-auditar + biblia-auditar-em-massa: divergencia de ATRIBUTO do specsAmazon (CPU/tela/RAM/SO/peso/Wi-Fi capturado errado, atributos espurios de listagem, variante-irma no bruto) COM O ASIN CONFERINDO NAO acende chip NENHUM (nem wrong-info, nem review) -> registra em dadosInconsistentes e segue; e ruido de captura, nao problema. wrong-info SO por: ASIN dentro do specsAmazon diferente do asin da biblia, OU fato errado em campo CURADO, OU contaminacao cross-produto (texto de produto genuinamente diferente). review SO p/ frescor/verificacao externa real; nunca duplicar chips operacionais (sem opinioes/sem preco/indisponivel). Ancora Marcelo: specsAmazon so 'informacoes erradas' se o ASIN la for diferente, e atributo divergente com ASIN certo nem 'revisar' gera.",
-    "version": "1.49.2"  },
+    "description": "[v1.50.0] artigo-guia-auditar ganha criterio faq-order-shuffle (anti-footprint cross-site): artigos da mesma keyword em sites irmaos convergem nas MESMAS perguntas de FAQ (mesma analise de concorrentes); as RESPOSTAS ja divergem (jaccard 0.25-0.45), entao o footprint e so a ordem/identidade das perguntas. O criterio reordena a FAQ por seed determinístico (site+slug) e IDEMPOTENTE (ordena canonico -> fixa a money-question no topo -> Fisher-Yates seedado), via scripts/faq-shuffle.ts. NAO mexe na redacao (bater PAA literal tem valor). level=info, nao bloqueia readyToLock. A clone NAO embaralha sozinha (lembrete no relatorio final pra rodar guia-auditar/faq-shuffle no artigo novo).",
+    "version": "1.50.0"
+  },
   "plugins": [
     {
       "name": "afiliados-skills",
