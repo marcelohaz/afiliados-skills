@@ -91,14 +91,20 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
    `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-guide.mdx` (via helper `readGuideContent` do painel, mesmo formato dos outros).
 
 10. **Aplicar os aprovados** via `Edit` cirúrgico no `guideContent` do `.mdx` (preservar indent 2 espaços do block scalar; um trecho por vez). Regras:
-    - **anchor-nao-keyword**: trocar SÓ o texto entre `<a>...</a>` pela keyword (qualificadores ficam FORA do `<a>`).
-    - **anchor-produto-sem-nome**: trocar o texto pelo nome completo do produto (com marca).
+    - **anchor-nao-keyword**: trocar SÓ o texto entre `<a>...</a>` pela keyword (qualificadores ficam FORA do `<a>`). **⚠ RECONCILIAR a concordância do artigo/preposição que vem ANTES do `<a>` (canon 2026-06-23):** se a âncora nova muda NÚMERO ou GÊNERO em relação à antiga, o artigo/contração que a rege precisa acompanhar. Caso real: âncora `melhores impressoras de tanque de tinta` (plural) virou `melhor impressora tanque de tinta` (singular) mas o "no guia **das**" ficou → "no guia das melhor impressora" (quebrado). Ajustes típicos: `das→da`, `dos→do`, `nas→na`, `nos→no`, `aos→ao`, `pelas→pela`, `essas→essa`, `umas→uma`. **Reler a FRASE INTEIRA do `<a>` tocado (não só o trecho da âncora) antes de salvar.**
+    - **anchor-produto-sem-nome**: trocar o texto pelo nome completo do produto (com marca). **Mesma reconciliação de concordância do item acima** (ex: âncora que era plural genérico vira nome próprio singular → ajustar artigo antes).
     - **link-home-errado**: trocar `href="/{homeReviewSlug}/"` por `href="/"` (manter a âncora = keyword da home).
     - **link-quebrado**: corrigir o href pro slug REAL (confirmar o arquivo existe) OU, se não há destino, remover o `<a>` mantendo o texto.
     - **peer-link-na-conclusao**: MOVER o link pro spot contextual aprovado (remover da Conclusão + inserir no parágrafo-alvo). Produto/Amazon na Conclusão ficam.
     - **link novo**: inserir o `<a>` no spot exato aprovado, âncora = keyword singular do destino, href = slug REAL (`/slug/` ou `/` pra home), sem `rel`/`target` (interno passa autoridade).
 
 11. **Build** (gate): `pnpm --filter {site} build`. Se Zod/Astro falhar, reverter do backup e reportar.
+
+11.5. **AUTO-CHECK de concordância artigo↔âncora (OBRIGATÓRIO, canon 2026-06-23):** o `audit-linkagem.ts` valida âncora=keyword mas NÃO olha a gramática da frase em volta — então um conserto de âncora pode passar verde e mesmo assim deixar "no guia **das** melhor impressora". Pra cada artigo tocado, grep:
+    ```bash
+    grep -nE '\b(das|dos|nas|nos|aos|pelas|pelos|essas|esses|umas|uns) +<a [^>]*>(o |a |melhor|impressora|tablet|opç)' sites/{site}/src/content/reviews/*.mdx
+    ```
+    Qualquer match = artigo plural regendo âncora singular → corrigir o artigo (`das→da` etc). Esse check pega a regressão clássica do anchor-fix isolado. Sem matches → ok.
 
 12. **Re-rodar `bun scripts/audit-linkagem.ts {site}`** pós-fix pra confirmar que os findings aprovados sumiram e nada regrediu (cada artigo 2-4 peers — hub isento; 0 `linkagem-excesso`; 0 órfãos e idealmente 0 sublinkados; 0 na Conclusão; 0 broken/home-errado).
 
