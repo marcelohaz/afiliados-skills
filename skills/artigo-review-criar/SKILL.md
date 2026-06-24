@@ -173,7 +173,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 Estrutura: `[abertura variada], o [Produto] é o melhor [keyword] para [ângulo do produto]`
 
-Exemplos (nicho pré-treino, ângulo vindo do badge de cada produto):
+Exemplos (nicho pré-treino, ângulo vindo do subtitle de cada produto):
 - "Se você prioriza treino intenso, o FTW Diabo Verde é o melhor pré-treino para treino intenso, porque..."
 - "Para quem treina à noite, o Night Train é o melhor pré-treino para treino noturno, por ser..."
 - "Quando a concentração é o que falta, o Darkness é o melhor pré-treino para foco mental, porque..."
@@ -195,7 +195,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 - **specs** (3-10 pares label/value): strings simples sem HTML. Reuso labels comuns do lineup pra alinhar com `specLabels`.
 
-- **subtitle**: default leve keyword-first (keyword inteira + cauda do PRÓPRIO badge, sem spec); a normalização cross-produto (cauda variada/sequência) é do `artigo-reviews-auditar`, depois da escrita. Ver seção "subtitle — default leve keyword-first" abaixo.
+- **subtitle** (10-150 chars): título descritivo curto, sem redundância com nome.
 
 - **shortDescription** (50-250 chars, alvo 180-230): padrão BENEFÍCIO-FIRST. 1-2 frases que abrem com posicionamento/perfil, técnico justifica depois. **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
 
@@ -243,19 +243,8 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 ## Os 6 campos do produto-no-artigo
 
-### subtitle — default leve keyword-first; a normalização é do AUDIT (v1.52.0, canon Marcelo 2026-06-24)
-
-O subtitle é o heading do card = slot de alto peso SEO. **Mas a criação NÃO gasta esforço nele nem deixa ele enviesar a escrita.** O ângulo que guia o review é o `badge` (ver "Badge = ângulo do review" abaixo), não o subtitle. A normalização keyword-first de verdade (cauda variada anti-clone, sequência por posição) é **cross-produto** e mora no `artigo-reviews-auditar` (critério `subtitle-keyword-first`), que roda DEPOIS com visão do conjunto — canon "criação escreve livre; cross-produto é da auditoria".
-
-**O que a criação faz com o subtitle:**
-- Escreve o review PRIMEIRO (da bíblia, ângulo = badge). O subtitle é o ÚLTIMO campo, não influencia a prosa.
-- Seta um **default leve keyword-first**: keyword inteira do artigo + cauda simples derivada do PRÓPRIO badge ("Custo-Benefício"→"{kw} custo-benefício", "Melhor Escolha"→"{kw} em geral", "Mais Barata"→"{kw} boa e barata", "Profissional"→"{kw} profissional", marca→"{kw} da {Marca}"). 5-7 palavras, **SEM spec técnica** (sem Hz/GB/mAh/polegada/MP/W/número), em **Title Case PT-BR** (palavras de conteúdo maiúsculas; preposições/artigos curtos minúsculos: em/de/da/do/para/e/a/o/com/no/na/por; preserva marca/sigla). Ex: "Melhor Impressora Multifuncional em Geral".
-- **NÃO tenta variar cauda contra os irmãos** — a criação é cega aos outros produtos; variar/sequenciar é trabalho do audit.
-- Subtitle escrito à mão no stub = rótulo deliberado, **não sobrescreve** (exceção v1.34.0).
-
-Ex (keyword "melhor tablet para desenho", badge "Custo-Benefício"): "Melhor tablet para desenho custo-benefício".
-
-❌ NUNCA estilo ângulo + spec: "Topo do Android com AMOLED 120Hz e S Pen".
+### subtitle (10-150 chars)
+Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L3250": "Multifuncional EcoTank com Wi-Fi, ideal para casa e home office".
 
 ### shortDescription (50-250 chars, alvo 180-230) — padrão BENEFÍCIO-FIRST
 
@@ -457,16 +446,16 @@ Conversacional ≠ personagem. Caso real: a home do melhorimpressora acumulou "m
 
 **7. Máximo 1 expressão coloquial leve por review** (pode ser zero); analogia só quando explica algo. Teste final: leia em voz alta como se explicasse pra um cliente — soou personagem ou corporativo, simplifica.
 
-## Badge = ângulo do review; subtitle = rótulo SEO (v1.52.0 reconcilia v1.34.0)
+## Subtitle humano = ângulo do review (v1.34.0, canon Marcelo 2026-06-10)
 
-**O ângulo que guia o review é o `badge`** (Custo-Benefício, Melhor Escolha, Profissional, Mais Barata...), NÃO o subtitle. O review aborda o produto pelo papel do badge: o "Para quem é" deriva dele, os pros priorizam o que o sustenta.
+Quando o stub já vem com `subtitle` (e/ou `badge`) preenchido pelo editor humano (modal "+ Adicionar produto" do painel), isso NÃO é placeholder: **é a direção editorial** — "normalmente é o ângulo que queremos que você aborde o produto" (Marcelo).
 
-1. **Badge = ângulo VINCULANTE**: se o stub vem com `badge`, o review inteiro aborda o produto por esse papel. Se a bíblia CONTRADIZ o badge (ex: badge "a mais rápida" e a bíblia mostra que não é), NÃO grave nada conflitante — pare e pergunte ao usuário.
-2. **Subtitle = rótulo SEO** (não enviesa a prosa): default leve keyword-first na criação (ver seção "subtitle — default leve keyword-first" acima). A normalização cross-produto (cauda variada/sequência) é do `artigo-reviews-auditar`, DEPOIS da escrita.
-3. **Subtitle escrito à mão no stub**: respeite como rótulo deliberado — NÃO sobrescreva (nem na criação nem no audit; exceção mantida da v1.34.0). Caso especial: se NÃO há badge e o editor escreveu um subtitle com ângulo claro, ele pode servir de direção pro review (fallback do comportamento antigo).
-4. **Subtitle vazio** = default leve keyword-first derivado do badge (ver seção acima). NUNCA estilo ângulo/benefício com spec.
+1. **Ângulo VINCULANTE**: o review inteiro aborda o produto por esse ângulo — o "Para quem é" deriva dele (reforça a régua v1.20.1, que já manda derivar o claim do subtitle), os pros priorizam o que o sustenta.
+2. **Texto MELHORÁVEL**: você tem liberdade de polir o subtitle (concisão, clareza, régua 10-150 chars, title case) — mas o SENTIDO não muda. Trocar "tanque pra alto volume" por "multifuncional compacta" = violação; polir "boa pra muito volume" → "Tanque de alto volume pra rotina pesada" = ok.
+3. **Subtitle vazio** = comportamento atual (criar do zero a partir da bíblia + badge).
+4. **NUNCA descartar silenciosamente** o ângulo humano. Se a bíblia CONTRADIZ o ângulo (ex: subtitle diz "a mais rápida" e a bíblia mostra que não é), NÃO grave nada conflitante: pare e pergunte ao usuário.
 
-Histórico: até v1.51 o ângulo vinha do subtitle (v1.34.0). Com o subtitle virando rótulo SEO keyword-first (v1.52.0), o papel de "ângulo vinculante" migrou pro **badge** (que sempre foi o hint editorial). O subtitle keyword-first é setado/normalizado no audit, depois da escrita, pra não enviesar — canon "criação escreve livre; cross-produto é da auditoria".
+Histórico: até v1.33 a skill regenerava o subtitle sem ler o existente (~80% dos subtitles humanos sobrescritos; os ~20% "mantidos" eram convergência por acaso). O badge sempre teve esse tratamento (var + hint editorial) — esta régua espelha pro subtitle.
 
 ## Operação de destilação bíblia → .mdx (CRÍTICO)
 

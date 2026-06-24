@@ -5,7 +5,7 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.54.0] subtitle keyword-first agora em Title Case PT-BR (palavras de conteudo maiusculas, preposicoes/artigos curtos minusculos). Regra no criterio 22 do artigo-reviews-auditar (onde o subtitle e normalizado) + default leve do artigo-review-criar. subtitle keyword-first MIGRA da criação pro AUDIT (canon: criação escreve livre, cross-produto é da auditoria). artigo-reviews-auditar ganha o critério 22 subtitle-keyword-first: com visão do conjunto, seta o subtitle = keyword inteira + cauda variada por badge/posição (anti-clone), 5-7 palavras, sem spec tecnica. artigo-review-criar para de gerar subtitle com peso editorial — so poe um default leve do badge, sem enviesar a escrita; o ANGULO do review passa a ser o BADGE (v1.34.0 reconciliada). artigo-clonar-em-massa: a normalizacao keyword-first acontece na Etapa 1.4 (audit cross-produto). Subtitle escrito a mao pelo editor continua respeitado.",
+    "description": "[v1.55.0] CRIAÇÃO volta ao normal: o subtitle é escrito como angulo editorial (v1.34, guia o review) — sem mudanca na criacao. A UNICA novidade que fica e o NORMALIZADOR no audit: artigo-reviews-auditar criterio 22 reescreve o subtitle pra keyword-first (keyword inteira + cauda por badge/posicao, Title Case PT-BR, sem spec, anti-clone cross-produto) DEPOIS do review pronto. Modelo: criacao escreve livre; o subtitle vira keyword-first so no audit.",
     "version": "1.51.1"
   },
   "plugins": [

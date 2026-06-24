@@ -53,20 +53,9 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 - **Português brasileiro editorial**, voz analítica.
 - **Idempotência defensiva:** se o artigo destino já existe e está `contentLocked: true`, ABORTAR (não sobrescrever trabalho travado). Se existe sem lock, perguntar/abortar conforme contexto.
 
-## Checklist executável (clone-log) — OBRIGATÓRIO
-
-Pra GARANTIR que nenhuma etapa (em especial os hard-gates 1.4 e 4) seja pulada, o pipeline é rastreado por um gate executável: `scripts/clone-log.ts`. Ele escreve `docs/biblias-v2/.audits/clone-runs/{target}-{slug}-last.md` (git-tracked via exceção `!**/*-last.md`; fora de `sites/` → NUNCA vai pro `.mdx`/live).
-
-- **Início (dentro da Etapa 0):** `bun scripts/clone-log.ts init {target} {slug} --source={sourceSite}/{sourceSlug}`
-- **Fim de CADA etapa:** `bun scripts/clone-log.ts check {target} {slug} <etapa> "<detalhe curto>"` (etapas: `0 1.1 1.2 1.3 1.4 2 2.2 3 3.2 4 5 6`). Etapa não-aplicável: detalhe começando com "N/A: ..." (proibido em hard-gate).
-- **ANTES do relatório final (TRAVA DURA):** `bun scripts/clone-log.ts verify {target} {slug}`. Se sair com **exit 1**, a run é INVÁLIDA — É PROIBIDO reportar "concluído/pronto". Rode as etapas pendentes (tipicamente 1.4/4) e só feche quando `verify` passar (exit 0). Trate igual ao `pnpm build` falhar.
-
-Colar o conteúdo do marcador (`bun scripts/clone-log.ts show ...`) no relatório final.
-
 ## Pipeline (full-auto, etapa por etapa)
 
 ### Etapa 0 — Pré-flight (auto; aborta cedo se faltar)
-0. **`clone-log init`** (cria o checklist da run). Ao fim da Etapa 0, `clone-log check {t} {s} 0 "..."`.
 1. Git pull no repo de trabalho (evita estado stale; painel/Bárbara commitam em paralelo).
 2. Parse args. Valida `targetSite`/`sourceSite` (`[a-z0-9-]+`).
 3. Lê o `.mdx` fonte → extrai: produtos (ASIN, name, image, imageAlt, badge, **rating**, schemaPrice, store), keyword, keywordPlural, listHeading, category, e a estrutura de H2/H3 do `guideContent`. **`rating` é a nota editorial do fonte e DEVE ser preservada — o clone biblia-only NÃO regenera nota, e sem ela o artigo/página perde a fonte de estrela (caso real escritoriocasa 2026-06-11: clones saíram com 0 rating).**
@@ -80,7 +69,7 @@ Colar o conteúdo do marcador (`bun scripts/clone-log.ts show ...`) no relatóri
 1. **1.0 Lineup + shuffle**: ordem = top-3 do fonte FIXOS + posições 4+ embaralhadas com shuffle determinístico (seed = hash do target+source+slug; FNV-1a + xorshift32, igual `agent-edit.ts`). Badge **e `rating`** viajam COM o produto (mapeados por ASIN). Top-3 fixo garante "Melhor Escolha" na posição 1.
    - **GATE DE BADGE — TODO produto leva etiqueta (HARD GATE):** a convenção da rede é que **cada produto do comparativo tem badge** (ex.: melhor-impressora-hp e melhor-impressora-tanque-de-tinta = 7 produtos / 7 badges). Como o badge viaja por ASIN, **buraco no fonte vira buraco no destino** (causa-raiz 2026-06-14: o fonte sublimática tinha badge só nos 2 primeiros → o clone propagou L3250/L1250 SEM etiqueta nos 2 sites). Regra: os 2 primeiros mantêm os de ranking ("Melhor Escolha"/"Boa Alternativa"); **toda posição sem badge recebe um badge DESCRITIVO curto** derivado do ângulo/categoria do produto (ex.: "Multifuncional Adaptável", "Mais Barata", "Laser Monocromática", "Fotográfica", "Frente e Verso Automático", "Boa e Barata"). Badge é **texto livre**: renderiza com a cor padrão (`#1a56db`) via fallback de `getBadgeLabel`/`getBadgeColor`, **sem precisar registrar no `packages/ui/src/utils/amazon.ts`** (registro só pra cor custom, ex.: cinza de "Fora de Linha"). **AUTO-CHECK pós-lineup (OBRIGATÓRIO):** `nº de produtos com badge == nº de produtos`. Se faltar qualquer um, atribuir antes de seguir. Esse mesmo invariante é re-conferido na Etapa 4 (`artigo-auditar` critério `badge-ausente`).
 2. **1.1 Geração**: N sub-agents Opus paralelos (levas de até 10). Cada um gera os campos do review-no-artigo (subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos) — **biblia-only** (vê só a bíblia do produto + a página individual do mesmo produto no destino como "ângulo a NÃO repetir" / anti-dup intra-site). NUNCA vê o texto do fonte (`biblia-only`). Régua = `artigo-review-criar` (destilação categoria D, voz analítica, sem travessão, texto-puro, links tag-aware, chavões por nicho, health YMYL, hard caps). Os 4 parágrafos do fullReview usam os rótulos canônicos LITERAIS (`Para quem é:` / `Por que gostamos:` / `Pontos de atenção:` / `Resumo:`), NUNCA parafraseados — o audit (regra `review`) exige os literais e o anti-dup do clone já remove esses rótulos antes de medir overlap, então parafrasear só quebra (canon Marcelo 2026-06-14).
-3. **1.2 Gate mecânico** (auto): por review — travessão (0), ponto-e-vírgula (0 em prosa; régua 2026-06-20; detecção entity-aware: ignora &amp;/&#..; e querystring de href antes de checar), links Amazon (formato + contagem 2-3, tag-aware), texto-puro (subtitle/shortDescription/specs.value sem HTML), **subtitle keyword-first sem spec técnica (sem Hz/GB/mAh/polegada/MP/W)**, 4 parágrafos com prefixos, tamanhos, **voz-comprador com LISTA AMPLA** (incluir "de forma recorrente", bare "recorrente", "aparece como", "parte das opiniões/observações", "citado/citados de forma"; caso real: "de forma recorrente" escapou de uma lista curta). Falha → auto-fix (sub-agent corrige só o campo) → re-valida (máx 3x).
+3. **1.2 Gate mecânico** (auto): por review — travessão (0), links Amazon (formato + contagem 2-3, tag-aware), texto-puro (subtitle/shortDescription/specs.value sem HTML), 4 parágrafos com prefixos, tamanhos, **voz-comprador com LISTA AMPLA** (incluir "de forma recorrente", bare "recorrente", "aparece como", "parte das opiniões/observações", "citado/citados de forma"; caso real: "de forma recorrente" escapou de uma lista curta). Falha → auto-fix (sub-agent corrige só o campo) → re-valida (máx 3x).
 4. **1.3 Anti-dup intra-site** (auto): cada review ≠ página individual do mesmo produto (jaccard de sentenças). Acima do limite → auto-fix (reescreve trecho divergindo) → re-valida.
 5. **1.4 Audit cross-produto** (`artigo-reviews-auditar`): tone-clone, redundância, incoerência, claim-vs-lineup, buyer-refs, etc. → AUTO-APLICA as correções propostas → re-audita (máx 3x). Não-convergido → flag no relatório.
 
@@ -110,16 +99,13 @@ Colar o conteúdo do marcador (`bun scripts/clone-log.ts show ...`) no relatóri
    - Registra `melhorpretreino`/target em `TEMPLATE_KNOWN_DIVERGENCES` (index.astro) no server.ts + scripts/template-diff.ts se o site virar homeReviewSlug e ainda não estiver lá (senão o chip "Template" acusa falso drift).
 3. **6.3 Build** (`pnpm --filter {target} build`): gate Zod/YAML. Falha → conserta (YAML do .mdx) → rebuild.
 4. **6.4 Commit + push** (`--no-verify`, hook bloqueia .mdx direto) + **regen `gen.ts`** (senão painel mostra "0 artigos") + **restart do dev server** do target (senão getStaticPaths fica stale e a rota nova dá 404 — armadilha conhecida).
-   - **Incluir o marcador do clone-log no `git add`**: `git add docs/biblias-v2/.audits/clone-runs/{target}-{slug}-last.md` (commit prefixo `clone-log(...)` OU junto do `feat(...): clona artigo ...`). SEM commitar o marcador, o painel não enxerga a pill 🧬 Clone cross-máquina (a timeline lê via `git log`). O `verify` da Etapa final roda no arquivo local; o commit é só pra surfar no painel.
 5. **6.5 Verifica infra** (auto): build OK + dev serve a home + `/{slug}/` 200 + painel lista o artigo.
 
 ### Relatório final (o que o humano lê)
-- **TRAVA: rodar `bun scripts/clone-log.ts verify {target} {slug}` ANTES de escrever este relatório.** Exit 1 = run inválida, NÃO reportar concluído (volte e feche as etapas pendentes). Colar o `clone-log show` no relatório.
 - Artigo criado: site/slug, título, N produtos (ordem final + badges), home sim/não.
 - Por etapa: o que cada audit pegou, o que foi auto-corrigido, **o que NÃO convergiu** (⚠ revisar).
 - Comparação vs fonte: frases idênticas, near-dup, overlap, specs — antes e depois da reescrita.
 - Build/infra: status. Commit hash.
-- **Lembrete anti-footprint (FAQ):** esta clone NÃO embaralha a FAQ. Se o artigo tem irmão(s) na mesma keyword em outro(s) site(s), rode `bun scripts/faq-shuffle.ts {target}/{slug} --apply` (ou o `artigo-guia-auditar`, que já inclui o critério `faq-order-shuffle`) pra divergir a ordem da FAQ cross-site. Determinístico/idempotente — pode rodar agora ou em lote no cluster depois.
 - Próximo passo: revisar a home renderizada; se aprovar, travar (contentLocked) + deploy (ambos manuais).
 
 ## Prompt do sub-agent de review (Etapa 1.1) — resumo
@@ -127,7 +113,6 @@ Colar o conteúdo do marcador (`bun scripts/clone-log.ts show ...`) no relatóri
 Inline, ~mesma régua de `artigo-review-criar`, com:
 - Inputs: target, slug-artigo, ASIN, badge, affiliateTag (crua se vazia), bíblia (conteúdo), página individual do produto no destino (texto, p/ anti-dup intra-site).
 - Gera os 6 campos do review-no-artigo. `biblia-only`: fonte factual = SÓ a bíblia. NUNCA citar/ver o artigo fonte.
-- **subtitle: o ângulo do review é o BADGE, não o subtitle (v1.52.0).** O sub-agent escreve o review pelo badge e seta um subtitle default leve keyword-first (keyword inteira + cauda do PRÓPRIO badge, sem spec técnica). NÃO instruir "o ângulo do produto pra X" (erro real 2026-06-24: pedir ângulo gerou subtitle estilo "Topo do Android com AMOLED 120Hz"). A **normalização keyword-first cross-produto** (cauda variada/sequência anti-clone) acontece na **Etapa 1.4** (`artigo-reviews-auditar`, critério `subtitle-keyword-first`), que tem visão do conjunto. Ver artigo-review-criar → "subtitle — default leve keyword-first".
 - Régua dura: sem travessão; voz analítica (zero comprador/opiniões/relatos/elogiado/quem comprou); destilação categoria D; campos texto-puro sem HTML; pros/cons `<strong>Título</strong>: texto`; fullReview 4 parágrafos com os rótulos canônicos LITERAIS (`Para quem é:`/`Por que gostamos:`/`Pontos de atenção:`/`Resumo:`, nunca parafraseados) + 2-3 links Amazon tag-aware; sem termos técnico-industriais; sem "declarado/conforme/segundo o fabricante" como muleta; health YMYL; hard caps.
 - Retorna SÓ JSON com os 6 campos (a skill-mãe monta o .mdx).
 
