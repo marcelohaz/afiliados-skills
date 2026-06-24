@@ -570,25 +570,31 @@ for produto in products:
 
 **21f — tiques com teto por ARTIGO** (🟡): ler `naturalidade_max` do bloco do nicho em `docs/painel/_data/chavoes-por-nicho.json` e contar no artigo INTEIRO. Padrão Impressoras: "daqui" ≤2 · "pede/pedem" (personificação) ≤3 · "trunfo" ≤1 · "fôlego" ≤1 · "telinha" ≤1 · "enxuto/enxuga" ≤2 · abertura "No conjunto," ≤1 · fórmula "O custo de X é Y" ≤1 · "o preço é o filtro" ≤1 · "leva X a sério" ≤1. Caso real: "daqui" 13× e "pede" 9× no impressoraideal/melhor-impressora-multifuncional.
 
-### 22. `subtitle-keyword-first` (v1.52.0, canon Marcelo 2026-06-24, severidade: 🟡 Médio)
+### 22. `subtitle-keyword-first` (v1.56.0, canon Marcelo 2026-06-24, severidade: 🟡 Médio)
 
-O subtitle é o **heading do card** do produto = slot de alto peso SEO. **Esta é a etapa que NORMALIZA o subtitle pra keyword-first** — a criação escreve o subtitle como **ângulo editorial natural** (v1.34, que guia o review e NÃO é tocado lá); o keyword-first é decidido AQUI, no audit, **depois** do review pronto e com **visão do conjunto** (canon "criação escreve livre; cross-produto é da auditoria" — [[afiliados.regras.criacao-escreve-livre-dedup-no-audit]]). Morar aqui é deliberado por 2 motivos: (1) não enviesar a escrita com o formato SEO; (2) variar cauda anti-clone + distribuir a sequência exige ver os N produtos juntos, coisa que a criação (1 produto por vez) não tem.
+O subtitle é o **heading do card** do produto = slot de alto peso SEO. **Esta é a etapa que NORMALIZA o subtitle pra keyword-first** — a criação escreve o subtitle como **ângulo editorial natural** (v1.34, que guia o review e NÃO é tocado lá); o keyword-first é decidido AQUI, no audit, **depois** do review pronto e com **visão do conjunto** (canon "criação escreve livre; cross-produto é da auditoria" — [[afiliados.regras.criacao-escreve-livre-dedup-no-audit]]). Morar aqui é deliberado por 2 motivos: (1) não enviesar a escrita com o formato SEO; (2) variar o lead anti-clone + distribuir a sequência exige ver os N produtos juntos, coisa que a criação (1 produto por vez) não tem.
 
-**Formato-alvo:** keyword INTEIRA do artigo (sem corte) + cauda curta variada. 5-7 palavras (máx 12). **SEM spec técnica** (nada de Hz/GB/mAh/polegada/"/MP/W/resolução/AMOLED/OLED/número). **Title Case PT-BR** (canon Marcelo 2026-06-24): capitaliza as palavras de conteúdo, mantém MINÚSCULAS as preposições/artigos/conjunções curtas (em, de, da, do, para, e, a, o, com, no, na, por); 1ª palavra sempre maiúscula; preserva marca/sigla (HP, Canon, A3). Ex: "Melhor Impressora Multifuncional em Geral", "Impressora Multifuncional para Escritório".
-- Cauda derivada do `badge`/papel: "Custo-Benefício"→"{kw} custo-benefício" · "Melhor Escolha"→"{kw} em geral" · "Mais Barata/Boa e Barata"→"{kw} boa e barata" (concordância pelo gênero do núcleo da keyword) · "Premium/Topo"→"{kw} topo de linha" · "Profissional"→"{kw} profissional" · marca→"{kw} da {Marca}" · perfil→"{kw} para {perfil}".
-- **Cross-produto (o porquê de morar no audit):** caudas DISTINTAS entre os produtos (anti-clone). Pode soltar o "Melhor" e variar a categoria pra não repetir N× igual. Sequência sugerida: pos 0 = "em geral"/"custo-benefício", pos 1 = "custo-benefício", pos 2 = "boa e barata", pos 3+ = perfil/marca/feature.
-- Se a keyword já contém o diferenciador (ex "melhor tablet custo benefício"), NÃO repita a cauda — use marca/perfil.
+**Formato-alvo: HÍBRIDO FLUINDO** (canon Marcelo 2026-06-24) — **LEAD keyword-first capitalizado emendado DIRETO num gancho descritivo**, numa frase só que flui. **NUNCA use dois-pontos (`:`)** entre lead e gancho — é emenda natural (`com`/`de`/`que`/`e`/vírgula), não rótulo+legenda.
+- **LEAD = keyword-first** (a keyword do artigo, ou um pedaço dela, + um qualificador curto). Capitalizado tipo título no lead só (ex: "Impressora Tanque de Tinta em Geral", "Tablet Custo Benefício", "Tablet para Desenho Profissional").
+- **GANCHO (tail) = o ângulo/spec concreto do produto**, em **caixa natural de frase** (não Title Case). **Spec técnica é PERMITIDA aqui** (Hz/GB/polegada/chip/tinta etc.) — é o que torna o card útil e único.
+- **≤13 palavras no total** (lead incluso). Conte de verdade, palavra a palavra — o lead come 2-3 palavras. Corte spec sobrando pra caber.
+- ✅ EX: `Impressora Tanque de Tinta em Geral que equilibra funções, custo e tamanho` · `Tablet Custo Benefício com S Pen inclusa, tela de 10,9 polegadas a 90Hz` · `Impressora Multifuncional a Laser com texto preto firme a até 21 ppm`.
 
-**FLAGRAR (e propor o subtitle novo, campo `newSubtitle`)**: subtitle que não começa com a keyword/variante, OU tem spec técnica, OU repete cauda de outro produto, OU passa de 12 palavras, OU está vazio.
+**Vocabulário de qualificador do LEAD (SUGESTÃO, não regra — o agente analisa e usa quando faz sentido):** em Geral · Custo Benefício (sem hífen no lead) · Boa e Barata (feminino) / Bom e Barato (masculino) · Barato e Bom · Premium · Topo de Linha · Profissional · de Entrada · a Laser · Fotográfica · Frente e Verso · de Tanque de Tinta {Marca} (termo COMPLETO "tanque de tinta", nunca só "tanque") · da {Marca} · para {perfil} · com {feature}. A keyword no lead **não é obrigatória em todo produto** — é o alvo preferido; se ficar forçado, o agente prioriza naturalidade.
+- **Concordância de gênero pelo núcleo da keyword:** impressora→"Boa e Barata"; tablet→"Bom e Barato". Nunca trocar.
+- **Cross-produto (o porquê de morar no audit):** LEADs DISTINTOS entre os produtos (anti-clone) — não repetir o mesmo qualificador 2× (os 2 "a laser" se separam por marca: "a Laser da HP" × "a Laser da Brother"). Pode soltar o "Melhor". Sequência típica: pos 0 = "em geral"/"custo benefício", pos 1 = "custo benefício", pos 2 = "boa e barata", pos 3+ = perfil/marca/feature.
+- Se a keyword já contém o diferenciador (ex "melhor tablet custo benefício"), o lead já é "Tablet Custo Benefício" — **varie a 2ª palavra** com marca/perfil pra distinguir os produtos.
 
-**Exceção (v1.34.0 reconciliada):** subtitle escrito À MÃO pelo editor no stub é rótulo deliberado — **respeite** (não force keyword-first por cima). O ângulo que guia o REVIEW é o `badge`, não o subtitle. Só normalize subtitles gerados/vazios/claramente fora do padrão.
+**FLAGRAR (e propor o subtitle novo, campo `newSubtitle`)**: subtitle que NÃO é keyword-first no lead, OU usa dois-pontos (`:`) entre lead e gancho, OU repete o LEAD de outro produto, OU passa de 13 palavras, OU está vazio, OU é rótulo puro SEM gancho descritivo (ex "Melhor Impressora Multifuncional em Geral" sozinho — falta o tail concreto).
 
-❌ ERRADO (ângulo + spec): "Topo do Android com AMOLED 120Hz e S Pen". ✅ CERTO: "Melhor tablet para desenho topo de linha".
+**Exceção (v1.34.0 reconciliada):** subtitle escrito À MÃO pelo editor no stub é rótulo deliberado — **respeite** (não force por cima). O ângulo que guia o REVIEW é o `badge`, não o subtitle. Só normalize subtitles gerados/vazios/claramente fora do padrão.
+
+❌ ERRADO (rótulo + dois-pontos): "Tablet para Desenho: topo do Android com AMOLED". ❌ ERRADO (rótulo puro sem gancho): "Melhor tablet para desenho topo de linha". ✅ CERTO (híbrido fluindo): "Tablet para Desenho Topo de Linha Android com AMOLED 120Hz e S Pen".
 
 ## Filtros de severidade
 
 - **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0)
-- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (antropomorfismo+gíria, jargão financeiro, tiques acima do teto — v1.32.0), **subtitle-keyword-first** (22, v1.52.0 — normaliza subtitle keyword-first cross-produto)
+- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (antropomorfismo+gíria, jargão financeiro, tiques acima do teto — v1.32.0), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório
@@ -661,7 +667,7 @@ Pra cada produto aprovado:
 
 3. **Se `newCons != null`**: idem `cons:`.
 
-3b. **Se `newSubtitle != null`** (critério 22): substituir SÓ a linha `subtitle: "..."` do produto pelo novo rótulo keyword-first. Linha única, texto puro entre aspas. NÃO mexer se o subtitle era escrito à mão pelo editor (exceção v1.34.0).
+3b. **Se `newSubtitle != null`** (critério 22): substituir SÓ a linha `subtitle: "..."` do produto pelo novo subtitle híbrido fluindo (lead keyword-first + gancho, SEM dois-pontos, ≤13 palavras). Linha única, texto puro entre aspas. NÃO mexer se o subtitle era escrito à mão pelo editor (exceção v1.34.0). AUTO-CHECK antes de gravar: zero `:` no valor + ≤13 palavras contadas 1 a 1 (lead incluso) + lead distinto dos outros produtos.
 
 4. **NÃO** alterar outros campos (`name`, `asin`, `image`, `imageAlt`, `badge`, `schemaPrice`, `store`, `shortDescription`, `specs`).
 

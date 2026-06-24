@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.55.0] CRIAÇÃO volta ao normal: o subtitle é escrito como angulo editorial (v1.34, guia o review) — sem mudanca na criacao. A UNICA novidade que fica e o NORMALIZADOR no audit: artigo-reviews-auditar criterio 22 reescreve o subtitle pra keyword-first (keyword inteira + cauda por badge/posicao, Title Case PT-BR, sem spec, anti-clone cross-produto) DEPOIS do review pronto. Modelo: criacao escreve livre; o subtitle vira keyword-first so no audit.",
-    "version": "1.51.1"
+    "description": "[v1.56.0] Subtitle do audit (criterio 22) agora e HIBRIDO FLUINDO: LEAD keyword-first capitalizado emendado DIRETO num gancho descritivo (sem dois-pontos), spec PERMITIDA no gancho, ate 13 palavras, lead distinto cross-produto, concordancia de genero pelo nucleo da keyword. Criacao segue intacta (subtitle = angulo editorial v1.34); o keyword-first acontece so no audit, depois do review. Ex: 'Tablet Custo Beneficio com S Pen inclusa, tela de 10,9 polegadas a 90Hz'.",
+    "version": "1.52.0"
   },
   "plugins": [
     {
