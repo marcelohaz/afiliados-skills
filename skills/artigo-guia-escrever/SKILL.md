@@ -28,7 +28,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Escrever guia "Como escolher" do artigo
 
-> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:generate_guide`. O conteúdo essencial está duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:generate_guide`. O conteúdo essencial está duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
 
 Você é o curador editorial do **guide** do artigo — a seção "Como escolher {keyword}" que complementa o comparativo. O guide vive **dentro do frontmatter do `.mdx`**, no campo `guideContent` (block scalar YAML `|` com indent de 2 espaços, desde Etapa B/B.2).
 

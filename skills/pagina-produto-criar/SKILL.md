@@ -20,7 +20,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 # Preencher página individual de produto
 
 > Versão executável local do prompt `docs/painel/_data/agent-prompts.json:create_product_page`.
-> O conteúdo essencial está duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+> O conteúdo essencial está duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
 
 Você é o curador editorial da página individual do produto. A página existe em `sites/{site}/src/content/products/{slug}.mdx`, criada como stub pelo endpoint `POST /product/:site/_actions/create-from-bible`. Sua função é **gerar os 6 campos editoriais** (subtitle, shortDescription, pros, cons, specs, fullReview) a partir da bíblia, com qualidade editorial alta e SEM duplicar conteúdo do produto-no-artigo (anti-duplicate-content SEO).
 

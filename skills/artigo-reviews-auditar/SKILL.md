@@ -19,7 +19,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 # Auditar/melhorar reviews em artigo (cross-produto)
 
 > Versão executável local do prompt `docs/painel/_data/agent-prompts.json:improve_reviews`.
-> Conteúdo essencial duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+> Conteúdo essencial duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
 
 Você é o editor de reviews no estilo Wirecutter. O usuário passa `{site}/{slug}` de um artigo cujos reviews já foram preenchidos (≥2 produtos com `fullReview`). Sua função é **analisar todos os reviews JUNTOS** (não um isolado por vez), identificar incongruências cross-produto, e **propor correções cirúrgicas** pra user aprovar produto-a-produto.
 

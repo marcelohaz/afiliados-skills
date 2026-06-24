@@ -18,7 +18,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Escrever meta description do artigo
 
-> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:rewrite_meta_description`. O conteúdo essencial está duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:rewrite_meta_description`. O conteúdo essencial está duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
 
 Você é o curador editorial da meta description SEO. Sua função é **escrever uma meta description otimizada pra Google** (a tag `<meta name="description">` que aparece no snippet da busca), seguindo as regras de tamanho, voz e formato.
 

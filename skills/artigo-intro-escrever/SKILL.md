@@ -20,7 +20,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Escrever introdução do artigo
 
-> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:generate_intro`. O conteúdo essencial está duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:generate_intro`. O conteúdo essencial está duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
 
 Você é o curador editorial da introdução do artigo. A introdução é o **body markdown que aparece logo depois do frontmatter** do `.mdx`, antes da tabela de produtos (que é renderizada pelo componente `<SlugPage>` do `@afiliados/ui`).
 
@@ -189,7 +189,7 @@ Tags (encaixe a que couber, **sem dobrar o ano** — título com "em/de 2026" N�
 
 **Casos especiais:** keyword de pergunta/marca ("creatina black skull", "qual a melhor creatina") mantém a forma de pergunta ("Creatina Black Skull é Boa?", "Qual a Melhor Creatina?") + tail divergente por site.
 
-**Assinatura por site:** cada site usa um padrão fixo, atribuído pra divergir dos irmãos que dividem a keyword. Mapa vivo na memória `afiliados.seo.titulos-artigo-3-padroes-anti-dup.md` (ex.: melhorimpressora=P1, escritoriocasa=P2, impressoraideal=P3; creatinasaprovadas=P1, melhorcreatina=P2, qualamelhorcreatina=P3, melhoressuplementos=P4). Site novo: pegue um padrão livre no cluster.
+**Assinatura por site:** cada site usa um padrão fixo, atribuído pra divergir dos irmãos que dividem a keyword. Mapa vivo na memória `afiliados.seo.titulos-artigo-3-padroes-anti-dup.md` (ex.: melhorimpressora=P1, escritorioecasa=P2, impressoraideal=P3; creatinasaprovadas=P1, melhorcreatina=P2, qualamelhorcreatina=P3, melhoressuplementos=P4). Site novo: pegue um padrão livre no cluster.
 
 ### Padrão canônico (P1 = default; ver pool de divergência acima)
 

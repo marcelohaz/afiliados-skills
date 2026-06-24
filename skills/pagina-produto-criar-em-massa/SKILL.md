@@ -409,7 +409,7 @@ Esta skill **NÃO TEM op canônica** em `agent-prompts.json` (é skill local-onl
 - Batch via painel seria pesado (HTTP timeout, monitoramento de paralelismo)
 - Bárbara/Marcelo invocam batch via Claude Code (`Skill(skill="afiliados-skills:pagina-produto-criar-em-massa", args="melhorpretreino")`)
 
-A skill INDIVIDUAL `pagina-produto-criar` continua sincronizada com `agent-prompts.json:create_product_page` — esse é o canônico editorial. Sub-agents do batch seguem a mesma régua (paridade garantida porque sub-agent prompt cita a SKILL.md individual como fonte da verdade).
+A skill INDIVIDUAL `pagina-produto-criar` continua sincronizada com `agent-prompts.json:create_product_page` (espelho do painel/API) — a SKILL.md individual é a fonte viva editorial. Sub-agents do batch seguem a mesma régua (paridade garantida porque sub-agent prompt cita a SKILL.md individual como fonte da verdade).
 
 ## Exemplo de invocação
 

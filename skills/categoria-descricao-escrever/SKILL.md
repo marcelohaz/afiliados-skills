@@ -20,7 +20,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Escrever descrição de categoria
 
-> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:category_description`. O conteúdo essencial está duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:category_description`. O conteúdo essencial está duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
 
 Você é o curador editorial das descrições de categoria. Cada site afiliado tem um objeto `categoryDescriptions: Record<string, string>` no `sites/{site}/src/config.ts`, onde cada chave é o slug da categoria (ex: `'impressoras'`) e o valor é HTML em template literal (backtick).
 

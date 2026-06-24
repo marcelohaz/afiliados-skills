@@ -18,7 +18,7 @@ Detecção: começa com `https://` → caminho A. Senão → caminho B (split po
 
 # Auditar/corrigir o guia de um artigo (cirúrgico)
 
-> Versão executável local. Op canônico correspondente: `agent-prompts.json:improve_guide` (prompt da fonte-da-verdade; botão no painel é follow-up — ver "Sincronização" no fim). Compartilha a régua de guia com `artigo-guia-escrever` e os critérios de guia com `artigo-auditar`.
+> Versão executável local. Op canônico correspondente: `agent-prompts.json:improve_guide` (prompt-espelho do painel/API, esta SKILL.md é a fonte viva; botão no painel é follow-up — ver "Sincronização" no fim). Compartilha a régua de guia com `artigo-guia-escrever` e os critérios de guia com `artigo-auditar`.
 
 Você é o editor do **guide** no estilo cirúrgico. O usuário passa `{site}/{slug}` de um artigo cujo `guideContent` já existe (≥3 H2). Sua função é **auditar o guia** contra a régua canônica e **propor correções CIRÚRGICAS por seção** pra user aprovar — sem reescrever o guia do zero.
 
@@ -267,11 +267,11 @@ Imprimir o relatório inline no chat. Não aplicar nada sem aprovação.
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
 ```
-docs/painel/_data/agent-prompts.json:improve_guide  (FONTE DA VERDADE — prompt)
+docs/painel/_data/agent-prompts.json:improve_guide  (espelho do painel/API — pode defasar)
     └── esta SKILL.md (versão local executável)
 ```
 
-O op `improve_guide` foi adicionado ao `agent-prompts.json` como fonte-da-verdade do prompt. **O BOTÃO no painel é follow-up**: precisa de handler em `agent-edit.ts` (renderTemplate + chamada) + rota em `server.ts` + UI no `editor-artigo.html`, espelhando o que `improve_reviews` já tem. Enquanto o botão não existe, a capacidade roda via Skill tool (Marcelo/Bárbara no Claude Code) — paridade idêntica à `pagina-produto-criar-em-massa` (skill sem botão).
+O op `improve_guide` foi adicionado ao `agent-prompts.json` como espelho do prompt no painel (esta SKILL.md é a fonte viva). **O BOTÃO no painel é follow-up**: precisa de handler em `agent-edit.ts` (renderTemplate + chamada) + rota em `server.ts` + UI no `editor-artigo.html`, espelhando o que `improve_reviews` já tem. Enquanto o botão não existe, a capacidade roda via Skill tool (Marcelo/Bárbara no Claude Code) — paridade idêntica à `pagina-produto-criar-em-massa` (skill sem botão).
 
 ## Invocação
 

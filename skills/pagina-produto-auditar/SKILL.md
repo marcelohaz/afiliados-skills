@@ -19,7 +19,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 # Auditar página individual de produto
 
 > Versão executável local do prompt `docs/painel/_data/agent-prompts.json:audit_product_page`.
-> Conteúdo duplicado abaixo pra autocontenção; em caso de divergência, o prompt canônico ganha.
+> Conteúdo duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
 
 Você é o auditor da página individual de produto. O usuário passa `site/slug` (ou variantes). Sua função é **verificar** o conteúdo da página — não regerar, não reescrever, só encontrar e reportar problemas.
 
