@@ -98,6 +98,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
    - (`[slug].astro` do template1 já filtra o home-slug via siteConfig.homeReviewSlug — confirmar.)
    - Registra `melhorpretreino`/target em `TEMPLATE_KNOWN_DIVERGENCES` (index.astro) no server.ts + scripts/template-diff.ts se o site virar homeReviewSlug e ainda não estiver lá (senão o chip "Template" acusa falso drift).
 3. **6.3 Build** (`pnpm --filter {target} build`): gate Zod/YAML. Falha → conserta (YAML do .mdx) → rebuild.
+3.5. **6.3.5 FAQ-shuffle anti-footprint (OBRIGATÓRIO se há irmão na keyword)**: se o artigo clonado tem irmão(s) na MESMA keyword em outro(s) site(s) da rede (quase sempre o caso num clone, já que a fonte é um irmão), rodar `bun scripts/faq-shuffle.ts {target}/{slug} --apply` ANTES do commit. Determinístico/idempotente (função pura por seed), só reordena a FAQ, não muda redação. NÃO é opcional nem "deixa pro batch depois" — faz parte do fechamento do clone (canon Marcelo 2026-06-24: "já era pra ter feito, nem precisa perguntar"). Rebuildar após o shuffle. Ver [[feedback_aplicar_fix_deterministico_seguro_sem_pedir]].
 4. **6.4 Commit + push** (`--no-verify`, hook bloqueia .mdx direto) + **regen `gen.ts`** (senão painel mostra "0 artigos") + **restart do dev server** do target (senão getStaticPaths fica stale e a rota nova dá 404 — armadilha conhecida).
 5. **6.5 Verifica infra** (auto): build OK + dev serve a home + `/{slug}/` 200 + painel lista o artigo.
 
@@ -105,7 +106,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 - Artigo criado: site/slug, título, N produtos (ordem final + badges), home sim/não.
 - Por etapa: o que cada audit pegou, o que foi auto-corrigido, **o que NÃO convergiu** (⚠ revisar).
 - Comparação vs fonte: frases idênticas, near-dup, overlap, specs — antes e depois da reescrita.
-- Build/infra: status. Commit hash.
+- Build/infra: status. Commit hash. FAQ-shuffle aplicada (Etapa 6.3.5).
 - Próximo passo: revisar a home renderizada; se aprovar, travar (contentLocked) + deploy (ambos manuais).
 
 ## Prompt do sub-agent de review (Etapa 1.1) — resumo

@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.56.0] Subtitle do audit (criterio 22) agora e HIBRIDO FLUINDO: LEAD keyword-first capitalizado emendado DIRETO num gancho descritivo (sem dois-pontos), spec PERMITIDA no gancho, ate 13 palavras, lead distinto cross-produto, concordancia de genero pelo nucleo da keyword. Criacao segue intacta (subtitle = angulo editorial v1.34); o keyword-first acontece so no audit, depois do review. Ex: 'Tablet Custo Beneficio com S Pen inclusa, tela de 10,9 polegadas a 90Hz'.",
-    "version": "1.52.0"
+    "description": "[v1.53.0] artigo-clonar-em-massa: faq-shuffle anti-footprint virou passo OBRIGATORIO no fechamento do clone (Etapa 6.3.5, antes do commit) quando ha irmao na keyword — nao e mais lembrete opcional. (v1.52.0: subtitle do audit crit.22 = HIBRIDO FLUINDO, lead keyword-first + gancho sem dois-pontos, ate 13 palavras.)",
+    "version": "1.53.0"
   },
   "plugins": [
     {
