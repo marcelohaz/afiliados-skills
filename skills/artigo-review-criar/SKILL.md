@@ -243,8 +243,18 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 ## Os 6 campos do produto-no-artigo
 
-### subtitle (10-150 chars)
-Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L3250": "Multifuncional EcoTank com Wi-Fi, ideal para casa e home office".
+### subtitle — rótulo SEO KEYWORD-FIRST (v1.52.0, canon Marcelo 2026-06-24)
+
+O subtitle é o **heading do card do produto** = slot de alto peso SEO. Formato: **a keyword INTEIRA do artigo (sem corte) PRIMEIRO + cauda curta variada**. 5-7 palavras (ideal), máx 12. **SEM spec técnica** (nada de Hz, GB, mAh, polegadas, MP, W, resolução, ", pol — isso vai pros `specs`/`fullReview`).
+
+- **Lead = o `keyword` do artigo, por extenso.** Pode soltar o "Melhor" e usar uma variante de categoria pra não repetir 7× igual ("Tablet para desenho boa e barata", "Impressora a laser para documentos").
+- **Cauda variada por produto (anti-clone):** `custo-benefício` · `da {Marca}` · `para {perfil}` · `boa e barata` · `de entrada` · `topo de linha` · `profissional` · `em geral`.
+- **Sequência sugerida:** pos 0 = "{keyword} em geral" (ou "custo-benefício") · pos 1 = "{keyword} custo-benefício" · pos 2 = "{keyword} boa e barata" · pos 3+ = perfil/marca/feature da bíblia. Coerente com o `badge`.
+- **Exceção (v1.34.0, mantida):** subtitle escrito à mão pelo editor no stub é vinculante (direção). O keyword-first é o **DEFAULT de geração quando o subtitle está vazio**.
+
+Ex (keyword "melhor tablet para desenho"): "Melhor tablet para desenho custo-benefício" · "Tablet para desenho da Samsung" · "Melhor tablet para desenho profissional" · "Tablet para desenho boa e barata".
+
+❌ ERRADO (estilo ângulo + spec, régua antiga): "Topo do Android com AMOLED 120Hz e S Pen" · "S Pen na caixa e tela de 90Hz".
 
 ### shortDescription (50-250 chars, alvo 180-230) — padrão BENEFÍCIO-FIRST
 
@@ -452,7 +462,7 @@ Quando o stub já vem com `subtitle` (e/ou `badge`) preenchido pelo editor human
 
 1. **Ângulo VINCULANTE**: o review inteiro aborda o produto por esse ângulo — o "Para quem é" deriva dele (reforça a régua v1.20.1, que já manda derivar o claim do subtitle), os pros priorizam o que o sustenta.
 2. **Texto MELHORÁVEL**: você tem liberdade de polir o subtitle (concisão, clareza, régua 10-150 chars, title case) — mas o SENTIDO não muda. Trocar "tanque pra alto volume" por "multifuncional compacta" = violação; polir "boa pra muito volume" → "Tanque de alto volume pra rotina pesada" = ok.
-3. **Subtitle vazio** = comportamento atual (criar do zero a partir da bíblia + badge).
+3. **Subtitle vazio** = criar do zero no formato **keyword-first** (ver "subtitle — rótulo SEO KEYWORD-FIRST" acima): keyword inteira do artigo + cauda variada, sem spec. NÃO criar subtitle estilo ângulo/benefício.
 4. **NUNCA descartar silenciosamente** o ângulo humano. Se a bíblia CONTRADIZ o ângulo (ex: subtitle diz "a mais rápida" e a bíblia mostra que não é), NÃO grave nada conflitante: pare e pergunte ao usuário.
 
 Histórico: até v1.33 a skill regenerava o subtitle sem ler o existente (~80% dos subtitles humanos sobrescritos; os ~20% "mantidos" eram convergência por acaso). O badge sempre teve esse tratamento (var + hint editorial) — esta régua espelha pro subtitle.

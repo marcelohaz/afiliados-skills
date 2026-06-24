@@ -5,7 +5,7 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.50.0] artigo-guia-auditar ganha criterio faq-order-shuffle (anti-footprint cross-site): artigos da mesma keyword em sites irmaos convergem nas MESMAS perguntas de FAQ (mesma analise de concorrentes); as RESPOSTAS ja divergem (jaccard 0.25-0.45), entao o footprint e so a ordem/identidade das perguntas. O criterio reordena a FAQ por seed determinístico (site+slug) e IDEMPOTENTE (ordena canonico -> fixa a money-question no topo -> Fisher-Yates seedado), via scripts/faq-shuffle.ts. NAO mexe na redacao (bater PAA literal tem valor). level=info, nao bloqueia readyToLock. A clone NAO embaralha sozinha (lembrete no relatorio final pra rodar guia-auditar/faq-shuffle no artigo novo).",
+    "description": "[v1.52.0] subtitle dos produtos agora e KEYWORD-FIRST (regua codificada). O subtitulo e o heading do card = slot de alto peso SEO, entao leva a KEYWORD INTEIRA do artigo + cauda variada (custo-beneficio / da Marca / profissional / boa e barata / de entrada / topo de linha), 5-7 palavras, SEM spec tecnica (nada de Hz/GB/mAh/polegada). Substitui o estilo angulo antigo. Codificado em artigo-review-criar (regua subtitle + exceção subtitle-humano-vinculante mantida) e artigo-clonar-em-massa (prompt do sub-agent + gate 1.2). Espelha o piloto validado pelo Marcelo (commit 084508f0).",
     "version": "1.51.1"
   },
   "plugins": [
