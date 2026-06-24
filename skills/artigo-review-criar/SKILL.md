@@ -195,7 +195,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 - **specs** (3-10 pares label/value): strings simples sem HTML. Reuso labels comuns do lineup pra alinhar com `specLabels`.
 
-- **subtitle** (10-150 chars): título descritivo curto, sem redundância com nome.
+- **subtitle**: rótulo SEO **keyword-first** = keyword inteira do artigo + cauda variada, 5-7 palavras, SEM spec técnica. Ver seção dedicada "subtitle — rótulo SEO KEYWORD-FIRST" abaixo.
 
 - **shortDescription** (50-250 chars, alvo 180-230): padrão BENEFÍCIO-FIRST. 1-2 frases que abrem com posicionamento/perfil, técnico justifica depois. **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
 
