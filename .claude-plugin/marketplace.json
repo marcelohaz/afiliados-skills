@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.54.1] artigo-clonar-em-massa: FONTE UNICA DE REGUA, fim do drift. Os reviews (Etapa 1.1) agora mandam o sub-agent LER a artigo-review-criar/SKILL.md inteira em vez de um resumo inline desatualizado (corrige voz-comprador, 'Para quem e', shortDescription, jargao dev, concordancia de uma vez; subtitle: criacao=angulo da review-criar, normalizacao keyword-first fica na Etapa 1.4). Guide/intro/meta = INVOCAR via Skill tool de verdade, NUNCA inline (herda anti-clone intra-site da intro + YMYL do guide). name/imageAlt vem da PAGINA DO DESTINO (nao do fonte) + auto-check slugify(name)->pagina anti build-breaker. Re-gate mecanico apos a reescrita anti-dup da Etapa 5. (v1.53.0: faq-shuffle OBRIGATORIO no fechamento.)",
-    "version": "1.54.1"
+    "description": "[v1.55.0] NOVA skill preencher-institucionais: escreve as DUAS paginas institucionais editoriais por nicho — /sobre/ (voz do site) E /autor/ (voz da pessoa, 1a pessoa) — distintas, E-E-A-T fundamentado, metodologia vaga, disclosure Amazon+YMYL, anti-clone cross-site/cross-pagina; cria /autor/ se faltar. Antes era project-only. (v1.54.1: artigo-clonar-em-massa fonte unica de regua — reviews leem review-criar, guide/intro/meta invocados de verdade, name do destino anti build-breaker.)",
+    "version": "1.55.0"
   },
   "plugins": [
     {
@@ -31,7 +31,8 @@
         "./skills/artigo-clonar-em-massa",
         "./skills/linkagem-auditar",
         "./skills/biblia-preencher-em-massa",
-        "./skills/biblia-auditar-em-massa"
+        "./skills/biblia-auditar-em-massa",
+        "./skills/preencher-institucionais"
       ]
     }
   ]
