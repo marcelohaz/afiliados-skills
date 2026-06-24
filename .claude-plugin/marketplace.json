@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.54.0] artigo-clonar-em-massa: FONTE UNICA DE REGUA, fim do drift. Os reviews (Etapa 1.1) agora mandam o sub-agent LER a artigo-review-criar/SKILL.md inteira em vez de um resumo inline desatualizado (corrige subtitle, voz-comprador, 'Para quem e', shortDescription, jargao dev de uma vez). Guide/intro/meta = INVOCAR via Skill tool de verdade, NUNCA inline (herda anti-clone intra-site da intro + YMYL do guide). name/imageAlt vem da PAGINA DO DESTINO (nao do fonte) + auto-check name->slug anti build-breaker. Re-gate mecanico apos a reescrita anti-dup da Etapa 5. (v1.53.0: faq-shuffle OBRIGATORIO no fechamento.)",
-    "version": "1.54.0"
+    "description": "[v1.54.1] artigo-clonar-em-massa: FONTE UNICA DE REGUA, fim do drift. Os reviews (Etapa 1.1) agora mandam o sub-agent LER a artigo-review-criar/SKILL.md inteira em vez de um resumo inline desatualizado (corrige voz-comprador, 'Para quem e', shortDescription, jargao dev, concordancia de uma vez; subtitle: criacao=angulo da review-criar, normalizacao keyword-first fica na Etapa 1.4). Guide/intro/meta = INVOCAR via Skill tool de verdade, NUNCA inline (herda anti-clone intra-site da intro + YMYL do guide). name/imageAlt vem da PAGINA DO DESTINO (nao do fonte) + auto-check slugify(name)->pagina anti build-breaker. Re-gate mecanico apos a reescrita anti-dup da Etapa 5. (v1.53.0: faq-shuffle OBRIGATORIO no fechamento.)",
+    "version": "1.54.1"
   },
   "plugins": [
     {
