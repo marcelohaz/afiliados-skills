@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.53.0] artigo-clonar-em-massa: faq-shuffle anti-footprint virou passo OBRIGATORIO no fechamento do clone (Etapa 6.3.5, antes do commit) quando ha irmao na keyword — nao e mais lembrete opcional. (v1.52.0: subtitle do audit crit.22 = HIBRIDO FLUINDO, lead keyword-first + gancho sem dois-pontos, ate 13 palavras.)",
-    "version": "1.53.0"
+    "description": "[v1.54.0] artigo-clonar-em-massa: FONTE UNICA DE REGUA, fim do drift. Os reviews (Etapa 1.1) agora mandam o sub-agent LER a artigo-review-criar/SKILL.md inteira em vez de um resumo inline desatualizado (corrige subtitle, voz-comprador, 'Para quem e', shortDescription, jargao dev de uma vez). Guide/intro/meta = INVOCAR via Skill tool de verdade, NUNCA inline (herda anti-clone intra-site da intro + YMYL do guide). name/imageAlt vem da PAGINA DO DESTINO (nao do fonte) + auto-check name->slug anti build-breaker. Re-gate mecanico apos a reescrita anti-dup da Etapa 5. (v1.53.0: faq-shuffle OBRIGATORIO no fechamento.)",
+    "version": "1.54.0"
   },
   "plugins": [
     {
