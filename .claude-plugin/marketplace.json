@@ -5,7 +5,7 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.52.0] subtitle dos produtos agora e KEYWORD-FIRST (regua codificada). O subtitulo e o heading do card = slot de alto peso SEO, entao leva a KEYWORD INTEIRA do artigo + cauda variada (custo-beneficio / da Marca / profissional / boa e barata / de entrada / topo de linha), 5-7 palavras, SEM spec tecnica (nada de Hz/GB/mAh/polegada). Substitui o estilo angulo antigo. Codificado em artigo-review-criar (regua subtitle + exceção subtitle-humano-vinculante mantida) e artigo-clonar-em-massa (prompt do sub-agent + gate 1.2). Espelha o piloto validado pelo Marcelo (commit 084508f0).",
+    "description": "[v1.53.0] subtitle keyword-first MIGRA da criação pro AUDIT (canon: criação escreve livre, cross-produto é da auditoria). artigo-reviews-auditar ganha o critério 22 subtitle-keyword-first: com visão do conjunto, seta o subtitle = keyword inteira + cauda variada por badge/posição (anti-clone), 5-7 palavras, sem spec tecnica. artigo-review-criar para de gerar subtitle com peso editorial — so poe um default leve do badge, sem enviesar a escrita; o ANGULO do review passa a ser o BADGE (v1.34.0 reconciliada). artigo-clonar-em-massa: a normalizacao keyword-first acontece na Etapa 1.4 (audit cross-produto). Subtitle escrito a mao pelo editor continua respeitado.",
     "version": "1.51.1"
   },
   "plugins": [

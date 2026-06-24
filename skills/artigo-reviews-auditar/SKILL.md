@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 21 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta), naturalidade (rótulo de categoria inventado, meta-SEO, antropomorfismo, tiques com teto por artigo). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 22 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta), naturalidade (rótulo de categoria inventado, meta-SEO, antropomorfismo, tiques com teto por artigo). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -84,7 +84,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Vazia → links Amazon devem ser crus. Preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`.
 
-7. **Analisar cross-produto** pelos 21 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
+7. **Analisar cross-produto** pelos 22 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
 8. **Reportar em chat** no formato canônico (seção "Formato do relatório").
 
@@ -127,7 +127,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 21 critérios da análise
+## Os 22 critérios da análise
 
 ### 1. `tone-clone` — abertura/frase idêntica entre produtos
 
@@ -570,10 +570,25 @@ for produto in products:
 
 **21f — tiques com teto por ARTIGO** (🟡): ler `naturalidade_max` do bloco do nicho em `docs/painel/_data/chavoes-por-nicho.json` e contar no artigo INTEIRO. Padrão Impressoras: "daqui" ≤2 · "pede/pedem" (personificação) ≤3 · "trunfo" ≤1 · "fôlego" ≤1 · "telinha" ≤1 · "enxuto/enxuga" ≤2 · abertura "No conjunto," ≤1 · fórmula "O custo de X é Y" ≤1 · "o preço é o filtro" ≤1 · "leva X a sério" ≤1. Caso real: "daqui" 13× e "pede" 9× no impressoraideal/melhor-impressora-multifuncional.
 
+### 22. `subtitle-keyword-first` (v1.52.0, canon Marcelo 2026-06-24, severidade: 🟡 Médio)
+
+O subtitle é o **heading do card** do produto = slot de alto peso SEO. **Esta é a etapa que SETA/normaliza o subtitle keyword-first** — a criação escreve livre (o ângulo do review é o `badge`), e o subtitle é decidido AQUI, no audit, **depois** do review pronto e com **visão do conjunto** (canon "criação escreve livre; cross-produto é da auditoria" — [[afiliados.regras.criacao-escreve-livre-dedup-no-audit]]). Morar aqui é deliberado: variar cauda anti-clone e distribuir a sequência exige ver os N produtos juntos, coisa que a criação (1 produto por vez) não tem.
+
+**Formato-alvo:** keyword INTEIRA do artigo (sem corte) + cauda curta variada. 5-7 palavras (máx 12). **SEM spec técnica** (nada de Hz/GB/mAh/polegada/"/MP/W/resolução/AMOLED/OLED/número).
+- Cauda derivada do `badge`/papel: "Custo-Benefício"→"{kw} custo-benefício" · "Melhor Escolha"→"{kw} em geral" · "Mais Barata/Boa e Barata"→"{kw} boa e barata" (concordância pelo gênero do núcleo da keyword) · "Premium/Topo"→"{kw} topo de linha" · "Profissional"→"{kw} profissional" · marca→"{kw} da {Marca}" · perfil→"{kw} para {perfil}".
+- **Cross-produto (o porquê de morar no audit):** caudas DISTINTAS entre os produtos (anti-clone). Pode soltar o "Melhor" e variar a categoria pra não repetir N× igual. Sequência sugerida: pos 0 = "em geral"/"custo-benefício", pos 1 = "custo-benefício", pos 2 = "boa e barata", pos 3+ = perfil/marca/feature.
+- Se a keyword já contém o diferenciador (ex "melhor tablet custo benefício"), NÃO repita a cauda — use marca/perfil.
+
+**FLAGRAR (e propor o subtitle novo, campo `newSubtitle`)**: subtitle que não começa com a keyword/variante, OU tem spec técnica, OU repete cauda de outro produto, OU passa de 12 palavras, OU está vazio.
+
+**Exceção (v1.34.0 reconciliada):** subtitle escrito À MÃO pelo editor no stub é rótulo deliberado — **respeite** (não force keyword-first por cima). O ângulo que guia o REVIEW é o `badge`, não o subtitle. Só normalize subtitles gerados/vazios/claramente fora do padrão.
+
+❌ ERRADO (ângulo + spec): "Topo do Android com AMOLED 120Hz e S Pen". ✅ CERTO: "Melhor tablet para desenho topo de linha".
+
 ## Filtros de severidade
 
 - **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0)
-- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (antropomorfismo+gíria, jargão financeiro, tiques acima do teto — v1.32.0)
+- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (antropomorfismo+gíria, jargão financeiro, tiques acima do teto — v1.32.0), **subtitle-keyword-first** (22, v1.52.0 — normaliza subtitle keyword-first cross-produto)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório
@@ -646,7 +661,9 @@ Pra cada produto aprovado:
 
 3. **Se `newCons != null`**: idem `cons:`.
 
-4. **NÃO** alterar outros campos (`name`, `asin`, `image`, `imageAlt`, `badge`, `schemaPrice`, `store`, `subtitle`, `shortDescription`, `specs`).
+3b. **Se `newSubtitle != null`** (critério 22): substituir SÓ a linha `subtitle: "..."` do produto pelo novo rótulo keyword-first. Linha única, texto puro entre aspas. NÃO mexer se o subtitle era escrito à mão pelo editor (exceção v1.34.0).
+
+4. **NÃO** alterar outros campos (`name`, `asin`, `image`, `imageAlt`, `badge`, `schemaPrice`, `store`, `shortDescription`, `specs`).
 
 5. **NÃO** alterar outros produtos do lineup.
 
