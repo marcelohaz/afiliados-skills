@@ -173,7 +173,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 Estrutura: `[abertura variada], o [Produto] é o melhor [keyword] para [ângulo do produto]`
 
-Exemplos (nicho pré-treino, ângulo vindo do subtitle de cada produto):
+Exemplos (nicho pré-treino, ângulo vindo do badge de cada produto):
 - "Se você prioriza treino intenso, o FTW Diabo Verde é o melhor pré-treino para treino intenso, porque..."
 - "Para quem treina à noite, o Night Train é o melhor pré-treino para treino noturno, por ser..."
 - "Quando a concentração é o que falta, o Darkness é o melhor pré-treino para foco mental, porque..."
