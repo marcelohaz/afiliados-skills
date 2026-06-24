@@ -285,170 +285,45 @@ def classify(frontmatter, body):
 
 ## Prompt do sub-agent
 
-Cada Agent recebe esta instrução (inline, ~40 linhas):
+**A régua editorial NÃO é re-escrita aqui — o sub-agent LÊ a `pagina-produto-criar/SKILL.md` e a executa à risca (régua v1.34.0, fonte única).** Resumo inline de régua = proibido: era a fonte do drift (o antigo inline tinha ficado pra trás em **Peso por fonte**, **Filtros editoriais** eco/origem, **banner de descontinuado** e atribuição-elíptica v1.21.1). Lendo o arquivo vivo, o batch herda SEMPRE a régua atual da individual, sem drift. Sub-agent do Agent tool não consegue invocar a Skill tool (são N agents PARALELOS), por isso ele LÊ o arquivo em vez de invocar.
 
 ```
 Tarefa: gerar os 6 campos editoriais (subtitle, shortDescription, pros, cons,
-specs, fullReview) da página individual de produto.
+specs, fullReview) da página individual de UM produto, em conversa fresh isolada.
 
-Inputs:
-- Site: {{site}}
-- Slug: {{slug}}
-- ASIN: {{asin}}
-- AffiliateTag do site: {{tag}} (pode ser vazia '' em sites em construção)
+PASSO 1 — LEIA a régua canônica e EXECUTE À RISCA (não improvise, não use resumo de memória):
+- Read `.claude/skills/pagina-produto-criar/SKILL.md` e execute o **Fluxo, passos 2 a 11**:
+  Read .mdx → parse frontmatter → Read bíblia → affiliateTag → montar amazonUrl →
+  anti-dup vs review-no-artigo → gerar os 6 campos pela seção "Os 6 campos" → validar →
+  backup → Write + AUTO-CHECK de fence (`grep -c '^---$'` == 2).
+  TODA a régua daquele arquivo vale; reforço as que costumam escapar:
+  benefício-first + hard caps (shortDescription ≤250, pros/cons ≤180 texto-puro),
+  subtitle = ângulo (v1.34, vinculante se o stub já traz subtitle/badge),
+  destilação categoria D (voz-comprador implícita → observação analítica),
+  **Peso por fonte** (specsAmazon sozinho NÃO vira pró central, só tabela specs),
+  **Filtros editoriais** (dropar specs ambientais/Energy Star + origem de fabricação),
+  **banner de descontinuado** (setar `descontinuado:{asin,nome}` no frontmatter se a bíblia sinalizar),
+  atribuição-elíptica/voz-citação = muleta (spec factual vai direto), tom natural (rótulo real),
+  sem travessão, sem `;`, campos texto-puro, health-YMYL, âncora = NOME do produto (nunca CTA).
+- Read `docs/painel/_data/chavoes-por-nicho.json` → use `_genericos` + bloco do `{{site}}.niche`
+  (de `docs/painel/sites-meta.json`) como guard rail.
 
-Execute o fluxo da skill `.claude/skills/pagina-produto-criar/SKILL.md` à risca,
-EXCETO os passos de git operations (12, 13). Especificamente:
+Inputs deste produto (já resolvidos pela skill-mãe — NÃO faça parse de args nem git pull):
+- Site: {{site}} · Slug: {{slug}} · ASIN: {{asin}} · AffiliateTag: {{tag}} (pode ser '')
 
-0.5. **Carregar chavões do nicho** (régua v1.18.0, expandida v1.19.0):
-   - Leia `docs/painel/sites-meta.json` e identifique `{{site}}.niche` (ex: "Pré Treino", "Creatinas", "Tablets")
-   - Leia `docs/painel/_data/chavoes-por-nicho.json`
-   - Use `_genericos` + bloco do nicho identificado (se nicho não listado, use só `_genericos`)
-   - Aplique limites como guard rail durante geração:
-     - `termos_banidos_absoluto` → NUNCA use no output (lineup, SKU, ASIN, trade-off, hardcore, datasheet, notificado, peers, claim, stack)
-     - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0) → aplicar quando o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada"→"feita pra")
-     - Subtitle humano = ângulo (v1.34.0): stub com `subtitle` preenchido pelo editor = direção VINCULANTE do review (pode polir o texto, não pode trocar o ângulo); vazio = criar do zero. Idem badge.
-     - Tom natural v1.32.0 (régua completa na `pagina-produto-criar`): rótulo de categoria só se existe no varejo (teste-da-Amazon; "máquina de trabalho"→"impressora de escritório"); elipse "a barata/a doméstica/a laser" LIBERADA; zero meta-SEO (nunca citar a busca do leitor); zero antropomorfismo com gíria ("no batente", "se reconserta"); máx 1 coloquialismo leve
-     - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0). Use "o grande ponto é", "categoria premium", "funciona pra quem"
-     - `voz_eximir_responsabilidade` (v1.19.1) → ban "X mg declarados" parentético (drop "declarados"), "declarado pelo fabricante" (sobrando), "todos/todas/doses declaradas pelo fabricante" (transfere responsabilidade), alérgeno com "declarado" ("contém glúten declarado pelo fabricante" → "contém glúten"). Inclui "segundo a [marca]" em spec factual: rendimento/economia/velocidade afirme direto, sem atribuir (atribuição só pra recomendação tipo "a HP recomenda 50-100 págs/mês")
-     - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano", "totalmente seguro", "sem efeitos colaterais", "cientificamente comprovado" = 0 (YMYL, v1.19.0). Qualifique sempre.
-     - `concordancia_quebrada_regex` → grep antes de gravar: composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX"/"produtos elaboradas" — corrija (v1.19.0)
-     - `ingles_max` → não passe do número (ex: Pré Treino tem cutting ≤25, fat-burner ≤5)
-     - `medico_tecnico_max` → variar léxico após atingir limite (ex: parestesia ≤5 → use "formigamento")
-     - `industrial_max` → variar com sinônimos PT (ex: fórmula ≤60 → "composição", "mistura", "produto")
-     - `indicacao_medica_max` → não repita advertência em cada produto
+OVERRIDES DO BATCH (sobrepõem o Fluxo da individual):
+- PULE o passo 1.5 (git pull) e os passos 12-13 (git add/commit/push/VPS). É **PROIBIDO**
+  git add/commit/push/painel-vps-pull aqui — a skill-mãe faz UM commit-lote no fim.
+- Isolamento: você vê SÓ este produto. Não compare com outros sites nem "divirja ângulo" de
+  propósito (dedup cross-site é trabalho da auditoria).
+- Você MESMO escreve o `.mdx` (passos 10-11 da individual: backup + Write + fence check).
 
-1. Read .mdx atual: `sites/{{site}}/src/content/products/{{slug}}.mdx`
-2. Read bíblia: `docs/biblias-v2/{{asin}}.json`
-3. Verifique reviews-em-artigo que citam o ASIN (anti-duplicate vs página individual):
-   `Grep "asin.*{{asin}}" sites/{{site}}/src/content/reviews/*.mdx`
-4. Se houver review, leia o fullReview do produto naquele review pra saber
-   o ÂNGULO daquele texto. Sua página individual DEVE ter ângulo DIFERENTE
-   (anti-duplicate-content SEO).
-5. Monte amazonUrl:
-   - Tag preenchida: `https://www.amazon.com.br/dp/{{asin}}?tag={{tag}}&linkCode=ogi&th=1&psc=1`
-   - Tag vazia: `https://www.amazon.com.br/dp/{{asin}}` (crua)
-6. Gere os 6 campos seguindo as regras detalhadas em pagina-produto-criar/SKILL.md:
-   - subtitle (10-150 chars): título descritivo editorial, sem redundância
-     com o nome do produto, SEM spec dump
-   - shortDescription (50-250 chars, alvo 180-230): padrão **BENEFÍCIO-FIRST**
-     (régua v1.17.0) — posicionamento/perfil na 1ª frase, técnico justifica
-     depois. **HARD CAP 250 chars.** Canon `melhoraspirador`: 225 média.
-     Drop "[Tipo] brasileiro da [marca]" (marca já no nome), drop "preço médio
-     em torno de R$ X", drop público verboso. Começar com adjetivo posicional
-     ("Custo-benefício forte"), "Ideal pra quem..." ou "Você ganha...".
-     Ex ✅: "Custo-benefício forte e fórmula completa pra iniciantes. Combina
-     creatina, beta-alanina e cafeína anidra em dose pequena de 5g, com pote
-     de 300g que rende 60 doses por cerca de R$ 55." (Molde C, 211ch)
-     Ex ❌: "Pré-treino brasileiro da X com Y mg de Z..." (técnico-first).
-   - pros (3-8 items, 60-180 chars texto puro cada): formato
-     `<strong>Título</strong>: explicação` com dado concreto. **HARD CAP 180 chars**
-     texto puro (sem markup HTML). Canon `melhoraspirador`: 65 chars/item média.
-   - cons (1-5 items, 60-180 chars texto puro cada): mesmo formato e mesmos limites
-   - specs (3-10 pares): label + value strings simples
-   - fullReview (300-3000 chars HTML): 4 parágrafos marcados:
-     `<p><strong>Para quem é:</strong> ...</p>`
-     `<p><strong>Por que gostamos:</strong> ...</p>`
-     `<p><strong>Pontos de atenção:</strong> ...</p>`
-     `<p><strong>Resumo:</strong> ...</p>`
-     3 links Amazon nas posições: Para quem é, Por que gostamos, Resumo.
-     **Âncora = NOME do produto, NUNCA frase-CTA** (a página já tem o botão
-     "Ver Preço na Amazon"; CTA no texto é redundante/spam). ❌ `<a>Ver preço na
-     Amazon</a>`, `<a>é só acessar aqui</a>`, `<a>Comprar na Amazon</a>` · ✅
-     `<a>Nome do Produto</a>`. **AUTO-CHECK**: (1) os 4 prefixos DEVEM sair em
-     `<strong>` (`<p><strong>Para quem é:</strong>`); (2) cada `<a>` deve conter
-     o nome do produto. Caso real 2026-06-01 (creatinasaprovadas): 5 de 9
-     falharam aqui (2 sem negrito + sem nome; 3 com âncora-CTA).
-7. Régua editorial DURA (NÃO violar):
-   - Sem travessão (—) em nenhum campo
-   - Sem ponto-e-vírgula (;) em nenhum campo (régua 2026-06-20; troca por "." ou ","; entity-aware: ignora &amp; dos links)
-   - Sem superlativos absolutos ("o melhor", "incomparável")
-   - Voz analítica (NUNCA cite compradores/reviews/avaliações/estrelas)
-   - HTML allowlist em fullReview: só `<p>`, `<strong>`, `<em>`, `<a>`
-   - **CAMPOS TEXTO-PURO** — subtitle, shortDescription e specs[].value são
-     TEXTO PURO, sem HTML inline. Astro renderiza via `{var}` (escape XSS):
-     `<strong>X</strong>` vira `&lt;strong&gt;X&lt;/strong&gt;` no HTML →
-     exibido como texto literal pro usuário, NÃO negrito. Caso real
-     2026-05-26: Integralmédica Huger pros[5] vazou `<strong>energia...</strong>`
-     na shortDescription, apareceu literal no card da página individual.
-     **AUTO-CHECK antes de escrever**: grep `<strong>` em subtitle/
-     shortDescription/specs.value — se achar, ERRADO, reescreva sem markup.
-     (Em pros/cons, `<strong>Título</strong>` no início é OK — template usa
-     `set:html` ali; só não pode `<strong>` DENTRO do texto após o `:`.)
-   - Tag-aware nos links Amazon (formato acima)
-   - Sem comparações com concorrentes (página individual é sobre o produto sozinho)
-   - **NÃO comparar nem "divergir o ângulo" contra outros sites nossos.** Mesmo que o mesmo produto exista num site irmão, escreva a MELHOR página pela bíblia, sem tentar ser diferente de propósito (forçar divergência contorce e piora o texto). Dedup cross-site é trabalho da AUDITORIA (`pagina-produto-auditar` mede a similaridade real e flagga só o que de fato colou). Regra: criação escreve livre, audit mede, fix corrige o que colou.
-   - Voz-citação ("segundo X", "alérgenos confirmam") drop sempre; spec
-     factual (rendimento/velocidade) vai direto. Atribuição só pra
-     recomendação/calibração do fabricante ("a HP recomenda 50-100 págs/mês")
-   - Operação de destilação bíblia → .mdx (drop marcadores burocráticos)
-
-   - **DESTILAÇÃO CATEGORIA D (operação OBRIGATÓRIA pra cada claim da bíblia)**:
-     Bíblia frequentemente traz claim com voz-comprador IMPLÍCITA dentro de
-     pontosFortes/pontosFracos. Exemplos reais que sub-agents do Opus já
-     caíram em armadilha (caso 2026-05-26, batch melhorpretreino):
-
-       Bíblia → "Sabor maçã verde divide opiniões nos reviews"
-         ❌ "Sabor divide: opiniões sobre o sabor são mistas"  (voz-comprador vazou)
-         ✅ "Sabor maçã verde é frutado, pode não agradar quem prefere
-             perfis mais neutros"
-
-       Bíblia → "Um comprador relata que a fórmula não causou parestesia"
-         ❌ "Um comprador relata que não há formigamento"  (voz-comprador literal)
-         ✅ "A fórmula em uso normal não induz formigamento marcante"
-
-       Bíblia → "Sabor elogiado de forma recorrente nas opiniões disponíveis"
-         ❌ "Bem avaliado pelos compradores"  (voz-comprador)
-         ✅ "Sabor jabuticaba com romã, perfil cítrico-frutado"
-
-       Bíblia → "Paladar bem recebido nos comentários disponíveis"
-         ❌ "Paladar bem recebido pelos comentários disponíveis"  (literal)
-         ✅ "Perfil de sabor adocicado, agradável em uso continuado"
-
-     **AUTO-CHECK final antes de escrever**: se ALGUM campo do .mdx final
-     contém "opiniões", "comentários", "um comprador", "elogios", "recepção",
-     "avaliações", "reviews", "divide opiniões", "bem recebido [pelos/nos]" —
-     está ERRADO. Reescreva como observação ANALÍTICA OBJETIVA antes de
-     finalizar.
-
-   - **Termos técnico-industriais proibidos** (régua específica do projeto):
-     "contaminação cruzada", "linha de produção compartilhada" (sem contexto
-     editorial). Não agregam ao leitor final; soam como ficha técnica.
-     Para alérgenos, usar linguagem editorial:
-       ❌ "Risco de contaminação cruzada na linha de produção"
-       ✅ "Pode conter traços de leite — alérgicos severos devem ler a
-           rotulagem antes do uso"
-8. Validações antes de escrever:
-   - Tamanhos no limite
-   - HTML allowlist
-   - Sem travessão
-   - 3 links Amazon no fullReview com tag/sem-tag conforme config
-9. Backup ANTES de escrever:
-   ```bash
-   DAY=$(date +%Y-%m-%d); TIME=$(date +%H%M%S)
-   mkdir -p "docs/painel/.painel-backups/$DAY"
-   cp "sites/{{site}}/src/content/products/{{slug}}.mdx" \
-      "docs/painel/.painel-backups/$DAY/product-{{site}}-{{slug}}-${TIME}.mdx"
-   ```
-10. Write o .mdx novo: preserva frontmatter base (asin, name, image, etc),
-    adiciona os 6 campos editoriais, remove o marker `{/* STUB GERADO POR ... */}`
-    do body.
-11. **AUTO-CHECK DE FENCE (OBRIGATÓRIO pós-Write)**: rode `grep -c '^---$'` no
-    arquivo gravado. Tem que ser **exatamente 2** (abre+fecha o frontmatter).
-    Se for **1**, faltou a fence de fechamento (o block scalar `>-` do `fullReview`,
-    sendo o último campo, correu até o EOF sem fechar) → **anexe `\n---\n` no fim
-    do arquivo** e re-confira == 2. Sem isso o build do Astro quebra com
-    `asin: Required / name: Required` (caso real Bárbara 2026-06-15: 1 em 6 saiu
-    assim). NÃO reporte `ok:true` sem o arquivo ter 2 fences.
-
-❌ NÃO FAÇA: git add / git commit / git push / painel-vps-pull.sh.
-Esses são responsabilidade da skill mãe que vai aggregar todos os
-sub-agents e fazer 1 commit lote no fim.
-
-Reporte em formato curto:
-- Sucesso: `{ ok: true, slug: '{{slug}}', path: '...', summary: 'subtitle 67c / fullReview 1842c / 3 links Amazon' }`
-- Erro: `{ ok: false, slug: '{{slug}}', error: 'motivo curto' }`
+SAÍDA — reporte curto:
+- Sucesso: { ok: true, slug: '{{slug}}', path: '...', summary: 'subtitle 67c / fullReview 1842c / 3 links' }
+- Erro:    { ok: false, slug: '{{slug}}', error: 'motivo curto' }
 ```
+
+Se o ambiente impedir o sub-agent de ler `pagina-produto-criar/SKILL.md` (raro, VPS-only), a skill-mãe lê o arquivo e cola o conteúdo no prompt — NUNCA cair num resumo de memória.
 
 ## Limites e edge cases
 
