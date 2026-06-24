@@ -249,7 +249,7 @@ O subtitle é o heading do card = slot de alto peso SEO. **Mas a criação NÃO 
 
 **O que a criação faz com o subtitle:**
 - Escreve o review PRIMEIRO (da bíblia, ângulo = badge). O subtitle é o ÚLTIMO campo, não influencia a prosa.
-- Seta um **default leve keyword-first**: keyword inteira do artigo + cauda simples derivada do PRÓPRIO badge ("Custo-Benefício"→"{kw} custo-benefício", "Melhor Escolha"→"{kw} em geral", "Mais Barata"→"{kw} boa e barata", "Profissional"→"{kw} profissional", marca→"{kw} da {Marca}"). 5-7 palavras, **SEM spec técnica** (sem Hz/GB/mAh/polegada/MP/W/número).
+- Seta um **default leve keyword-first**: keyword inteira do artigo + cauda simples derivada do PRÓPRIO badge ("Custo-Benefício"→"{kw} custo-benefício", "Melhor Escolha"→"{kw} em geral", "Mais Barata"→"{kw} boa e barata", "Profissional"→"{kw} profissional", marca→"{kw} da {Marca}"). 5-7 palavras, **SEM spec técnica** (sem Hz/GB/mAh/polegada/MP/W/número), em **Title Case PT-BR** (palavras de conteúdo maiúsculas; preposições/artigos curtos minúsculos: em/de/da/do/para/e/a/o/com/no/na/por; preserva marca/sigla). Ex: "Melhor Impressora Multifuncional em Geral".
 - **NÃO tenta variar cauda contra os irmãos** — a criação é cega aos outros produtos; variar/sequenciar é trabalho do audit.
 - Subtitle escrito à mão no stub = rótulo deliberado, **não sobrescreve** (exceção v1.34.0).
 
