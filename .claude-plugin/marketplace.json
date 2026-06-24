@@ -5,8 +5,8 @@
     "email": "marcelo.ckx@gmail.com"
   },
   "metadata": {
-    "description": "[v1.56.0] FONTE UNICA DE REGUA padronizada nas skills em-massa (fim do drift): pagina-produto-criar-em-massa, biblia-preencher-em-massa e biblia-auditar-em-massa agora mandam o sub-agent LER a SKILL.md individual a risca em vez de re-statear/colar a regua inline. A pagina-produto-criar-em-massa perdeu ~165 linhas de inline que tinham driftado (Peso por fonte, Filtros editoriais eco/origem, banner descontinuado, v1.21.1 estavam ausentes) — agora vem sempre do arquivo vivo. Mesmo padrao da clone v1.54. (v1.55.0: nova skill preencher-institucionais.)",
-    "version": "1.56.0"
+    "description": "[v1.56.1] fix preencher-institucionais: rota/dir de autor corrigida de /autor/ para /author/ (a rede usa /author/ — href /autor/ dava 404 e a pagina ia pro dir errado). (v1.56.0) FONTE UNICA DE REGUA padronizada nas skills em-massa (fim do drift): pagina-produto-criar-em-massa, biblia-preencher-em-massa e biblia-auditar-em-massa agora mandam o sub-agent LER a SKILL.md individual a risca em vez de re-statear/colar a regua inline. A pagina-produto-criar-em-massa perdeu ~165 linhas de inline que tinham driftado (Peso por fonte, Filtros editoriais eco/origem, banner descontinuado, v1.21.1 estavam ausentes) — agora vem sempre do arquivo vivo. Mesmo padrao da clone v1.54. (v1.55.0: nova skill preencher-institucionais.)",
+    "version": "1.56.1"
   },
   "plugins": [
     {
