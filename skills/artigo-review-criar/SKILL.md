@@ -748,6 +748,18 @@ Se achar qualquer bug: corrija ANTES de gravar. Skill atualmente faz isso mental
 
 **Auto-check**: grep dos termos exatos antes de gravar. Achou → reescreve qualificando.
 
+### 13. Aviso "consultar profissional" — sem ladainha (SÓ nicho suplemento/saúde, régua v1.34.0)
+
+**Escopo: SÓ nichos de suplemento/saúde** (Creatinas, Whey Protein, Pré Treino, Ômega 3, Vitaminas, Suplementos, Colágeno, beleza-saúde). Em eletrônicos/cozinha/tablet/impressora isto NÃO se aplica.
+
+O encaminhamento genérico a profissional ("consulte/converse/alinhe a dose com médico ou nutricionista") **NÃO entra em todo review** — vira ladainha (caso real: 8 de 10 produtos + guia, ~14×/artigo; o próprio texto se entrega com "como sempre…", "como qualquer suplemento…"). Diferença vs régua 12: a 12 é sobre NÃO usar absolutos de segurança; esta é sobre NÃO REPETIR o encaminhamento.
+
+- O aviso GERAL fica no **guia** (1×, responsabilidade da `artigo-guia-escrever`).
+- No corpo do artigo: no máximo no **1º produto** da lista, e só se sair natural.
+- Nos demais produtos: só quando aquele produto tem motivo **distinto dos outros** (cafeína muito acima, anticoagulante/interação, contraindicação específica, restrição de gestante/lactante no rótulo). Aí é fato útil — escreva com o gancho concreto, não o bordão.
+- **NUNCA** a mesma frase carimbada produto após produto. Teto prático: ~5 por artigo (a `artigo-auditar` flagra acima disso).
+- Restrição factual específica do produto (ex: "o fabricante não indica pra gestantes", alérgeno) continua valendo onde for real — não é disclaimer genérico.
+
 ### 13. Auto-check max 2 valores numéricos por frase (régua v1.19.0, canon 2026-05-28)
 
 **Bug-class** (ChatGPT-Bárbara ponto 10): frases comparativas viram tabela em prosa quando listam 3+ valores em mg/g/R$.

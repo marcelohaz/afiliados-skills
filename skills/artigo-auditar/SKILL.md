@@ -618,6 +618,20 @@ for produto in products:
 
 Fix sugerido: qualificar sempre — "Tolerado pela maioria, consulte um profissional se tem comorbidade" em vez de "uso regular é seguro".
 
+### `disclaimer-saude-repetido` (level=`warn`, régua v1.34.0 — SÓ nicho suplemento/saúde)
+
+**Escopo: aplica APENAS se o `niche` do site é suplemento/saúde** (Creatinas, Whey Protein, Pré Treino, Ômega 3, Vitaminas, Suplementos, Colágeno, beleza-saúde). Em eletrônicos, cozinha, tablets, impressoras, etc. **NÃO roda** (pula a regra).
+
+**Bug-class** (canon Marcelo 2026-06-25): o encaminhamento genérico a profissional ("consulte/converse/alinhe/confirme/defina a dose com médico ou nutricionista") estava colado no fim de quase todo review, virando ladainha. Caso real: artigos de vitamina/multivitamínico/ômega com o aviso em 8 de ~10 produtos + 3-6× no guia (~14×/artigo). Cansa o leitor e não pontua mais no Google (1 aviso claro basta). Mediana da rede = 2; só ~25% dos artigos de suplemento passam de 5.
+
+**Como contar**: nos reviews (fullReview + cons), conta quantos PRODUTOS têm encaminhamento genérico — regex aproximado `(consult\w+|convers\w+|alinh\w+|confirm\w+|defin\w+ a dose|acompanhamento)[^.!?]{0,50}(m[ée]dico|nutricionista|profissional)`.
+
+**FLAG se**: (a) total de produtos-com-aviso > **5** no artigo, OU (b) a mesma frase de encaminhamento aparece quase idêntica (≥6 palavras iguais) em ≥2 produtos.
+
+**Fix sugerido**: manter o aviso geral no **guia** (1×) + no **1º produto** da lista (se natural) + nos produtos com motivo REALMENTE distinto (cafeína muito acima, anticoagulante/interação, contraindicação específica, restrição de gestante/lactante no rótulo). Cortar o encaminhamento genérico dos demais e variar a redação dos que ficam. NÃO mexer no conteúdo de segurança específico de um produto (isso é fato, não ladainha).
+
+**Bloqueia readyToLock?** Não (`warn`) — é qualidade editorial, não risco YMYL: o aviso continua existindo, só deixa de ser repetido. (A régua `health-absolutes-ymyl` acima continua valendo e ESSA sim bloqueia.)
+
 ### `voz-eximir-responsabilidade` (level=`error`, régua v1.19.1)
 
 **Bug-class** (canon 2026-05-28, Marcelo): "declarado", "declarada", "declarados" e "pelo fabricante" viram muleta epistêmica — site se eximindo de afirmar diretamente. 91 ocorrências combinadas no melhorpretreino. Soa como se a redação não confiasse nos próprios dados.
