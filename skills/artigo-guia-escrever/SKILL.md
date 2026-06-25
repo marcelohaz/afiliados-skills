@@ -650,7 +650,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - "sem efeitos colaterais" → "efeitos colaterais raros"
 - "cientificamente comprovado" / "100% seguro" → qualificar
 
-**Aviso "consultar profissional" — o guia é a CASA dele (só nicho suplemento/saúde, régua v1.34.0):** em nicho de suplemento/saúde (creatina, whey, pré-treino, ômega, vitamina, suplementos, colágeno, beleza), o aviso geral de "conteúdo informativo, não substitui orientação de médico/nutricionista" vai AQUI no guia, **1 vez** (natural em "Vale a pena comprar…?" ou numa pergunta da FAQ), conciso. É o lugar canônico — os reviews dos produtos NÃO repetem esse encaminhamento genérico (vira ladainha, ~14×/artigo; ver régua na `artigo-review-criar` §13 e o check `disclaimer-saude-repetido` da `artigo-auditar`). Em nicho não-saúde (eletrônico/cozinha/tablet), não há esse aviso.
+**Aviso "consultar profissional" — o guia é a CASA dele (só nicho suplemento/saúde, régua v1.57.0):** em nicho de suplemento/saúde (creatina, whey, pré-treino, ômega, vitamina, suplementos, colágeno, beleza), o aviso geral de "conteúdo informativo, não substitui orientação de médico/nutricionista" vai AQUI no guia, **1 vez** (natural em "Vale a pena comprar…?" ou numa pergunta da FAQ), conciso. É o lugar canônico — os reviews dos produtos NÃO repetem esse encaminhamento genérico (vira ladainha, ~14×/artigo; ver régua na `artigo-review-criar` §13 e o check `disclaimer-saude-repetido` da `artigo-auditar`). Em nicho não-saúde (eletrônico/cozinha/tablet), não há esse aviso.
 
 ### Voz-eximir-responsabilidade (não use fabricante como muleta)
 

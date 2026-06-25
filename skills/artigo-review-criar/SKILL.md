@@ -748,7 +748,7 @@ Se achar qualquer bug: corrija ANTES de gravar. Skill atualmente faz isso mental
 
 **Auto-check**: grep dos termos exatos antes de gravar. Achou → reescreve qualificando.
 
-### 13. Aviso "consultar profissional" — sem ladainha (SÓ nicho suplemento/saúde, régua v1.34.0)
+### 13. Aviso "consultar profissional" — sem ladainha (SÓ nicho suplemento/saúde, régua v1.57.0)
 
 **Escopo: SÓ nichos de suplemento/saúde** (Creatinas, Whey Protein, Pré Treino, Ômega 3, Vitaminas, Suplementos, Colágeno, beleza-saúde). Em eletrônicos/cozinha/tablet/impressora isto NÃO se aplica.
 

@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 35 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade, badge-ausente) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
+description: Audita artigo inteiro read-only. Combina 35 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, disclaimer-saude-repetido (aviso de saúde repetido — só nicho suplemento), voz-eximir-responsabilidade, badge-ausente) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
 ---
 
 ## Parse de input
@@ -618,7 +618,7 @@ for produto in products:
 
 Fix sugerido: qualificar sempre — "Tolerado pela maioria, consulte um profissional se tem comorbidade" em vez de "uso regular é seguro".
 
-### `disclaimer-saude-repetido` (level=`warn`, régua v1.34.0 — SÓ nicho suplemento/saúde)
+### `disclaimer-saude-repetido` (level=`warn`, régua v1.57.0 — SÓ nicho suplemento/saúde)
 
 **Escopo: aplica APENAS se o `niche` do site é suplemento/saúde** (Creatinas, Whey Protein, Pré Treino, Ômega 3, Vitaminas, Suplementos, Colágeno, beleza-saúde). Em eletrônicos, cozinha, tablets, impressoras, etc. **NÃO roda** (pula a regra).
 
