@@ -61,6 +61,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 - **Preservar estrutura do `fullReview`**: 4 parágrafos com prefixos exatos (`Para quem é:`, `Por que gostamos:`, `Pontos de atenção:`, `Resumo:`). `Por que gostamos` pode ter 2 parágrafos.
 - **Preservar formato pros/cons**: `<strong>Título</strong>: explicação`.
 - **Nunca inventar dados**: cada claim com origem rastreável na bíblia.
+- **🚨 AUDITORIA POR AMOSTRAGEM É PROIBIDA (gate de cobertura, canon Marcelo 2026-06-27).** Percorra os **23 critérios um a um** e produza a **Checklist de cobertura** no relatório (passo 7 + seção no "Formato do relatório"): cada critério marcado `✓ pass` / `⚠ flag` / `n/a`, com nota de 1 linha. **Varredura seletiva por grep NÃO basta** — vários critérios (esp. os de NORMALIZAÇÃO: **22 subtitle-keyword-first** e **23 badge-ausente**) NÃO aparecem em grep de defeito porque não são "defeito", são transformação proativa que quase SEMPRE gera proposta. Pular qualquer critério sem marcar na checklist = bug da auditoria. Incidente-origem: melhorairfryer-com/melhor-air-fryer 2026-06-27, subtitles e badges passaram batido porque a auditoria foi por amostragem (só os 3 achados que saltaram no grep) — Marcelo pegou os dois no olho. Ver Armadilha "auditoria por amostragem".
 
 ## Fluxo
 
@@ -84,9 +85,12 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Vazia → links Amazon devem ser crus. Preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`.
 
-7. **Analisar cross-produto** pelos 22 critérios (seção abaixo). Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
+7. **Analisar cross-produto percorrendo os 23 critérios UM A UM** (seção abaixo). **OBRIGATÓRIO (gate de cobertura):** pra CADA um dos 23, decida `✓ pass` / `⚠ flag` / `n/a` e anote 1 linha — isso vira a **Checklist de cobertura** do relatório. **Proibido pular ou "achar que está ok" sem avaliar.** Atenção redobrada aos critérios de NORMALIZAÇÃO, que não saltam em grep de defeito e quase sempre geram proposta:
+   - **22 `subtitle-keyword-first`**: leia os N subtitles e avalie CADA um (lead keyword-first? gancho? ≤13 palavras? sem dois-pontos? lead distinto dos outros?). Subtitle escrito pela criação (ângulo v1.34) NÃO está "pronto" — o keyword-first é decidido AQUI.
+   - **23 `badge-ausente`**: confira se TODO produto tem `badge`. Faltando → propor `newBadge`.
+   Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
-8. **Reportar em chat** no formato canônico (seção "Formato do relatório").
+8. **Reportar em chat** no formato canônico (seção "Formato do relatório") — **incluindo a Checklist de cobertura dos 23 critérios** (sem ela o relatório é inválido).
 
 8.5. **Gravar marcador de auditoria** (registra QUANDO os reviews foram auditados — alimenta a barra "Reviews auditados" + o log de atividade do editor-artigo). Roda **SEMPRE**, logo após o relatório, mesmo que o user depois rejeite todas as mudanças (auditar é o evento; aplicar é outro):
    - `Write` em `docs/biblias-v2/.audits/reviews/{site}-{slug}-last.md` com: título (`# Auditoria de reviews: {site}/{slug}`), `- Produtos auditados: {N}`, `- Achados: {M}` (+ lista curta das rules disparadas, ou "nenhum"). A data é só pra leitura humana — **NÃO** invente timestamp pra sort (a fonte de tempo é o commit do git; e gerar `Date().toISOString()` cai no bug de timezone). Crie o diretório se não existir.
@@ -617,6 +621,35 @@ Apresentar em chat após análise:
 **Lineup**: {N} produtos analisados, {N-X} com fullReview preenchido (auditados)
 **Resultado**: {X} produtos com mudanças propostas, {Y} passaram limpos
 
+## Checklist de cobertura dos 23 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
+
+| # | Critério | Status | Nota |
+|---|---|---|---|
+| 1 | tone-clone | ✓/⚠/n.a. | ... |
+| 2 | redundancy | ✓/⚠/n.a. | ... |
+| 3 | incoherence | ✓/⚠/n.a. | ... |
+| 4 | quality | ✓/⚠/n.a. | ... |
+| 5 | buyer-reference | ✓/⚠/n.a. | ... |
+| 6 | links-incorretos | ✓/⚠/n.a. | ... |
+| 7 | claim-vs-lineup-fato | ✓/⚠/n.a. | ... |
+| 8 | voz-citacao-ficha-tecnica | ✓/⚠/n.a. | ... |
+| 9 | voz-comprador-implicita | ✓/⚠/n.a. | ... |
+| 10 | termos-tecnico-industriais | ✓/⚠/n.a. | ... |
+| 11 | html-texto-puro | ✓/⚠/n.a. | ... |
+| 12 | tamanho-escannavel | ✓/⚠/n.a. | ... |
+| 13 | chavoes-por-nicho | ✓/⚠/n.a. | ... |
+| 14 | capitalizacao-duplicacao | ✓/⚠/n.a. | ... |
+| 15 | concordancia-quebrada-pt-br | ✓/⚠/n.a. | ... |
+| 16 | template-para-quem-e | ✓/⚠/n.a. | ... |
+| 17 | numeros-em-excesso | ✓/⚠/n.a. | ... |
+| 18 | health-absolutes-ymyl | ✓/⚠/n.a. | ... |
+| 19 | voz-eximir-responsabilidade | ✓/⚠/n.a. | ... |
+| 21 | naturalidade | ✓/⚠/n.a. | ... |
+| 22 | **subtitle-keyword-first** (NORMALIZAÇÃO — avaliar CADA subtitle) | ✓/⚠/n.a. | ... |
+| 23 | **badge-ausente** (NORMALIZAÇÃO — conferir badge em TODOS) | ✓/⚠/n.a. | ... |
+
+> Todo critério marcado. `⚠ flag` vira mudança proposta abaixo. Os de NORMALIZAÇÃO (22, 23) raramente são `✓ pass` num artigo recém-criado — se marcar `✓`, justifique na nota (ex.: "11/11 subtitles já keyword-first").
+
 ---
 
 ## ✅ Passaram (sem mudanças)
@@ -696,6 +729,14 @@ Pra cada produto aprovado:
 Depois do Edit, rodar `pnpm --filter {site} build`. Se Zod do Astro falhar (raríssimo), reverter do backup e reportar erro.
 
 ## Armadilhas recorrentes
+
+### 0. Auditoria por amostragem (a pior — gate de cobertura existe pra matar isso)
+
+**Incidente-origem (melhorairfryer-com/melhor-air-fryer, 2026-06-27):** rodei a auditoria caçando defeito por grep (claims, voz-comprador, `;`, travessão, chavões), achei 3 issues, declarei "8 passaram" e fechei — **sem avaliar os 23 critérios um a um**. Resultado: o critério **22 (subtitle-keyword-first)** e o **23 (badge-ausente)** passaram inteiros (11 subtitles sem keyword no lead, 6 produtos sem badge). Marcelo pegou os dois no olho: "só não passou pq eu tô cobrando você". 
+
+**Por que acontece:** os critérios de NORMALIZAÇÃO (22, 23) não são "defeito que aparece em grep" — são transformação proativa que quase sempre gera proposta. Quem audita "procurando o que está errado" não os vê, porque o subtitle "lê bem" (é o ângulo da criação) e o badge ausente é uma omissão, não um erro visível no texto.
+
+**A trava:** percorrer os 23 e **preencher a Checklist de cobertura** (passo 7 + Formato do relatório) é OBRIGATÓRIO. Produzir a linha de cada critério força avaliá-lo. Relatório sem a checklist completa = inválido. Marcar `✓ pass` em 22/23 num artigo recém-criado exige justificativa na nota.
 
 ### 1. Re-flagrar estrutura padrão como tone-clone
 
