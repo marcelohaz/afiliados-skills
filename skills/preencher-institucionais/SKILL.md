@@ -86,6 +86,19 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 - Credencial REAL do config.author (role/bio). Se a persona não é especialista no nicho exato, descrever honesto (redator/analista que pesquisa o nicho), NUNCA título falso.
 - A página é renderizada com o cabeçalho da persona (nome/foto/bio do config) por cima pelo `AutorPageEditable.astro` — o HTML aqui é só o corpo.
 
+## Variação obrigatória por seção (anti-footprint) — POOLS
+
+**Por que existe:** mesmo lendo as irmãs, a geração CONVERGE nas seções semanticamente presas (assinatura, disclosure, contato, abre do "Como avaliamos", boas-vindas) — elas "têm que dizer a mesma coisa", então saem com a MESMA redação em todos os sites da persona. Caso real (melhorairfryer vs cozinhaideal, 2026-06-27): mesmo com a régua anti-clone, colaram em 5 pontos — assinatura ("O conteúdo daqui é assinado por… É ela quem…"), abre do "Como avaliamos" ("avaliamos a fundo o que ele entrega…"), critério de custo ("o que você paga com o que…"), disclosure ("de graça em troca de elogio") e contato ("use a nossa página de contato"). A leitura não pegou; só o check de 6-gramas. A correção é **variar de propósito**, rotacionando um molde DIFERENTE por site nas 6 seções de risco.
+
+**Regra:** pra CADA seção abaixo, escolha um molde da família que NENHUMA irmã da persona já usou (leia as irmãs no passo 3). É a ESTRUTURA da frase que varia, não só sinônimo solto. Os pools são sementes — gere fresco a partir deles, não copie verbatim.
+
+- **Boas-vindas (§1 do /sobre/):** "Que bom ter você por aqui." / "Bem-vindo ao {Site}." / "Se você chegou até aqui, é porque…" / "{Site} existe por um motivo simples:" / (abre direto pela dor, sem saudação).
+- **Assinatura ("Quem está por trás"):** "O conteúdo daqui é assinado por {Autor}…" / "Cada análise leva a assinatura de {Autor}…" / "Quem escreve por aqui é {Autor}…" / "Por trás das recomendações está {Autor}…". O 2º movimento ("é ela quem decide…") também rotaciona: "É dela a palavra final sobre…" / "É quem define o que entra na lista…" / "Cabe a ela escolher…". O encaminhamento pra /author/ varia também: "vale dar uma passada na página dela" / "é só abrir a página da autora" / "conheça o método dela na página de autor".
+- **Abre do "Como avaliamos":** "Antes de indicar qualquer modelo, avaliamos…" / "Cada recomendação passa por uma análise de…" / "Toda indicação aqui nasce de…" / "Pra entrar na lista, o modelo é avaliado por…". (Mantém vago-evaluativo + anti-spec; só muda a estrutura.)
+- **Critérios (a redação de cada `<li>`):** o CONCEITO repete entre sites (custo, capacidade, etc. são os mesmos), mas a FRASE de cada bullet varia. Ex. custo: "pesando o preço contra o uso real" / "equilibrando o valor com o que você de fato vai usar" / "se o preço se paga no uso do dia a dia".
+- **Disclosure (parte NÃO-Amazon):** o nome "Programa de Associados da Amazon Brasil" é fixo (citação), mas a prosa ao redor varia: "podemos ganhar uma pequena comissão, sem custo a mais pra você" / "recebemos uma porcentagem da compra, e o preço pra você não muda" / "ganhamos uma comissão da loja, nunca do seu bolso". A parte do "não aceito brinde/pagamento" idem: "não aceito aparelho cortesia em troca de resenha boa" / "nenhum fabricante paga pra subir na lista" / "produto grátis não compra elogio aqui".
+- **Fecho ("Fale conosco"):** o e-mail é fixo, mas o convite e o link variam: "mande sua mensagem pela página de contato" / "fale com a gente pela página de contato" / "passe pela página de contato". NUNCA repetir "use a nossa página de contato" se uma irmã já usa.
+
 ## Régua de CONTEÚDO (as duas)
 
 - Allowlist HTML: `h1`(só sobre), `h2`, `h3`, `p`, `ul`, `ol`, `li`, `strong`, `em`, `a`. Nada mais.
@@ -102,7 +115,7 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 - [ ] Autor = config.author (nome + /author/{slug}/ corretos). E-mail = config.contactEmail.
 - [ ] SEM "testamos/laboratório/bancada/presencial/medimos".
 - [ ] SEM método-de-mesa ("partimos das especificações", "linha por linha", "cruzamos com opiniões").
-- [ ] Variado vs irmãs da mesma persona (zero sequência ≥6 palavras igual).
+- [ ] Variado vs irmãs da mesma persona (zero sequência ≥6 palavras igual). **GATE EM LOOP, não checagem única:** rode o check de 6-gramas vs CADA irmã; pra cada overlap que NÃO seja a citação Amazon ("Programa de Associados da Amazon Brasil") nem a credencial-fato do autor, **reescreva o trecho (rotacionando o pool da seção) e RODE DE NOVO**. Repita até sobrar só os grams permitidos. ⚠ Cuidado pra a reescrita não criar colisão NOVA com outra irmã (caso real 2026-06-27: reescrevi o contato e bati noutra irmã no "use a nossa página de contato"; só o re-run pegou) — por isso é loop, não passada única.
 - [ ] sobre↔autor do MESMO site: zero frase verbatim copiada (overlap de TÓPICO ok; o /author/ usa 3 prioridades pessoais, NÃO espelha a lista de critérios do /sobre/). **VERIFICAR PROGRAMÁTICO** com check de 6-gramas (set de tuplas de 6 palavras de cada página; interseção deve ser 0) — fácil escapar na leitura manual (caso real 06-12: o fecho "se um modelo imprime devagar, tem tinta cara..." foi copiado do /sobre/ no "Meu compromisso" do /author/ e só o check de 6-gramas pegou).
 - [ ] HTML só na allowlist; sem travessão; tamanhos OK.
 
