@@ -409,7 +409,7 @@ Guide bem feito tem ~12-18k chars. Menos que 6k provavelmente faltou cobertura; 
 ```html
 <p>Antes de comprar, verifique:</p>
 <ul>
-  <li>Voltagem (bivolt ou específica)</li>
+  <li>Potência de sucção (em Pa ou W)</li>
   <li>Tipo de filtro (HEPA, lavável, descartável)</li>
   <li>Garantia oficial Brasil</li>
 </ul>
