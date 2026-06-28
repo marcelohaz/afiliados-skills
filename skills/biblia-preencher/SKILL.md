@@ -310,6 +310,15 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - Alérgeno: "contém glúten declarado pelo fabricante" → "contém glúten"
 - **Spec de fabricante = fato, afirme direto** (régua v1.21.1): rendimento, economia e velocidade da ficha (ex: "rende até 4.500 páginas") vão SEM "segundo a Epson"/"segundo o fabricante" (atribuir a cada spec vira muleta repetitiva, igual "declarado pelo fabricante"). Atribuição só vale pra recomendação/calibração do fabricante (ex: "a HP recomenda 50 a 100 páginas/mês").
 
+### Voltagem / bivolt — NUNCA inferir (régua dura, canon 2026-06-28)
+
+NUNCA afirme "bivolt" (nem "funciona em qualquer tomada", "sem transformador") a partir de copy de POTÊNCIA do fabricante tipo `"1800W 110V | 2000W 220V"` ou `"110/127V e 220V"`. Isso descreve **SKUs de voltagem SEPARADOS** (cada um voltagem única, ASINs diferentes na Amazon), **não** um aparelho bivolt. Só registre "bivolt" se o **`specsAmazon`** trouxer "bivolt" explícito.
+
+- **Aparelho de aquecimento de alta potência é voltagem ÚNICA por design** (resistência feita pra uma tensão): air fryer, ferro de passar, secador de cabelo, chaleira, aquecedor, chuveiro. Em air fryer o padrão é voltagem única (varredura 2026-06-28: 19/19 air fryers da rede = voltagem única no specsAmazon, 0 bivolt).
+- O que o `specsAmazon`/`descricaoProduto` do ASIN diz É a voltagem (ex: "Voltagem 110 Volts" = 110V único). Na curadoria, descreva como SKU único; se o fabricante lista 110V e 220V, diga "vendido em versões 110V e 220V, confira a versão no anúncio" — **nunca** "bivolt".
+- **Na dúvida, OMITA a voltagem** (melhor omitir que afirmar bivolt errado). Caso real (NA341/Midea/Mondial/WAP, 2026-06-28): copy "110v|220v" virou "bivolt" na curadoria → propagou pra 4 sites.
+- Exceção legítima de bivolt (não-aquecimento, baixa potência): impressora (100-240V comum), e cooktop a GÁS (a ignição eletrônica costuma ser bivolt). Aí só afirme se a ficha confirmar.
+
 ### Chavões por nicho (carregar `docs/painel/_data/chavoes-por-nicho.json`)
 
 - Identifique `niche` em `docs/painel/sites-meta.json`

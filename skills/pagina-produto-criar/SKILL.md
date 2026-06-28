@@ -462,6 +462,7 @@ Ao decidir QUAL claim vira pro central vs. spec, considere a fonte:
 
 - **Specs ambientais**: % plástico reciclado, certificações eco (Energy Star, EPEAT, RoHS, FSC), programas de devolução tipo "HP Planet Partners", neutralidade de carbono. Irrelevante pra decisão do comprador típico.
 - **Origem de fabricação**: "fabricado no Brasil", "made in X", "produto nacional". Idem.
+- **Bivolt inferido (régua dura, canon 2026-06-28)**: NUNCA afirme "bivolt"/"funciona em qualquer tomada"/"sem transformador" se o `specsAmazon`/`descricaoProduto` do ASIN traz voltagem ÚNICA (ex: "Voltagem 110 Volts") e não diz "bivolt" explícito. Copy de potência "1800W 110V \| 2000W 220V" / "110/127V e 220V" = SKUs SEPARADOS, não bivolt. **Aparelho de aquecimento de alta potência (air fryer, ferro, secador, chaleira) é voltagem única por design.** Na dúvida, **OMITA a voltagem** (nem na spec nem na prosa). Se há 2 versões, no máximo "vendido em versões 110V e 220V, confira no anúncio". Exceção (bivolt comum): impressora e cooktop a gás. Caso real: air fryers afirmados bivolt erradamente (2026-06-28).
 
 **Exceção**: se a bíblia tem em `angulosConversao` um tema explícito como `sustentabilidade` ou `produto-nacional` marcado como diferencial central, pode tratar com licença editorial. Sem ângulo registrado = ignore mesmo se aparecer em `sobreEsteItem`/`doFabricante`.
 
