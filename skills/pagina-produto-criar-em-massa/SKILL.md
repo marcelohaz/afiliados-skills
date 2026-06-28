@@ -145,6 +145,8 @@ Detecção:
 
    **GUARDA DE FENCE (OBRIGATÓRIO, antes do commit) — canon 2026-06-15:** pra CADA path com sucesso, rode `grep -c '^---$' {path}`. Deve ser **exatamente 2** (abertura + fechamento do frontmatter). Se vier **1**, o sub-agent gravou sem a fence de fechamento (o block scalar do `fullReview` correu até o EOF) → **anexe `\n---\n` no fim do arquivo** e re-confira == 2. Se vier 0 ou >2, não commite aquele: re-dispare o sub-agent isolado. **Caso real (Bárbara, melhoressuplementos/flora-nativa-b12, 2026-06-15): 1 de 6 saiu sem a fence, quebrou o build com `asin: Required / name: Required` e passou silencioso porque o sub-agent reportou `ok:true`.** Esta guarda na skill-mãe é o que pega isso (o sub-agent pode falhar o próprio auto-check).
 
+   **GUARDA DE TAMANHO (OBRIGATÓRIO, antes do commit) — canon 2026-06-28:** mesma lógica da guarda de fence (o sub-agent self-checa tamanho mas **conta caractere de cabeça e erra ~14% das vezes** — caso real: 3 de 22 páginas com `shortDescription` em 256-264 chars apesar do hard cap 250 na régua, pego só pelo `--audit`). Pra CADA path com sucesso, meça mecanicamente (parse YAML do frontmatter): `shortDescription` ≤ **250** chars; cada `pros[i]`/`cons[i]` ≤ **180** chars de **texto puro** (descontar tags `<strong>`/`<a>`/`<em>`). Se algum estourar → **NÃO commite aquele ainda: re-dispare o sub-agent isolado** com a instrução exata "seu `{campo}` saiu com N chars (cap M); reescreva SÓ esse campo pra ≤ alvo (shortDescription ≤230, pros/cons ≤150), mantendo benefício-first e o mesmo fato" → re-meça (máx 2 tentativas). Não-convergiu em 2 → trima a última frase mecanicamente e registra no relatório. **Por que na mãe:** LLM não conta char com precisão, então a régua (≤250) no sub-agent não basta — a verificação determinística tem que estar aqui, igual à fence. É mais barato que `--audit` (que pega o mesmo, mas custa +N sub-agents): a guarda de tamanho cobre o gap acionável a custo ~zero, e o `--audit` continua opt-in pro resto (claim-vs-bible, cross-site, etc.).
+
    ```bash
    git commit -m "feat({site}): preenche {N} páginas individuais em batch via skill" \
      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
@@ -312,8 +314,15 @@ Inputs deste produto (já resolvidos pela skill-mãe — NÃO faça parse de arg
 - Site: {{site}} · Slug: {{slug}} · ASIN: {{asin}} · AffiliateTag: {{tag}} (pode ser '')
 
 OVERRIDES DO BATCH (sobrepõem o Fluxo da individual):
-- PULE o passo 1.5 (git pull) e os passos 12-13 (git add/commit/push/VPS). É **PROIBIDO**
-  git add/commit/push/painel-vps-pull aqui — a skill-mãe faz UM commit-lote no fim.
+- ⛔⛔ **REGRA ZERO — NÃO RODE NENHUM COMANDO GIT.** Você NÃO tem os passos de git da
+  individual. É **PROIBIDO** `git add`/`git commit`/`git push`/`git stash`/`git pull` E
+  `painel-vps-pull.sh`. Pule o passo 1.5 (git pull) E os passos 12-13 inteiros. **A
+  skill-mãe faz TODO o git num commit-lote no fim** — você só faz `Read` + `cp` (backup) +
+  `Write` do `.mdx`. ⚠️ A `pagina-produto-criar.SKILL.md` que você leu TEM passos de
+  commit/push (12-13) — IGNORE-OS. O impulso de "seguir o fluxo da individual e commitar" é
+  exatamente o BUG: N sub-agents commitando em paralelo = race condition que corrompe o
+  histórico (caso real 2026-06-28: 2 de 11 sub-agents commitaram/pusharam no meio do batch e
+  bagunçaram a árvore). Se você se pegar prestes a rodar git, PARE — não é seu trabalho.
 - Isolamento: você vê SÓ este produto. Não compare com outros sites nem "divirja ângulo" de
   propósito (dedup cross-site é trabalho da auditoria).
 - Você MESMO escreve o `.mdx` (passos 10-11 da individual: backup + Write + fence check).
