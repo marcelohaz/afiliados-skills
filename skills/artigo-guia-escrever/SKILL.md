@@ -106,15 +106,17 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    ### Cenário A — análise da keyword EXATA existe E user NÃO colou novos concorrentes
    - **Match EXATO do slug é obrigatório.** `{keyword-slug}` = slugify do `keyword` do frontmatter DESTE artigo (ver função abaixo). Se o arquivo do slug exato NÃO existe, isto **NÃO é Cenário A** — vá pro **Cenário C** (pedir concorrentes). **NUNCA** carregar a análise de uma keyword vizinha/parecida (ex: usar `melhor-impressora-custo-beneficio.md` pra keyword "melhor impressora", ou `-epson`/`-tanque-de-tinta`): keywords diferentes têm intenção, SERP e concorrentes diferentes. "Mesma categoria" ≠ "mesma keyword".
    - `Read docs/painel/_data/competitor-analyses/{keyword-slug}.md` (slugify do `keyword` do frontmatter — ver função slugify abaixo)
+   - **Se existir `docs/painel/_data/competitor-sources/{keyword-slug}/` (texto cru, canon 2026-06-30), LEIA também** — é a fonte de fidelidade estrutural (headings reais) pra derivar os H2. Precedência: cru > ficha (a ficha vira só a síntese de gaps/clichês/ângulos). Keywords antigas sem cru → só a ficha topic-only, como antes.
    - Carrega como contexto rico (topical map, gaps, o que evitar, ângulos)
-   - **NÃO regera a análise** (preserva a existente)
+   - **NÃO regera a análise nem o cru** (preserva os existentes)
    - Reporta no chat: "📊 Análise de concorrentes carregada de `_data/competitor-analyses/{kw}.md` (gerada em DD/MM/YYYY)"
 
    ### Cenário B — análise NÃO existe + user colou textos de concorrentes
    - Cada texto truncado em 16k chars (mais generoso que os 8k antigos — análise rica)
+   - **Salvo o texto cru colado VERBATIM** em `competitor-sources/{keyword-slug}/` (passo 10c) — fonte dos headings reais
    - Eu analiso os textos e produzo a análise estruturada (passo 10b)
-   - Usa como topical map pra gerar o guide
-   - Cria o `.md` da análise depois (passo 10b)
+   - Uso os **headings reais do cru** pra derivar a estrutura (H2/H3/FAQ) + a ficha como topical map
+   - Crio o `.md` da análise (10b) E salvo o cru (10c)
 
    ### Cenário C — não existe análise da keyword EXATA E user NÃO colou nada
    - **PARAR e PEDIR os concorrentes. OBRIGATÓRIO, sem exceção.** NÃO gerar o guia sem análise da keyword exata. Não há mais opção de "fallback genérico", e é **PROIBIDO reusar a análise de outra keyword** (mesmo do mesmo site/categoria — ver Cenário A). Mensagem ao user:
@@ -162,6 +164,11 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     Salvar: `docs/painel/_data/competitor-analyses/{keyword-slug}.md`.
 
     Criar `_data/competitor-analyses/` se não existir.
+
+10c. **Salvar o TEXTO CRU dos concorrentes, além da ficha** (canon 2026-06-30). Sempre que o user colar concorrentes (Cenário B), salve o texto colado VERBATIM em `docs/painel/_data/competitor-sources/{keyword-slug}/` (um `.md` por concorrente, ou um só concatenado com separador `--- concorrente N ---`). Criar o diretório se não existir.
+    - **Por quê:** a ficha (10b) é um resumo **lossy** — perde o NÍVEL de cada tópico (se o concorrente tratou como seção/H2, critério/H3 ou item de FAQ). O cru preserva os **headings reais**, que é o que a derivação de estrutura precisa pra decidir H2 vs H3 vs FAQ sem chutar. A ficha continua (síntese + reuso humano); o cru é a fonte de **fidelidade estrutural**. Custo-benefício: salvar o cru é ~de graça e elimina recolar no futuro.
+    - **Precedência de leitura da estrutura (passo 8/9): cru > ficha.** Se existir `competitor-sources/{keyword-slug}/`, leia o cru pra extrair os headings e derivar os H2. Se só houver ficha (keywords antigas, pré-2026-06-30), use a ficha topic-only como antes. Nenhum dos dois → Cenário C (pedir concorrentes).
+    - **Anti-cópia (DURO):** o cru é material de pesquisa, NUNCA renderizado. Proibido copiar/parafrasear óbvio dele — a prosa do guia é original (a régua "concorrente parafraseado óbvio" vale com mais força agora que o texto fica salvo ao lado).
 
 11. **Validar mentalmente** antes de salvar:
     - **6.000-25.000 chars** total (alvo 12-18k)
@@ -338,7 +345,8 @@ Eles carregam a intenção comercial/comparativa + os links de afiliado (Marca/F
 **Além dos 5 base, ADICIONE H2 extras quando a análise de concorrentes mostrar que a SERP da keyword é informacional** (régua canon 2026-06-29). A estrutura é **dirigida pela SERP, não um molde fixo**:
 
 - Se os concorrentes da keyword usam H2 informacionais em forma de pergunta ("O que é {keyword}?", "{keyword} gasta muita energia?", "Que receitas dá pra fazer?", "Como limpar {keyword}?"), **crie esses H2 no guide** — é o que o Google premia pra keyword com intenção how-to/informacional. Caso-origem: `melhorairfryer-com/melhor-air-fryer-oven` (2026-06-29), onde 3 de 3 guias completos concorrentes usavam só H2 informacionais e nenhum usava o frame comercial.
-- **Critério pra incluir um H2 extra**: o tópico aparece em **2+ concorrentes** OU é um gap real da SERP (ver análise de concorrentes). Não invente seção que ninguém busca.
+- **Critério pra incluir um H2 extra**: o tópico é **SEÇÃO (capítulo próprio) em 2+ concorrentes** OU é um gap real da SERP. **Derive do TEXTO CRU dos concorrentes** (`competitor-sources/`, passo 10c) olhando os **headings reais** deles: assunto a que eles dão SEÇÃO → vira H2; assunto que aparece só na FAQ deles → fica na FAQ; assunto que é critério dentro de "Como escolher" → vira H3. **Não chute o nível pela ficha topic-only** (ela achata seção/FAQ/critério — foi a causa-raiz do erro abaixo). Não invente seção que ninguém busca.
+- **⚠ NUNCA espelhe a estrutura de um artigo de OUTRA keyword** (nem de um irmão de keyword diferente). Derive SÓ dos concorrentes DESTA keyword. Caso real (2026-06-30): espelhar os H2 do `melhor-air-fryer-oven` (categoria nova, SERP informacional, ganhou "O que é/energia/receitas/limpar") no `melhor-air-fryer` (keyword madura/comparativa, onde esses temas vivem na FAQ) inflou a estrutura indevidamente. Oven ≠ air fryer: mesma família, SERPs diferentes, estruturas diferentes.
 - **Teto: +2 a +4 H2 extras** (guide com 7-9 H2 no total). Acima disso vira walls of text.
 - **6º opcional clássico** ("Por que confiar neste conteúdo", entre FAQ e Conclusão) continua valendo e conta dentro do teto.
 - Keyword **comparativa** (ex: "melhor tablet custo benefício", "melhor impressora") em geral NÃO pede extras — segue enxuta nos 5 base. Os extras são pra keyword **informacional** que a SERP pedir.
