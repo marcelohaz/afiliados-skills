@@ -353,29 +353,33 @@ Fix sugerido: editar via painel (editor-artigo.html → campo "Heading da tabela
 
 ### `guide-estrutura` (level=`warn`)
 
-Audit da estrutura do `guideContent` HTML (Fase 3, canon 2026-05-27). Régua canon da skill `artigo-guia-escrever`.
+Audit da estrutura do `guideContent` HTML (Fase 3, canon 2026-05-27; estrutura SERP-driven canon 2026-06-29). Régua canon da skill `artigo-guia-escrever`.
 
 **Checklist**:
-- **5 H2 obrigatórios na ordem**:
+- **5 H2 base obrigatórios, na ordem relativa entre si**:
   1. "Vale a pena" (ou variante: "Vale a pena comprar")
   2. "Como escolher"
   3. "Melhor marca" (ou variante: "Qual a melhor marca")
   4. "FAQ" (ou variante: "Perguntas frequentes")
   5. "Conclusão"
-- **1 H2 opcional permitido**: "Por que confiar" (geralmente no início, antes de "Vale a pena")
-- **Ordem importa**: H2s fora de ordem viram issue (ex: "Conclusão" antes de "FAQ").
+- **H2 extras informacionais PERMITIDOS** (régua 2026-06-29): a estrutura do guide é **dirigida pela SERP**. H2 como "O que é {keyword}?", "{keyword} gasta muita energia?", "Que receitas dá pra fazer?", "Como limpar {keyword}?" são **bem-vindos** quando a keyword tem intenção informacional — NÃO flagar como issue. Eles se intercalam entre os 5 base (informacionais de definição/consumo perto do topo; de uso entre "Como escolher" e FAQ). Teto saudável: ~9 H2 totais (+2 a +4 extras). Acima de ~10 H2, flag `info` "guide muito fragmentado, considere consolidar".
+- **Ordem RELATIVA dos 5 base importa**: os 5 base devem aparecer na ordem Vale a pena → Como escolher → Marca → FAQ → Conclusão (com extras podendo aparecer no meio). H2 base fora dessa ordem relativa vira issue (ex: "Conclusão" antes de "FAQ"). Extras intercalados NÃO são desordem.
+- **6º opcional clássico** ("Por que confiar") continua permitido, entre FAQ e Conclusão.
+- **H2 extra educacional não pode ter link Amazon**: se um H2 informacional (O que é / energia / receitas / limpeza) tiver link Amazon, é o mesmo erro de "Amazon em seção educativa" — flag (ver check de links por seção). Link Amazon segue só em Marca/FAQ/Conclusão.
+- **Anti-duplicação de tópico** (`info`): se um H2 informacional existe E o mesmo tópico é re-explicado a fundo em "Vale a pena"/FAQ, é redundância (ver check `redundancy`) — cada tópico mora em um lugar só.
 - **Sem H1 no guide** — H1 já é o `title` do artigo, duplicar quebra hierarquia SEO.
 - **Sem placeholder** (`[GUIDE TODO`, `Conteúdo do guia aqui`).
 
 **Exemplo flag**:
-- ❌ Guide só tem 3 H2 (faltando "Melhor marca" e "FAQ") → warn "guide-estrutura: faltam 2 H2 obrigatórios"
-- ❌ H2s na ordem "Vale a pena / FAQ / Como escolher" → warn "ordem invertida"
+- ❌ Guide só tem 3 H2 base (faltando "Melhor marca" e "FAQ") → warn "guide-estrutura: faltam 2 H2 base obrigatórios"
+- ❌ Os 5 base na ordem "Vale a pena / FAQ / Como escolher" → warn "ordem relativa dos base invertida"
+- ✅ "Vale a pena / O que é / Como escolher / Gasta energia / Receitas / Como limpar / Marca / FAQ / Conclusão" → OK (9 H2, base na ordem, extras informacionais intercalados)
 
-Fix sugerido: rodar skill `artigo-guia-escrever` (gera os 5 H2 na ordem canônica).
+Fix sugerido: rodar skill `artigo-guia-escrever` (gera os 5 base na ordem + extras informacionais dirigidos pela SERP quando a keyword pedir).
 
 ### `guide-tamanho` (level=`info`)
 
-Audit do tamanho do `guideContent` (chars). Régua canon: 6000-25000 chars, alvo 12000-18000.
+Audit do tamanho do `guideContent` (chars). Régua canon: 6000-25000 chars, alvo 12000-18000 (comparativo) ou 16000-22000 (informacional, com H2 extras — régua 2026-06-29).
 
 **Checklist**:
 - **<6000 chars**: info "guide-tamanho: muito curto ({N} chars), abaixo do mínimo 6000. Aprofundar análise."
@@ -415,7 +419,7 @@ Audit dos links no `guideContent`. Régua hub-and-spoke (canon v1.10.0 da skill 
 **Checklist**:
 - **Links Amazon (`amazon.com.br/dp/`) em FAQ/Marca/Conclusão**: tag-aware (com `?tag={tag}&linkCode=ogi&th=1&psc=1` se site live). Sem tag = warn.
 - **Preferir link interno sobre Amazon em FAQ/Conclusão** (info): se há peer page/article no site, link interno (`/{slug}/`) é preferido.
-- **Vale a pena / Como escolher**: 0 links (essas 2 seções são EDUCATIVAS, sem links pra não distrair).
+- **Vale a pena / Como escolher + TODO H2 informacional extra** (O que é / gasta energia / receitas / como limpar): **0 link Amazon** (são EDUCATIVAS, sem CTA pra não distrair). Link Amazon `/dp/` ou `/s?k=` em qualquer uma dessas = warn "Amazon em seção educativa". Link interno (peer/produto) é OK se contextual.
 - **Marca**: links Amazon de busca por marca permitidos (`amazon.com.br/s?k=marca-X`).
 - **Sem travessão** (também coberto em guide-html-allowlist, mas reforço aqui).
 

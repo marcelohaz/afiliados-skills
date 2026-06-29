@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-escrever
-description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Quando user cola "Como escolher" de 1-3 concorrentes, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + SALVA análise em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` pra reuso (qualquer site na mesma keyword auto-carrega). Régua: 5 H2 obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + 1 opcional (Por que confiar), 6000-25000 chars (alvo 12-18k), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 0-3 só pra peer articles reais (peer/home contextuais, NÃO na Conclusão; produto pode na Conclusão). Carrega chavões nicho-específicos. Substitui só o campo guideContent. Backup + commit + push + sync VPS.
+description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Quando user cola "Como escolher" de 1-3 concorrentes, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + SALVA análise em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` pra reuso (qualquer site na mesma keyword auto-carrega). Régua: 5 H2 base obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + H2 extras informacionais dirigidos pela SERP (O que é / gasta energia / receitas / como limpar, +2 a +4, teto 9 H2, educacionais sem link Amazon, sem duplicar tópico dos base) quando a análise de concorrentes mostra intenção informacional; marca = 1-2 parágrafos substantivos por marca, FAQ = resposta completa snippet-worthy (lista quando ajuda), profundidade por completude e NUNCA por cota (anti-padding). 6000-25000 chars (alvo 12-18k comparativo, 16-22k informacional), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 0-3 só pra peer articles reais (peer/home contextuais, NÃO na Conclusão; produto pode na Conclusão). Carrega chavões nicho-específicos. Substitui só o campo guideContent. Backup + commit + push + sync VPS.
 ---
 
 ## Parse de input
@@ -47,7 +47,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 - **HTML, não markdown.** Diferente da intro (que é markdown puro), o guide é HTML.
 - **Allowlist de tags**: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Tudo mais é proibido: `<h1>` (artigo já tem H1 no title), `<script>`, `<iframe>`, `<style>`, `<img>`, `<table>`, `<form>`, `<button>`, `<div>`, `<span>` (visual fica pro CSS).
 - **6.000 a 25.000 chars** no total do HTML (alvo típico 8-18k — vide canônicos do projeto).
-- **Estrutura: 5 H2 obrigatórios** + 1 opcional. Faltar qualquer obrigatório = ERRO. Ver "Régua editorial — ESTRUTURA OBRIGATÓRIA" abaixo.
+- **Estrutura: 5 H2 base obrigatórios + H2 extras dirigidos pela SERP.** Os 5 base (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) são sempre obrigatórios; H2 informacionais extras (O que é / gasta energia / receitas / como limpar) entram quando a análise de concorrentes mostra intenção informacional. Faltar qualquer base = ERRO. Ver "Régua editorial — ESTRUTURA" abaixo.
 - **Links Amazon: tag-aware.** PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca" (link de busca da marca), "FAQ" e "Conclusão" (recomendações de produto). Formato: `?tag={tag}&linkCode=ogi&th=1&psc=1` se tag preenchida; URL crua se vazia.
 - **Linkagem interna: 2 a 4 links (ideal ~3), contextuais e naturais** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (ou o total de peers, se o site tiver menos de 2; 0 só se for o 1º artigo do site, sem peers ainda). Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
 - **Sem travessão (—).** Use vírgula, ponto, dois pontos ou parênteses.
@@ -165,7 +165,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 
 11. **Validar mentalmente** antes de salvar:
     - **6.000-25.000 chars** total (alvo 12-18k)
-    - **5 H2 obrigatórios presentes na ordem**: `Vale a pena` → `Como escolher` → `Melhor marca` → `Perguntas Frequentes` → `Conclusão` (6º opcional: `Por que confiar` entre FAQ e Conclusão)
+    - **5 H2 base presentes na ordem relativa**: `Vale a pena` → `Como escolher` → `Melhor marca` → `Perguntas Frequentes` → `Conclusão`. **H2 extras informacionais permitidos** (O que é / gasta energia / receitas / como limpar) quando a SERP pedir, intercalados (+2 a +4, teto 9 H2 total); cada extra educacional = ZERO link Amazon; cada tópico em UM lugar só (regra anti-duplicação)
     - Primeiro tag = `<h2>` (NÃO `<h1>`, NÃO `<p>`)
     - HTML allowlist OK (Grep mental por tags fora da lista)
     - 2-4 links internos (ideal ~3; 0 só sem peers): cada `href="/{slug}/"` aponta pra slug REAL da peer articles list
@@ -321,21 +321,43 @@ Estrutura obrigatória do `_data/competitor-analyses/{keyword-slug}.md`:
 
 > **Padrão consolidado em 2026-05** com `docs/PADROES.md` + canônicos do projeto (ex: `sites/melhorestablets/src/content/reviews/melhor-tablet-custo-beneficio.mdx`).
 
-### 5 H2 obrigatórios (na ordem) + 1 opcional
+### Estrutura: 5 H2 base obrigatórios + H2 extras dirigidos pela SERP
+
+**Os 5 H2 base são SEMPRE obrigatórios, nesta ordem relativa:**
 
 ```html
 <h2>Vale a pena comprar um/uma {keyword} em {ano}?</h2>
 <h2>Como escolher o melhor/a melhor {keyword} em {ano}?</h2>
 <h2>Qual a melhor marca de {keyword} em {ano}?</h2>
 <h2>Perguntas Frequentes</h2>
-<!-- [OPCIONAL] <h2>Por que confiar neste conteúdo</h2> -->
 <h2>Conclusão</h2>
 ```
+
+Eles carregam a intenção comercial/comparativa + os links de afiliado (Marca/FAQ/Conclusão). Faltar qualquer um dos 5 base = ERRO.
+
+**Além dos 5 base, ADICIONE H2 extras quando a análise de concorrentes mostrar que a SERP da keyword é informacional** (régua canon 2026-06-29). A estrutura é **dirigida pela SERP, não um molde fixo**:
+
+- Se os concorrentes da keyword usam H2 informacionais em forma de pergunta ("O que é {keyword}?", "{keyword} gasta muita energia?", "Que receitas dá pra fazer?", "Como limpar {keyword}?"), **crie esses H2 no guide** — é o que o Google premia pra keyword com intenção how-to/informacional. Caso-origem: `melhorairfryer-com/melhor-air-fryer-oven` (2026-06-29), onde 3 de 3 guias completos concorrentes usavam só H2 informacionais e nenhum usava o frame comercial.
+- **Critério pra incluir um H2 extra**: o tópico aparece em **2+ concorrentes** OU é um gap real da SERP (ver análise de concorrentes). Não invente seção que ninguém busca.
+- **Teto: +2 a +4 H2 extras** (guide com 7-9 H2 no total). Acima disso vira walls of text.
+- **6º opcional clássico** ("Por que confiar neste conteúdo", entre FAQ e Conclusão) continua valendo e conta dentro do teto.
+- Keyword **comparativa** (ex: "melhor tablet custo benefício", "melhor impressora") em geral NÃO pede extras — segue enxuta nos 5 base. Os extras são pra keyword **informacional** que a SERP pedir.
+
+**Política de links dos H2 extras**: por padrão são **educacionais → ZERO link Amazon** (mesma regra de "Vale a pena" e "Como escolher"). Links de afiliado seguem concentrados em Marca/FAQ/Conclusão. Link interno (peer/produto) pode, se contextual.
+
+**Posição/ordem dos extras:**
+- Informacionais de definição/consumo ("O que é", "Gasta energia") → perto do topo (logo após "Vale a pena", ou até antes dele se a SERP abrir sempre com "O que é").
+- De uso ("Que receitas", "Como limpar") → depois de "Como escolher", antes da FAQ.
+- Os 5 base mantêm a ordem relativa ENTRE SI (Vale a pena → Como escolher → Marca → FAQ → Conclusão); os extras se intercalam.
+
+**🚨 REGRA ANTI-DUPLICAÇÃO (a que faz os extras valerem a pena):** cada tópico mora em **UM lugar só, com profundidade total**. Quando você cria um H2 informacional, ele **ABSORVE** a menção rasa que iria pros 5 base — não soma por cima (senão dispara o check `redundancy` do audit). Exemplos:
+- Criou "O que é {keyword}?" → o "Vale a pena" PARA de definir o produto e foca na DECISÃO de compra (compensa? pra quem? quando não vale).
+- Criou "{keyword} gasta energia?" / "Que receitas?" / "Como limpar?" → essas perguntas SAEM da FAQ (viram H2 próprios). A FAQ fica com o que sobra (comparações, "X ou Y", tamanho/medida, "qual a melhor").
+- Distinção legítima que NÃO é duplicação: "Facilidade de limpeza" dentro de "Como escolher" = **o que procurar na compra** (porta removível, antiaderente); "Como limpar" = **a rotina de limpeza**. São ângulos diferentes.
 
 - **`em {ano}`** é padrão recomendado (atualidade SEO) mas pode ser omitido se a frase fica forçada (keyword já tem ano implícito, soa redundante, etc).
 - **"Perguntas Frequentes"** e **"Conclusão"** ficam **sem** `em {ano}`.
 - **NUNCA** `<h1>` (artigo já tem H1 no title). **NUNCA** começar com `<p>` antes do primeiro H2.
-- A 6ª seção opcional ("Por que confiar neste conteúdo") fica entre FAQ e Conclusão. Use só quando agrega (transparência editorial específica, metodologia explicada).
 
 ### Régua por seção
 
@@ -364,22 +386,25 @@ Exemplos do que diferencia bom vs ruim (de `docs/PADROES.md`):
 #### 3. Qual a melhor marca?
 **Intro (1 parágrafo curto) + 1 `<h3>` por marca relevante** (tipicamente 3-5 H3).
 
-Régua de cada H3:
+Régua de cada H3 (profundidade por completude, **não cota** — régua canon 2026-06-29):
 - Título: `<h3>{Marca}: {posicionamento curto editorial}</h3>` (ex: *"Samsung: a marca mais completa para Android no Brasil"*)
-- 1 parágrafo: foco em **diferencial editorial real** (linha principal, ecossistema, suporte, característica única)
+- **1 a 2 parágrafos, o que a marca pedir** (não trave em 1 parágrafo raso). Cada marca deve cobrir, **quando o dado existe na bíblia/categoria**: posicionamento + **linha/modelos principais na categoria** + **diferencial técnico real** + **pra qual perfil serve** + (opcional) **uma ressalva honesta** (onde a marca peca). Fôlego de referência ~60-110 palavras — orientação, NÃO meta a bater.
 - **Sem ranking absoluto** entre marcas — cada uma cobre um cenário diferente
 - **Pode incluir link Amazon de busca da marca** (formato `<a href="https://www.amazon.com.br/s?k={termo}&tag={affiliateTag}" rel="nofollow" target="_blank">{Marca}</a>`)
-- Manter **objetivo** e baseado em fatos da bíblia/categoria (NÃO inventar "história da empresa")
+- Manter **objetivo** e baseado em fatos da bíblia/categoria (NÃO inventar "história da empresa" nem encher de adjetivo). Profundidade vem de cobrir mais ângulos REAIS, não de prosa decorativa.
+- ⚠ **Anti-padding**: se a marca só tem 1 diferencial honesto, 1 parágrafo basta. Não invente segundo parágrafo só pra "engordar". Completo ≠ comprido.
 
 #### 4. Perguntas Frequentes
-**5-8 subseções `<h3>`** cada uma com a pergunta como título + 1-3 frases de resposta concreta.
+**5-8 subseções `<h3>`** cada uma com a pergunta como título + resposta **completa** (não resumida).
 
-Régua de cada FAQ:
+Régua de cada FAQ (profundidade por completude, **não cota** — régua canon 2026-06-29):
 - Pergunta como leitor digitaria no Google (ex: *"Qual o melhor X em 2026?"*, *"Vale a pena Y?"*, *"X ou Z?"*)
-- Resposta direta e concreta (não rodeio)
+- **Resposta que ganharia o featured snippet / People Also Ask**: completa o suficiente pra ser a melhor resposta da SERP. Tipicamente **2-4 frases (~40-80 palavras)**, e **use lista curta (`<ul>`/`<ol>`, 3+ itens) quando o formato ajudar** (passo a passo de limpeza, "o que NÃO colocar", checklist). Resposta de 1 frase raramente vence a caixa de destaque.
+- Direta e concreta (sem rodeio), mas **cobre a dúvida inteira** — antecipa o "e se...", dá o número/critério, fecha com a recomendação prática.
 - **PODE citar produtos específicos do lineup com link Amazon** (ex: *"Para a maioria das pessoas, o Samsung Galaxy Tab S10 Lite é a melhor compra..."* com link Amazon do ASIN)
 - Distribuir 1-2 links Amazon por FAQ que justifique recomendação
 - Pergunta-teste: *"Esta FAQ responde algo que o leitor REALMENTE perguntaria?"*
+- ⚠ **Anti-padding**: se a pergunta se resolve em 2 frases, PARE em 2 frases. Não enrole pra atingir tamanho. Completo é responder a dúvida toda, não escrever muito.
 
 #### 5. [OPCIONAL] Por que confiar neste conteúdo
 1-3 parágrafos sobre metodologia editorial (sem citar Amazon/avaliações — viola memória do projeto). Use só quando há diferencial real a comunicar.
@@ -392,7 +417,7 @@ Régua de cada FAQ:
 
 ### Tamanho típico
 
-**Alvo: 8.000-18.000 chars.** Range válido: 6.000-25.000.
+**Alvo: 8.000-18.000 chars** pra keyword comparativa (5 base). **Keyword informacional (com H2 extras): mirar 16.000-22.000 chars** — os H2 informacionais + marca/FAQ aprofundadas naturalmente puxam pra cima. Range válido sempre: 6.000-25.000.
 
 Canônicos atuais (referência):
 - `melhor-tablet-custo-beneficio` — 17.847 chars
@@ -400,7 +425,7 @@ Canônicos atuais (referência):
 - `melhor-tablet-samsung` — 20.073 chars
 - `kindle-qual-o-melhor` — 15.518 chars
 
-Guide bem feito tem ~12-18k chars. Menos que 6k provavelmente faltou cobertura; mais que 25k vira walls of text.
+Guide bem feito tem ~12-18k chars (comparativo) ou ~16-22k (informacional com extras). Menos que 6k provavelmente faltou cobertura; mais que 25k vira walls of text. **Profundidade vem de cobrir mais tópicos REAIS (H2 informacionais, marca/FAQ completas), nunca de encher parágrafo (ver anti-padding nas seções 3 e 4).**
 
 ### Listas (opcionais, dentro das seções)
 
@@ -596,7 +621,7 @@ Referência canônica pra calibrar tom + densidade visual: `sites/melhoraspirado
 
 ## Regras duras (bloqueiam audit)
 
-- **Estrutura: 5 H2 obrigatórios + 1 opcional** (Vale a pena / Como escolher / Melhor marca / FAQ / [Por que confiar] / Conclusão). Faltar qualquer um dos 5 obrigatórios = ERRO.
+- **Estrutura: 5 H2 base obrigatórios** (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão). Faltar qualquer um dos 5 = ERRO. **H2 extras informacionais permitidos** (dirigidos pela SERP/análise de concorrentes, +2 a +4, teto 9 H2 total, educacionais = ZERO link Amazon, sem duplicar tópico dos 5 base). 6º opcional "Por que confiar" segue valendo.
 - Primeira tag é `<h2>` (NÃO `<h1>`, NÃO começa com `<p>`).
 - **6.000-25.000 chars** total no HTML (alvo típico 8-18k).
 - HTML allowlist: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Nada mais.
@@ -729,7 +754,7 @@ Se user colou texto da Buscapé e o guide reusa frase quase literal, é cópia (
 "Compradores recorrentemente preferem..." → PROIBIDO. Substituir por linguagem analítica: "Para uso doméstico, o critério principal é..." ou "Quem imprime muito tende a recuperar...".
 
 ### 13. Gerar só 1 H2 (estrutura antiga)
-Versão da skill pré-1.8.2 induzia "abertura com 1 H2 + H3 dentro". Estrutura atual é **5 H2 obrigatórios** (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão). Faltar qualquer um = ERRO. Conferir contagem de H2 antes de salvar.
+Versão da skill pré-1.8.2 induzia "abertura com 1 H2 + H3 dentro". Estrutura atual é **5 H2 base obrigatórios** (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + **H2 extras informacionais quando a SERP pedir** (régua canon 2026-06-29). Conferir que os 5 base existem na ordem relativa antes de salvar; os extras (O que é / energia / receitas / limpeza) são bem-vindos pra keyword informacional, sem duplicar tópico dos base.
 
 ### 14. Faltar FAQ ou Conclusão
 Modelo tende a parar em "Melhor marca" achando que cobriu o tema. Mas FAQ e Conclusão são obrigatórios pelo PADROES.md + são onde leitor decide a compra (FAQ responde dúvidas pré-compra; Conclusão dá recomendação clara). Sem essas 2 seções, guide fica fraco em SEO + UX.
