@@ -175,9 +175,15 @@ Link Amazon com tag diferente da esperada.
 Travessão (`—` ou `–`) detectado em qualquer campo editorial: title, description, subtitle, shortDescription, fullReview, pros, cons, intro (body markdown), guideContent.
 
 ### `superlativo-sem-evidencia` (level=`warn`)
-Absolutos sem evidência: "o melhor disponível", "o mais X", "incomparável", "único", "imbatível".
+Absoluto de VITRINE sem lastro: "imbatível", "incomparável", "insuperável", "sem igual", "o melhor do mercado"/"melhor do mercado", "o mais {forte/potente/completo} do mercado", "campeão absoluto".
 
-**Não flag**: qualificadores positivos simples ("excelente", "ótimo", "muito bom") — review afiliado é levemente inclinado ao positivo por design.
+**NÃO flag** (legítimo — review afiliado é levemente inclinado ao positivo por design):
+- **A keyword** (quase sempre "melhor/melhores + algo"): "melhor tablet para estudar", "melhor {produto} para {uso}" quando faz sentido = uso da keyword, OK.
+- **Escopado ao comparativo**: "o mais completo deste comparativo", "o melhor custo-benefício da lista", "o mais barato aqui".
+- **Ancorado em fato na mesma frase**: "o maior suporte da categoria, com 7 anos de atualização".
+- Qualificadores positivos simples: "excelente", "ótimo", "muito bom".
+
+Regra: absoluto de mercado/mundo sem lastro = flag; keyword, escopo local ou ancorado em fato = OK. (v1.69.0: explicita o whitelist — antes o "o mais X" genérico sobre-flagava escopo/keyword.)
 
 ### `atribuicao-comprador` (level=`warn`)
 Usa "compradores" (plural) sem ter múltiplas opiniões na bíblia; OU cita "1 comprador" como se fosse consenso. Voz analítica é o padrão — citações explícitas de comprador/Amazon/reviews devem ser reescritas.

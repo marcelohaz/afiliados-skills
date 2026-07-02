@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-auditar
-description: Audita o guideContent ("Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") de um artigo E aplica correções CIRÚRGICAS por seção (nunca rewrite do guia inteiro). Contraparte do `artigo-reviews-auditar`, mas pro guide. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Critérios: produto-no-lineup-fora-do-guide (lineup mudou e o guia não acompanhou), claim-vs-lineup-stale, guide-estrutura (5 H2 na ordem), guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa, mover pra spot contextual), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, travessao, voz-comprador, chavoes-por-nicho, concordancia-pt-br, faq-order-shuffle (anti-footprint cross-site: reordena a FAQ por seed determinístico/idempotente, sem mexer na redação). Output: relatório em chat com diffs por seção, user aprova granular ("aplica 1,3" / "aplica tudo"). Aplica via Edit cirúrgico preservando o resto do guideContent. Usa `artigo-guia-escrever` (rewrite total) só quando o guia está ausente/stub ou estruturalmente quebrado (3+ H2 faltando).
+description: Audita o guideContent ("Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") de um artigo E aplica correções CIRÚRGICAS por seção (nunca rewrite do guia inteiro). Contraparte do `artigo-reviews-auditar`, mas pro guide. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Critérios: produto-no-lineup-fora-do-guide (lineup mudou e o guia não acompanhou), claim-vs-lineup-stale, guide-estrutura (5 H2 na ordem), guide-tamanho, guide-html-allowlist, guide-links-hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa, mover pra spot contextual), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, travessao, voz-comprador, chavoes-por-nicho, superlativo-sem-evidencia (absoluto de mercado sem lastro; keyword/escopo/ancorado-em-fato NÃO flagam), concordancia-pt-br, faq-order-shuffle (anti-footprint cross-site: reordena a FAQ por seed determinístico/idempotente, sem mexer na redação). Output: relatório em chat com diffs por seção, user aprova granular ("aplica 1,3" / "aplica tudo"). Aplica via Edit cirúrgico preservando o resto do guideContent. Usa `artigo-guia-escrever` (rewrite total) só quando o guia está ausente/stub ou estruturalmente quebrado (3+ H2 faltando).
 ---
 
 ## Parse de input
@@ -194,6 +194,22 @@ Voz-comprador explícita ("compradores citam", "avaliações") OU implícita ("d
 
 ### 12. `chavoes-por-nicho` (level=`warn`)
 Carregar `docs/painel/_data/chavoes-por-nicho.json` pelo `niche` do site. `termos_banidos_absoluto` (lineup, SKU, ASIN, etc.) > 0 → flag. Limites de frequência ultrapassados → flag. Fix: variação léxica.
+
+### 12b. `superlativo-sem-evidencia` (level=`warn`, v1.69.0 — 2026-07-02)
+
+Absoluto de VITRINE sem lastro na prosa do guia. **Faltava esta checagem aqui** (a `chavoes-por-nicho` só pega palavra banida tipo lineup/SKU, não superlativo) — caso real 2026-07-02: "imbatível", "o mais forte do mercado" e "melhor do mercado" passaram batido pela guia-auditar em 3 guias de tablet e só o `artigo-auditar` pegou. Este critério fecha o buraco.
+
+**FLAG** (absoluto de mercado/mundo, sem escopo nem dado):
+- Bare-boasts: "imbatível", "incomparável", "insuperável", "imperdível", "sem igual", "não tem concorrente", "campeão absoluto", "nada se compara", "o número 1".
+- Claim de mercado ilimitado: "o melhor do mercado" / "melhor do mercado", "o mais {forte/potente/rápido/completo} do mercado".
+
+**NÃO FLAG** (legítimo — a régua da rede é levemente positiva por design):
+- **A keyword em si.** A keyword da rede quase sempre é "melhor/melhores + algo" ("melhor tablet para estudar", "melhores air fryers"). Usá-la no H2/prosa é correto e esperado. "o melhor tablet para desenho" = uso da keyword, OK. "melhor {produto} para {uso}" quando faz sentido = OK.
+- **Superlativo ESCOPADO ao comparativo:** "o mais completo deste comparativo", "a maior autonomia entre os analisados", "o melhor custo-benefício da lista", "o mais barato aqui". O escopo local tira o caráter de claim de mercado.
+- **Superlativo ANCORADO em fato na mesma frase:** "o maior suporte de software da categoria, com 7 anos de atualização", "a maior tela daqui, de 14,6 polegadas". Colado ao número/fato que o sustenta = análise, não boast.
+- Qualificadores positivos simples: "excelente", "ótimo", "muito bom".
+
+Regra mental: **absoluto de MERCADO/MUNDO sem lastro = flag; keyword, escopo local, ou ancorado em fato = OK.** Fix cirúrgico: escopar ("...deste comparativo"), ancorar no fato, ou trocar por qualificador simples.
 
 ### 13. `concordancia-quebrada-pt-br` (level=`error`)
 Bugs de substituição mecânica (composiçãos, "a produto", "no em 20XX", termo duplicado entre parênteses). Regex igual `artigo-reviews-auditar` critério 15. Fix: corrigir concordância.

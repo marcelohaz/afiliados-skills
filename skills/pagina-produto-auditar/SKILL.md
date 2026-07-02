@@ -102,16 +102,16 @@ Presença de `—` (U+2014) ou `–` (U+2013) em qualquer campo. Proibido por PA
 
 ### 5. `superlativo-sem-evidencia`
 
-**Proibido**: superlativos ABSOLUTOS sem dado verificável que justifique:
-- ❌ "o melhor"
-- ❌ "o mais X" (sem dado de comparação contra todo o lineup)
-- ❌ "o único"
-- ❌ "incomparável"
-- ❌ "imbatível"
+**Proibido** (absoluto de mercado/mundo sem lastro):
+- ❌ "imbatível", "incomparável", "insuperável", "sem igual"
+- ❌ "o melhor do mercado" / "melhor do mercado", "o mais {forte/potente/completo} do mercado"
+- ❌ "o único" (sem qualificar em quê)
 
-**Permitido** (qualificadores positivos simples — alinhado com diretriz editorial #2 da bíblia: "review honesto mas inclinado ao positivo pra aumentar conversão"):
-- ✓ "excelente"
-- ✓ "ótimo"
+**Permitido** (NÃO flagar):
+- ✓ **A keyword**: "melhor {produto} para {uso}" quando faz sentido — a keyword da rede é "melhor/melhores + algo".
+- ✓ **Escopado**: "o mais completo deste comparativo", "o mais barato da lista" (dado de comparação contra o lineup).
+- ✓ **Ancorado em fato**: "a maior tela daqui, de 14,6 polegadas".
+- ✓ Qualificadores simples (diretriz editorial #2 da bíblia: "review honesto mas inclinado ao positivo pra aumentar conversão"): "excelente", "ótimo"
 - ✓ "muito bom"
 - ✓ "boa fidelidade"
 - ✓ "destaque prático"
