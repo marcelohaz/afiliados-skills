@@ -42,6 +42,7 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 - **YMYL** (nicho saúde): disclaimer obrigatório — /sobre/ tem "Um lembrete importante"; /author/ embute no "Meu compromisso".
 - **DISTINÇÃO sobre↔autor**: a /author/ NÃO repete "Independência editorial" nem "Como avaliamos os produtos" do /sobre/. /sobre/ = o que o SITE faz; /author/ = quem a PESSOA é + como ELA trabalha (1ª pessoa).
 - **ANTI-CLONE cross-site = só VOZ, nunca cobertura**: personas são reusadas (Eduardo ×9, Gustavo ×3) E sites do mesmo nicho cobrem OS MESMOS tópicos (SERP-monopoly — ex: "melhor impressora sublimática" e "plotter de recorte" vão estar em TODOS os sites de impressora). Logo é PROIBIDO diferenciar por "este site cobre X, o outro Y" — todos cobrem tudo. A diferenciação é 100% redação/ângulo/tom. Antes de gerar, LER as /sobre/ e /author/ das sites-irmãs da MESMA persona e variar a prosa (zero sequência ≥6 palavras igual). Risco máximo: mesma persona + mesmo nicho (3 creatinas do Eduardo; impressoraideal+melhorimpressora do Gustavo).
+- **VOZ NATURAL, sem figura de linguagem (canon Marcelo 2026-07-05)**: o tom especialista→amigo é cumprido com **simplicidade**, não com metáfora/personificação/hipérbole. Tem que soar como PESSOA REAL explicando, não prosa literária. Ver seção **"Voz natural"** abaixo — mesma família da régua de "Voz humana" da `artigo-review-criar` (antropomorfismo=0, máx 1 coloquialismo leve).
 - **`contentLocked: false`** nas duas. PT-BR editorial, tom especialista→amigo, sem travessão. **NÃO faz deploy.**
 
 ## Fluxo
@@ -99,6 +100,36 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 - **Disclosure (parte NÃO-Amazon):** o nome "Programa de Associados da Amazon Brasil" é fixo (citação), mas a prosa ao redor varia: "podemos ganhar uma pequena comissão, sem custo a mais pra você" / "recebemos uma porcentagem da compra, e o preço pra você não muda" / "ganhamos uma comissão da loja, nunca do seu bolso". A parte do "não aceito brinde/pagamento" idem: "não aceito aparelho cortesia em troca de resenha boa" / "nenhum fabricante paga pra subir na lista" / "produto grátis não compra elogio aqui".
 - **Fecho ("Fale conosco"):** o e-mail é fixo, mas o convite e o link variam: "mande sua mensagem pela página de contato" / "fale com a gente pela página de contato" / "passe pela página de contato". NUNCA repetir "use a nossa página de contato" se uma irmã já usa.
 
+## Voz natural — sem figura de linguagem (canon Marcelo 2026-07-05)
+
+O tom é especialista→amigo, mas **cumprido com SIMPLICIDADE, não com figuras de
+linguagem**. A voz tem que soar como uma pessoa real explicando, não como prosa
+literária ou "IA se esforçando pra ser bacana". Vale nas DUAS páginas, com risco
+maior na /author/ (1ª pessoa tenta "dar personalidade" e escorrega pro personagem).
+Caso que disparou a régua: o /author/ do tabletparatrabalho (Lucas Ferreira,
+2026-07-05) foi REJEITADO por excesso de metáfora e personificação.
+
+**PROIBIDO (o que fez o author ser rejeitado):**
+- **Metáfora rebuscada / personificação forçada**: "esse aparelho só parece firme na vitrine", "o que muda quando o aparelho **encara** e-mail, planilha e reunião" (aparelho não encara nada), "quero sentir como o aparelho se vira no aperto real".
+- **Hipérbole**: "número de processador e memória como se isso, sozinho, **resolvesse a sua vida**".
+- **Clichê-narrativo / voz de personagem**: "tentando ser aquele conhecido que já **garimpou tudo antes de você abrir a carteira**", "**tenho birra** de ficha que empilha número".
+
+**CERTO (a reescrita aprovada):**
+- Direto e concreto: *"o que quero saber é direto: ele realmente aguenta a correria de um expediente? Não me prendo só ao número do processador ou à quantidade de memória, porque uma ficha técnica cheia nem sempre significa um bom aparelho no uso."*
+
+**Regra prática:** se um trecho usa metáfora/personificação/hipérbole pra dizer algo
+que caberia numa frase direta, **reescreve direto**. Personificação leve SÓ quando
+descreve um fato de uso comum ("a bateria segura o dia", "um teclado ruim manda a
+gente de volta pro notebook" — ok). Máx 1 coloquialismo leve por página. **Teste
+final: leia em voz alta como se explicasse pra um amigo — se soou "personagem" ou
+"poético demais", simplifica.** Herda a régua de "Voz humana" da `artigo-review-criar`
+(mesma família: antropomorfismo com gíria = 0, jargão burocrático fora, máx 1 coloquialismo).
+
+⚠ **A reescrita naturalizadora RECOLA nas irmãs** (frase direta converge entre sites
+da mesma persona) — depois de naturalizar, RODE DE NOVO o gate de 6-gramas vs cada
+irmã (caso real 2026-07-05: naturalizar o author criou 7 colisões novas que só o
+re-run pegou). Naturalizar e anti-clone são o MESMO loop, não passadas separadas.
+
 ## Régua de CONTEÚDO (as duas)
 
 - Allowlist HTML: `h1`(só sobre), `h2`, `h3`, `p`, `ul`, `ol`, `li`, `strong`, `em`, `a`. Nada mais.
@@ -115,6 +146,7 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 - [ ] Autor = config.author (nome + /author/{slug}/ corretos). E-mail = config.contactEmail.
 - [ ] SEM "testamos/laboratório/bancada/presencial/medimos".
 - [ ] SEM método-de-mesa ("partimos das especificações", "linha por linha", "cruzamos com opiniões").
+- [ ] **Voz natural** (canon 2026-07-05): sem metáfora rebuscada, personificação forçada ("o aparelho encara"), hipérbole ("resolvesse a sua vida") nem clichê-narrativo ("garimpou tudo antes de você abrir a carteira"). Leu em voz alta e soou pessoa real, não prosa literária. Ver seção "Voz natural".
 - [ ] Variado vs irmãs da mesma persona (zero sequência ≥6 palavras igual). **GATE EM LOOP, não checagem única:** rode o check de 6-gramas vs CADA irmã; pra cada overlap que NÃO seja a citação Amazon ("Programa de Associados da Amazon Brasil") nem a credencial-fato do autor, **reescreva o trecho (rotacionando o pool da seção) e RODE DE NOVO**. Repita até sobrar só os grams permitidos. ⚠ Cuidado pra a reescrita não criar colisão NOVA com outra irmã (caso real 2026-06-27: reescrevi o contato e bati noutra irmã no "use a nossa página de contato"; só o re-run pegou) — por isso é loop, não passada única.
 - [ ] sobre↔autor do MESMO site: zero frase verbatim copiada (overlap de TÓPICO ok; o /author/ usa 3 prioridades pessoais, NÃO espelha a lista de critérios do /sobre/). **VERIFICAR PROGRAMÁTICO** com check de 6-gramas (set de tuplas de 6 palavras de cada página; interseção deve ser 0) — fácil escapar na leitura manual (caso real 06-12: o fecho "se um modelo imprime devagar, tem tinta cara..." foi copiado do /sobre/ no "Meu compromisso" do /author/ e só o check de 6-gramas pegou).
 - [ ] HTML só na allowlist; sem travessão; tamanhos OK.
@@ -129,6 +161,7 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 6. **Esquecer YMYL** em saúde (sobre "Um lembrete importante" + autor "Meu compromisso").
 7. **/author/ inexistente** — criar o dir + arquivo (melhoraspirador, melhorcozinha).
 8. **HTML fora da allowlist** / travessão.
+9. **Voz de personagem / prosa literária** (caso real tabletparatrabalho 2026-07-05) — a /author/ saiu com "só parece firme na vitrine", "o aparelho encara e-mail", "como se isso resolvesse a sua vida", "garimpou tudo antes de você abrir a carteira". Rejeitada. Voz natural = frase direta e concreta (ver seção "Voz natural"). Risco maior na 1ª pessoa da /author/.
 
 ## Exemplo de invocação
 
