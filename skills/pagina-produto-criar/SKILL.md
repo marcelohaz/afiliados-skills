@@ -408,7 +408,7 @@ Conversacional ≠ personagem. Caso real: a home do melhorimpressora acumulou "m
 ## Como usar a bíblia
 
 - `pontosFortes` / `pontosFracos`: base dos pros/cons. NÃO invente. **DESTILE ao copiar** — ver "Operação de destilação" abaixo.
-- `angulosConversao`: ângulos editoriais. Use pra estruturar parágrafos do `fullReview` ("para quem é", "por que gostamos").
+- `angulosConversao`: ângulos editoriais = **matéria-prima, NÃO texto pronto**. Use o `tema` pra estruturar parágrafos do `fullReview` ("para quem é", "por que gostamos") e as `frases` como **fonte do FATO**, nunca como fraseado a colar. **DESTILE o registro** — ver categoria E em "Operação de destilação". As frases de ângulo são escritas em registro de venda e frequentemente vêm coloquiais ("no tempo do café passar", "sem precisar ficar de olho", "fininho"); colar verbatim importa a gíria direto pra página. A bíblia é fonte de **fato**, não de **voz**.
 - `sentimentoCompradores`: insights — **REESCREVA** como observação editorial, NÃO cite compradores. Ex: "compradores citam custo-benefício" → "O custo-benefício se destaca por {dado da bíblia}".
 - `dicasAcionaveis`: incorpore se fizer sentido no `fullReview` ou como item em `cons` (quando for limitação contextual).
 - `dadosInconsistentes` + `decisaoEditorial`: SE existir, **RESPEITE**. A decisão editorial diz qual valor usar e qual ignorar.
@@ -432,7 +432,9 @@ Histórico: até v1.33 a skill regenerava o subtitle sem ler o existente (~80% d
 
 A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conforme declarado pelo fabricante", "confirmado nos alérgenos"). É correto e útil internamente — rastreabilidade evita invenção. **O .mdx público é destilado**: droppa marcadores que viraram ruído burocrático.
 
-**4 categorias de claim — como destilar cada:**
+⚠ Destilar é DUAS coisas, não uma: (1) dropar o marcador de procedência (A-D) **e** (2) reescrever o REGISTRO quando a bíblia vier coloquial (E). As categorias A-D só cobrem (1) — um trecho pode não ter marcador nenhum e ainda assim estar impróprio pro público por causa do fraseado. Sem (2), a gíria da bíblia entra na página sem disparar nenhum check.
+
+**5 categorias de claim — como destilar cada:**
 
 | Tipo | Bíblia (raw, OK) | .mdx destilado |
 |---|---|---|
@@ -440,6 +442,9 @@ A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conf
 | **B) Claim do fabricante repetível** | "Forma triglicerídeo, apontada pelo fabricante como mais absorvível" | "Forma triglicerídeo, considerada mais absorvível" |
 | **C) Claim institucional / PR** | "Marca tradicional brasileira segundo o próprio fabricante" | "Marca brasileira" (ou omite se não agrega) |
 | **D) Voz comprador implícita** | "Cápsulas sem sabor segundo relatos de compradores" | "Cápsulas sem sabor" |
+| **E) Registro coloquial da bíblia** | "700W pra tostar as fatias no tempo do café passar" · "as fatias sobem sozinhas, sem precisar ficar de olho" · "não só pão de forma fininho" | "700W, potência que dá conta das fatias enquanto o café fica pronto" → **melhor**: "700W nas duas fatias" · "elevação automática ao fim do ciclo" · "aceita fatias de espessuras diferentes" |
+
+**Categoria E — por que existe** (canon 2026-07-16): `angulosConversao` (e às vezes `sentimentoCompradores`) vêm em **registro de venda**, coloquial de propósito, porque servem de matéria-prima pra copy. Colar verbatim importa a gíria: no lote cozinhaideal de 9 páginas, 8 saíram com 6 a 9 coloquialismos contra o teto de 1 — e dois auditores independentes rastrearam a origem pra frases **literais** da bíblia ("no tempo do café passar", "sem precisar ficar de olho", "fininho"). O sub-agent não estava improvisando: a régua mandava "usar" o ângulo e ele usou. **Pegue o FATO da frase de ângulo e reescreva em voz analítica.** Se você copiou ≥5 palavras seguidas de uma `frase` de `angulosConversao`, você NÃO destilou.
 
 **Exceção (raro, mas existe)**: recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês") pode manter "segundo X". Spec factual (rendimento, velocidade) NÃO — vai direto. Ver Armadilha 7 abaixo.
 
