@@ -136,7 +136,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 ```html
 <p><strong>Para quem é:</strong> perfil de uso. Inclua 1 link Amazon no nome do produto.</p>
 <p><strong>Por que gostamos:</strong> features-chave com dados concretos. Inclua 1 link Amazon na primeira menção. Pode dividir em 2 parágrafos se >5-6 frases (primeiro features-chave, segundo specs gerais).</p>
-<p><strong>Pontos de atenção:</strong> trade-offs, limitações. SEM link de afiliado neste parágrafo.</p>
+<p><strong>Pontos de atenção:</strong> contrapartidas, limitações. SEM link de afiliado neste parágrafo.</p>
 <p><strong>Resumo:</strong> fechamento conciso. Inclua 1 link Amazon na última menção.</p>
 ```
 
@@ -462,7 +462,9 @@ Histórico: até v1.33 a skill regenerava o subtitle sem ler o existente (~80% d
 
 A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conforme declarado pelo fabricante", "confirmado nos alérgenos"). É correto e útil internamente — rastreabilidade evita invenção. **O .mdx público é destilado**: droppa marcadores que viraram ruído burocrático.
 
-**4 categorias de claim — como destilar cada:**
+⚠ Destilar é DUAS coisas, não uma: (1) dropar o marcador de procedência (A-D) **e** (2) reescrever o REGISTRO quando a bíblia vier coloquial (E). As categorias A-D só cobrem (1) — um trecho pode não ter marcador nenhum e ainda assim estar impróprio pro público por causa do fraseado. Sem (2), a gíria da bíblia entra no review sem disparar nenhum check.
+
+**5 categorias de claim — como destilar cada:**
 
 | Tipo | Bíblia (raw, OK) | .mdx destilado |
 |---|---|---|
@@ -470,6 +472,9 @@ A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conf
 | **B) Claim do fabricante repetível** | "Forma triglicerídeo, apontada pelo fabricante como mais absorvível" | "Forma triglicerídeo, considerada mais absorvível" |
 | **C) Claim institucional / PR** | "Marca tradicional brasileira segundo o próprio fabricante" | "Marca brasileira" (ou omite se não agrega) |
 | **D) Voz comprador implícita** | "Cápsulas sem sabor segundo relatos de compradores" | "Cápsulas sem sabor" |
+| **E) Registro coloquial da bíblia** | "700W pra tostar as fatias no tempo do café passar" · "as fatias sobem sozinhas, sem precisar ficar de olho" · "não só pão de forma fininho" | "700W, potência que dá conta das fatias enquanto o café fica pronto" → **melhor**: "700W nas duas fatias" · "elevação automática ao fim do ciclo" · "aceita fatias de espessuras diferentes" |
+
+**Categoria E — por que existe** (canon 2026-07-16): `angulosConversao` (e às vezes `sentimentoCompradores`) vêm em **registro de venda**, coloquial de propósito, porque servem de matéria-prima pra copy. Colar verbatim importa a gíria: no lote cozinhaideal de 9 páginas, 8 saíram com 6 a 9 coloquialismos contra o teto de 1 — e dois auditores independentes rastrearam a origem pra frases **literais** da bíblia ("no tempo do café passar", "sem precisar ficar de olho", "fininho"). O sub-agent não estava improvisando: a régua mandava "usar" o ângulo e ele usou. **Pegue o FATO da frase de ângulo e reescreva em voz analítica.** Se você copiou ≥5 palavras seguidas de uma `frase` de `angulosConversao`, você NÃO destilou. (O caso real foi em página individual, mas o review-em-artigo consome as MESMAS `frases` de `angulosConversao` — o risco é idêntico.)
 
 **Exceção (raro, mas existe)**: recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês") pode manter "segundo X". Spec factual (rendimento, velocidade) NÃO — vai direto. Ver Armadilha 4 abaixo.
 
@@ -761,7 +766,7 @@ O encaminhamento genérico a profissional ("consulte/converse/alinhe a dose com 
 - **NUNCA** a mesma frase carimbada produto após produto. Teto prático: ~5 por artigo (a `artigo-auditar` flagra acima disso).
 - Restrição factual específica do produto (ex: "o fabricante não indica pra gestantes", alérgeno) continua valendo onde for real — não é disclaimer genérico.
 
-### 13. Auto-check max 2 valores numéricos por frase (régua v1.19.0, canon 2026-05-28)
+### 13b. Auto-check max 2 valores numéricos por frase (régua v1.19.0, canon 2026-05-28)
 
 **Bug-class** (ChatGPT-Bárbara ponto 10): frases comparativas viram tabela em prosa quando listam 3+ valores em mg/g/R$.
 

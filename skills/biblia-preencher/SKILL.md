@@ -263,6 +263,8 @@ O que fazer:
 
 ## Régua editorial PT-BR (v1.19.2, 2026-05-28)
 
+> ⚠️ **Escopo (alinhado com `biblia-auditar`/`regras-biblia.md`, canon 2026-06-14):** a bíblia é FONTE DE FATO; a VOZ FINAL (health-absolutes, voz-consultiva/corporativa, muleta "declarado", superlativo) é aplicada pelo **review/página** sobre o texto reescrito — a `biblia-auditar` nem flagra isso na bíblia. As subseções de voz abaixo valem aqui só como **higiene de escrita** (não injetar lixo óbvio na curadoria), NÃO como polimento de voz-final. O que é dado limpo de verdade e SEMPRE vale: concordância PT-BR, capitalização, duplicação, chavões por nicho, voltagem. Ver [[afiliados.regras.audit-biblia-escopo-fato]].
+
 Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 ### Concordância PT-BR (bug-class real de substituições mecânicas)
@@ -302,13 +304,13 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - "sem efeitos colaterais" → "efeitos colaterais raros"
 - "cientificamente comprovado" / "100% seguro" → qualificar
 
-### Voz-eximir-responsabilidade (não use fabricante como muleta)
+### Procedência na bíblia — MANTER (o drop da muleta é do render, não daqui)
 
-- "X mg declarados" parentético → drop "declarados"
-- "declarado pelo fabricante" → drop sempre
-- "todos/todas/doses declaradas pelo fabricante" → "fórmula transparente" ou drop
-- Alérgeno: "contém glúten declarado pelo fabricante" → "contém glúten"
-- **Spec de fabricante = fato, afirme direto** (régua v1.21.1): rendimento, economia e velocidade da ficha (ex: "rende até 4.500 páginas") vão SEM "segundo a Epson"/"segundo o fabricante" (atribuir a cada spec vira muleta repetitiva, igual "declarado pelo fabricante"). Atribuição só vale pra recomendação/calibração do fabricante (ex: "a HP recomenda 50 a 100 páginas/mês").
+⚠️ **A régua "declarado pelo fabricante → drop" NÃO se aplica à bíblia** (canon 2026-06-14, alinhado com a `biblia-auditar` e o `docs/painel/_data/regras-biblia.md`, que já tiraram voz-de-render do escopo da bíblia). A bíblia carrega claims **COM** marcador de procedência de propósito — é rastreabilidade, evita invenção downstream. Quem dropa a muleta é a **destilação do review/página** (`artigo-review-criar`/`pagina-produto-criar`) sobre o texto público, não a curadoria.
+
+- **Marcador de procedência é DESEJADO** nos campos curados quando a fonte importa: `"pureza >99,9% declarada pelo fabricante"` com `"fonte": "fabricante"` é CORRETO (ver os exemplos de saída acima, nesta mesma skill). **NÃO drope "declarado pelo fabricante" na curadoria.**
+- Registre a `fonte` de cada claim (`fabricante`/`comprador`/`specs`) — é o que permite ao review decidir depois o que afirma direto (spec de fábrica = fato) e o que atribui (recomendação/calibração do fabricante).
+- **A bíblia é FATO, e o marcador de procedência é parte do fato** — não é voz a ser dropada aqui; quem transforma "declarado pelo fabricante" em prosa afirmada é a criação do review/página sobre o texto reescrito (a `biblia-auditar` também não flagra a muleta na bíblia, pela mesma razão).
 
 ### Voltagem — NÃO citar, exceto bivolt explícito (régua dura, canon 2026-06-28; endurecida 2026-06-29)
 

@@ -87,7 +87,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 2. **3.2 Confirmar que as skills rodaram** (NÃO re-listar a régua): só o ESSENCIAL ESTRUTURAL — intro gravada (2-3 parágrafos, §1 com keyword bold + §final com keywordPlural bold `. ✅`, exatos 2 bolds, sem heading/travessão/marca) e meta gravada (50-160 chars, single-line). Anti-clone intra-site da intro e benefício-first da meta são da skill invocada. Inlinou em vez de invocar → RE-INVOQUE. Falha → re-rodar a skill ou auto-fix → re-valida.
 
 ### Etapa 4 — Audit do artigo inteiro (auto-fix)
-1. **4.1** Invoca `artigo-auditar` (30 categorias editoriais + 4 estruturais hasIntro/hasGuide/productCount≥3/hasMeta + `readyToLock`). Issues críticos → auto-fix dirigido → re-audita (máx 3x). Não-convergido → flag.
+1. **4.1** Invoca `artigo-auditar` (38 categorias editoriais + 4 estruturais hasIntro/hasGuide/productCount≥3/hasMeta + `readyToLock`). Issues críticos → auto-fix dirigido → re-audita (máx 3x). Não-convergido → flag.
 
 ### Etapa 5 — Duplicata vs fonte (comparar + reescrever + re-scan em loop)
 1. **5.1** Roda o comparador `compare-cross-site.py` (nesta pasta) entre o artigo destino e o fonte: frases idênticas (≥6 palavras, HTML→espaço), near-dup (jaccard ≥0.8 e ≥0.6), overlap 5-grama e 8-grama, specs label↔value.

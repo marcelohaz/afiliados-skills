@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-escrever
-description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Quando user cola "Como escolher" de 1-3 concorrentes, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + SALVA análise em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` + o texto cru dos concorrentes em `competitor-sources/{keyword-slug}/` pra reuso (mesma keyword auto-carrega; cru > ficha pra derivar os H2 dos headings reais). Régua: 5 H2 base obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + H2 extras informacionais dirigidos pela SERP (O que é / gasta energia / receitas / como limpar, +2 a +4, teto 9 H2, educacionais sem link Amazon, sem duplicar tópico dos base) quando a análise de concorrentes mostra intenção informacional; marca = 1-2 parágrafos substantivos por marca, FAQ = resposta completa snippet-worthy (lista quando ajuda), profundidade por completude e NUNCA por cota (anti-padding). 6000-25000 chars (alvo 12-18k comparativo, 16-22k informacional), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 0-3 só pra peer articles reais (peer/home contextuais, NÃO na Conclusão; produto pode na Conclusão). Carrega chavões nicho-específicos. Substitui só o campo guideContent. Backup + commit + push + sync VPS.
+description: Escreve o guideContent (HTML completo "Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão") do artigo + análise de concorrentes reusável por keyword. Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug`. Quando user cola "Como escolher" de 1-3 concorrentes, skill ANALISA (tópicos, palavras-chave, gaps, clichês a evitar) + GERA guide com topical map paritário + SALVA análise em `docs/painel/_data/competitor-analyses/{keyword-slug}.md` + o texto cru dos concorrentes em `competitor-sources/{keyword-slug}/` pra reuso (mesma keyword auto-carrega; cru > ficha pra derivar os H2 dos headings reais). Régua: 5 H2 base obrigatórios na ordem (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + H2 extras informacionais dirigidos pela SERP (O que é / gasta energia / receitas / como limpar, +2 a +4, teto 9 H2, educacionais sem link Amazon, sem duplicar tópico dos base) quando a análise de concorrentes mostra intenção informacional; marca = 1-2 parágrafos substantivos por marca, FAQ = resposta completa snippet-worthy (lista quando ajuda), profundidade por completude e NUNCA por cota (anti-padding). 6000-25000 chars (alvo 12-18k comparativo, 16-22k informacional), allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon em FAQ/Marca/Conclusão (tag-aware), SEM travessão, linkagem interna 2-4 (ideal ~3; 0 só se o site ainda não tem peers) pra peer articles reais (peer/home contextuais, NÃO na Conclusão; produto pode na Conclusão). Carrega chavões nicho-específicos. Substitui só o campo guideContent. Backup + commit + push + sync VPS.
 ---
 
 ## Parse de input
@@ -549,7 +549,7 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 - Pense no grafo do site: linke os **irmãos mais relevantes** (ex: o guia do termo-head linka custo-benefício + tanque + barata; cada sub-artigo aponta de volta pra home via `/`). Evita artigo órfão/sub-linkado.
 - **A home é um peer como qualquer artigo.** Ela é o `homeReviewSlug`, servida na raiz (`/` = dominio.com.br), âncora = a keyword dela (ex: "melhor impressora"). Os outros artigos DEVEM linká-la via `<a href="/">{keyword da home}</a>` (NUNCA `/{homeReviewSlug}/`, que é 404) — **não deixe a home órfã**. O `href="/"` CONTA como peer link (vale pros ≥2 distintos).
 - Atributos: SEM `target="_blank"`, SEM `rel="nofollow"` (interno passa autoridade).
-- Quantidade: **mínimo 2 peer ARTICLES DISTINTOS** (NUNCA repita o mesmo destino 2×), até 3, + os links de PRODUTO (hub-and-spoke, quantos forem naturais).
+- Quantidade: **mínimo 2 peer ARTICLES DISTINTOS** (NUNCA repita o mesmo destino 2×), até 4 (ideal ~3), + os links de PRODUTO (hub-and-spoke, quantos forem naturais).
 - **Só no guia**: todos os links internos (peer + produto) vivem **só no `guideContent`** (Como escolher / FAQ / Marca / Vale a pena / Conclusão). **NUNCA** na introdução nem nos reviews dos produtos (lá só vai link Amazon).
 - **Onde colocar o link peer/home — contextual, EVITAR a Conclusão (v1.24.0):** cada link pra artigo-irmão ou pra home entra no spot onde o assunto aparece **naturalmente no meio do texto** — uma resposta de FAQ que toca no tema do artigo-irmão, a seção "Qual a melhor marca" (pra apontar o guia daquela marca), ou "Vale a pena" / "Como escolher" (pra ligar a categoria-mãe/home). **NÃO concentre links de navegação peer/home na Conclusão.** Link de navegação jogado no fecho é decorativo, não contextual; o ideal é evitar a Conclusão de vez pra esses links. Se não houver encaixe natural fora da Conclusão, **melhor não forçar o link** do que enfiá-lo no fecho.
   - ⚠ **Distinção importante:** essa régua é pra links **peer-article + home** (navegação entre artigos). Links de **PRODUTO** (hub-and-spoke `/{slug-produto}/` ou Amazon `/dp/`) **continuam OK na Conclusão** — ali são recomendação direta de compra, que é a função do fecho. O que sai da Conclusão é só a navegação inter-artigo.
@@ -561,14 +561,6 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 Se algo falhar, **corrijo o trecho antes de aplicar**. Não passa link inventado nem âncora fora da régua.
 
 Se peer list está vazia (1º artigo do site), **ZERO links de peer**.
-
-## Concorrentes (opcional)
-
-Se o user colou textos de páginas concorrentes (ex: "olha o guia da Buscapé sobre creatina"), uso como **inspiração editorial** (tópicos cobertos, estrutura, ângulos), **NÃO como cópia**.
-
-Máximo 3 textos, cada um até 8k chars (truncamento se vier maior). Cada texto passa por strip básico de tags HTML antes de virar contexto.
-
-**REGRA DURA**: nada do guide pode ser frase parafraseada ÓBVIA de concorrente. Se aparece "A creatina monohidratada é a forma mais estudada" e o concorrente tem isso literal, eu reescrevo com ângulo próprio.
 
 ## Como usar as bíblias (contexto, não citação)
 
@@ -804,7 +796,7 @@ Inverso da armadilha 17. Modelo tende a negritar SÓ specs numéricos (R$ 450, 1
 Antes de salvar, escaneie cada parágrafo procurando **frases-chave conceituais sem negrito**. Padrões típicos a negritar:
 - *"o ponto que define X é Y"* → negritar Y
 - *"diferente das outras opções, esta tem Z"* → negritar Z
-- *"o trade-off real: ..."* → negritar a coisa que é o trade-off
+- *"o porém real: ..."* → negritar o porém (a contrapartida)
 - *"o que importa de verdade é A"* → negritar A
 - *"perfil de quem imprime B"* → negritar B (perfil)
 

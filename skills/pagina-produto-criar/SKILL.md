@@ -244,7 +244,7 @@ Errados:
 
 ### 4. `cons` (array de strings, 1-5 itens, cada 60-180 chars com alvo 80-130)
 
-Mesma formatação dos pros: `<strong>Título</strong>: explicação`. Mesmos limites de tamanho (180 chars texto puro). Pontos de atenção, trade-offs, contextos onde NÃO comprar. Se a bíblia tem `pontosFracos` populados, use como ponto de partida.
+Mesma formatação dos pros: `<strong>Título</strong>: explicação`. Mesmos limites de tamanho (180 chars texto puro). Pontos de atenção, contrapartidas, contextos onde NÃO comprar. Se a bíblia tem `pontosFracos` populados, use como ponto de partida.
 
 Exemplo: `"<strong>Duplex manual</strong>: imprimir frente e verso exige virar o papel à mão, sem mecanismo automático."` *(108 chars — OK)*
 
@@ -264,7 +264,7 @@ specs:
     value: "Imprime, copia, digitaliza"
 ```
 
-### 6. `fullReview` (string HTML, 300-3000 chars)
+### 6. `fullReview` (string HTML, 800-3000 chars)
 
 **Estrutura obrigatória — 4 parágrafos marcados, paridade com `formato_full_review` dos prompts de artigo**:
 
@@ -273,7 +273,7 @@ specs:
 
 <p><strong>Por que gostamos:</strong> features-chave com dados concretos. Inclua 1 link Amazon na primeira menção do produto. Se houver muito o que cobrir (>5-6 frases), divida em 2 parágrafos: primeiro features-chave, segundo specs gerais (peso, dimensões, conectividade, garantia).</p>
 
-<p><strong>Pontos de atenção:</strong> trade-offs reais, limitações, contextos onde NÃO comprar. SEM link de afiliado neste parágrafo (não tenta vender no parágrafo de objeções).</p>
+<p><strong>Pontos de atenção:</strong> contrapartidas reais, limitações, contextos onde NÃO comprar. SEM link de afiliado neste parágrafo (não tenta vender no parágrafo de objeções).</p>
 
 <p><strong>Resumo:</strong> fechamento conciso. Inclua 1 link Amazon na última menção do produto.</p>
 ```
@@ -362,7 +362,7 @@ Os reviews têm voz de **quem testou/analisou** o produto. Tom: "nós identifica
 
 **Reescreva** insights da bíblia em voz analítica:
 - ✓ "O custo-benefício se destaca: {dado concreto}"
-- ✓ "Um trade-off identificado é..."
+- ✓ "Uma limitação a considerar é..."
 - ✓ "O equipamento entrega {feature} em {condição}"
 
 > **Sobre citar o fabricante**: regra diferente de citar comprador/Amazon. Spec factual (rendimento, velocidade, economia) vai afirmado direto, sem "segundo X". Atribuir só vale pra recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês"). Ver Armadilha 7 abaixo pra régua completa.
@@ -726,6 +726,6 @@ Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evi
 
 ## Limitação intrínseca conhecida
 
-Sem schema Zod programático no output (diferente do painel), a validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (subtitle de 9 chars, fullReview de 290 chars, etc).
+Sem schema Zod programático no output (diferente do painel), a validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (subtitle de 9 chars, fullReview de 780 chars, etc).
 
 Mitigação: depois de gerar, conferir tamanhos antes de salvar. Se algum estiver no limite, expandir/encurtar com cuidado.

@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 20 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, antropomorfismo, jargão financeiro — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 21 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, antropomorfismo, jargão financeiro — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
 ---
 
 ## Parse de input
@@ -140,7 +140,7 @@ Campo fora dos limites editoriais — pode estar **curto demais** (vazio/incompl
 **Curto demais** (severidade: depende do campo):
 - `subtitle` ausente ou < 10 chars
 - `shortDescription` ausente ou < 50 chars (era 40 antes da v1.16.0)
-- `fullReview` ausente ou < 300 chars
+- `fullReview` ausente ou < 300 chars (🔴 incompleto); 300-800 chars (🟡 abaixo do alvo — os 4 parágrafos rotulados + 3 links não cabem em <800; alvo 800-3000, paridade com a criação)
 - `pros` < 3 itens
 - `cons` ausente ou 0 itens
 - `specs` < 3 pares
@@ -231,6 +231,23 @@ Sub-agent v1.11.3 reconhecia voz-comprador EXPLÍCITA na bíblia mas CAÍA em SU
 **Exemplo flag (errado vs certo)**:
 - ❌ "Sabor divide opiniões" → ✅ "Sabor maçã verde é frutado, pode não agradar quem prefere perfis mais neutros"
 
+### 12. `termos-tecnico-industriais` (severidade: 🔴 Crítico)
+
+Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-26 v1.11.4). Soam como rotulagem técnica/ANVISA — quebram a voz editorial.
+
+**Padrões pra grep em qualquer campo**:
+- "contaminação cruzada"
+- "linha de produção compartilhada" (sem contexto editorial)
+- "sujeito a contaminação"
+- "risco de contaminação por proteínas"
+
+**Caso real 2026-05-26**: `essential-nutrition-beta-action` cons[3] usou "considerar o risco de contaminação cruzada na linha de produção". Audit pegou — sugerido fix:
+
+- ❌ "Risco de contaminação cruzada na linha de produção"
+- ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
+
+Linguagem editorial em vez de técnica. Aviso é crítico porque quebra a voz, não é um qualificador a debater.
+
 ### 12b. `jargao-tecnico-vazado` (régua v1.17.3, severidade: 🔴 Crítico)
 
 Termos de dev/estoque/regulatório que NUNCA devem aparecer no texto público. Gap real descoberto no melhorpretreino: bullets de produto continham "SKU avaliado" / "ASIN aqui só vem em...".
@@ -251,24 +268,6 @@ Lê `docs/painel/_data/chavoes-por-nicho.json` baseado em `niche` do site (`docs
 Aplica limites de `_genericos` + bloco do nicho específico (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam imediatamente; demais flagam quando passam do `_max` definido.
 
 Fix: variação léxica (alternativas PT-BR documentadas) + destilação cirúrgica.
-
-### 12. `termos-tecnico-industriais` (severidade: 🔴 Crítico)
-
-Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-26 v1.11.4). Soam como rotulagem técnica/ANVISA — quebram a voz editorial.
-
-**Padrões pra grep em qualquer campo**:
-- "contaminação cruzada"
-- "linha de produção compartilhada" (sem contexto editorial)
-- "sujeito a contaminação"
-- "risco de contaminação por proteínas"
-
-**Caso real 2026-05-26**: `essential-nutrition-beta-action` cons[3] usou "considerar o risco de contaminação cruzada na linha de produção". Audit pegou — sugerido fix:
-
-- ❌ "Risco de contaminação cruzada na linha de produção"
-- ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
-
-Linguagem editorial em vez de técnica. Aviso é crítico porque quebra a voz, não é um qualificador a debater.
-
 
 ### 14. `capitalizacao-duplicacao` (régua v1.18.3, severidade: 🔴 Crítico)
 

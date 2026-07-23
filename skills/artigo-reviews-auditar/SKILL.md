@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 22 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta), naturalidade (rótulo de categoria inventado, meta-SEO, antropomorfismo, tiques com teto por artigo). Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 23 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta), naturalidade (rótulo de categoria inventado, meta-SEO, antropomorfismo, tiques com teto por artigo), subtitle-keyword-first, badge-ausente. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -636,6 +636,7 @@ Apresentar em chat após análise:
 | 8 | voz-citacao-ficha-tecnica | ✓/⚠/n.a. | ... |
 | 9 | voz-comprador-implicita | ✓/⚠/n.a. | ... |
 | 10 | termos-tecnico-industriais | ✓/⚠/n.a. | ... |
+| 10b | **jargao-tecnico-vazado** (CRÍTICO — SKU/ASIN/datasheet em prosa) | ✓/⚠/n.a. | ... |
 | 11 | html-texto-puro | ✓/⚠/n.a. | ... |
 | 12 | tamanho-escannavel | ✓/⚠/n.a. | ... |
 | 13 | chavoes-por-nicho | ✓/⚠/n.a. | ... |

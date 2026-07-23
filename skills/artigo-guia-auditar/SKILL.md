@@ -157,7 +157,7 @@ Permitidas: `<h2> <h3> <p> <ul> <ol> <li> <strong> <em> <a href rel target> <br>
 
 ### 6. `guide-links-hub-and-spoke` (level=`warn` p/ tag errada, `info` p/ posição)
 - Links Amazon (`/dp/`) tag-aware: tag preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`; tag vazia → cru. Severity contextual igual `artigo-auditar` (live=true → error; live=false → warn).
-- "Vale a pena" e "Como escolher" devem ter **0 links AMAZON** (seções educativas, sem CTA de compra). Link Amazon nelas → info. (Link interno peer/home contextual nessas seções É permitido — é navegação, não CTA.)
+- "Vale a pena" e "Como escolher" devem ter **0 links AMAZON** (seções educativas, sem CTA de compra). Link Amazon nelas → warn (paridade com `artigo-auditar`; é violação de régua dura, não polimento). (Link interno peer/home contextual nessas seções É permitido — é navegação, não CTA.)
 - FAQ/Marca/Conclusão: links de produto/Amazon OK; preferir link interno pra peer sobre Amazon (info).
 
 ### 6b. `peer-link-na-conclusao` (level=`info`, v1.24.0)
@@ -221,7 +221,7 @@ Bugs de substituição mecânica (composiçãos, "a produto", "no em 20XX", term
 
 **Aplicação:** entra como mudança proposta normal (mostre o antes→depois no relatório). Se aprovado, em vez de Edit à mão, rode `bun scripts/faq-shuffle.ts {site}/{slug} --apply` (preserva block-scalar + indentação sozinho). Determinístico e seguro → pode auto-aplicar junto dos demais fixes aprovados. **level=info** (não bloqueia readyToLock; é polimento anti-footprint, não erro).
 
-ℹ️ A clone (`artigo-clonar-em-massa`) NÃO roda esta skill — artigo novo de clone não sai embaralhado sozinho. Rode o `guia-auditar` (ou o `faq-shuffle.ts` direto) como passo de fechamento no artigo novo, ou em lote num cluster inteiro quando quiser (é determinístico, pode rodar a qualquer momento). O relatório final da clone lembra disso.
+ℹ️ A clone (`artigo-clonar-em-massa`) roda o `faq-shuffle.ts` direto na Etapa 6.3.5 dela (obrigatório desde 2026-06-24 quando há irmão na keyword) — artigo novo de clone já sai embaralhado. Esta skill/o script seguem sendo o caminho pra artigos ANTIGOS (pré-shuffle) ou pra reembaralhar um cluster inteiro (determinístico, pode rodar a qualquer momento).
 
 ## Formato do relatório
 

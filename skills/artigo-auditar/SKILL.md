@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only. Combina 35 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, disclaimer-saude-repetido (aviso de saúde repetido — só nicho suplemento), voz-eximir-responsabilidade, badge-ausente) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
+description: Audita artigo inteiro read-only. Combina 38 categorias editoriais (claim-vs-bible, tag-affiliate contextual, travessão, superlativo, voz-comprador explícita+implícita, html-inválido, termos técnico-industriais, intro/title/meta/listHeading qualidade, guide estrutura/tamanho/links hub-and-spoke, peer-link-na-conclusao (navegação peer/home no fecho = decorativa), link-interno-quebrado, peer-article-nao-linkado, anchor-nao-keyword, tamanho-escannavel-produto, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, disclaimer-saude-repetido (aviso de saúde repetido — só nicho suplemento), voz-eximir-responsabilidade, badge-ausente) com 4 checks estruturais (hasIntro, hasGuide, productCount≥3, hasMetaDescription) e calcula readyToLock pra sinalizar se está pronto pra contentLocked:true. Tag-affiliate é severity contextual: error crítico se site live=true, warn se em construção. Output: relatório completo inline no chat + salva em `docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md` (painel lê). NÃO modifica o .mdx. Aceita URL do painel OU args canônicos `site/slug`.
 ---
 
 ## Parse de input
@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 35 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
+7. **Rodar auditoria IA** nas 38 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -150,7 +150,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (35 categorias)
+## Critérios de auditoria (38 categorias)
 
 Use exatamente esses valores em `rule`:
 
@@ -548,7 +548,7 @@ Audit dos limites editoriais de tamanho nos campos do produto-no-artigo. Bullets
 - `bullet-longo`: pros[i] ou cons[i] texto puro > 180 chars
 - `listagem-peers-exaustiva`: bullet/parágrafo cita 4+ peers (lista virou tabela em texto)
 - `palavra-chavao-banida`: ocorrência de "lineup", "do lineup", "do nosso lineup", "desta seleção", "do nosso comparativo" em qualquer campo do produto
-- `palavra-chavao-alta-freq` (level=`warn`): "fórmula" > 60, "ativo"/"ativos" > 50, "preço médio" > 15, "parestesia"+"formigamento" > 20 combinados — chavões que precisam variação léxica
+- `palavra-chavao-alta-freq` (level=`warn`): "fórmula" > 60, "ativo"/"ativos" > 50, "preço médio" > 15, "parestesia"+"formigamento" > 20 combinados — chavões que precisam variação léxica. ⚠️ Subset cru mantido por conveniência; a checagem AUTORITATIVA por nicho é a rule `chavoes-por-nicho` abaixo (lê o `_max` do JSON)
 
 **Caso real `melhorpretreino`** (regressão pré-v1.16.0): shortDescription média 329-414 chars (canon vivo: 225); bullets média 175-182 chars (canon: 65); 50 ocorrências de "lineup" + 114 de "seleção" num único artigo.
 
@@ -575,6 +575,23 @@ Fix sugerido: rodar skill `artigo-review-criar` (v1.16.0+) com hard caps embutid
 **Bloqueia readyToLock?** Sim — categoria `error`, conta como blocker.
 
 Fix sugerido: regex find-and-replace direto, sem ambiguidade semântica.
+
+### `chavoes-por-nicho` (level=`error`, régua v1.18.0)
+
+Lê `docs/painel/_data/chavoes-por-nicho.json` pelo `niche` do site (`docs/painel/sites-meta.json`) e conta termos em TODO o texto público do artigo (intro, `guideContent`, e os campos de cada review: subtitle/shortDescription/pros/cons/specs.value/fullReview), excluindo frontmatter YAML técnico.
+
+Aplica `_genericos` + bloco do nicho (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam imediatamente; os demais quando passam do `_max`. **Autoritativo — absorve o fragmento `palavra-chavao-alta-freq`** de `tamanho-escannavel-produto` (thresholds hardcoded eram um subconjunto cru; aqui o limite vem do JSON por nicho, igual ao gate intermediário `artigo-reviews-auditar` e à `pagina-produto-auditar`).
+
+Fix: variação léxica (alternativas PT-BR documentadas) + destilação cirúrgica. **Bloqueia readyToLock** (error).
+
+### `capitalizacao-duplicacao` (level=`error`, régua v1.18.3)
+
+Bugs de substituição mecânica que vazam pro output, em qualquer campo do artigo:
+- **a — duplicação contígua**: `([a-zA-ZÀ-ÿ\s]{8,40})\1` (ex real `a72e7d9`: "sem empilhar suplementos sem empilhar suplementos")
+- **b — bullet minúsculo**: bullet de pros/cons começando com `<strong>[a-z]` (ex: `<strong>aminoácidos…` quando devia ser maiúsculo)
+- **c — minúscula após ponto**: `\. [a-z]` em texto editorial (excluir URLs amazon.com.br)
+
+**Absorve o sub-check `termo-duplicado-parens`** de `concordancia-quebrada-pt-br` (duplicação entre parênteses, ex `formigamento (formigamento)`). Fix: capitalizar 1ª letra / destilar duplicação. **Bloqueia readyToLock** (error).
 
 ### `template-para-quem-e` (level=`warn`, régua v1.19.0)
 
@@ -781,7 +798,7 @@ Aquela é WRITE op cross-produto (sugere mudanças, user aprova granular). Esta 
 Override determinístico (passo 9) cobre isso. Se IA disse `true` mas falta intro/guide/produtos/meta, reescrevo o `lockReasoning` listando blockers e força `readyToLock = false`.
 
 ### 4. Citar comprador no audit
-"Compradores reclamam de X" → quebra a voz analítica. Sempre reescreva: "Bíblia registra trade-off X (campo Y)".
+"Compradores reclamam de X" → quebra a voz analítica. Sempre reescreva: "Bíblia registra a contrapartida X (campo Y)".
 
 ### 5. Não criar diretório `.audits/articles/`
 Primeiro run do skill no projeto, o diretório não existe. Sempre fazer `mkdir -p docs/biblias-v2/.audits/articles/` antes de escrever.
