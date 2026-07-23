@@ -142,6 +142,12 @@ DELTAS DO CLONE (adições à régua da skill):
   produto no destino (não repetir frases/ângulo).
 - subtitle: NÃO inventar ângulo novo; segue a régua de subtitle da skill (a normalização
   keyword-first cross-produto fica pra Etapa 1.4). O ângulo editorial do review é o BADGE.
+- superlativo geral = SÓ a posição 1. Se este produto NÃO for a posição 1, NUNCA escreva
+  "a melhor {keyword}" / "a melhor {keyword} deste comparativo" / "a melhor que analisamos"
+  (superlativo geral). Ancore no ângulo de NICHO do badge ("a mais barata", "a de grande
+  formato", "a de entrada", "a de sublimação"). Só o nº1 carrega o "a melhor" geral. Isso
+  evita dois produtos reivindicando liderança (a Etapa 1.4 reconcilia, mas gasta ciclo —
+  caso real 2026-07-23: fotos e personalizados tiveram duplo-"melhor" pego no 1.4).
 
 SAÍDA: retorne SÓ um JSON com os 6 campos (subtitle, shortDescription, pros[], cons[], specs[],
 fullReview). A skill-mãe monta o .mdx — não escreva arquivo nem rode git.
