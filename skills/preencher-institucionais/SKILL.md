@@ -55,7 +55,7 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 6. **Gera /sobre/** (régua abaixo) + **/author/** (régua abaixo), distintas e variadas vs irmãs.
 7. **Valida** (checklist).
 8. **Backup** ambas em `.painel-backups/{dia}/`.
-9. **Escreve** sobre.html + author/{slug}.html (cria o dir `author/` se faltar). **A rota/dir da rede é `/author/` (com 'h'), NUNCA `/author/`** — o `.mdx`/`.html` vive em `src/content/pages/author/{slug}.html`, a rota é `/author/{slug}/` e `config.author.href` aponta pra lá. Gravar em `autor/` = página órfã + link 404.
+9. **Escreve** sobre.html + author/{slug}.html (cria o dir `author/` se faltar). **A rota/dir da rede é `/author/` (com 'h'), NUNCA `/autor/`** — o `.mdx`/`.html` vive em `src/content/pages/author/{slug}.html`, a rota é `/author/{slug}/` e `config.author.href` aponta pra lá. Gravar em `autor/` = página órfã + link 404.
 10. **Alinha `config.author.bio`** pra voz vaga (sem "Testo"); mantém variado vs irmãs. **IGNORA `evaluationText`** (campo morto, não renderiza).
 11. **Commit** (`--no-verify`) + **push** + `bash scripts/painel-vps-pull.sh`.
 12. **Reporta**: chars de cada página, autor citado, e lembrete de que vai ao ar no deploy.

@@ -337,10 +337,10 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 ## Armadilhas recorrentes — evitar sempre
 
 **1. Singular → plural em atribuições de compradores**
-Quando um claim vem de uma única opinião, escreva "um comprador" ou "um comprador relata". Use "compradores" (plural sem qualificação) **apenas** quando o mesmo tema aparece de forma independente em 2 ou mais reviews. Generalizar uma opinião individual para "compradores" é invenção sutil.
+Quando um claim vem de uma única opinião, use a forma **"há relato de X"** (hedge singular, sem a moldura de voz-comprador — é a forma que a `biblia-auditar` já considera destilada; ver a cláusula de cardinalidade na Régua editorial). Use plural ("há relatos de"/"compradores") **apenas** quando o mesmo tema aparece de forma independente em 2 ou mais reviews. Generalizar uma opinião individual para "compradores" é invenção sutil.
 
-Errado: "Compradores relatam satisfação continuada após trocar de marca."
-Certo: "Um comprador relata satisfação após trocar de marca por insatisfação com outras opções."
+Errado: "Compradores relatam satisfação continuada após trocar de marca." (infla 1 opinião pra consenso plural)
+Certo: "Há relato de satisfação após trocar de marca por insatisfação com outras opções." (hedge singular preservado)
 
 **2. Travessão (—) em campos de texto livre**
 A proibição de travessão vale para **todos** os campos de saída, incluindo `observacoesAgente` e `dicasAcionaveis`, que são strings livres e especialmente suscetíveis ao erro. Antes de salvar, revise mentalmente esses dois campos em busca de "—".

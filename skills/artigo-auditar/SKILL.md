@@ -570,7 +570,7 @@ Fix sugerido: rodar skill `artigo-review-criar` (v1.16.0+) com hard caps embutid
 | `adjetivo-quebrado` | `produto[s]? elaborada[s]?\b\|produto ampla\|formula natural` |
 | `duplicacao-prep` | `\b(?:disponíveis?\|disponível) no em \d{4}\|Pra a (maioria\|primeira\|melhor)` |
 | `genero-errado` | `\b(as produtos\|os fórmulas\|as ingredientes)\b` |
-| `termo-duplicado-parens` | `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)` (ex: `formigamento (formigamento)`) |
+| `termo-duplicado-parens` | `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)` (ex: `formigamento (formigamento)`) — ⚠️ autoritativo agora é a rule `capitalizacao-duplicacao` (não duplicar o achado) |
 
 **Bloqueia readyToLock?** Sim — categoria `error`, conta como blocker.
 
