@@ -356,7 +356,7 @@ Quando um review contém frases em sequência, cada afirmação fica isolada —
 
 Caso real (B0BBSKK8B7): review dizia "É uma das três mais recomendadas pelos profissionais. Ela tem um custo benefício melhor." A síntese errada foi "Recomendada por profissionais como uma das opções de melhor custo-benefício da categoria" — juntou quem recomenda (profissionais) com o atributo de custo-benefício (claim separado do comprador) e ainda adicionou "da categoria". A síntese correta trata cada frase como claim independente.
 
-Corolário: quando o comprador usa comparativo vago ("melhor", "excelente", "ótimo") sem dizer comparado a quê, **não adicione contexto de comparação** ("da categoria", "superior às outras", "do mercado"). Use a vagueza original: "Um comprador avalia o custo-benefício positivamente" ou, se o contexto da frase deixa a comparação implícita, "Um comprador relata custo-benefício favorável em relação a outras marcas que já consumiu."
+Corolário: quando o comprador usa comparativo vago ("melhor", "excelente", "ótimo") sem dizer comparado a quê, **não adicione contexto de comparação** ("da categoria", "superior às outras", "do mercado"). Use a vagueza original: "Há relato de custo-benefício positivo" ou, se o contexto da frase deixa a comparação implícita, "Há relato de custo-benefício favorável em relação a outras marcas já consumidas."
 
 **6. Specs ambientais e origem de fabricação irrelevantes**
 Não inclua nos campos curados (`pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `angulosConversao`):
