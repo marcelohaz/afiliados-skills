@@ -101,7 +101,7 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 
 10. **Backup** antes de aplicar: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-guide.mdx`.
 
-11. **Aplicar** os fixes aprovados via `Edit` cirúrgico no `guideContent` (preservar indentação de 2 espaços do block scalar; um bloco por linha).
+11. **Aplicar** os fixes óbvios + os aprovados via `Edit` cirúrgico no `guideContent` (preservar indentação de 2 espaços do block scalar; um bloco por linha).
 
 12. **Build**: `pnpm --filter {site} build`. Se Zod falhar, reverter do backup e reportar.
 

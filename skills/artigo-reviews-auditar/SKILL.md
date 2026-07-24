@@ -116,7 +116,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-improve.mdx`. Pattern paralelo ao painel pra aparecer no card "Histórico de versões".
 
-11. **Aplicar mudanças**: usar `Edit` cirúrgico no `.mdx` pra cada produto aprovado.
+11. **Aplicar mudanças** (óbvios já aplicados + editoriais aprovados): usar `Edit` cirúrgico no `.mdx` pra cada produto com mudança a aplicar.
     - Preservar produtos NÃO-alvo intactos (não tocar)
     - Preservar block scalar `|` do fullReview (não usar parseYaml/stringifyYaml)
     - Aplicar `newFullReview`, `newPros`, `newCons` quando não-null

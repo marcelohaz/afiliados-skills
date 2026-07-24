@@ -91,7 +91,7 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 9. **Backup** antes de aplicar (1 por artigo tocado):
    `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-guide.mdx` (via helper `readGuideContent` do painel, mesmo formato dos outros).
 
-10. **Aplicar os aprovados** via `Edit` cirúrgico no `guideContent` do `.mdx` (preservar indent 2 espaços do block scalar; um trecho por vez). Regras:
+10. **Aplicar os óbvios + os aprovados** via `Edit` cirúrgico no `guideContent` do `.mdx` (preservar indent 2 espaços do block scalar; um trecho por vez). Regras:
     - **anchor-nao-keyword**: trocar SÓ o texto entre `<a>...</a>` pela keyword (qualificadores ficam FORA do `<a>`). **⚠ RECONCILIAR a concordância do artigo/preposição que vem ANTES do `<a>` (canon 2026-06-23):** se a âncora nova muda NÚMERO ou GÊNERO em relação à antiga, o artigo/contração que a rege precisa acompanhar. Caso real: âncora `melhores impressoras de tanque de tinta` (plural) virou `melhor impressora tanque de tinta` (singular) mas o "no guia **das**" ficou → "no guia das melhor impressora" (quebrado). Ajustes típicos: `das→da`, `dos→do`, `nas→na`, `nos→no`, `aos→ao`, `pelas→pela`, `essas→essa`, `umas→uma`. **Reler a FRASE INTEIRA do `<a>` tocado (não só o trecho da âncora) antes de salvar.**
     - **anchor-produto-sem-nome**: trocar o texto pelo nome completo do produto (com marca). **Mesma reconciliação de concordância do item acima** (ex: âncora que era plural genérico vira nome próprio singular → ajustar artigo antes).
     - **link-home-errado**: trocar `href="/{homeReviewSlug}/"` por `href="/"` (manter a âncora = keyword da home).
