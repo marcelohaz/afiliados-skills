@@ -72,6 +72,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 - **Não listar concorrentes.** É função do artigo comparativo, não da página individual.
 - **NÃO comparar nem "divergir o ângulo" contra outros sites nossos.** Mesmo que o mesmo produto exista num site irmão (estratégia SERP-monopoly), escreva a MELHOR página pela bíblia, sem tentar ser diferente de propósito — forçar divergência contorce e piora o texto. A comparação cross-site (e a reescrita do que de fato colar) é trabalho da `pagina-produto-auditar`, que mede a similaridade real. Regra: criação escreve livre, audit mede, fix corrige.
 - **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.
+- **SEM confirmação — prossiga direto** (canon Marcelo 2026-07-24). Chegou ao passo de gerar = os pré-requisitos foram lidos (`.mdx` existe, bíblia existe, tag resolvida). NÃO pergunte "posso criar?/confirma?" — os aborts do fluxo (404 do `.mdx`, bíblia ausente) são a única barreira. Perguntar antes de escrever é atrito. (Exceção estrita: input de args genuinamente ambíguo no passo 1 — aí sim esclareça o mapeamento antes; não é confirmação de "pode criar".)
 
 ## Fluxo
 

@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar-em-massa
-description: Cria os 6 campos editoriais de TODAS as páginas individuais vazias de um site em PARALELO via sub-agents (até 10 simultâneos). Qualidade IDÊNTICA à skill individual `pagina-produto-criar` — cada sub-agent é conversa fresh do Opus, sem cross-contamination. Skill mãe orquestra: pre-flight bíblias → confirmação interativa → N Agents paralelos → 1 commit lote → push + VPS pull → report. Aceita `site` (todos stubs vazios) OU `site/ASIN1,ASIN2` (subset). Flag opcional `--audit` dispara audit pós-batch em paralelo. NÃO toca em stubs parciais. NÃO cria stubs (pré-requisito: stubs no painel). Sub-agents herdam toda a régua editorial da `pagina-produto-criar` (chavões por nicho, concordância PT-BR, ban "declarado pelo fabricante" muleta, health YMYL, hard caps, voz consultiva).
+description: Cria os 6 campos editoriais de TODAS as páginas individuais vazias de um site em PARALELO via sub-agents (até 10 simultâneos). Qualidade IDÊNTICA à skill individual `pagina-produto-criar` — cada sub-agent é conversa fresh do Opus, sem cross-contamination. Skill mãe orquestra: pre-flight bíblias (única barreira, aborta se incompleto) → imprime plano e dispara direto (SEM confirmação S/N) → N Agents paralelos → 1 commit lote → push + VPS pull → report. Aceita `site` (todos stubs vazios) OU `site/ASIN1,ASIN2` (subset). Flag opcional `--audit` dispara audit pós-batch em paralelo. NÃO toca em stubs parciais. NÃO cria stubs (pré-requisito: stubs no painel). Sub-agents herdam toda a régua editorial da `pagina-produto-criar` (chavões por nicho, concordância PT-BR, ban "declarado pelo fabricante" muleta, health YMYL, hard caps, voz consultiva).
 ---
 
 ## Parse de input
@@ -39,7 +39,7 @@ Detecção:
 - **Sub-agents NÃO fazem git operations.** Eles só fazem `Read` (bíblia/config/.mdx/artigos), `Edit/Write` no `.mdx` do produto e backup. **Skill mãe controla TUDO de git** (1 commit lote no fim, 1 push, 1 VPS pull).
 - **Detecção rigorosa de stub vazio.** Só processa stubs 100% vazios (marker no body + ausência de TODOS os 6 campos editoriais no frontmatter). Stub parcial NÃO entra no batch — protege trabalho manual em andamento.
 - **Pre-flight bíblias é obrigatório.** Skill aborta antes do paralelo se alguma bíblia faltar `pontosFortes` ou `angulosConversao` — senão sub-agent vai produzir página fraca em silêncio.
-- **Confirmação interativa.** Mostra lista de stubs encontrados + tempo estimado. Pergunta `S/N` antes de disparar paralelo (pra evitar disparar batch errado).
+- **Plano automático (SEM confirmação S/N).** Mostra lista de stubs encontrados + o que pula + tempo estimado, e **dispara direto** — não pergunta, não espera "S/N". A barreira de segurança é o pré-flight (aborta em site inexistente, zero stubs vazios, ou bíblia incompleta), não um beat humano. Decisão do Marcelo 2026-07-24: o pré-flight já protege qualidade; a confirmação era só atrito. O plano continua sendo IMPRESSO (transparência), mas é notificação, não pergunta.
 - **Limite de paralelismo: 10 sub-agents simultâneos.** Acima disso, batch é dividido em levas (10 + 10 + ...). Throttling do harness pode degradar acima de 10.
 - **Erro em 1 não quebra batch.** Sub-agent que falha retorna `{ok: false, error: ...}`. Skill mãe agrega e reporta no fim. Outros sub-agents continuam.
 - **Português brasileiro editorial.** Tom analítico.
@@ -80,10 +80,12 @@ Detecção:
    - Se bíblia tem `pontosFortes=[]` ou `angulosConversao=[]`: adicionar à lista de "curadoria incompleta"
    - Se houver QUALQUER problema: **abortar batch** com lista dos ASINs e instrução pra rodar `biblia-preencher` antes
 
-5. **Confirmação interativa** (obrigatória):
+5. **Imprimir plano e PROSSEGUIR (sem confirmação)**:
+
+   Chegou aqui = o pré-flight (passos 2-4) passou (site existe, há stubs vazios, bíblias completas). Imprime o plano como **notificação de transparência** e dispara os sub-agents **direto**, sem perguntar `S/N`:
 
    ```
-   📋 Encontrei {N} stubs vazios em {site}, todos com bíblia completa:
+   📋 Criando {N} páginas em {site} (bíblias completas, disparando agora):
      - {slug-1} (ASIN {asin-1}) — {name-do-produto}
      - {slug-2} (ASIN {asin-2}) — {name-do-produto}
      - ...
@@ -92,21 +94,16 @@ Detecção:
      - {slug-parcial} (parcial: tem subtitle mas falta o resto)
      - {slug-preenchido} (já tem os 6 campos)
 
-   Cada produto será processado por um sub-agent Opus INDEPENDENTE
-   (conversa fresh, isolada, sem cross-contamination). Mesma régua editorial
-   da skill individual `pagina-produto-criar`.
+   Cada produto = um sub-agent Opus INDEPENDENTE (conversa fresh, isolada,
+   sem cross-contamination). Mesma régua da skill individual `pagina-produto-criar`.
 
-   {{Se flag --audit ativa}}: Audit pós-batch via `pagina-produto-auditar`
-   em paralelo pra cada página criada (opt-in pra qualidade extra).
-   {{Se flag --audit ausente}}: SEM audit automático (user pode rodar
-   `pagina-produto-auditar` separado quando quiser).
+   {{Se flag --audit ativa}}: + audit pós-batch via `pagina-produto-auditar`.
+   {{Se flag --audit ausente}}: sem audit automático.
 
    Tempo estimado: ~3-5 min (paralelo até 10 simultâneos).
-
-   Confirma processar? (S/N)
    ```
 
-   **NÃO PROSSEGUIR sem resposta afirmativa do user.** Se user disser N ou ambíguo, abortar limpo.
+   **NÃO pergunte `S/N`.** Os aborts do pré-flight são a única barreira; se o pré-flight passou, dispara. (Se o input do user for genuinamente ambíguo — ex. um slug/ASIN que não casa com nenhum stub — isso já é abort do passo 2/3, não motivo pra confirmação.)
 
 6. **Read affiliateTag do site** (uma única vez, passa pros sub-agents): `Read sites/{site}/src/config.ts` → extrai via regex `/affiliateTag:\s*['"]([^'"]*)['"]/`.
 
@@ -391,8 +388,8 @@ Stub com `subtitle` preenchido mas resto vazio é trabalho manual em andamento. 
 ### 4. Commit por sub-agent (race condition)
 Sub-agents simultâneos fazendo `git add + commit + push` = race condition garantida. Skill mãe controla TODO o git. Sub-agents só escrevem `.mdx`.
 
-### 5. Confirmação interativa skippada
-"S/N" é importante pra evitar disparar batch errado. **NÃO PROSSEGUIR sem confirmação afirmativa explícita do user.** Em caso de ambiguidade, abortar limpo.
+### 5. Pedir confirmação `S/N` (atrito desnecessário)
+**NÃO pergunte `S/N` antes de disparar** (mudança 2026-07-24). A régua antiga exigia confirmação; hoje a barreira é o pré-flight (passos 2-4), que aborta em site inexistente, zero stubs vazios ou bíblia incompleta. Se o pré-flight passou, imprime o plano (transparência) e dispara direto. Perguntar de novo só duplica o beat que o pré-flight já dá. Ambiguidade real (slug/ASIN que não casa com stub) é abort do passo 2/3, não pedido de confirmação.
 
 ### 6. Pular VPS pull no fim
 Skill mãe DEVE rodar `bash scripts/painel-vps-pull.sh` depois do push. Sem isso, painel da Bárbara/produção não vê o batch até alguém manualmente puxar.
