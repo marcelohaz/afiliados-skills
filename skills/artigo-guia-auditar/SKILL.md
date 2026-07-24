@@ -52,6 +52,7 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 
 - **EDIÇÃO MÍNIMA, NUNCA REWRITE.** Só toca nas seções/trechos com violação clara. O resto do `guideContent` fica byte-a-byte intacto. Se você está reescrevendo o guia inteiro, está usando a skill errada.
 - **CONVERGÊNCIA.** Seção que já passa em todos os critérios não entra em `changes`. Re-run no mesmo guia não deve gerar mudança aleatória.
+- **APLICA O ÓBVIO, PROPÕE O JULGAMENTO (canon Marcelo 2026-07-24, alinha com `biblia-auditar`).** Fix **determinístico de direção única** → **APLICA DIRETO** (sem esperar) e marca ✅ CORRIGIDO no relatório: `faq-order-shuffle` (reorder por seed idempotente, zero mudança de redação), `link-interno-quebrado` (href pro slug REAL / remover `<a>` mantendo texto), `link-home-errado` (`/{homeReviewSlug}/`→`/`), `anchor-nao-keyword` e `peer-article-nao-linkado` de âncora (+ a reconciliação de concordância artigo↔âncora), `travessao`, `;`, `concordancia-pt-br`. **Julgamento** → **propor→aprovar** (espera aprovação granular): `voz-comprador`, `superlativo-sem-evidencia`, `peer-link-na-conclusao` (mover placement), reescrita de texto, adicionar conteúdo. Na dúvida, trate como julgamento (proponha).
 - **Preservar o block scalar `|`.** NUNCA parseYaml/stringifyYaml o frontmatter (bagunça o HTML multilinha). Sempre `Edit` cirúrgico no trecho-alvo do `guideContent`.
 - **Preservar tudo fora do `guideContent`.** Não tocar em title, description, keyword, products, intro do body.
 - **Sem travessão (—).**
@@ -85,7 +86,7 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 
 8. **Decisão rewrite vs cirúrgico**: se 3+ H2 obrigatórios faltando OU guia fora de tema → NÃO propor remendos; recomendar `artigo-guia-escrever` e encerrar. Senão, seguir cirúrgico.
 
-9. **Reportar em chat** (formato abaixo) + esperar aprovação granular.
+9. **Reportar em chat** (formato abaixo) + **aplicar o óbvio, esperar aprovação só do julgamento** (canon 2026-07-24): os fixes **determinísticos** (faq-shuffle, link quebrado/home-errado, âncora-keyword/produto-sem-nome + concordância, travessão, `;`, concordância PT-BR) **aplicam direto** no passo 11 sem esperar, marcados ✅ CORRIGIDO. Só os de **julgamento** (voz-comprador, superlativo, mover placement, reescrita) esperam aprovação granular ("aplica tudo" / "aplica 1,3" / "rejeita 2"). Se não houver nenhum de julgamento, pula a espera.
 
 9.5. **Gravar marcador de auditoria** (registra QUANDO o guia foi auditado — alimenta a pill "Guia auditado", o chip "Auditar Guia" da barra FALTAM e o log de atividade do editor-artigo). Roda **SEMPRE**, logo após o relatório, mesmo que o user depois rejeite todas as correções (auditar é o evento; aplicar é outro):
    - `Write` em `docs/biblias-v2/.audits/guide/{site}-{slug}-last.md` com: título (`# Auditoria do guia: {site}/{slug}`), `- Critérios checados: {N}`, `- Achados: {M}` (+ lista curta dos critérios disparados, ou "nenhum"). A data é só pra leitura humana — **NÃO** invente timestamp pra sort (a fonte de tempo é o commit do git; `Date().toISOString()` cai no bug de timezone). Crie o diretório se não existir.

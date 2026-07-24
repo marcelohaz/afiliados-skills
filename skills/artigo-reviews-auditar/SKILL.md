@@ -52,6 +52,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 - **EDIÇÃO MÍNIMA**: preserve wording original sempre que possível. Só proponha mudança onde tem violação clara de critério.
 - **CONVERGÊNCIA**: produto que já passa em todos critérios vai pra `passed`, NÃO pra `changes`. Re-runs no mesmo artigo não devem gerar mudanças aleatórias.
+- **APLICA O ÓBVIO, PROPÕE O JULGAMENTO (canon Marcelo 2026-07-24, alinha com `biblia-auditar`).** Se a mudança proposta pra um produto for **puramente mecânica** — só travessão→pontuação, `;`→pontuação, ou concordância PT-BR quebrada (gênero/número), **sem tocar em voz/claim/estrutura** — **APLICA DIRETO** (sem esperar) e marca ✅ CORRIGIDO no relatório. Qualquer mudança que envolva **reescrita editorial** (voz-comprador→análise, `buyer-reference`, `claim-vs-lineup-fato`, `redundancy`, `quality`, `tone-clone`, badge, subtitle-keyword-first) vai por **propor→aprovar** e espera aprovação granular. Na dúvida entre mecânico e editorial, trate como editorial (proponha).
 - **Mexer em 1 campo é OK**: pode propor mudança só em `pros`, deixar `fullReview` e `cons` intactos.
 - **null É LITERAL** quando inalterado. NUNCA `''` ou `[]`.
 - **Tamanho de pros/cons**: preserve número de itens. Max +1 novo se claro da bíblia. NÃO reordene itens existentes.
@@ -103,12 +104,15 @@ Se algum requisito falhar, abortar com mensagem clara.
      ```
    - **Por quê:** o nome `-last.md` (sem dígitos de data) NÃO cai no `.gitignore` de audits timestampados → fica TRACKED e sincroniza. O editor-artigo lê via `git log` (endpoint `/article/:site/:slug/activity`), então o evento aparece em qualquer máquina. Prefixo `audit-reviews(` faz o log classificar como auditoria de reviews (ícone 🔍). Sem este passo, "Reviews auditados" fica "sem registro" pra sempre.
 
-9. **Esperar resposta do user**: granularidade per-produto. Possíveis comandos:
-   - `aplica tudo` / `aplica todos` → todas as mudanças
-   - `aplica produto 1, 3` → granular por número
-   - `aplica L1250 e 107W` → granular por nome (fuzzy match)
-   - `rejeita tudo` → encerra sem mudanças
-   - `rejeita produto 2` → todas exceto produto 2
+9. **Aplicar o óbvio + esperar aprovação só do julgamento** (canon 2026-07-24):
+   - **Mudanças puramente mecânicas** (travessão, `;`, concordância PT-BR — sem tocar voz/claim/estrutura) → **APLICA DIRETO** junto com o backup+Edit dos passos 10-11, sem esperar, e marca ✅ CORRIGIDO no relatório.
+   - **Mudanças com julgamento editorial** (voz-comprador, claim-vs-lineup, redundância, quality, tone-clone, badge, subtitle) → **espera resposta do user**, granularidade per-produto:
+     - `aplica tudo` / `aplica todos` → todas as mudanças editoriais
+     - `aplica produto 1, 3` → granular por número
+     - `aplica L1250 e 107W` → granular por nome (fuzzy match)
+     - `rejeita tudo` → encerra sem as editoriais (os mecânicos já foram aplicados)
+     - `rejeita produto 2` → todas exceto produto 2
+   - Se um produto só tem mudança mecânica, ele nem entra na espera (já foi aplicado). Se não houver nenhuma mudança editorial, pula a espera e vai direto pro build/commit.
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-improve.mdx`. Pattern paralelo ao painel pra aparecer no card "Histórico de versões".
 
