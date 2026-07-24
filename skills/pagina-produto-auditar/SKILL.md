@@ -60,7 +60,13 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    ```
    Lê o JSON. **`duplicata_acionavel` se baseia SÓ em colisão de PROSA** (subtitle/shortDescription/fullReview/pros/cons) — por par: `prosa_exatas`, `prosa_near_0.8`, `overlap_prosa_8gram_pct`. Se `duplicata_acionavel: true` (prosa idêntica > 0 OU prosa near-dup ≥ 0.8 contra algum irmão), abra a categoria `duplicata-cross-site` (abaixo) com os trechos de `prosa_exatas_lista` / `prosa_near_lista`. **Colisões de spec** (`specs_identicas`/`specs_identicas_lista`) NÃO são acionáveis — são dado bruto de ficha (dpi/ppm/rendimento) que repete entre sites por ser fato; no máximo registre como 🔵 info, NUNCA contorça spec pra fugir do match. Se `peers_encontrados: 0` (produto só existe neste site) ou prosa abaixo do limite, nada a flaggar. NÃO é erro ter o mesmo produto em 2 sites (estratégia SERP-monopoly) — o problema é a PROSA ser quase igual.
 
-7. **Rodar as categorias de checagem** (abaixo).
+6.7. **Camada MECÂNICA determinística PRIMEIRO** (canon 2026-07-24 — não conta char de cabeça): rode o script antes de julgar. Ele decide 100% dos checks contáveis/estruturais (tamanho texto-puro, fence, travessão, `;` em prosa entity-aware, HTML em campo texto-puro, 4 rótulos do fullReview, termos banidos absolutos). Motivo: LLM erra ~1/3 desses (medido no gabarito: 6 de 19 shortDescriptions >250 vivas passaram batido na auditoria LLM; o script pega 100%).
+   ```bash
+   bun scripts/audit-editorial.ts {site}/{slug} --json
+   ```
+   Os findings retornados são **autoritativos** — inclua TODOS no relatório com a severidade que o script deu (`error`/`warn`), NÃO re-julgue tamanho/fence/`;`/travessão de cabeça. Se o script erra por ausência de `bun`/lib (raro), caia no check manual das mesmas categorias. **Escopo do script: só o mecânico.** Ele NÃO cobre `tag-affiliate` (a tag pode ser injetada no build — verificável só no HTML renderizado, não no `.mdx`), nem julgamento (claim-vs-bible, naturalidade, redundância, voz-comprador) — isso continua com você nos passos abaixo.
+
+7. **Rodar as categorias de JULGAMENTO** (abaixo) — as que o script NÃO cobre: claim-vs-bible, tag-affiliate, tone/voz-comprador, superlativo, redundância, naturalidade, chavões-contexto, etc. As categorias puramente mecânicas (tamanho, travessão, `;`, html-invalido, fullReview-prefixo) já vieram do passo 6.7 — não duplicar.
 
 8. **Escrever relatório**:
    - `docs/biblias-v2/.audits/products/{site}-{slug}-{YYYY-MM-DD-HHMM}.md` (histórico)

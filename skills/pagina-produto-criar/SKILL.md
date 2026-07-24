@@ -138,6 +138,13 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
     - **Body**: remove o marker de stub (`{/* STUB GERADO POR ... [TODO: preencher] */}`). Body fica vazio ou com 1 linha em branco.
     - **AUTO-CHECK DE FENCE (OBRIGATÓRIO pós-Write)**: rode `grep -c '^---$'` no `.mdx` — tem que dar **exatamente 2** (abre+fecha o frontmatter). Se der **1**, faltou a fence de fechamento (o block scalar `>-` do `fullReview`, último campo, correu até o EOF) → **anexe `\n---\n` no fim do arquivo** e re-confira. Sem isso o build quebra com `asin: Required / name: Required` (caso real Bárbara 2026-06-15).
 
+    - **AUTO-CHECK MECÂNICO DETERMINÍSTICO (OBRIGATÓRIO pós-Write, canon 2026-07-24)** — NÃO conte char de cabeça:
+      ```bash
+      bun scripts/audit-editorial.ts {site}/{slug} --json
+      ```
+      Cobre 100% dos checks contáveis/estruturais: tamanho texto-puro (shortDescription ≤250, pros/cons ≤180), fence, travessão, `;` em prosa (entity+url-aware, exclui specs.value), HTML em campo texto-puro, 4 rótulos do fullReview, termos banidos absolutos. **É AUTORITATIVO** — se ele apontar `error`, conserte SÓ o campo apontado e re-rode (máx 2×). **Por quê:** LLM erra ~1/3 desses (medido: 6 de 19 shortDescriptions >250 vivas passaram batido na auditoria). Este passo substitui o "eyeball" dos hard caps de tamanho/`;`/travessão — não confie na sua contagem, confie no script. Se `bun`/lib faltar (raro), caia nos auto-checks manuais das mesmas categorias. **Escopo: só o mecânico** — ele NÃO cobre tag-affiliate (tag pode ser injetada no build) nem julgamento (claim-vs-bible etc.), que seguem sendo seus nos passos da régua.
+      **⚠ Modo batch:** se você é um sub-agent da `pagina-produto-criar-em-massa` (REGRA ZERO), **PULE este passo** — a skill-mãe roda a guarda determinística equivalente uma vez, no commit-lote. Rodar aqui = N spawns paralelos redundantes.
+
     Use YAML válido. Strings com aspas duplas (escape `\"` interno). Arrays multi-linha:
     ```yaml
     pros:
