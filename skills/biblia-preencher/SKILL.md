@@ -61,6 +61,26 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
    - `descricaoProduto` — descrição adicional
    - `identidade` — nome, marca, modelo, categoria
    - `snapshot` — preço, compras, disponibilidade
+2.5. **LER AS IMAGENS ANEXADAS (OBRIGATÓRIO — antes de gerar qualquer campo).** Se `conteudoBrutoFabricanteImagens` ou `doFabricanteImagens` tiverem qualquer item, **baixe e LEIA cada uma**. Elas são fonte factual de **mesmo peso que os campos de texto**: é onde a editora cola tabela nutricional, tabela de dose e ficha técnica quando o fabricante só publica em imagem. Medido em 2026-07-25: **216 das 535 bíblias (40%) têm imagem anexada, e as 216 foram curadas sem ninguém abrir nenhuma.**
+
+   **Quando pular (a única exceção):** se `imagensVerificadasEm` existe E a lista de imagens não mudou desde então (mesma quantidade e mesmas URLs), as imagens já foram lidas numa passada anterior — pule e diga isso no relatório. Qualquer imagem nova ou lista diferente → lê tudo de novo. Isso mantém a garantia sem pagar o custo de reler 731 imagens a cada execução.
+
+   ```bash
+   curl -s -o /tmp/<ASIN>-<n>.jpg "<url>"
+   sips -Z 1400 /tmp/<ASIN>-<n>.jpg --out /tmp/<ASIN>-<n>-s.jpg   # imagens de fabricante chegam a 8000x8000 / 8 MB
+   ```
+   Depois `Read` no arquivo reduzido.
+
+   **O que fazer com cada tipo:**
+   - **tabela nutricional / de dose / ficha técnica** → **transcrever pro `conteudoBrutoFabricante`** e usar como fato nos campos curados
+   - **marketing** (ícones de benefício, posicionamento de marca) → alimenta `angulosConversao`. Marketing CONTA: é o posicionamento da marca. A régua proíbe reproduzir claim de saúde, não proíbe conhecer o posicionamento
+   - **spec legível no rótulo da foto** (dose, UI, mcg, gramagem) → usar como fato
+   - **contradiz o `specsAmazon`** → registrar em `dadosInconsistentes`. ⚠️ **Se for ALÉRGENO, NÃO escolha lado** — traga pra decisão humana. Caso real B0F9ZVXXKH: rótulo diz "NÃO CONTÉM GLÚTEN", specsAmazon diz "Contém: Glúten". Enquanto não resolvido, a página não pode afirmar nada sobre o alérgeno.
+
+   **Registrar em `observacoesAgente`** o que cada imagem trouxe — ou explicitamente "imagem N é marketing, sem dado factual novo". Assim a próxima rodada sabe que já foi olhada.
+
+   ⚠️ **Isto NÃO é a foto do produto.** `imagemAmazon` → `.webp` é arquivo a baixar (etapa 3.5 da `biblia-auditar`). Aqui a imagem é **conteúdo a ler**.
+
 3. **Preencher os 7 campos de curadoria** (ver seção abaixo). Trabalhar na memória.
 3.5. **Limpar `conteudoBrutoFabricante`** (ver seção abaixo). Só se o campo tiver conteúdo e houver ruído visível.
 4. **Criar backup antes de salvar**: se o arquivo existir, copiá-lo para `docs/painel/.painel-backups/` antes de sobrescrever. Este é o diretório que o servidor do painel usa — backups aqui aparecem no card "Histórico de versões" do editor.
@@ -69,10 +89,27 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
    mkdir -p "docs/painel/.painel-backups/$DAY"
    cp "docs/biblias-v2/$ASIN.json" "docs/painel/.painel-backups/$DAY/${ASIN}-v2-${TIME}.json" 2>/dev/null || true
    ```
-5. **Montar o JSON atualizado**: copiar o objeto inteiro da bíblia, substituindo APENAS os 7 campos de curadoria + o `conteudoBrutoFabricante` limpo (se modificado na etapa 3.5) + **`lastModified = new Date().toISOString()`** + **`lastFilledAt = new Date().toISOString()`** (mesmo timestamp; sinaliza re-preenchimento → painel marca "auditar de novo"). **Não toque em `lastAuthor`** nem em qualquer outra metadata. Resto preservado bit-a-bit.
+5. **Montar o JSON atualizado**: copiar o objeto inteiro da bíblia, substituindo APENAS os 7 campos de curadoria + o `conteudoBrutoFabricante` limpo (se modificado na etapa 3.5) ou enriquecido (se a etapa 2.5 transcreveu tabela de imagem) + **`imagensVerificadasEm = new Date().toISOString()`** (só se a etapa 2.5 leu imagens nesta execução — é o carimbo que evita reler as mesmas 731 imagens toda vez) + **`lastModified = new Date().toISOString()`** + **`lastFilledAt = new Date().toISOString()`** (mesmo timestamp; sinaliza re-preenchimento → painel marca "auditar de novo"). **Não toque em `lastAuthor`** nem em qualquer outra metadata. Resto preservado bit-a-bit.
 6. **Escrever de volta**: `Write docs/biblias-v2/<ASIN>.json` com `JSON.stringify(dados, null, 2) + '\n'`.
 7. **Sincronizar com o R2** (obrigatório, sem perguntar): `bun scripts/sync-biblias-r2.ts --apply --push`. Propaga a curadoria pra colaboradoras (Bárbara) imediatamente — sem isso, o trabalho fica preso na máquina local até alguém rodar sync manualmente. ⚠ Desde 2026-05-17, `--apply` sozinho é pull-only (defesa contra ressurreição acidental de bíblias deletadas). Pra subir saves novos do local pro R2, `--push` é obrigatório. **Confira que a linha do ASIN diz `enviado` / `local mais novo`, NÃO `recebido`** — com o bump do lastModified (passo 5) o push deve vencer. Se vier `recebido`, o pull clobberou seu edit (timestamp não bumpado): re-aplique com o bump. Re-rodar o sync deve dar `0 enviadas, 0 recebidas` (steady-state = local==R2). Reportar o resultado (X enviadas / Y recebidas).
 8. **Reportar no chat**: resumo de quantos itens foram gerados por campo + alertas se algum ficou vazio por falta de dados + status do sync R2.
+
+## Modo `--enriquecer` (backfill das bíblias já curadas)
+
+Para as **216 bíblias que já têm curadoria escrita mas foram curadas sem ler as imagens**. Rodar o fluxo normal por cima delas **sobrescreveria curadoria boa**. Neste modo a regra é uma só: **NUNCA sobrescrever campo curado existente — só ACRESCENTAR.**
+
+O fluxo é o mesmo até a etapa 2.5 (ler as imagens). A partir daí:
+
+| o que a imagem traz | ação |
+|---|---|
+| fato **ausente** de todos os campos de texto | acrescenta aos campos curados **e** ao `conteudoBrutoFabricante` |
+| fato que **contradiz** o texto existente | registra em `dadosInconsistentes`. **Não reescreve nada** |
+| marketing / posicionamento | acrescenta em `angulosConversao` |
+| nada de novo | só registra em `observacoesAgente` que foi verificada |
+
+Sempre carimba `imagensVerificadasEm`, inclusive quando não achou nada — senão o backfill não é retomável e refaz trabalho.
+
+**Ordem de prioridade** (risco YMYL primeiro): 1º as **18 de suplemento sem nenhum dado nutricional em campo de texto** (dose e alérgeno = risco real) · 2º as outras 60 de suplemento + 8 de beleza-saúde · 3º as 125 de cozinha (infográfico de spec, risco menor) · 4º o resto.
 
 ## Os 7 campos
 

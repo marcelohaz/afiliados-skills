@@ -142,6 +142,14 @@ Detecção:
 
    **GUARDA DE FENCE (OBRIGATÓRIO, antes do commit) — canon 2026-06-15:** pra CADA path com sucesso, rode `grep -c '^---$' {path}`. Deve ser **exatamente 2** (abertura + fechamento do frontmatter). Se vier **1**, o sub-agent gravou sem a fence de fechamento (o block scalar do `fullReview` correu até o EOF) → **anexe `\n---\n` no fim do arquivo** e re-confira == 2. Se vier 0 ou >2, não commite aquele: re-dispare o sub-agent isolado. **Caso real (Bárbara, melhoressuplementos/flora-nativa-b12, 2026-06-15): 1 de 6 saiu sem a fence, quebrou o build com `asin: Required / name: Required` e passou silencioso porque o sub-agent reportou `ok:true`.** Esta guarda na skill-mãe é o que pega isso (o sub-agent pode falhar o próprio auto-check).
 
+   **GUARDA DE PARÁGRAFOS DO `fullReview` (OBRIGATÓRIO, antes do commit) — canon 2026-07-26:** o sub-agent às vezes grava **5 parágrafos** (um sem rótulo) em vez dos 4 canônicos. Nem a fence nem o tamanho pegam, e o `--audit` só pega parte. **Medido em 2026-07-26: 93 de 2.681 páginas da rede (3,5%) estão assim** — cozinhaideal 24, melhoraspirador-com 9, melhorguia 8, melhoressuplementos 7. O padrão é sempre o mesmo: 5 `<p>`, 4 rotulados. Pra CADA path com sucesso:
+   ```python
+   ps  = re.findall(r'<p>(.*?)</p>', fm['fullReview'], re.S)
+   rot = sum(1 for x in ps if re.match(r'\s*<strong>(Para quem é|Por que gostamos|Pontos de atenção|Resumo):', x))
+   assert len(ps) == 4 == rot
+   ```
+   Falhou → **fundir o parágrafo órfão no "Por que gostamos"**, que é sempre onde ele aparece, e re-medir. Não force re-dispatch do sub-agent: a fusão é determinística e mais barata.
+
    **GUARDA DE TAMANHO (OBRIGATÓRIO, antes do commit) — canon 2026-06-28:** mesma lógica da guarda de fence (o sub-agent self-checa tamanho mas **conta caractere de cabeça e erra ~14% das vezes** — caso real: 3 de 22 páginas com `shortDescription` em 256-264 chars apesar do hard cap 250 na régua, pego só pelo `--audit`). Pra CADA path com sucesso, meça mecanicamente (parse YAML do frontmatter): `shortDescription` ≤ **250** chars; cada `pros[i]`/`cons[i]` ≤ **180** chars de **texto puro** (descontar tags `<strong>`/`<a>`/`<em>`). Se algum estourar → **NÃO commite aquele ainda: re-dispare o sub-agent isolado** com a instrução exata "seu `{campo}` saiu com N chars (cap M); reescreva SÓ esse campo pra ≤ alvo (shortDescription ≤230, pros/cons ≤150), mantendo benefício-first e o mesmo fato" → re-meça (máx 2 tentativas). Não-convergiu em 2 → trima a última frase mecanicamente e registra no relatório. **Por que na mãe:** LLM não conta char com precisão, então a régua (≤250) no sub-agent não basta — a verificação determinística tem que estar aqui, igual à fence. É mais barato que `--audit` (que pega o mesmo, mas custa +N sub-agents): a guarda de tamanho cobre o gap acionável a custo ~zero, e o `--audit` continua opt-in pro resto (claim-vs-bible, cross-site, etc.).
 
    ```bash

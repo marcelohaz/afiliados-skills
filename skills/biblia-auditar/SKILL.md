@@ -114,6 +114,12 @@ Campos vazios que comprometem review:
 - `specsAmazon === null && conteudoBrutoFornecedor === null` → agente não tem ficha técnica pra trabalhar.
 - `opinioesCompradores === null && sentimentoCompradores.length === 0` → review sem voz de comprador.
 - `doFabricanteImagens.length === 0` mas `doFabricante` é longo → provavelmente há imagens de infográfico não cadastradas.
+- **🔴 IMAGEM ANEXADA COM CONTEÚDO AUSENTE DA BÍBLIA (canon 2026-07-26).** Se `conteudoBrutoFabricanteImagens` ou `doFabricanteImagens` tiverem **qualquer item, ABRA e leia cada uma** (mesmo procedimento da etapa 2.5 da `biblia-preencher`: `curl` → `sips -Z 1400` → `Read`). Se a imagem traz **dado factual** (tabela nutricional, dose, ficha técnica) que **não aparece em nenhum campo de texto**, é achado 🟡 e vira `auditFlags` tipo `review`.
+  - **Pule só se** `imagensVerificadasEm` existe E a lista de imagens não mudou desde então. Qualquer imagem nova → lê tudo.
+  - **Conflito de alérgeno entre imagem e `specsAmazon` é achado 🔴, e NÃO se escolhe lado** — traz pra decisão humana. Caso real B0F9ZVXXKH: rótulo "NÃO CONTÉM GLÚTEN" vs specsAmazon "Contém: Glúten".
+  - ⚠️ **Não confundir com o passo 3.5**, que cuida da FOTO do produto (`imagemAmazon` → `.webp`). Lá a imagem é arquivo a baixar; **aqui é conteúdo a ler**.
+  - **Por que existe:** a regra logo acima só reclamava quando a imagem FALTAVA. Quando ela ESTAVA lá, nenhuma skill mandava abrir — 216 bíblias (40% da base) foram curadas e 123 auditadas sem ninguém ler uma única imagem anexada.
+- **Recado no lugar do conteúdo.** `conteudoBrutoFabricante` curto (< 200 chars) casando com padrão de bilhete (`/est[áa] na imagem|em anexo|ver anexo|texto na imagem/i`) **não é conteúdo do fabricante** — é a editora avisando que o dado está na imagem. Achado 🟡: a bíblia está sem a voz do fabricante apesar do campo parecer preenchido. O detector do painel já trata isso desde 2026-07-26 (`server.ts`, `cbFabEhRecado`).
 
 ### 5. Higiene de dado + naming (NÃO voz editorial)
 

@@ -108,6 +108,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 3. **Parsear frontmatter**: extrair `asin`, `name`, `image`, `imageAlt`, `category`, `categorySlug`. Validar que `asin` está no formato `[A-Z0-9]{10}`.
 
 4. **Read bíblia**: `Read docs/biblias-v2/{asin}.json`. Se não existir, abortar (bíblia foi deletada após criação do stub — raro mas possível).
+   - **Defesa em profundidade (canon 2026-07-26):** se a bíblia tem imagem em `conteudoBrutoFabricanteImagens`/`doFabricanteImagens` **e** o `conteudoBrutoFabricante` está fino ou é só um recado ("o texto está na imagem em anexo"), **avise no relatório e não finja que a base está completa** — a bíblia provavelmente ainda não teve as imagens lidas (`imagensVerificadasEm` ausente confirma). O certo é rodar `biblia-preencher` (ou `--enriquecer`) antes, em vez de escrever a página com base incompleta. Depois que a régua nova das skills de bíblia rodar, isso vira raro; a linha existe pro caso residual.
 
 5. **Read affiliateTag do site**: `Read sites/{site}/src/config.ts` e extrair `affiliateTag` via regex `/affiliateTag:\s*['"]([^'"]*)['"]/`. Pode ser string vazia (`''`, construção) ou preenchida.
 
