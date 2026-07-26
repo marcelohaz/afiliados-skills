@@ -1,6 +1,6 @@
 ---
 name: biblia-preencher-em-massa
-description: Preenche a curadoria (7 campos) de VÁRIAS bíblias v2 de uma vez, em PARALELO via sub-agents (até 10 simultâneos), cada um isolado na sua bíblia (zero contaminação cruzada). Aceita lista de ASINs OU "todas as pendentes". Exclui contaminadas e sem-dados-brutos do lote. Sync R2 nas 2 pontas, bump lastModified, backup. Botão roxo "✨ Preencher bíblias" do produtos.html copia o comando pra cá.
+description: Preenche a curadoria (7 campos) de VÁRIAS bíblias v2 de uma vez, em PARALELO via sub-agents (até 10 simultâneos), cada um isolado na sua bíblia (zero contaminação cruzada). Aceita lista de ASINs OU "todas as pendentes". Exclui contaminadas e sem-dados-brutos do lote. Cada sub-agent LÊ as imagens anexadas (conteudoBrutoFabricanteImagens/doFabricanteImagens) como fonte factual antes de curar. Flag --enriquecer = modo backfill que NUNCA sobrescreve curadoria existente, só acrescenta (obrigatório em bíblia já curada). Sync R2 nas 2 pontas, bump lastModified, backup. Botão roxo "✨ Preencher bíblias" do produtos.html copia o comando pra cá.
 ---
 
 ## Parse de input
@@ -9,6 +9,9 @@ Args no `$ARGUMENTS`:
 - **Lista de ASINs** (forma do botão do painel): `B0CH5RSZTP,B01I78MAHW,B093Q7LLD6` (vírgula, sem espaço). Cada um `^[A-Z0-9]{10}$`.
 - **`todas` / `todas as pendentes`**: varre `docs/biblias-v2/*.json`, pega as `pend` preenchíveis (ver Etapa 0.4).
 - **Filtro** (opcional): `niche=Panela Elétrica` ou `sub=panela-eletrica` → restringe o "todas" àquela subcategoria.
+- **`--enriquecer`** (opcional, mas **OBRIGATÓRIO pro backfill das 216**): liga o modo enriquecer da `biblia-preencher` em TODOS os sub-agents. **Nesse modo nenhum campo curado existente é sobrescrito — só se ACRESCENTA.**
+
+> ⚠️ **PERIGO — leia antes de rodar batch em bíblia já curada.** O fluxo normal desta skill **REESCREVE os 7 campos**. As **216 bíblias com imagem anexada já têm curadoria escrita** (foi feita sem ler as imagens, que é o motivo do backfill existir). Rodar o batch nelas **sem `--enriquecer` destrói curadoria boa em massa.** A Etapa 0.4 filtra "pendentes" justamente pra não pegar essas — mas se o alvo vier por lista explícita de ASINs, esse filtro não protege. **Regra: alvo que já tem curadoria ⇒ `--enriquecer` obrigatório.** Com a flag, o prompt do sub-agent manda seguir a seção "Modo `--enriquecer`" da `biblia-preencher` (acrescenta fato ausente, manda contradição pra `dadosInconsistentes` sem reescrever, marketing pra `angulosConversao`, e carimba `imagensVerificadasEm` mesmo quando não achou nada).
 
 # Preencher curadoria de bíblias em massa (paralelo via sub-agents)
 

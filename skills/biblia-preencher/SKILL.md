@@ -1,6 +1,6 @@
 ---
 name: biblia-preencher
-description: Preenche os 7 campos editoriais da bíblia v2 (docs/biblias-v2/<ASIN>.json) a partir dos dados brutos. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Curadoria: sentimentoCompradores, angulosConversao, pontosFortes, pontosFracos, dicasAcionaveis, dadosInconsistentes, observacoesAgente. Limpa ruído do conteudoBrutoFabricante. Cria backup, sync R2.
+description: Preenche os 7 campos editoriais da bíblia v2 (docs/biblias-v2/<ASIN>.json) a partir dos dados brutos. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Curadoria: sentimentoCompradores, angulosConversao, pontosFortes, pontosFracos, dicasAcionaveis, dadosInconsistentes, observacoesAgente. Limpa ruído do conteudoBrutoFabricante. LÊ as imagens anexadas (conteudoBrutoFabricanteImagens/doFabricanteImagens) como fonte factual antes de curar. Flag --enriquecer = modo backfill que NUNCA sobrescreve curadoria existente, só acrescenta. Cria backup, sync R2.
 ---
 
 ## Parse de input
@@ -15,6 +15,8 @@ Aceita 2 formatos no $ARGUMENTS:
 - ASIN literal: `B07S61ZJCS` (regex `^[A-Z0-9]{10}$`)
 - Nome do produto: `HP Laser 107W` (fuzzy match contra `identidade.nome` dos arquivos em `docs/biblias-v2/*.json`)
 - "todas" → iterar sobre todas as bíblias que ainda não têm os 7 campos preenchidos
+
+**Flag `--enriquecer`** (em qualquer posição do `$ARGUMENTS`): liga o **modo backfill** — ver seção "Modo `--enriquecer`" abaixo. **NUNCA sobrescreve campo curado existente, só acrescenta.** É o modo obrigatório pra rodar por cima das 216 bíblias que já têm curadoria escrita mas foram curadas sem ler as imagens anexadas. Sem a flag, o fluxo normal REESCREVE os 7 campos — o que destruiria curadoria boa.
 
 Detecção: se $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
