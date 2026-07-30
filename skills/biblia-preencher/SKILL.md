@@ -375,11 +375,23 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - Termo entre parênteses dup: `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)` (ex: "formigamento (formigamento)")
 ## Armadilhas recorrentes — evitar sempre
 
-**1. Singular → plural em atribuições de compradores**
-Quando um claim vem de uma única opinião, use a forma **"há relato de X"** (hedge singular, sem a moldura de voz-comprador — é a forma que a `biblia-auditar` já considera destilada; ver a cláusula de cardinalidade na Régua editorial). Use plural ("há relatos de"/"compradores") **apenas** quando o mesmo tema aparece de forma independente em 2 ou mais reviews. Generalizar uma opinião individual para "compradores" é invenção sutil.
+**1. Atribuições de compradores — cardinalidade E moldura**
 
-Errado: "Compradores relatam satisfação continuada após trocar de marca." (infla 1 opinião pra consenso plural)
-Certo: "Há relato de satisfação após trocar de marca por insatisfação com outras opções." (hedge singular preservado)
+São **duas** regras, e falhar em qualquer uma é erro. A segunda foi endurecida em 2026-07-30 (antes esta armadilha só cobria a primeira, e a redação liberava "compradores" no plural — foi essa brecha que produziu a moldura em 390 das 634 bíblias).
+
+**(a) Cardinalidade.** Claim vindo de UMA opinião usa **"há relato de X"** (hedge singular). Generalizar uma opinião individual para o plural é invenção sutil.
+
+> Errado: "Compradores relatam satisfação continuada após trocar de marca." (infla 1 opinião pra consenso plural)
+> Certo: "Há relato de satisfação após trocar de marca por insatisfação com outras opções."
+
+**(b) Moldura — vale mesmo com a cardinalidade certa.** ⛔ **Nunca use sujeito humano + verbo de fala em campo curado**, nem quando 2+ reviews sustentam: `compradores relatam/descrevem/citam/destacam/dizem/mencionam/consideram/acham`, `usuários…`, `clientes…`, `quem comprou descreve`. Com 2+ relatos, o certo é **análise de frequência** ou **hedge com `relatos` como sujeito**, carregando o número real.
+
+> Errado: "Compradores destacam volume alto." (3 relatos reais — cardinalidade OK, moldura não)
+> Certo: "Volume alto é o tema mais recorrente." · "Volume alto aparece em três relatos." · "Relatos independentes citam volume alto."
+
+Por que (b) importa: a bíblia é **fonte de FATO**, e a moldura devolve o dado ao formato de opinião, que é o que a curadoria existe pra destilar. `sentimentoCompradores` é o campo do SENTIMENTO, não a transcrição da voz — o número entra no texto, o comprador como sujeito não. A `biblia-auditar` (categoria 5) trata (b) como violação auto-fixável, então deixar passar aqui só gera retrabalho no audit.
+
+✅ **Não confundir com o certo:** frequência sem sujeito humano ("é o tema mais recorrente", "aparece em dois relatos") e `relatos`/`opiniões` como sujeito são as formas prescritas. E o campo `fonte` de um item (`"opiniões, recorrente em 3 relatos"`) é metadado de procedência: **deve** registrar cardinalidade.
 
 **2. Travessão (—) em campos de texto livre**
 A proibição de travessão vale para **todos** os campos de saída, incluindo `observacoesAgente` e `dicasAcionaveis`, que são strings livres e especialmente suscetíveis ao erro. Antes de salvar, revise mentalmente esses dois campos em busca de "—".
