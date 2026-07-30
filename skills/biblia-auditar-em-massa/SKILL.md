@@ -104,9 +104,13 @@ N sub-agents Opus, levas ≤10. Cada um (Agent tool, `model: opus`, fresh) vê S
 
 Pra cada bíblia com fix (A) confirmado ou (B) retornado:
 3.1. **Trava de ASIN**: `json.asin == pedido`? Não → descarta + re-dispara isolado.
-3.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`.
+3.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`. ⚠️ **O nome é EXATAMENTE esse — não invente sufixo** (`-preaudit`, `-audit`, `-voz`, `-stamp`…). O painel só lista o que casa o regex de `docs/painel/_lib/handlers/backups.ts` (`{ASIN}-v2-{6 dígitos}` + uma allowlist curta de sufixos), então backup com sufixo improvisado **existe no disco mas some da UI de restore** — o usuário não consegue desfazer. Medição 2026-07-30: 210 de 459 backups de bíblia estavam invisíveis, acumulados por sufixos ad-hoc de vários runs. `HHMMSS` é 6 dígitos: nada de epoch nem de `aud170950`.
 3.3. **Aplicar (A)** (deleção/formato + naming óbvio em `identidade.nome`/`identidade.marca`, ex.: preencher marca vazia derivável) **+ (B)** (substituir `antes`→`depois` no campo curado exato). NUNCA tocar brutos. NUNCA aplicar (C).
 3.4. **Bumpar `lastModified = new Date().toISOString()`**. Manter `lastAuthor`. Write `JSON.stringify(b,null,2)+'\n'`.
+3.4.1. **GUARDA DE SCHEMA pós-write (OBRIGATÓRIA, canon 2026-07-30).** Guarde **em memória**, antes de escrever, um mapa `campo → tipo` de cada campo curado (e, dentro de `angulosConversao`, o tipo de cada `frases` e de cada item dela). Depois do write, recarregue o arquivo e compare: nenhum array pode ter virado string, nenhum objeto pode ter virado escalar, nenhum item de `frases` pode deixar de ser string. ⚠️ **O baseline é esse snapshot em memória, NÃO o backup da 3.2** — numa reaplicação a 3.2 gera um backup novo, já do estado corrompido, e a comparação passaria em falso.
+   - **Divergiu?** Restaure aquele campo do backup **pré-fix** (o mais antigo da rodada, não o recém-criado), **conserte a resolução de caminho no seu aplicador** e só então reaplique. Reaplicar com o mesmo aplicador quebrado é loop.
+   - **Por que existe:** o `campo` do fix vem como caminho aninhado (`angulosConversao[0].frases[2]`, `sentimentoCompradores[3].resumo`). Um aplicador que resolve só os dois primeiros tokens pega a LISTA `frases`, faz `str(lista)` e grava o **repr da linguagem** por cima do array. O JSON continua válido, o texto novo até aparece lá dentro, e o schema morre em silêncio. Caso real 2026-07-30: 9 arrays corrompidos em 6 bíblias num único lote. **Resolva o caminho inteiro até a folha e só edite se a folha for string.**
+   - Este check é mecânico e determinístico: **não delegue à re-auditoria da 3.5.** Lá dependeu de os auditores repararem, e reparar não é garantia.
 
 ### Etapa 3.5 — RE-AUDITORIA (a trava no lugar da aprovação humana)
 
@@ -125,7 +129,8 @@ Pra **cada** bíblia auditada (consertada ou não), no MESMO write: backup (se a
 - **`b.auditFlags`** = avisos SEMÂNTICOS que SOBRARAM pós-conserto, pra acender o chip na coluna Observações do painel (o detector mecânico `contaminado` só pega marca/ASIN; estes são os achados que só a auditoria vê). Cada flag `{ type, label }` (label ≤ ~120 ch, sem aspas duplas, com o motivo concreto):
   - **`type` = o `flagType` do `report_C`** correspondente (`'wrong-info'` ⚠ / `'off-niche'` 🧭 / `'review'` 🔍).
   - **Só `report_C` vira flag.** Achado **(B) auto-consertado NÃO vira flag** (já resolvido).
-  - **Se NENHUM `report_C` qualifica → `b.auditFlags = []`** (OBRIGATÓRIO esvaziar — re-auditar depois do conserto APAGA o chip; chip preso = bug).
+  - **Se NENHUM `report_C` qualifica → `b.auditFlags = []`** (OBRIGATÓRIO esvaziar — re-auditar depois do conserto APAGA o chip; chip preso = bug). ⚠️ **Isso vale para uma passada COMPLETA.** Numa **reaplicação parcial** (ex.: reaplicar só os fixes que o 3.4.1 restaurou) o `report_C` do payload vem vazio de propósito, e esvaziar apagaria os chips legítimos da passada cheia — nesse caso **NÃO toque em `auditFlags`**. Caso real 2026-07-30: uma reaplicação parcial zerou 3 chips já gravados.
+  - ⚠️ **Antes de acender `off-niche`, confira se a taxonomia oferece destino** (`docs/painel/taxonomia-biblias.json`). Se o tipo real do produto não existe como subcategoria, o chip não tem como ser resolvido e vira chip preso, que é o bug que esta seção quer evitar. Nesse caso **não acenda**: reporte a lacuna de taxonomia no relatório consolidado, como decisão humana. Caso real 2026-07-30: 4 repetidores de Wi-Fi classificados como `roteadores`, sem `repetidores` na taxonomia — 4 chips insolúveis evitados.
 - Write `JSON.stringify(b,null,2)+'\n'`.
 
 ⚠ `auditFlags` é o que faz o chip ⚠/🧭/🔍 aparecer no painel (server lê `d.auditFlags`; `_pages/biblias.ts` renderiza). NUNCA inventar flag sem evidência. **`specsAmazon`: wrong-info SÓ por ASIN divergente** (ASIN dentro da ficha ≠ `asin` da bíblia). **Contaminação cross-produto** (texto de um produto GENUINAMENTE diferente — outra marca/modelo — vazado em qualquer campo) também é `'wrong-info'` até re-captura. Mas **atributo capturado errado do PRÓPRIO produto, com ASIN certo, NÃO acende chip nenhum** (nem `wrong-info` nem `review`) — registra em `dadosInconsistentes` e segue; é ruído de captura, não problema.
@@ -155,7 +160,7 @@ Pra **cada** bíblia auditada (consertada ou não), no MESMO write: backup (se a
 1. **Bíblia só no R2**: sync 0.1 resolve.
 2. **Clobber do lastModified**: bump via `toISOString()` SÓ quando aplicou. Sem isso o `--push` vira `recebido`.
 3. **NÃO comparar bíblias**: isolamento é a defesa nº1.
-4. **Falso-positivo do grep**: "EAN" em `dadosInconsistentes` (campo interno) NÃO é problema; "rita lobo" em 2 produtos da mesma marca NÃO é contaminação. Confirmar contexto antes de aplicar; na dúvida, (C).
+4. **Falso-positivo do grep**: "EAN" em `dadosInconsistentes` (campo interno) NÃO é problema; "rita lobo" em 2 produtos da mesma marca NÃO é contaminação. **A regex de duplicação contígua da Etapa 1 (`([a-zA-ZÀ-ÿ\s]{8,40})\1`) casa através de fronteira de palavra e dá falso-positivo em expressão idiomática:** `"guiada passo a passo"` casa como `"a passo "` + `"a passo "` (o "a" final de *guiada* mais *passo a passo*). Antes de "consertar" duplicação, **imprima o trecho e leia** — se as duas cópias começam no meio de uma palavra, é ruído da regex, não do dado. Confirmar contexto antes de aplicar; na dúvida, (C).
 5. **Re-auditoria é obrigatória**: nunca dar (B) por aplicado sem o passo 3.5. É ela que substitui sua aprovação.
 6. **(C) não é preguiça**: é ausência de valor certo. NUNCA chutar um conserto (C) — flag.
 7. **Race de escrita**: sub-agent NUNCA grava; só a skill-mãe (serial).

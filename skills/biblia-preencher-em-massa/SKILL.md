@@ -79,7 +79,7 @@ N sub-agents Opus, levas de ≤10. Cada sub-agent (Agent tool, `model: opus`, co
 
 Pra cada JSON retornado:
 2.1. **Trava de ASIN**: `json.asin === asin_pedido`? Não → descarta + re-dispara aquele isolado (anti-mix-up).
-2.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`.
+2.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`. ⚠️ **Nome EXATO, sem sufixo inventado** (`-stamp`, `-voz`, `-preaudit`…): o painel só lista o que casa o regex de `docs/painel/_lib/handlers/backups.ts`, então sufixo ad-hoc faz o backup existir no disco e sumir da UI de restore. Medição 2026-07-30: 210 de 459 backups de bíblia invisíveis por esse motivo. `HHMMSS` = 6 dígitos.
 2.3. **Merge**: objeto inteiro da bíblia + substitui SÓ os 7 campos + (se veio) `conteudoBrutoFabricante` limpo + **`lastModified = new Date().toISOString()`** + **`lastFilledAt = new Date().toISOString()`** (carimbo de re-preenchimento → painel marca "auditar de novo"). NÃO toca `lastAuthor` nem resto.
 2.4. **Write** `JSON.stringify(obj, null, 2) + '\n'`.
 
