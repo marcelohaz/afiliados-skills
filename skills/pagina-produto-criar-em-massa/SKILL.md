@@ -145,11 +145,14 @@ Detecção:
    ```bash
    # 1) audit-editorial, 1× por slug — AUTORITATIVO. ⚠ ele SEMPRE sai com exit 0,
    #    mesmo com achado: o gate tem que ler o JSON, não o exit code.
-   SITE=compraguia; FAIL=0
+   SITE={site}; FAIL=0        # ⚠ {site} é o site DO BATCH, não um valor fixo
    for S in {slug-1} {slug-2} ...; do
      bun scripts/audit-editorial.ts "$SITE/$S" --json 2>/dev/null | python3 -c "
    import json,sys
-   d=json.load(sys.stdin); bad=[f for f in (d.get('findings') or []) if f.get('sev') in ('error','warn')]
+   raw=sys.stdin.read().strip()
+   if not raw.startswith('{'):            # ex.: '404: <path>' quando o slug/site não casa
+       print('  ⛔ $S: audit-editorial não retornou JSON →', raw[:80]); sys.exit(1)
+   d=json.loads(raw); bad=[f for f in (d.get('findings') or []) if f.get('sev') in ('error','warn')]
    if bad:
        print('  ⛔ '+d['slug'])
        for f in bad: print(f\"       {f['sev']:5} {f['rule']:22} {f.get('field','')} · {str(f.get('detail',''))[:60]}\")
