@@ -342,6 +342,10 @@ Estrutura obrigatória do `_data/competitor-analyses/{keyword-slug}.md`:
 
 Eles carregam a intenção comercial/comparativa + os links de afiliado (Marca/FAQ/Conclusão). Faltar qualquer um dos 5 base = ERRO.
 
+⚠️ **Os 5 base são SLOTS, e coincidir com outro site da rede é ESPERADO — não é duplicação a corrigir.** `Perguntas Frequentes` e `Conclusão` já são obrigatoriamente idênticos em toda a rede; os outros três saem do mesmo template acima com a keyword trocada, então artigos da mesma keyword em sites irmãos vão convergir por construção. **NÃO invente variação ("Vale investir em…", "Compensa comprar…", "Que marca escolher?") para fugir de um comparador de duplicata** — isso quebra a consistência DO PRÓPRIO SITE, que é o que o leitor e o Google veem, e não compra nada em SEO. Mesma lógica de [[afiliados.regras.dedup-crosssite-nao-reescrever-por-jaccard]]: não reescrever por jaccard.
+- **Nunca coloque nome de marca do lineup num H2 base** (ex.: "Epson ou Fujifilm: qual marca…"). O heading é estrutural e o lineup muda — o título passaria a mentir. Nome de marca vive nos H3 de "Melhor marca".
+- Medido em 2026-07-30 (compraguia, 3 artigos): os **H3 divergem sozinhos** (1 idêntico em 49, e o único era a taxonomia "Cartucho, tanque de tinta ou laser"), incluindo as perguntas da FAQ. Diferenciação é trabalho dos H3 e da prosa, não dos slots.
+
 **Além dos 5 base, ADICIONE H2 extras quando a análise de concorrentes mostrar que a SERP da keyword é informacional** (régua canon 2026-06-29). A estrutura é **dirigida pela SERP, não um molde fixo**:
 
 - Se os concorrentes da keyword usam H2 informacionais em forma de pergunta ("O que é {keyword}?", "{keyword} gasta muita energia?", "Que receitas dá pra fazer?", "Como limpar {keyword}?"), **crie esses H2 no guide** — é o que o Google premia pra keyword com intenção how-to/informacional. Caso-origem: `melhorairfryer-com/melhor-air-fryer-oven` (2026-06-29), onde 3 de 3 guias completos concorrentes usavam só H2 informacionais e nenhum usava o frame comercial.

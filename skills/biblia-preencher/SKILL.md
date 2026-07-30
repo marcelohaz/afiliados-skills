@@ -65,6 +65,12 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
    - `snapshot` — preço, compras, disponibilidade
 2.5. **LER AS IMAGENS ANEXADAS (OBRIGATÓRIO — antes de gerar qualquer campo).** Se `conteudoBrutoFabricanteImagens` ou `doFabricanteImagens` tiverem qualquer item, **baixe e LEIA cada uma**. Elas são fonte factual de **mesmo peso que os campos de texto**: é onde a editora cola tabela nutricional, tabela de dose e ficha técnica quando o fabricante só publica em imagem. Medido em 2026-07-25: **216 das 535 bíblias (40%) têm imagem anexada, e as 216 foram curadas sem ninguém abrir nenhuma.**
 
+   ⚠️ **Duas imagens que NÃO são fonte sobre este produto (medido no piloto de 2026-07-30):**
+   - **Banner institucional da marca** — fala da história da empresa e exibe OUTROS produtos da linha. Caso real: a imagem anexada ao BCAA da Integralmédica (B07HV4QZC8) mostra "My Whey 21g proteins" e Collagen, e nada sobre o BCAA. **Não importe nada dela**; registre em `observacoesAgente` que a imagem é institucional, pra próxima passada não tentar de novo.
+   - **Ficha ou arte que cobre MODELO IRMÃO** — a ficha técnica da Agratto traz 783 (CE-01, 127V, 1000W) e 784 (CE-02, 220V, 1500W) na mesma tabela; a arte da Dux mostra os potes de 300 g e de 100 g juntos. **Case a linha com o ASIN desta bíblia antes de extrair qualquer número**, e diga na curadoria de qual versão você está falando. Ver `afiliados.armadilha.bruto-fabricante-de-modelo-irmao`.
+
+   **Rendimento esperado por tipo** (pra calibrar esforço, não pra pular a leitura): tabela nutricional e ficha técnica rendem fato duro; banner A+ de marketing rende ângulo de conversão e quase nunca fato; banner institucional rende zero. O melhor caso medido foi o Kimera, onde o rótulo **respondeu uma pergunta que a própria bíblia tinha registrado como sem resposta** (`flag: cafeina-por-dose-vs-comprimido`).
+
    **Quando pular (a única exceção):** se `imagensVerificadasEm` existe E a lista de imagens não mudou desde então (mesma quantidade e mesmas URLs), as imagens já foram lidas numa passada anterior — pule e diga isso no relatório. Qualquer imagem nova ou lista diferente → lê tudo de novo. Isso mantém a garantia sem pagar o custo de reler 731 imagens a cada execução.
 
    ```bash
@@ -77,7 +83,7 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
    - **tabela nutricional / de dose / ficha técnica** → **transcrever pro `conteudoBrutoFabricante`** e usar como fato nos campos curados
    - **marketing** (ícones de benefício, posicionamento de marca) → alimenta `angulosConversao`. Marketing CONTA: é o posicionamento da marca. A régua proíbe reproduzir claim de saúde, não proíbe conhecer o posicionamento
    - **spec legível no rótulo da foto** (dose, UI, mcg, gramagem) → usar como fato
-   - **contradiz o `specsAmazon`** → registrar em `dadosInconsistentes`. ⚠️ **Se for ALÉRGENO, NÃO escolha lado** — traga pra decisão humana. Caso real B0F9ZVXXKH: rótulo diz "NÃO CONTÉM GLÚTEN", specsAmazon diz "Contém: Glúten". Enquanto não resolvido, a página não pode afirmar nada sobre o alérgeno.
+   - **contradiz o `specsAmazon`** → registrar em `dadosInconsistentes`. ⚠️ **Se as duas fontes divergem e nenhuma dá valor único, NÃO escolha lado** — traga pra decisão humana. Vale pra qualquer campo (alérgeno, potência, capacidade), é regra de dado e não de saúde. Caso real B0F9ZVXXKH: rótulo diz "NÃO CONTÉM GLÚTEN", specsAmazon diz "Contém: Glúten". Enquanto não resolvido, a página não pode afirmar nada sobre o alérgeno.
 
    **Registrar em `observacoesAgente`** o que cada imagem trouxe — ou explicitamente "imagem N é marketing, sem dado factual novo". Assim a próxima rodada sabe que já foi olhada.
 
@@ -105,13 +111,36 @@ O fluxo é o mesmo até a etapa 2.5 (ler as imagens). A partir daí:
 | o que a imagem traz | ação |
 |---|---|
 | fato **ausente** de todos os campos de texto | acrescenta aos campos curados **e** ao `conteudoBrutoFabricante` |
-| fato que **contradiz** o texto existente | registra em `dadosInconsistentes`. **Não reescreve nada** |
+| fato que **contradiz** o texto existente **e o rótulo dá o valor certo** | **CORRIGE o item** e move o texto anterior, literal, pra `dadosInconsistentes` (ver Reconciliação) |
+| fato que **contradiz** mas **sem valor único** | só registra em `dadosInconsistentes`. Não reescreve |
+| **`decisaoEditorial` antiga que a imagem tornou obsoleta** | marca como SUPERADA/ATUALIZADA, preservando o texto anterior (ver Reconciliação) |
 | marketing / posicionamento | acrescenta em `angulosConversao` |
 | nada de novo | só registra em `observacoesAgente` que foi verificada |
 
-Sempre carimba `imagensVerificadasEm`, inclusive quando não achou nada — senão o backfill não é retomável e refaz trabalho.
+Sempre carimba `imagensVerificadasEm`, inclusive quando não achou nada — senão o backfill não é retomável e refaz trabalho. **Exceção: se alguma guarda reprovar, NÃO carimba** — bíblia rejeitada tem que continuar na fila, e carimbar uma falha a faz sumir do backlog em silêncio.
 
-**Ordem de prioridade** (risco YMYL primeiro): 1º as **18 de suplemento sem nenhum dado nutricional em campo de texto** (dose e alérgeno = risco real) · 2º as outras 60 de suplemento + 8 de beleza-saúde · 3º as 125 de cozinha (infográfico de spec, risco menor) · 4º o resto.
+### Reconciliação — o objetivo é bíblia mais completa **e ainda confiável**
+
+"Só acrescentar" não basta, e isso foi medido (Marcelo, 2026-07-30). A regra antiga mandava registrar a contradição em `dadosInconsistentes` e não tocar no texto existente. O resultado: a bíblia do Kimera continuou afirmando em `pontosFortes` "cafeína em dose alta, **300mg por dose**" enquanto o rótulo mostrava 150 mg por comprimido e 300 mg na porção de 2. Mais completa, menos confiável — porque quem escreve review lê `pontosFortes`, e ia publicar um número de cafeína errado.
+
+**"Não perder informação" não é o mesmo que "não editar".** Mover o texto superado pra `dadosInconsistentes` preserva o registro e tira a afirmação errada do campo que é publicado. Nada some.
+
+Isso é o grupo **(B)** da `biblia-auditar` — *claim curado que contradiz o bruto quando o bruto tem o valor certo → alinhar ao bruto* — aplicado à imagem como fonte. Não é exceção nova.
+
+**Corrige quando** o rótulo dá valor definido. Kimera (150/300 mg) e Lavitan ("sem açúcares" × 0,4 g declarados) entraram aqui.
+**Só flag quando** a imagem complica sem dar valor único. Caso Sustagen: "30% menos açúcar que a fórmula anterior" e "55% menos que achocolatados comuns" são **as duas verdadeiras**, com bases de comparação diferentes. Não há o que corrigir; a decisão é sempre citar a base.
+
+⚠️ **Varra também as `decisaoEditorial` existentes.** Corrigir o campo não basta: uma decisão antiga pode mandar o oposto do conserto. No Kimera, o flag `cafeina-por-dose-vs-comprimido` dizia "não afirmar mg por comprimido, que não está claro" — instrução que, deixada vigente, desfaria a correção na hora de escrever o review. Marque a decisão superada assim, preservando o texto anterior dentro dela:
+
+> `SUPERADA em <data> pela leitura do rótulo (ver flag <novo>): <o que o rótulo mostra>. Seguir a decisão do flag <novo>. Decisão anterior, tomada quando esse dado ainda não tinha sido lido: "<texto literal antigo>"`
+
+A supersessão pode ser **parcial**: no Lavitan, o rótulo confirmou B6 e cromo (que passam a poder ser afirmados) mas ferro e ácido fólico seguem sem confirmação, então parte da decisão antiga continua valendo. Diga qual parte.
+
+**Depois de qualquer correção, re-audite** (mesma trava da Etapa 3.5 da `biblia-auditar-em-massa`): o conserto resolveu? não inverteu sentido? não perdeu o resto do item que estava certo? Não convergiu → reverte do backup e vira flag.
+
+⚠️ Esta varredura é **semântica** — não existe check mecânico pra "esta decisão de dois meses atrás ainda vale?". Ela depende de o agente abrir `dadosInconsistentes` antes de escrever. As guardas mecânicas (3 chaves, diff de não-perda, não-carimbar-em-falha) cobrem o resto.
+
+**Ordem de prioridade — por RENDIMENTO e CUSTO, não por sensibilidade do nicho.** Medido no piloto de 2026-07-30 (12 bíblias): cozinha rendeu **13,3 itens por bíblia** contra **2,9** de suplemento e beleza, porque traz ficha técnica e etiqueta INMETRO, enquanto suplemento traz tabela nutricional (densa mas curta) ou banner de marketing. Em contrapartida cozinha concentra **82% das imagens** do acervo, que é onde está o custo. Decida por esses dois números. ⚠️ **Não priorize por "nicho YMYL"** — a bíblia captura fato, e dose é fato como potência é fato. Aviso ao leitor é decisão da hora de escrever página e review, não da captura.
 
 ## Os 7 campos
 
@@ -248,6 +277,16 @@ O que fazer:
 - `descricao` = o que está errado e onde
 - `decisaoEditorial` = o que fazer no review (ex.: "usar o dado da ficha técnica e ignorar o bullet", "omitir a feature até confirmar", "mencionar ambas as versões")
 - Se não houver inconsistências, deixar array vazio. Não fabricar inconsistências onde não existem
+
+⛔ **AS TRÊS CHAVES SÃO OBRIGATÓRIAS EM TODA ENTRADA.** Gravar um item só com `flag` e `descricao`, sem `decisaoEditorial`, **faz a bíblia ser revertida no R2 em silêncio** — o `sync --apply --push` responde `⬆ enviado / 0 falhas`, o conteúdo aparece lá, e 1 a 2 minutos depois o R2 está de volta na versão anterior, sem erro em lugar nenhum. Caso real 2026-07-30: reverteu 3 vezes seguidas, sempre nas mesmas bíblias, e eu diagnostiquei como "escrita concorrente de outra pessoa" antes de achar a causa. Guarda antes de qualquer push:
+
+```python
+faltando = [x.get('flag') for x in (b.get('dadosInconsistentes') or [])
+            if isinstance(x, dict) and not x.get('decisaoEditorial')]
+assert not faltando, f'sem decisaoEditorial: {faltando}'
+```
+
+E **releia do R2 uns 60s depois do push** — o `enviado` não é prova. Se a reversão sempre atinge o MESMO conjunto de bíblias, é invalidez de schema, não concorrência.
 
 **Issues de contaminação do passo 1.5 entram aqui também**, com `flag` igual ao `kind` do detector. Exemplos pra cada tipo:
 ```json

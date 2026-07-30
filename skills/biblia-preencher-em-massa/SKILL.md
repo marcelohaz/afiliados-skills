@@ -61,7 +61,13 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 0.4. **Classificar cada uma** (decide quem entra no lote):
    - **Já preenchida** (`angulosConversao` + `pontosFortes` + `pontosFracos` todos não-vazios = coreDone) → **PULA** (idempotência).
    - **Sem dados brutos** (todos vazios: `sobreEsteItem`/`doFabricante`/`specsAmazon`/`opinioesCompradores`/`descricaoProduto`) → **EXCLUI** + lista "sem matéria-prima, capturar antes".
-   - **Contaminada** — roda `bun scripts/check-contamination.ts <ASIN>`; se `hasContamination: true` com hard issue (`cross-brand-mention`) → **EXCLUI** + lista "informações erradas, corrigir à mão (biblia-preencher individual)". Issue soft (`asin-mismatch`/`brand-mismatch`) NÃO exclui — entra e o sub-agent trata por-campo + flag em `dadosInconsistentes` (régua do biblia-preencher passo 1.5).
+   - **Contaminada** — roda `bun scripts/check-contamination.ts <ASIN>`; se `hasContamination: true` com hard issue (`cross-brand-mention`) → **EXCLUI** + lista "informações erradas, corrigir à mão (biblia-preencher individual)". ⚠️ **CORRIGIDO 2026-07-30 — a frase anterior estava errada desde que foi escrita.** Ela dizia que `asin-mismatch` e `brand-mismatch` eram soft e não excluíam. Conferido no detector **na data daquele commit** (14/06): os três tipos eram `hard` incondicionalmente, não existia issue soft nenhuma. Quem seguisse a régua esperava essas bíblias entrarem no lote, e elas não entravam.
+
+   **Comportamento real hoje:** os três tipos são `hard` e EXCLUEM, com duas saídas condicionais:
+   - **`brand-mismatch` vira soft** se `identidade.confirmadoPelaEditora === true` (canon 2026-07-26). É a saída projetada pra co-branding e submarca. Casos reais: Tapo é linha da TP-Link (o próprio `urlFabricante` é `tp-link.com/br/.../tapo`), Multi Saúde é do grupo Multilaser (`urlFabricante` é `multilaser.com.br`). **Confirme pela evidência dentro da bíblia, não por conhecimento de mundo.** Não há UI pro campo — hoje é edição manual.
+   - **`asin-mismatch` vira soft** quando o modelo bate e não há ambiguidade de voltagem (`irmaoBenigno`): é relistagem, não produto trocado. Com voltagens conflitantes ou modelo diferente, continua hard e pede recaptura.
+
+   Manter `hard` como bloqueio é a decisão certa: `brand-mismatch` PODE ser ficha capturada de outra marca, e admitir todas automaticamente deixaria spec errada ser curada como se fosse do produto.
    - **Preenchível** (pend + tem dado bruto + não-hard-contaminada) → **ENTRA no lote**.
 
 0.5. **Mostrar o plano + confirmar**: tabela (ASIN, nome, ENTRA/PULA/EXCLUI + motivo) + nº no lote + estimativa (~1-3 min/leva). Pergunta `S/N` antes do paralelo (evita disparar lote errado).
@@ -72,16 +78,50 @@ N sub-agents Opus, levas de ≤10. Cada sub-agent (Agent tool, `model: opus`, co
 - **Input + régua (FONTE ÚNICA, não resumo)**: cole no prompt SÓ os DADOS (o ASIN + o conteúdo bruto daquela bíblia / JSON). A **régua dos 7 campos NÃO é colada** — o prompt manda o sub-agent **LER `.claude/skills/biblia-preencher/SKILL.md` à risca** (estrutura de cada campo + invariantes PT-BR + armadilhas + destilação) **+ `docs/painel/_data/chavoes-por-nicho.json`** (`_genericos` + bloco do nicho) e aplicar essa régua VIVA. Resumo inline de régua = proibido (evita drift; sub-agent não invoca Skill tool, então LÊ o arquivo — mesma fonte única da `pagina-produto-criar-em-massa` e da clone).
 - **⚠ IMAGENS ANEXADAS: passar as URLs no prompt (canon 2026-07-26).** A etapa 2.5 da individual manda **ler** `conteudoBrutoFabricanteImagens` e `doFabricanteImagens` antes de gerar qualquer campo. Isso só funciona no batch se o sub-agent tiver como abrir: **cole as URLs das imagens no prompt** (elas estão no JSON que você já cola, mas explicite que ele DEVE baixá-las) e diga que ele pode `curl` + `sips -Z 1400` + `Read`. Sem isso o sub-agent gera a curadoria só com os campos de texto — exatamente o buraco que gerou 216 bíblias curadas sem ninguém abrir uma imagem. **Se a bíblia tem `imagensVerificadasEm` e a lista de imagens não mudou, avise no prompt que já foram lidas** (evita rebaixar 731 imagens a cada batch).
 - **Tarefa**: gerar os 7 campos de curadoria (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`) + (se houver ruído) o `conteudoBrutoFabricante` limpo. Destilar SÓ dos dados daquela bíblia, sem inventar, sem copiar verbatim.
+- **NÃO descreva o produto no prompt.** Passe o ASIN e mande ler a bíblia. Caso real 2026-07-30: o orquestrador escreveu "notebook VAIO" num prompt e o produto era um **tablet** — o agente leu a bíblia e não propagou, mas isso foi sorte, não desenho. Descrição de produto escrita pela mãe é contexto factual que ela redige vendo todos os N ao mesmo tempo, exatamente o vetor que o isolamento existe pra fechar.
 - **Anti-contaminação no prompt**: "Você vê SÓ este produto. NÃO mencione nenhum outro produto/marca/modelo que não seja o deste ASIN. Comece o JSON com `\"asin\": \"<ASIN>\"`."
-- **Retorna**: SÓ o JSON `{ asin, sentimentoCompradores, angulosConversao, pontosFortes, pontosFracos, dicasAcionaveis, dadosInconsistentes, observacoesAgente, conteudoBrutoFabricanteLimpo? }`. NÃO grava arquivo.
+- **⚠ RECONCILIAÇÃO, no modo `--enriquecer` (canon 2026-07-30)**: o objetivo é bíblia **mais completa E ainda confiável**, não só maior. Ponha isto no prompt, porque **isolamento não resolve** (o agente sozinho não sabe que o banner é institucional nem que aquela decisão editorial ficou obsoleta) e **não há check mecânico** pra parte semântica:
+  > "Antes de escrever, LEIA os `dadosInconsistentes` que já existem nesta bíblia. Se o rótulo/imagem **contradiz um claim curado e dá o valor certo**, CORRIJA o claim e mova o texto anterior, literal, pra `dadosInconsistentes`. Se contradiz mas **não há valor único** (ex.: duas comparações com bases diferentes, ambas verdadeiras), só registre — não invente conserto. E verifique se alguma `decisaoEditorial` existente ficou **obsoleta** com o dado novo: se ficou, marque como SUPERADA (ou ATUALIZADA, se a obsolescência for parcial) preservando o texto anterior dentro dela. Uma decisão antiga vigente que mande o contrário do conserto desfaz a correção na hora de escrever o review."
+
+  A régua completa, com os casos reais (Kimera, Lavitan, Sustagen), está na seção **Reconciliação** da `biblia-preencher/SKILL.md`, que o sub-agent já lê como fonte única.
+- **GRAVA O PRÓPRIO PAYLOAD EM ARQUIVO (canon 2026-07-30)** e devolve só um recibo curto (`{asin, arquivo, itens_por_campo}`). Caminho: `<scratchpad>/<RUN>/<ASIN>.json`, um arquivo por ASIN, nome derivado do ASIN.
+  **Isto NÃO afrouxa o guard nº2.** A proibição existe contra **race no arquivo da bíblia**, e ela continua integral: nenhum sub-agent toca `docs/biblias-v2/`, a escrita da bíblia segue serial e só na mãe, e o sync R2 não enxerga o scratchpad. O que muda é que o orquestrador **para de redigitar** o JSON pra conseguir gravá-lo — redigitação é a maior categoria de geração da mãe e é caminho de contaminação (ela vê os N produtos ao mesmo tempo).
+  Ganhos colaterais: a trava de ASIN vira **dupla** (nome do arquivo × campo do payload), e JSON inválido vira falha de parse determinística — a resposta certa passa a ser **re-disparar o sub-agent isolado**, não o orquestrador remendar curadoria à mão.
+- **ESCREVE O PRÓPRIO RELATÓRIO** em `docs/biblias-v2/.audits/<ASIN>-last.md`, no formato canônico. Mesma razão: escrever N relatórios de N produtos numa geração só é o momento de maior risco de cruzamento de contexto do pipeline. A mãe escreve zero relatório.
+- **Retorna**: SÓ o recibo. O JSON completo `{ asin, sentimentoCompradores, angulosConversao, pontosFortes, pontosFracos, dicasAcionaveis, dadosInconsistentes, observacoesAgente, conteudoBrutoFabricanteLimpo?, correcoes? }` — `correcoes` = `[{campo, antes, depois, motivo}]` pra mãe conferir a guarda (b). NÃO grava arquivo.
 
 ### Etapa 2 — Escrita (skill-mãe, SERIAL, chaveada por ASIN)
 
 Pra cada JSON retornado:
-2.1. **Trava de ASIN**: `json.asin === asin_pedido`? Não → descarta + re-dispara aquele isolado (anti-mix-up).
-2.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`. ⚠️ **Nome EXATO, sem sufixo inventado** (`-stamp`, `-voz`, `-preaudit`…): o painel só lista o que casa o regex de `docs/painel/_lib/handlers/backups.ts`, então sufixo ad-hoc faz o backup existir no disco e sumir da UI de restore. Medição 2026-07-30: 210 de 459 backups de bíblia invisíveis por esse motivo. `HHMMSS` = 6 dígitos.
-2.3. **Merge**: objeto inteiro da bíblia + substitui SÓ os 7 campos + (se veio) `conteudoBrutoFabricante` limpo + **`lastModified = new Date().toISOString()`** + **`lastFilledAt = new Date().toISOString()`** (carimbo de re-preenchimento → painel marca "auditar de novo"). NÃO toca `lastAuthor` nem resto.
-2.4. **Write** `JSON.stringify(obj, null, 2) + '\n'`.
+2.1–2.3 e 2.5 **são feitas PELO SCRIPT da 2.4**, não à mão. Ele faz trava de ASIN (dupla), backup no padrão canônico, merge dos 7 campos, bump de `lastModified`/`lastFilledAt` sem tocar `lastAuthor`, e o write. Estão descritas aqui só para você saber o que ele garante — **não as reexecute por fora**, senão você grava duas vezes e o backup da segunda já é do estado novo.
+
+2.4. **RODAR O APLICADOR VERSIONADO — não reimplementar as guardas (canon 2026-07-30).**
+
+   ```bash
+   bun scripts/biblia-aplicar.ts <dir-payloads> <dir-snapshots> [--dry-run]
+   ```
+
+   O script faz backup, aplica, carimba e roda TODAS as travas. Exit 1 se alguma bíblia reprovar, e **reprovada não é gravada**. Rode `--dry-run` antes em lote grande.
+
+   ⛔ **NÃO reescreva essas guardas inline.** Elas viviam como snippet aqui pra ser redigitado a cada execução, e em 2026-07-30 o orquestrador as reimplementou 5 vezes num dia e **errou 4**: comparou `angulosConversao` por hash do objeto (acrescentar frase lia como perda), comparou o `nome` inteiro no leak-check (reprovou 3 de 5 por "biotina"/"vitamina"), comparou contra `JSON.stringify` (aspas internas viram `\"` e o substring falha), e só preservou o que o agente declarava. **A régua aqui estava certa nas 4 vezes; o erro foi a reimplementação.** Guarda que precisa ser redigitada não é trava.
+
+   O que o script garante, e por quê:
+
+   | trava | por quê |
+   |---|---|
+   | **trava de ASIN dupla** (nome do arquivo + campo do payload + snapshot) | com payload em arquivo dá pra checar os dois; antes existia só a comparação |
+   | **(a) 3 chaves em `dadosInconsistentes`** | sem `decisaoEditorial` a bíblia é **revertida no R2 em silêncio** — o push responde `enviado / 0 falhas` e 1-2 min depois o remoto voltou. Foi diagnosticado como "escrita concorrente" antes de acharem a causa |
+   | **(b) não-perda, consciente do shape** | `angulosConversao` é `{tema, frases[]}` e compara **por frase**; o resto por item, sempre contra **texto cru** (nunca `JSON.stringify`) |
+   | **(b.2) rastro das correções declaradas** | `correcoes` é payload de transporte e **não persiste** na bíblia |
+   | **(b.3) arquivamento por construção** | o agente só declara o que percebeu que mudou; item reescrito sem declaração é arquivado em `observacoesAgente` e **contado no relatório**, em vez de virar reprovação |
+   | **leak-check por marca+modelo** | o `nome` carrega categoria e ingrediente, que aparece legitimamente no nicho todo |
+   | **(c) não carimbar quando reprovar** | carimbo em falha tira a bíblia do backlog em silêncio e, como manda toda execução futura pular, torna o erro permanente |
+   | **guarda de schema pós-write** | baseline em memória, não o backup (numa reaplicação o backup já é do estado corrompido); divergiu → restaura |
+   | **backup `{ASIN}-v2-{HHMMSS}.json`** | sufixo inventado some da UI de restore do painel (210 de 459 invisíveis por isso) |
+
+   ⚠️ **REPROVAÇÃO DE GUARDA NÃO É SINAL DE DADO RUIM ATÉ SER INVESTIGADA.** Nos 4 casos de 2026-07-30 o dado estava bom e a guarda é que estava torta. Reprovar sempre **bloqueia a escrita**, então falso positivo custa retrabalho, nunca dado corrompido. **Investigue antes de "consertar" o dado pra guarda passar** — esse conserto é que quebra a bíblia. Se a guarda estiver errada, conserte o script e re-rode.
+
+2.6. **Reler do R2 ~60s depois do push.** `enviado` **não é prova** (ver guarda (a)). Confirme que `imagensVerificadasEm` está lá de verdade. Se a reversão atingir sempre o MESMO conjunto de bíblias, é invalidez de schema, não concorrência — não saia acusando escritor concorrente, e note que `lastAuthor` é campo de CONTEÚDO (os scripts de sync nunca o tocam), então ele não identifica quem fez o upload.
 
 ### Etapa 2.5 — Post-check de leak (auto)
 

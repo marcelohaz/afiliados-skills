@@ -48,12 +48,16 @@ O `TITLE=` de cada linha é HINT: a `artigo-clonar-em-massa` tem HARD GATE que D
 1. Parse do input (formato A ou B). Extrai a lista de itens `{target, source, slug, titleHint}` + delay do timer (se houver).
 2. `git pull --rebase origin main` (evita estado stale; painel/Bárbara commitam em paralelo).
 3. Para cada item: **git-verdade** (`git log -- .../{slug}.mdx`). Classifica: `FAZER` / `PULAR (já commitado)` / `REGERAR (.mdx órfão)`.
-4. Mostra o plano (tabela item → status + estimativa). Se > 10 itens, confirma custo.
-5. Se veio timer → `ScheduleWakeup` com o delay e re-entra nesta skill no disparo (ver Timer). Senão segue F1.
+   - **RETOMADA POR ETAPA (não por artigo):** pra todo item que NÃO for `PULAR`, leia também `docs/biblias-v2/.audits/clone-runs/{target}-{slug}-last.md`. Se ele já tem etapas marcadas, **retome da primeira etapa NÃO marcada** em vez de recomeçar do zero. A git-verdade sozinha tem granularidade de ARTIGO: um item que morreu depois de 8 de 10 reviews volta a `FAZER` e joga fora 8 sub-agents Opus. O clone-log já registra etapa por etapa — só precisa ser lido. Marque no plano como `RETOMAR (etapa X)`.
+     - ⚠️ Isso só funciona porque a `artigo-clonar-em-massa` grava os reviews em `<scratchpad>/rev-{slug}.json` na Etapa 2.5 dela, antes de marcar o `check 1.1`. Se o item estiver marcado em 1.1 mas o arquivo não existir (run antigo, anterior a essa régua), **trate como `FAZER`** e recomece o item — não tente retomar em cima de estado que não está no disco.
+   - Isso também é o que torna o despertar do heartbeat seguro: sem ele, um despertar que caia no meio de um item provoca exatamente o restart que ele deveria evitar.
+4. Mostra o plano (tabela item → status + estimativa). Se > 10 itens, confirma custo. **Informe o total em horas** (~1 artigo/hora medido) e que a sessão precisa ficar aberta.
+5. **Se ZERO itens em `FAZER`/`REGERAR`/`RETOMAR`** → `ScheduleWakeup(stop: true)` e vá direto ao F2 (a fila acabou; sem isso o heartbeat reagenda pra sempre). Senão, arme o heartbeat (ver Timer) e siga F1.
 
 ### Etapa F1 — Loop sequencial (por artigo)
-Para cada item `FAZER`/`REGERAR`, EM ORDEM:
-1. `bun scripts/clone-log.ts init {target} {slug} --source={source}`.
+Para cada item `FAZER`/`REGERAR`/`RETOMAR`, EM ORDEM:
+0. **Arme o heartbeat**: `ScheduleWakeup(1800)` com o bloco da fila como `prompt` (ver Timer). É o passo 0 porque tudo depois dele depende do turno continuar vivo.
+1. `bun scripts/clone-log.ts init {target} {slug} --source={source}` (pule se estiver RETOMANDO — o log já existe e apagá-lo perde o progresso).
 2. Roda a `artigo-clonar-em-massa` para o item (Skill tool OU fallback lendo a SKILL.md). Marca cada etapa com `clone-log.ts check {target} {slug} {etapa} "{detalhe}"` conforme conclui (0, 1.1, 1.2, 1.3, 1.4, 2, 2.2, 3, 3.2, 4, 5, 6).
    - Os HARD GATES (1.4 artigo-reviews-auditar, 4 artigo-auditar → readyToLock) são obrigatórios — a `artigo-clonar-em-massa` já os roda; a fila só confirma via clone-log.
 3. ANTES do commit do item (Etapa 6 da clone): `bun scripts/clone-log.ts verify {target} {slug}` (etapas ok?) **E** `bun scripts/clone-log.ts verify-output {target} {slug}` (artefato ok?). Qualquer um exit 1 → NÃO commita; tenta resolver (auto-fix da etapa faltante) ou marca "⚠ revisar" e segue.
@@ -64,22 +68,50 @@ Para cada item `FAZER`/`REGERAR`, EM ORDEM:
 ### Etapa F2 — Relatório consolidado
 Tabela por artigo: `commit | readyToLock (via clone-log) | verify-output | comparador (exatas/near≥.8) | título`. Lista os PULADOS (já feitos) e os "⚠ revisar" (não-convergidos), com o porquê. Aponta que NADA foi deployado (aguarda aprovação humana).
 
-## Timer (ScheduleWakeup)
+## Timer + HEARTBEAT (ScheduleWakeup) — obrigatório, não opcional
 
-Se a 1ª linha trouxer `iniciar-em=Nmin` (N>0): use `ScheduleWakeup(N*60)`, passando de volta a MESMA instrução (o bloco inteiro) pra re-entrar nesta skill no disparo. No disparo, a Etapa F0 roda de novo — e a **git-verdade pula automaticamente** o que já foi feito (idempotente). Rode a fila inteira num disparo só (ou re-arme por item se quiser heartbeat). NUNCA agende deploy.
+**Atraso de início** (opcional): se a 1ª linha trouxer `iniciar-em=Nmin` (N>0), agende com `ScheduleWakeup(N*60)` passando de volta a MESMA instrução (o bloco inteiro). Teto de 3600s por salto: pra N>60, encadeie saltos até o alvo. NUNCA agende deploy.
 
-- ⚠️ **É in-session**: a sessão do Claude Code precisa ficar ABERTA durante a espera — o `ScheduleWakeup` dorme e acorda DENTRO da sessão. O painel só GEROU o comando agendado; ele não executa nada. Se o usuário fechar tudo esperando rodar sozinho, NÃO roda (deixe isso claro se ele perguntar).
-- Este é o caminho recomendado: reusa tudo, mantém relatório revisável, zero infra nova.
+**Heartbeat durante a execução** (SEMPRE, mesmo sem `iniciar-em`): ⚠️ **a fila só avança enquanto o turno do agente está vivo. Nada roda entre turnos.** Se o turno acabar por qualquer motivo — compactação de contexto, erro de ferramenta, cota, ou decisão de parar pra relatar — a fila **morre em silêncio e nunca mais volta**, a não ser que exista um despertar pendente. Por isso:
+
+1. **Arme `ScheduleWakeup(1800)` no topo de CADA item**, com o bloco da fila como `prompt`.
+2. **Arme de novo como PRIMEIRO ATO de todo turno nascido de um despertar**, antes de qualquer outra coisa. Comportamento observado (3 disparos encadeados, 2026-07-30): há **um único** despertar pendente por vez e cada chamada substitui a anterior — a resposta da ferramenta diz "Next wakeup scheduled", no singular. Ou seja, um despertar consumido no meio de um item deixa a janela aberta até você re-armar. Acordar sem re-armar = voltar ao estado sem rede.
+3. **Encerre explicitamente** em QUALQUER uma destas três saídas, sempre com `ScheduleWakeup(stop: true)`:
+   - **Fila terminou**: a F0 classificou **ZERO** itens como `FAZER`/`REGERAR`/`RETOMAR`. Chame o `stop` **antes** do relatório F2. Sem isso o despertar pendente dispara depois do fim, acha tudo commitado e reagenda pra sempre.
+   - **⚠️ O usuário pediu pra parar, pausar, ou interrompeu a fila.** Com heartbeat armado a fila volta sozinha no próximo fim de turno — inclusive depois de você só responder uma pergunta dele. Se ele mandou parar, `stop: true` **na hora**, e diga que a fila está parada e como retomar (re-colar o bloco). Sem isso você ressuscita um trabalho que ele acabou de interromper.
+   - **Aborto do pré-flight** (site inexistente, bíblia incompleta, zero itens válidos): `stop: true` junto com a mensagem de aborto.
+
+Por que 1800s e não o teto de 3600: com o resume por etapa (F0 passo 3), despertar espúrio é barato — ele só relê o clone-log e continua de onde parou. Metade do intervalo = metade do tempo morto máximo quando a queda é real.
+
+### ⚠️ CIRCUIT BREAKER — o heartbeat não pode virar loop infinito de tentativa
+
+Heartbeat sem freio é pior que sem heartbeat: se a causa da queda for **persistente** (cota estourada às 3h, git-jam, bíblia corrompida), ele te acorda a cada 30 min pra falhar de novo, a noite inteira, queimando ciclo e sem ninguém pra ver. Obrigatório:
+
+1. **Meça progresso entre despertares.** Guarde em `<scratchpad>/fila-{target}-heartbeat.json` a assinatura de progresso: `{itensCommitados, etapasMarcadasNoItemEmCurso, streakSemProgresso}`. A cada despertar, recalcule e compare com a gravada.
+2. **Sem progresso = streak++.** Progresso (um commit novo OU uma etapa nova no clone-log) zera o streak.
+3. **`streakSemProgresso >= 3`** (≈1h30 sem sair do lugar) → **`ScheduleWakeup(stop: true)`** e escreva o F2 dizendo em que item travou, qual o erro observado e que a fila está PARADA aguardando decisão humana. Não tente pra sempre.
+4. **Falha de cota dentro do turno**: se os sub-agents morrerem com erro de limite de sessão, **PARE de disparar sub-agents nesse turno** na hora (não gaste os que faltam falhando um a um), registre no clone-log e deixe o heartbeat tentar mais tarde — a cota volta sozinha, o turno não. Isso conta como "sem progresso" pro streak.
+
+Caso real que motiva: em 2026-07-30, de madrugada, o limite de sessão matou 10 sub-agents de uma vez num batch. Uma fila de 7 artigos dispara ~70-105 sub-agents Opus — bater o teto no meio da noite é cenário provável, não exótico.
+
+- ⚠️ **É in-session**: a sessão do Claude Code precisa ficar ABERTA — o `ScheduleWakeup` dorme e acorda DENTRO da sessão. O painel só GEROU o comando agendado; ele não executa nada. Se o usuário fechar tudo esperando rodar sozinho, NÃO roda (deixe isso claro se ele perguntar).
+- **Dimensione a expectativa antes de prometer:** throughput medido em run real (compraguia, 2026-07-30) foi de **41 a 55 min por artigo** (4 a 10 produtos), ou seja **~1 artigo/hora**. Fila de 10 = corrida de **~9 horas** com a sessão aberta o tempo todo. Isso NÃO cabe num turno só — é justamente por isso que o heartbeat é obrigatório, e não uma preferência. Diga o número de horas ao usuário ao imprimir o plano.
 - **NÃO** existe (por ora) execução headless disparada pelo painel (cron na VPS → `claude`). Se um dia existir, é projeto separado com os riscos de rodar sem supervisão (custo, gate travado/git-jam às 3h). Ver a análise em memória.
+
+### Caso real que originou esta régua (2026-07-30)
+Fila de 10 artigos pro compraguia. A régua antiga dizia "rode a fila inteira num disparo só (ou re-arme por item **se quiser** heartbeat)". Rodei num disparo só: itens 1 e 2 commitados às 11:15 e 12:10, e aí o turno terminou (parei pra dar um checkpoint). **A cadeia de saltos já tinha sido inteiramente consumida no início**, nenhum despertar ficou pendente, e a fila ficou parada 1h09 até o usuário perguntar. Nada falhou — não houve erro, cota nem sub-agent morto. O default documentado simplesmente não sobrevive a um fim de turno, e num tamanho de fila que a própria skill autoriza sem confirmação (10) o fim de turno é **certo**.
 
 ## Armadilhas (embutir)
 
 1. **Paralelizar artigos** — NÃO. Serial. O paralelismo é intra-artigo (reviews da Etapa 1.1).
 2. **Pular git-verdade** — re-rodar a fila re-clona o que já existe e duplica trabalho/commits. Sempre checar `git log` por item.
 3. **Fechar sem os 2 gates** — `verify` (etapas) E `verify-output` (artefato) ANTES do commit. Um sem o outro deixa passar (etapas marcadas mas .mdx quebrado, ou .mdx ok mas hard-gate pulado).
-4. **TITLE do painel** — vem no padrão do FONTE; a `artigo-clonar-em-massa` normaliza pro destino. NÃO gravar o TITLE literal.
+4. **TITLE do painel** — ⚠️ **é SEMPRE o título de um site IRMÃO, nunca da fonte.** O painel embute `data-title = g.title` (o título do gap, vindo de um peer qualquer) em `_pages/site-detail.ts`, enquanto o `pickSource` escolhe a fonte por outro critério (canônica do nicho → live-first → alfabético). Os dois são **decoupled**, então o HARD GATE da `artigo-clonar-em-massa` é obrigado a descartar o TITLE em 100% dos casos. Trate como ruído: **não grave o literal e não perca tempo avaliando**. (Caso real 2026-07-30: os 10 TITLE= da fila do compraguia eram os títulos do `escritorioecasa` verbatim, com `SOURCE=escritoriocasa`.)
 5. **Deploy** — NUNCA na fila/timer. Para em commitado+buildado.
 6. **VPS git-jam** (ref lock) — retry; não é erro fatal (o commit em `main` é a fonte da verdade).
+7. **Achar que a fila "roda sozinha"** — não roda. Entre turnos NADA acontece. Sem o heartbeat re-armado (Timer), qualquer fim de turno mata a fila em silêncio, sem erro nenhum no log. Foi assim que a fila do compraguia parou 1h09 no item 2.
+8. **Encerrar sem `ScheduleWakeup(stop: true)`** — deixa despertar pendente reagendando pra sempre depois que a fila acabou.
+9. **Retomar por artigo em vez de por etapa** — joga fora até 10 sub-agents Opus de trabalho. O clone-log tem o estado por etapa; leia-o na F0.
 
 ## Disciplina de release
 
