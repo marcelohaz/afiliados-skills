@@ -140,13 +140,43 @@ Detecção:
 
    Antes do add, confirmar com `git status --short` que os paths esperados estão modificados. Se algum sucesso reportado não está modificado, alertar (sub-agent reportou ok mas não escreveu?).
 
-   **GUARDAS MECÂNICAS — RODAR O SCRIPT, não redigitar (canon 2026-07-30):**
+   **GUARDAS MECÂNICAS — RODAR OS DOIS SCRIPTS, não redigitar (canon 2026-07-30, corrigido 2026-07-31):**
 
    ```bash
+   # 1) audit-editorial, 1× por slug — AUTORITATIVO. ⚠ ele SEMPRE sai com exit 0,
+   #    mesmo com achado: o gate tem que ler o JSON, não o exit code.
+   SITE=compraguia; FAIL=0
+   for S in {slug-1} {slug-2} ...; do
+     bun scripts/audit-editorial.ts "$SITE/$S" --json 2>/dev/null | python3 -c "
+   import json,sys
+   d=json.load(sys.stdin); bad=[f for f in (d.get('findings') or []) if f.get('sev') in ('error','warn')]
+   if bad:
+       print('  ⛔ '+d['slug'])
+       for f in bad: print(f\"       {f['sev']:5} {f['rule']:22} {f.get('field','')} · {str(f.get('detail',''))[:60]}\")
+       sys.exit(1)
+   " || FAIL=1
+   done
+   [ "$FAIL" = "0" ] && echo "  ✅ audit-editorial limpo"
+
+   # 2) guarda (cobre o mesmo núcleo + tem o modo --rede)
    bun scripts/pagina-produto-guardas.ts {site} {slug-1} {slug-2} ...
    ```
 
-   Exit 1 = **não commite**. Confere fence (`---` == 2), `fullReview` com 4 `<p>` os 4 rotulados, `shortDescription` ≤ 250 e cada `pros`/`cons` ≤ 180 de texto puro.
+   Qualquer achado = **não commite**, conserte e re-rode. Bloqueie nos DOIS níveis
+   de `sev`: `error` (fence, html-invalido, tamanho-fora-de-faixa, termo-banido,
+   yaml-invalido) **e** `warn` (travessao, no-ponto-e-virgula) — os dois `warn` são
+   proibições duras da régua com conserto determinístico (`—`→vírgula, `;`→`.`/`,`),
+   então não há motivo pra deixar passar.
+
+   **Por que os DOIS, e nesta ordem** (medido 2026-07-31, injetando cada defeito e restaurando): o `audit-editorial.ts` é **superset** da guarda para checagem por página. A guarda sozinha **deixa passar travessão, `;` em prosa e HTML literal em campo texto-puro** — testado, os três passaram limpos por ela e os três foram pegos pelo `audit-editorial`. Como o sub-agent de criação PULA o `audit-editorial` em modo batch (ver `pagina-produto-criar`, passo 11), rodar só a guarda aqui deixava esses três sem checagem alguma no caminho default (sem `--audit`). É buraco de cobertura, não redundância.
+
+   | defeito | `pagina-produto-guardas` | `audit-editorial` |
+   |---|---|---|
+   | fence, `shortDescription` >250, `pros`/`cons` >180 | ✓ | ✓ |
+   | 4 `<p>` com os 4 rótulos | ✓ | ✓ (`fullReview-prefixo-e-ancoras`) |
+   | travessão · `;` em prosa · HTML em texto-puro · termo banido · YAML inválido | **✗** | ✓ |
+
+   A guarda continua no fluxo porque tem o modo `--rede` (agregação por site com dono/live), que o `audit-editorial` não tem.
 
    Por que existem, com o caso que originou cada uma:
    - **Fence** — 1 de 6 saiu sem o `---` de fechamento (Bárbara, `melhoressuplementos/flora-nativa-b12`, 2026-06-15): o block scalar do `fullReview` correu até o EOF, o build quebrou com `asin: Required / name: Required`, e **passou silencioso porque o sub-agent reportou `ok:true`**. É o auto-check do sub-agent que não basta.
@@ -203,6 +233,14 @@ Detecção:
     **CRÍTICO — sub-agents de audit também NÃO fazem git** (mesma regra dos
     sub-agents de criação, pra evitar race condition). Cada sub-agent de
     audit recebe instrução explícita:
+    - **A camada mecânica JÁ PASSOU limpa no passo 9** (`audit-editorial.ts`
+      rodou por slug e o commit só aconteceu porque não havia `error`).
+      **NÃO re-rode `audit-editorial.ts`** — gaste o contexto no JULGAMENTO:
+      claim-vs-bible, voz-comprador implícita, voz-citação, naturalidade,
+      duplicata-cross-site, chavões, superlativo. Se desconfiar de um achado
+      mecânico específico, confira aquele campo à mão em vez de re-rodar tudo.
+      (Antes de 2026-07-31 os N sub-agents re-rodavam o script: 1 tool call e
+      uma leitura de arquivo por agente, jogadas fora.)
     - Faça o audit completo (ler .mdx + bíblia, gerar relatório com
       errors/warnings/info)
     - **Escreva o relatório `.md`** em `docs/biblias-v2/.audits/products/{site}-{slug}-last.md`
