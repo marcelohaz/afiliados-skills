@@ -543,6 +543,40 @@ A skill carrega `[{slug, title, keyword, keywordPlural}]` dos OUTROS artigos do 
   - ✅ `<a href="/epson-ecotank-l4360/">Epson EcoTank L4360</a>`
   - ❌ `<a href="/epson-ecotank-l4360/">L4360</a>` ou `<a ...>EcoTank L4360</a>` (sem marca)
 
+### ⚠ A FRASE em volta da âncora tem que fechar (canon Marcelo 2026-07-31)
+
+A keyword nomeia um **GUIA** ("melhor whey protein"), não um produto do mundo. Encaixá-la como se fosse coisa concreta produz frase que ninguém fala. Medição na rede em 2026-07-31: **64 ocorrências publicadas em 19 sites** — todas nasceram AQUI, na criação, de obedecer "âncora = keyword" sem olhar as palavras anteriores. O `audit-linkagem.ts` agora emite `anchor-frase-quebrada`, mas o certo é não produzir.
+
+- ❌ `combinar com um melhor pré-treino` · `a creatina rende mais somada a um bom melhor whey protein` · `o caminho é um melhor tablet para estudar`
+- **Superlativo não aceita artigo indefinido em PT-BR.** Nunca `um/uma/bom/boa/outro/outra/qualquer` + `melhor…`.
+
+**O singular é o alvo por razão de SEO**, não estética: é a forma que as pessoas **buscam**, e a âncora reforça essa keyword. Quando não couber, nesta ordem:
+1. **Artigo definido** — `um melhor pré-treino` → `o melhor pré-treino`, **contraindo** a preposição: `a um`→`ao`, `a uma`→`à`, `de um`→`do`, `em um`→`no`.
+2. **Moldura de destino** — `no guia de melhor pré-treino`. Imune a concordância (a keyword vira complemento, sem artigo antes).
+3. **Plural** (`os melhores pré-treinos`) — aceito pelo script, mas é válvula de escape, não primeira opção. ⚠ exige `keywordPlural` preenchida.
+4. Reescrever a frase.
+
+⚠ **Só vale pra âncora com superlativo.** Em keyword sem "melhor" (`impressora barata`), o indefinido é CORRETO: *"vale ver uma impressora barata"*.
+
+**`na/no` só se retomar um substantivo de destino na mesma frase:**
+- ✅ `tem **guia** próprio **no** melhor tablet para trabalho` (o "no" retoma *guia*)
+- ❌ `encontra as opções **na** melhor glutamina` (lê-se lugar físico)
+
+### Padrão de frase de encaminhamento (canon Marcelo 2026-07-31)
+
+Molde aprovado, com quatro traços:
+1. **Nomeia o destino pelo que ele é** — `guia`/`artigo`/`comparativo` aparece na frase.
+2. **Diz pra quem o link é** — abre segmentando o leitor (recorte, perfil, objetivo, estágio da decisão), pra ele saber se aquilo é pra ele antes de clicar. É o que separa encaminhamento útil de link protocolar.
+3. **Verbo de leitura, não de compra** — veja, vale comparar, encontra mais, tem guia próprio.
+4. **A frase existe PRA encaminhar** — não é frase sobre outro assunto com link enfiado no meio.
+
+> "Pra ver só os isolados, veja o guia de **melhor whey protein isolado**."
+> "Esse cenário de produtividade tem guia próprio no **melhor tablet para trabalho**."
+> "Se o seu objetivo é o rendimento na academia, vale comparar com o nosso guia de **melhor pré-treino** antes de decidir."
+> "Quem já pensa na marca encontra mais no guia de **melhor impressora hp**."
+
+Recomendado, não obrigatório: link integrado ao texto vale quando a frase fecha (ex. *"vale olhar os melhores Kindles"*). O que não vale é a keyword enfiada como objeto de verbo no singular.
+
 ### Slug REAL — NUNCA derivar do keyword
 
 O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `products/`), copiado verbatim. **NUNCA derive o slug do keyword** (slugify do título). Foi exatamente assim que nasceu `/impressora-boa-e-barata/` (keyword "impressora boa e barata") quando o arquivo real é `impressora-barata.mdx` → 404 em produção. Se o destino é o `homeReviewSlug` do site, o href é `/` (a home), **não** `/{homeReviewSlug}/` (esse é filtrado do getStaticPaths → 404).
@@ -562,6 +596,7 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 
 1. Cada `href="/{slug}/"` existe em `reviews/` OU `products/`? Se não → 404, **regenerar com o slug real**. Nenhum aponta pro `homeReviewSlug` (esse vira `/`).
 2. Âncora de peer == keyword do destino (singular preferido)? Âncora de produto contém a marca + é o nome completo?
+3. **A FRASE de cada link fecha?** Reler a frase INTEIRA de cada `<a>` (não só a âncora): zero `um/uma/bom/boa/outro/outra/qualquer` antes de âncora com superlativo; `na/no` só se retomar guia/artigo; o artigo concorda em gênero com o núcleo REAL da keyword. Este é o passo que faltava até 2026-07-31 e que deixou 64 frases quebradas irem pro ar.
 Se algo falhar, **corrijo o trecho antes de aplicar**. Não passa link inventado nem âncora fora da régua.
 
 Se peer list está vazia (1º artigo do site), **ZERO links de peer**.

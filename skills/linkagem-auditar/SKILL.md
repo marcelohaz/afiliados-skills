@@ -45,6 +45,27 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 - **NÃO inventa.** Findings determinísticos vêm dos scripts (verbatim). Os de julgamento (placement/oportunidade) citam o trecho real do guideContent. Link novo só com âncora = keyword real do destino + href = slug REAL (nunca derivado do keyword).
 - **Escopo fechado.** CONSERTAR (404/home-errado/âncora/Conclusão/excesso>4) + ADICIONAR links novos contextuais (incl. reforçar órfão/sublinkado). `slug-vs-keyword` é só INFO (convenção, não se conserta — ver Critérios). **NÃO faz hub-and-spoke** (linkar produto órfão é decisão editorial à parte). **NÃO mexe em tag Amazon** (isso é `scripts/fill-affiliate-tag.ts`).
 - **Régua de linkagem canônica** (igual artigo-guia-escrever/auditar): âncora de peer = keyword do destino (singular preferido); âncora de produto = nome completo COM marca; href = slug REAL; peer/home links contextuais e NUNCA na Conclusão (produto/Amazon na Conclusão = OK); home linkada via `href="/"` (nunca `/{homeReviewSlug}/`).
+- **A FRASE em volta da âncora TEM que fechar (canon Marcelo 2026-07-31).** A keyword nomeia um **GUIA** ("melhor whey protein"), não um produto do mundo. Encaixá-la como se fosse coisa concreta produz frase que ninguém fala: *"combinar com **um melhor pré-treino**"*. Medição na rede: **64 ocorrências publicadas em 19 sites**, todas passando verde nos checks antigos — o defeito nasce de OBEDECER a régua de âncora=keyword sem olhar as palavras anteriores. O `audit-linkagem.ts` emite `anchor-frase-quebrada`.
+  - **Por que o singular é o alvo (razão de SEO, não estética):** é a forma que as pessoas **buscam**, e a âncora do link interno reforça essa keyword. Trocar pro plural por conveniência gramatical joga fora esse sinal. Então, quando o singular não couber na frase, resolva **nesta ordem**:
+    1. **Artigo definido** — `um melhor pré-treino` → `o melhor pré-treino`, **contraindo** a preposição que vier antes: `a um`→`ao`, `a uma`→`à`, `de um`→`do`, `em um`→`no`. Resolve a maioria e mantém o singular.
+    2. **Moldura de destino** — `no guia de melhor pré-treino`, `o comparativo de melhor pré-treino`. Também mantém o singular, e é imune a concordância (a keyword vira complemento, sem artigo antes).
+    3. **Plural** — `os melhores pré-treinos`. O script aceita (compara com `keyword` **ou** `keywordPlural`). Válvula de escape, não primeira opção. ⚠ 9 artigos da rede não têm `keywordPlural` preenchido; nesses, não está disponível.
+    4. **Reescrever a frase.** Último recurso.
+  - **Nunca** deixar `um/uma/bom/boa/outro/outra/qualquer` + superlativo.
+  - ⚠ **Só vale pra âncora com superlativo.** Em keyword sem "melhor" (`impressora barata`), o indefinido é CORRETO: *"vale ver uma impressora barata"*. O script já restringe.
+- **Padrão de frase de encaminhamento (canon Marcelo 2026-07-31).** As frases que o Marcelo aprovou têm quatro traços — use como molde ao ADICIONAR link ou ao reescrever um quebrado:
+  1. **Nomeia o destino pelo que ele é**: a palavra `guia`/`artigo`/`comparativo` aparece. Não finge que a keyword é produto.
+  2. **Diz pra quem o link é** — abre segmentando o leitor (recorte, perfil, objetivo, estágio da decisão), pra ele saber se aquilo é pra ele antes de clicar. É o que separa encaminhamento útil de link protocolar.
+  3. **Verbo de leitura, não de compra**: veja, vale comparar, encontra mais, tem guia próprio.
+  4. **A frase existe PRA fazer o encaminhamento** — não é uma frase sobre outro assunto que ganhou link enfiado no meio.
+
+  Exemplos canônicos (reais, aprovados 2026-07-31):
+  > "Pra ver só os isolados, veja o guia de **melhor whey protein isolado**."
+  > "Esse cenário de produtividade tem guia próprio no **melhor tablet para trabalho**."
+  > "Se o seu objetivo é o rendimento na academia, vale comparar com o nosso guia de **melhor pré-treino** antes de decidir."
+  > "Quem já pensa na marca encontra mais no guia de **melhor impressora hp**."
+
+  A moldura é o **padrão recomendado, não obrigatório**: link integrado ao texto continua válido quando passa nos checks de frase (ex.: *"vale olhar os melhores Kindles"*). O que não passa é a keyword enfiada como objeto de verbo no singular.
 - **Régua de QUANTIDADE (canon Marcelo 2026-06-09): 2 mínimo · ~3 ideal · 4 máximo** peers DISTINTOS de saída, sempre **contextuais e naturais** (nunca decorativos). Não linkar o mesmo peer 2× no mesmo artigo. O **HUB** (artigo-cabeça: `homeReviewSlug` ou frontmatter `pillar: true`) é **isento do teto de 4** — ele linka todos os filhos (hub-and-spoke ideal). O script emite `linkagem-fraca` (<2) e `linkagem-excesso` (>4 não-hub); a régua "~3 ideal" é alvo de julgamento (mire 3 ao ADICIONAR), não um flag por-artigo.
 - **Sem travessão.** Português brasileiro editorial.
 
@@ -73,12 +94,19 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 
 5. **Camada de julgamento LLM** (o valor que script não dá). O JSON do `audit-linkagem.ts` traz `lockedArticles[]` (fontes travadas) e `pillarArticles[]` (hubs isentos do teto) — use os dois. Read os `.mdx` dos artigos com links peer/home + os com FAQ/seções relevantes. Avalie:
    - **Placement genuinamente contextual?** Para cada link peer/home existente, o parágrafo onde ele está fala MESMO do tema do destino? "Fora da Conclusão" é necessário mas não suficiente. Sinalize os fracos com spot melhor. **Régua de spot (canon Marcelo): o link cai na MELHOR posição do artigo pro tema** — ex: link pro "melhor impressora para fotos" entra no parágrafo/H3 que fala de fotografia, não num lugar genérico.
+   - **REMOVER link que não faz sentido ali (canon Marcelo 2026-07-31).** Até 2026-07-31 a skill só sabia **consertar** (404/âncora/home) e **adicionar** — não havia NENHUM gatilho que produzisse "esse link não cabe aqui, tira". Consequência real: na 1ª passada do compraguia entreguei "0 erros · 0 avisos" com três links tablet→impressora vivos, porque nenhum check os questionava; só foram removidos quando o Marcelo apontou. Agora: link cujo parágrafo **não trata do tema do destino** é candidato a REMOÇÃO (não só a mover), **preservando a prosa** — tira o `<a>` e reescreve a frase pra ela continuar fazendo sentido sem o link.
+     - **⚠ GUARDA DE GRAFO, obrigatória antes de propor remoção:** remover `A→B` derruba `inboundPeers[B]` de N pra N-1. Confira que **N-1 ≥ 2**; se não, proponha o link substituto (de preferência intra-cluster) **junto** com a remoção, no mesmo lote. Sem isso a remoção cria órfão/sublinkado e a régua E é violada pelo próprio fix. Caso real (compraguia 2026-07-31): removi 3 links e repus 1 intra-cluster pra não derrubar o inbound do destino.
+     - Remoção é **julgamento** → propor→aprovar, nunca aplicar direto.
    - **Oportunidades de links NOVOS.** Há FAQ/H3/seção que toca no tema de um peer ainda não-linkado (ou pouco-linkado), onde um link cairia natural? Liste só as genuinamente naturais — NUNCA force link decorativo. Para cada: artigo origem, peer destino, **spot exato** (cite a frase âncora), **âncora sugerida** (= keyword singular do destino), e o **Edit proposto** (frase antes → depois).
    - **`contentLocked`-aware (régua D):** se a FONTE natural de um link novo está em `lockedArticles[]`, NÃO proponha editá-la (artigo travado = SEO estável). Em vez disso **rerroteie**: ache outra fonte NÃO-travada que cubra o mesmo tema do destino, ou registre a oportunidade como "bloqueada (fonte travada — destravar p/ aplicar)" sem aplicar. Nunca edite travado sem destrave explícito do user.
    - **Balanço do grafo — `sublinkado` é PADRÃO, não opcional (régua E, canon 2026-06-09).** Todo artigo deve receber **≥2 inbounds**. `orfao` (0 inbound) e `sublinkado` (1 inbound) são metas de QUALIDADE da skill, no mesmo nível dos consertos — não trate como "info ignorável". Para cada órfão/sublinkado, proponha 1-2 links contextuais de fontes que tocam o tema (respeitando contextualidade e o teto de 4 da fonte). Caso real: na 1ª passada do impressoraideal tratei sublinkado como opcional e só consertei defeitos — a barra de qualidade certa é reforçar autoridade de todo nó sublinkado.
      - **⚠ Delta de inbound via `inboundPeers` (canon 2026-07-04) — o link pra fixar sublinkado/órfão TEM que ser INBOUND ao nó.** Consumir `inboundPeers[slug]` do `--json` (passo 3) pra raciocinar sobre o grafo, NÃO recomputar na mão. Um link `A→B` proposto leva `inboundPeers[B]` de N pra N+1 (aumenta o inbound de **B**, o DESTINO). Logo: pra tirar `X` de sublinkado/órfão, a fonte é OUTRO artigo e o **destino é `X`** (`A→X`) — um link `X→A` (saindo de X) NÃO ajuda o inbound de X. Ao propor, confirme que `inboundPeers[X].length + (novos links inbound propostos pra X) ≥ 2`, e que a fonte `A` escolhida ainda NÃO está em `inboundPeers[X]` (senão é `peer-repetido`, não ganha inbound distinto). No relatório, anote pra cada nó tocado o inbound projetado (ex: `melhor-ipad: 1 → 2 ✓`). Causa-raiz (2026-07-04): sem esse delta explícito, rotulei um link OUTBOUND como se resolvesse o sublinkado do próprio artigo-fonte — só a re-auditoria do passo 12 pegou. O `inboundPeers` torna o delta verificável ANTES de aplicar.
 
 6. **Montar o relatório** (formato abaixo) com TODOS os fixes numerados (consertos + links novos), cada um com o diff `ANTES → DEPOIS`, marcando quais são **óbvios/determinísticos** (aplicam direto) e quais são **julgamento** (esperam aprovação). **Imprime inline.**
+
+   **⚠ A seção `## 🔗 Placement avaliado` é OBRIGATÓRIA (canon Marcelo 2026-07-31)** — sem ela o relatório está INCOMPLETO, mesmo que tudo mais esteja verde. Motivo: a avaliação de placement (passo 5) era a única camada da skill sem nenhum artefato de saída, então dava pra pular em silêncio e o relatório saía "completo" do mesmo jeito. Foi exatamente o que aconteceu no compraguia (2026-07-31).
+   - **Uma passada por ARTIGO, não por link.** Pergunta: *"algum link deste guide está num parágrafo que não trata do tema do destino?"*. São ~N perguntas (N = artigos) em vez de uma por link — dá pra fazer de verdade, e o output é curto. Exigir veredito link a link geraria 60+ linhas de "✓ ok" por site, que vira carimbo, não análise.
+   - **O que imprimir:** os artigos onde algo falhou (com o parágrafo citado e o encaminhamento: remover / mover / reescrever a frase). Se nada falhou, uma linha só: `N artigos avaliados, nenhum link fora de contexto`. **O que não pode é a seção não existir.**
 
 7. **Gravar o marcador de auditoria** (registra QUANDO auditou — roda SEMPRE, logo após o relatório, mesmo que o user rejeite tudo depois; auditar é o evento):
    ```bash
@@ -106,6 +134,8 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
     grep -nE '\b(das|dos|nas|nos|aos|pelas|pelos) +<a [^>]*>\s*(melhor|impressora|tablet|opção)\b' sites/{site}/src/content/reviews/*.mdx
     ```
     Qualquer match = artigo plural regendo âncora singular → corrigir o artigo (`das→da` etc). **O `\b` é OBRIGATÓRIO:** sem ele, `melhor` casa `melhores` e `tablet` casa `tablets`, e "das melhores creatinas"/"nos tablets Lenovo" (plural+plural, CORRETO) viram falso-positivo. Com `\b`, só pega `das melhor` / `nos tablet` singular. Esse check pega a regressão clássica do anchor-fix isolado. Sem matches → ok.
+
+    **Concordância de GÊNERO (`o melhor impressora`, `a melhor tablet`) fica FORA do determinístico — de propósito (canon 2026-07-31).** Tentei derivar o gênero do `title` do destino ("as N melhores" = feminino) e **medi 17% de acerto**: os títulos da rede usam `As 11 Melhores Whey Protein` e `As N Melhores Ômega 3` concordando com substantivo ELÍPTICO ("as melhores [opções]"), não com o núcleo da keyword. Resultado: `o melhor whey protein` e `o melhor ômega 3`, que estão **CORRETOS**, vinham como erro. Como esta skill aplica fix determinístico **sem aprovação**, um check assim viraria edição errada automática. Então: gênero é **julgamento** — ao reler a frase inteira do `<a>` tocado (passo 10), confira o artigo com o núcleo REAL da keyword, não com o título.
 
 12. **Re-rodar `bun scripts/audit-linkagem.ts {site}`** pós-fix pra confirmar que os findings aprovados sumiram e nada regrediu (cada artigo 2-4 peers — hub isento; 0 `linkagem-excesso`; 0 órfãos e idealmente 0 sublinkados; 0 na Conclusão; 0 broken/home-errado).
 
@@ -147,13 +177,20 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
   DEPOIS: <p>...frase-alvo. {nova frase com <a href="/peer/">keyword</a>}.</p>
   ```
 
+## 🔗 Placement avaliado  ← SEÇÃO OBRIGATÓRIA, nunca omitir
+{N} artigos avaliados. Links fora de contexto: {M}
+### N. {article}: link → {peer} no parágrafo "{primeiras palavras do <p>}"
+- **Por quê não cabe**: {1 frase — o parágrafo fala de X, o destino é sobre Y}
+- **Encaminhamento**: remover (inbound de {peer}: {N}→{N-1} {✓ ou ⚠ repor}) · mover pra {seção} · reescrever a frase
+{ou, se nada falhou: "{N} artigos avaliados, nenhum link fora de contexto."}
+
 ## Como aplicar
 - **"aplica tudo"** · **"aplica 1,3"** (por número) · **"aplica consertos"** (só os 🔴) · **"rejeita 2"** · **"refaz 1"**
 ```
 
 ## Critérios (referência — vêm dos scripts)
 
-- `link-quebrado` (error), `link-home-errado` (error), `linkagem-fraca` (warn, <2 peers distintos de saída), `linkagem-excesso` (warn, >4 peers distintos num artigo NÃO-hub — enxugar pros 3-4 contextuais ou marcar `pillar:true`), `peer-repetido` (warn), `anchor-nao-keyword` (warn), `anchor-produto-sem-nome` (warn), `slug-vs-keyword` (**info** — convenção comum na rede, ~23% dos artigos; o 404 real já é coberto por link-quebrado/link-home-errado; NÃO é defeito a consertar), `peer-link-na-conclusao` (info), `hub-and-spoke-incompleto` (info, **1 linha-resumo colapsada** — **fora de escopo desta skill**), `orfao` (warn)/`sublinkado` (info, mas **acionável** — ver régua E no passo 5).
+- `link-quebrado` (error), `link-home-errado` (error), `linkagem-fraca` (warn, <2 peers distintos de saída), `linkagem-excesso` (warn, >4 peers distintos num artigo NÃO-hub — enxugar pros 3-4 contextuais ou marcar `pillar:true`), `peer-repetido` (warn), `anchor-nao-keyword` (warn), `anchor-frase-quebrada` (**error** = indefinido/qualificador antes de âncora com superlativo, ex. "um melhor pré-treino" — fix: artigo definido contraindo a preposição, ver Invariantes; **warn** = "na/no" que não retoma guia/artigo, ou "qualquer" + superlativo, que pedem reescrita), `anchor-produto-sem-nome` (warn), `slug-vs-keyword` (**info** — convenção comum na rede, ~23% dos artigos; o 404 real já é coberto por link-quebrado/link-home-errado; NÃO é defeito a consertar), `peer-link-na-conclusao` (info), `hub-and-spoke-incompleto` (info, **1 linha-resumo colapsada** — **fora de escopo desta skill**), `orfao` (warn)/`sublinkado` (info, mas **acionável** — ver régua E no passo 5).
 
 ## Armadilhas
 
