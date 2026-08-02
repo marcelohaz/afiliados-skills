@@ -19,6 +19,7 @@ Skills editoriais do **ProjetoAfiliados** (sites de review/afiliados Amazon Bras
 | `artigo-guia-auditar` | Audita o `guideContent` e corrige CIRÚRGICO por seção (sem rewrite) — contraparte do `artigo-reviews-auditar` pro guia. Pega produto do lineup fora do guia, link interno quebrado, estrutura, etc. |
 | `artigo-auditar` | Auditoria read-only do artigo inteiro (categorias editoriais + checks estruturais + `readyToLock`) |
 | `categoria-descricao-escrever` | Escreve a descrição de uma categoria do site |
+| `artigo-lineup-montar` | Escolhe QUAIS produtos entram num artigo comparativo, em que ordem e com que papel — roda ANTES do painel. Consulta cega isolada vira rubrica pré-registrada, lê a página inteira de todos os produtos da categoria, e imprime um CHECKPOINT DE EXCLUSÕES antes de montar. Audita o próprio lineup num sub-agent isolado. Com `--aplicar`, cria o artigo no painel |
 | `artigo-clonar-em-massa` | Clona um artigo pra outro site (assembler determinístico + auditorias por etapa) |
 
 ## Instalação
@@ -37,7 +38,7 @@ Ou, se já tem o repo clonado localmente:
 /plugin install afiliados-skills@afiliados-skills
 ```
 
-Depois reinicia o Claude Code (Cmd+Q + abrir). As 14 skills viram disponíveis no `/`.
+Depois reinicia o Claude Code (Cmd+Q + abrir). As skills viram disponíveis no `/`.
 
 Pra atualizar quando sair release nova:
 
