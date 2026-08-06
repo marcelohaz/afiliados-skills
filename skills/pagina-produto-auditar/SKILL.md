@@ -537,6 +537,28 @@ A flag `aplicativo-e-bass-plus-ausentes-do-anuncio` proíbe a promessa, e o `pon
 mesma bíblia endossa o recurso — o redator seguiu o campo que endossa, três vezes. Consertar as
 três páginas calaria o sintoma e garantiria a quarta.
 
+#### Ao reportar (ou consertar) a bíblia, aponte o CLAIM, não o campo
+
+**Um claim mora em vários campos curados.** O audit só enxerga o campo que a página copiou,
+então reportar "conserte `pontosFortes[5]`" entrega um conserto pela metade.
+
+Ainda no mesmo 2026-08-06, a bíblia `B0FK1JG2TT` foi corrigida no `pontosFortes[5]` e a página
+seguinte saiu limpa. Mas a promessa do app continuava viva em `angulosConversao[2].frases[2]` e
+em duas `dicasAcionaveis` — o vetor seguia armado para o 6º site.
+
+Ao apontar a raiz, **varra os campos curados atrás do mesmo claim** e liste todos no relatório:
+
+```
+pontosFortes · pontosFracos · angulosConversao[].frases[] · dicasAcionaveis
+sentimentoCompradores[].resumo · observacoesAgente
+```
+
+⚠ **Busca por termo produz falso positivo e falso negativo.** No caso acima, um grep por
+`aplicativo|ajust|control` marcou o próprio conserto já aplicado (por conter "controlar"), marcou
+o texto da flag que **proíbe** o claim, e deixou passar uma `dicasAcionaveis` que dizia
+"desligue … pelo aplicativo" (o grep procurava "desligar"). Use a busca para **estreitar**, depois
+leia os campos. O que conta é o campo afirmar o claim, não conter a palavra.
+
 ### Como aplicar, quando aplicar
 
 Copie a mecânica da `biblia-auditar-em-massa`, não invente outra:

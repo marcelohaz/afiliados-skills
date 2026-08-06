@@ -302,6 +302,29 @@ Detecção:
     Reprovou? **Reverta aquela página do backup** que o sub-agent criou e mova o
     achado pra REPORTADO. Conserto que não passa na guarda não vale o risco.
 
+    ⚠️ **Antes de rodar as guardas, reconcilie o `git status` contra os `corrigidos[]`
+    reportados — nos DOIS sentidos.** O passo 9 já cobre "reportou e não escreveu";
+    aqui o que morde é o inverso:
+
+    ```bash
+    git status --short sites/{site}/src/content/products/    # modificados de FATO
+    ```
+
+    - **modificado E reportado** → normal, entra no 12b.
+    - **reportado E não modificado** → sub-agent alucinou o conserto. Investigue.
+    - **modificado E NÃO reportado** → ⛔ **edição órfã.** Trate como suspeita: o
+      agente editou e não chegou a validar. Rode as guardas nela **e** confira a
+      edição contra a bíblia à mão antes de commitar.
+
+    Caso real 2026-08-06 (`somprofissional/lg-xboom-grab`): o sub-agent de auditoria
+    morreu por erro de API **depois** do `Edit` e **antes** de re-auditar e de escrever
+    o relatório. Deixou o `.mdx` modificado, sem relatório e sem re-checagem — e o
+    retorno dele foi um erro, não um `corrigidos[]`. Só apareceu no `git status`. A
+    edição estava certa (era um RESTAURAR com texto literal da bíblia), mas isso foi
+    **sorte**: nada no fluxo garantia. Quando a auditoria de uma página morre assim,
+    termine-a **inline** em vez de re-disparar o sub-agent — o `Edit` dele já está no
+    disco, e um agente novo re-audita um arquivo que já mudou sem saber disso.
+
     **12c.** Skill mãe faz **DOIS commits separados**, nesta ordem:
     1. os `.mdx` consertados (se houver), com a mensagem dizendo o que foi trocado
     2. os `.md` de audit

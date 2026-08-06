@@ -19,8 +19,21 @@ por serem fato (rendimento/dpi/ppm) — NÃO contam como duplicata acionável (v
 à toa é contorção). Por isso `duplicata_acionavel` se baseia SÓ em prosa; colisões de
 spec são reportadas à parte (`specs_identicas`) como informação.
 
-Saída: JSON. Exit 1 se houver duplicata de PROSA acionável (prosa_exatas > 0 OU
-prosa_near_0.8 > 0), pra a auditoria decidir flaggar 🟡.
+⚠ FICHA DENTRO DE PROSA (corrigido 2026-08-06): a separação acima era derrotada por
+ONDE o redator põe a enumeração. A mesma frase — "woofer de 80 x 45 mm, tweeter de
+cúpula de 16 mm da Peerless e dois radiadores passivos" — era classificada como spec
+(não acionável) quando morava em `specs[].value` e como prosa AUTORAL (acionável)
+quando morava num bullet de `pros`. Medido no lote de 06/08: `acionavel` disparou em
+praticamente todo par comparado, e o top hit era sempre essa recitação de ficha —
+zero foram acionados de fato. Um sinal que sempre acende não carrega informação.
+
+Agora frases com >=3 medidas (número + unidade) entram no balde `prosa_ficha_*` e
+NÃO acionam. Elas continuam no JSON, com lista própria: o objetivo é tirá-las do
+gate, não escondê-las. Duas pessoas destilando a mesma ficha convergem na mesma
+enumeração porque ela é fato, exatamente como acontece em `specs[].value`.
+
+Saída: JSON. Exit 1 se houver duplicata de PROSA AUTORAL acionável
+(prosa_exatas > 0 OU prosa_near_0.8 > 0), pra a auditoria decidir flaggar 🟡.
 """
 import sys, re, json, glob, os
 
@@ -105,6 +118,32 @@ def shingles(parts, n):
     return set(tuple(w[i:i+n]) for i in range(len(w) - n + 1))
 
 
+# número + unidade: "80 x 45 mm", "16 mm", "20 W", "4.500 mAh", "1,37 kg", "12 h", "50%", '6,5"'
+# ⚠ `%` e `"` ficam FORA do grupo com `\b`: são não-palavra, então um `\b` depois deles
+# falha sempre que vier vírgula/ponto/fim ("50%," não casava). Bug pego no teste de
+# calibração — mantenha os dois blocos separados.
+MEDIDA_RE = re.compile(
+    r'\d+(?:[.,]\d+)?\s*'
+    r'(?:(?:mm|cm|m|km|kg|g|mah|wh|w|khz|hz|db|ms|min|h|horas?|pol(?:egadas?)?|v|gb|tb|mb|dpi|ppm|rpm)\b'
+    r'|[%"])',
+    re.I,
+)
+
+
+def is_ficha(s):
+    """Enumeração de ficha técnica: >=3 medidas na mesma frase.
+
+    Corta a recitação de spec que mora em bullet de pros/cons sem cortar prosa
+    autoral. Calibrado no lote 06/08 do lg-xboom-grab:
+      ficha    "woofer de 80 x 45 mm, tweeter ... 16 mm ... saída de 20 W"      (3+)
+      autoral  "Resistente e fácil de carregar pra quem ouve música fora"       (0)
+      autoral  "não existe estéreo numa unidade só"                             (0)
+      autoral  "IP67 cobre poeira e imersão de até 1 metro por 30 minutos"      (2)
+    O limiar 3 é o que separa enumerar ficha de citar um número dentro de uma frase.
+    """
+    return len(MEDIDA_RE.findall(s)) >= 3
+
+
 def collisions(parts_t, parts_s):
     """Frases idênticas (>=6 palavras) e near-dup (jaccard>=0.6) entre dois conjuntos."""
     st, ss = sentences(parts_t), sentences(parts_s)
@@ -134,21 +173,32 @@ def compare(target_fm, peer_fm):
         A, B = shingles(pt_prose, n), shingles(ps_prose, n)
         ov[n] = round(len(A & B) / max(1, len(A | B)) * 100, 1)
 
-    prose_near_08 = sum(1 for s, _, _ in prose_near if s >= 0.8)
+    # separa recitação de ficha da prosa autoral — só a autoral aciona (ver docstring)
+    aut_exatas = [s for s in prose_exatas if not is_ficha(s)]
+    fic_exatas = [s for s in prose_exatas if is_ficha(s)]
+    aut_near = [(s, a, b) for s, a, b in prose_near if not is_ficha(a)]
+    fic_near = [(s, a, b) for s, a, b in prose_near if is_ficha(a)]
+
+    aut_near_08 = sum(1 for s, _, _ in aut_near if s >= 0.8)
+    fic_near_08 = sum(1 for s, _, _ in fic_near if s >= 0.8)
     return {
-        # PROSA — o que conta pra acionável
-        "prosa_exatas": len(prose_exatas),
-        "prosa_near_0.8": prose_near_08,
-        "prosa_near_0.6": len(prose_near),
+        # PROSA AUTORAL — o que conta pra acionável
+        "prosa_exatas": len(aut_exatas),
+        "prosa_near_0.8": aut_near_08,
+        "prosa_near_0.6": len(aut_near),
         "overlap_prosa_5gram_pct": ov[5],
         "overlap_prosa_8gram_pct": ov[8],
-        "prosa_exatas_lista": prose_exatas[:30],
-        "prosa_near_lista": [{"jaccard": s, "a": a[:160], "b": b[:160]} for s, a, b in prose_near[:30]],
+        "prosa_exatas_lista": aut_exatas[:30],
+        "prosa_near_lista": [{"jaccard": s, "a": a[:160], "b": b[:160]} for s, a, b in aut_near[:30]],
+        # FICHA dentro de pros/cons — reportada, NÃO aciona (não é escondida)
+        "prosa_ficha_exatas": len(fic_exatas),
+        "prosa_ficha_near_0.8": fic_near_08,
+        "prosa_ficha_lista": (fic_exatas + [a for s, a, _ in fic_near if s >= 0.8])[:20],
         # SPECS — info, não acionável
         "specs_identicas": len(spec_exatas) + sum(1 for s, _, _ in spec_near if s >= 0.8),
         "specs_identicas_lista": (spec_exatas + [a for s, a, _ in spec_near if s >= 0.8])[:20],
-        # acionável = SÓ prosa
-        "acionavel": len(prose_exatas) > 0 or prose_near_08 > 0,
+        # acionável = SÓ prosa AUTORAL
+        "acionavel": len(aut_exatas) > 0 or aut_near_08 > 0,
     }
 
 
