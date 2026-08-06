@@ -15,6 +15,10 @@ Aceita 2 formatos no $ARGUMENTS, com flag opcional `--audit`:
 
 **Flag opcional `--audit`** (default OFF — opt-in pra qualidade extra):
 - `melhorpretreino --audit` → após criar páginas, roda `pagina-produto-auditar` em paralelo pra cada uma
+- ⚠️ **`--audit` não é mais só relatório.** Desde 2026-08-06 ele **conserta o erro de FATO** que
+  passa no teste da frase nova (apagar termo que a bíblia não tem, trocar por como ela chama,
+  restaurar qualificador que ela exige) e **reporta** o resto. **`warn` continua report-only**.
+  Ver passo 12 e a seção homônima da `pagina-produto-auditar`.
 - Sem a flag, skill batch tem comportamento idêntico à skill individual (não audita automaticamente)
 - Adicione `--audit` quando: site novo importante, qualidade-crítico, primeiro batch
 - Pule `--audit` quando: re-rodar, batch rotineiro, vai auditar separado depois
@@ -246,19 +250,65 @@ Detecção:
       uma leitura de arquivo por agente, jogadas fora.)
     - Faça o audit completo (ler .mdx + bíblia, gerar relatório com
       errors/warnings/info)
-    - **Escreva o relatório `.md`** em `docs/biblias-v2/.audits/products/{site}-{slug}-last.md`
+    - **CONSERTE o que passa no TESTE DA FRASE NOVA** (seção homônima da
+      `pagina-produto-auditar`, canon Marcelo 2026-08-06). A pergunta é uma só:
+      **dá pra consertar sem escrever nenhuma frase nova?** Apagar um termo que
+      a bíblia não tem, trocar por como a bíblia chama, restaurar um qualificador
+      que ela exige → **aplica**. Se o substituto for redação sua → **reporta**.
+      Backup antes, `Edit` cirúrgico, re-audita o que tocou, e **reverte do
+      backup** se não convergir em ≤3 tentativas. ⚠️ **`warn` NUNCA aplica**,
+      nem parecendo óbvio: frase colada na página irmã, coloquialismo acima do
+      teto e redundância bullet↔parágrafo são report-only, sem exceção
+      (canon 2026-07-10, que esta régua refina e não revoga). ⚠️ Se a página
+      contradiz a `decisaoEditorial` **mas obedece outro campo da mesma bíblia**,
+      NÃO toque na página — o alvo é a bíblia, e o relatório aponta pra lá.
+    - **Escreva o relatório `.md`** em `docs/biblias-v2/.audits/products/{site}-{slug}-last.md`,
+      distinguindo **CORRIGIDO** (com o diff) de **REPORTADO**
     - **NÃO faça** `git add`, `git commit`, `git push`, nem
       `painel-vps-pull.sh` — skill mãe controla isso
-    - Retorne resumo estruturado: `{ok: true, slug, severity: 'ok'|'warn'|'error', issues: [...]}`
+    - Retorne: `{ok: true, slug, severity, corrigidos: [{campo, de, para}], issues: [...]}`
 
     Skill mãe agrega:
     - **Páginas SEM issues críticos**: aprovadas
     - **Páginas com warnings**: lista no report final pra user revisar
-    - **Páginas com errors críticos**: alerta que precisam revisão individual via `pagina-produto-criar` em modo rewrite
+    - **Páginas com errors críticos que sobraram** (os que não passaram no teste):
+      alerta que precisam revisão individual via `pagina-produto-criar` em modo rewrite
 
-    Após agregar, skill mãe faz **1 commit lote dos `.md` de audit**
-    (`git add docs/biblias-v2/.audits/products/{site}-{slug}-last.md ...` —
-    lista específica, não glob) + push + VPS pull.
+    **12b. RE-RODAR AS DUAS GUARDAS nas páginas que o audit CONSERTOU (obrigatório).**
+
+    O conserto entra **depois** do passo 9, ou seja, fora de qualquer guarda. Sem
+    este passo, um `Edit` pode estourar o cap de tamanho, quebrar o fence ou
+    deixar o `fullReview` fora da forma canônica e **ir pro commit sem ninguém
+    olhar** — exatamente o buraco que as guardas existem pra fechar.
+
+    ```bash
+    # SÓ os slugs que voltaram com corrigidos[] não-vazio
+    SITE={site}; FAIL=0
+    for S in {slugs-corrigidos}; do
+      bun scripts/audit-editorial.ts "$SITE/$S" --json 2>/dev/null | python3 -c "
+    import json,sys
+    raw=sys.stdin.read().strip()
+    if not raw.startswith('{'): print('  ⛔ $S sem JSON →',raw[:80]); sys.exit(1)
+    d=json.loads(raw); bad=[f for f in (d.get('findings') or []) if f.get('sev') in ('error','warn')]
+    if bad:
+        print('  ⛔ '+d['slug'])
+        for f in bad: print(f\"       {f['sev']:5} {f['rule']:22} {str(f.get('detail',''))[:60]}\")
+        sys.exit(1)
+    " || FAIL=1
+    done
+    bun scripts/pagina-produto-guardas.ts {site} {slugs-corrigidos}
+    ```
+
+    Reprovou? **Reverta aquela página do backup** que o sub-agent criou e mova o
+    achado pra REPORTADO. Conserto que não passa na guarda não vale o risco.
+
+    **12c.** Skill mãe faz **DOIS commits separados**, nesta ordem:
+    1. os `.mdx` consertados (se houver), com a mensagem dizendo o que foi trocado
+    2. os `.md` de audit
+    Lista específica em cada `git add`, nunca glob. Depois push + VPS pull.
+
+    Separar importa: o commit de conteúdo tem que ser legível sozinho no
+    histórico e revertível sem levar os relatórios junto.
 
     Sem `--audit`, pula este passo inteiro. User pode rodar
     `pagina-produto-auditar` separado quando quiser (1 produto por vez
@@ -297,7 +347,14 @@ Detecção:
     PÁGINAS CRIADAS ({N}/{total}):
       ✓ {slug-1} → audit OK
       ✓ {slug-2} → audit: 1 warning (link Amazon com tag faltando)
-      ⚠ {slug-3} → audit: 2 errors → revisar via pagina-produto-criar
+      🔧 {slug-3} → 2 fatos CORRIGIDOS + 1 warning
+      ⚠ {slug-4} → audit: 1 error que exige decisão → revisar via pagina-produto-criar
+
+    CORRIGIDO NA HORA ({F}) — passou no teste da frase nova:
+      {slug-3} · specs[3]  "0,5ms MPRT (1ms GtG)" → "0,5ms MPRT"
+                           (o GtG só existe no bloco global do modelo irmão)
+      {slug-3} · subtitle  + "pela DisplayPort"
+                           (a HDMI do mesmo monitor faz 144)
 
     FALHAS NO BATCH ({M}):
       ✗ {slug-x} — {erro do sub-agent}
@@ -306,13 +363,19 @@ Detecção:
       ⏭️  {slug-y} (stub parcial)
       ⏭️  {slug-z} (já preenchido)
 
-    📦 Commit (criação): {commit-hash-1}
-    📦 Commit (audits): {commit-hash-2}
+    📦 Commit (criação): {hash-1}
+    📦 Commit (fixes):   {hash-2}   ← só se houve conserto
+    📦 Commit (audits):  {hash-3}
     🔄 VPS sincronizado: {OK | bloqueado}
-    🔍 Audits: {ok} OK / {warn} warnings / {err} críticos
+    🔍 Audits: {ok} OK / {fix} corrigidos / {warn} warnings / {err} críticos abertos
     ```
 
-    Páginas com errors críticos NÃO bloqueiam o commit lote (já foi). Apenas sinalizam pro user que precisam revisão individual depois.
+    **Todo conserto aplicado vai no report com o de→para**, não só a contagem. O
+    usuário precisa poder discordar de uma troca sem abrir o diff do git.
+
+    Erros críticos que sobraram NÃO bloqueiam o commit lote (já foi). Sinalizam
+    revisão individual depois — e sobraram justamente porque o substituto era
+    decisão editorial, não porque foram ignorados.
 
 ## Detecção rigorosa de stub vazio (CRÍTICO)
 
@@ -433,7 +496,7 @@ Se o ambiente impedir o sub-agent de ler `pagina-produto-criar/SKILL.md` (raro, 
 | Tempo total (10 produtos) | ~30-50 min sequencial | ~3-5 min paralelo |
 | Anti-duplicate cross-páginas | Não (skill individual também não faz) | Não (paridade) |
 | Commits no git | N commits | 1 commit lote |
-| Audit pós-criação | Manual via `pagina-produto-auditar` | Opt-in via flag `--audit` (paridade default) |
+| Audit pós-criação | Manual via `pagina-produto-auditar`, read-only | Opt-in via `--audit`, e **conserta o fato que passa no teste da frase nova** (warn segue report-only) |
 | Pode sobrescrever conteúdo? | Sim (modo individual = ação explícita) | **NÃO** (só stubs vazios) |
 | Logging incremental | Sim (passo a passo) | Não (sub-agents reportam só no fim) |
 
@@ -539,7 +602,9 @@ Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evi
 
 3. **Limite de paralelismo do harness** ≈10 sub-agents simultâneos. Batches >10 são divididos em levas. Não é limite formal documentado — assumido conservador. Pode ser mais (15-20) na prática, mas evita timeouts/throttling.
 
-4. **Falha silenciosa possível** — sub-agent pode retornar `{ok: true}` mas o `.mdx` ficou com problema sutil. **A subclasse MECÂNICA já é pega pela skill-mãe sempre** (guarda de fence = frontmatter quebrado; guarda de tamanho = shortDescription/pros/cons estourados — ambas no passo 9, determinísticas, com re-dispatch). Resta a subclasse de JULGAMENTO editorial (travessão escapado, HTML inválido em campo texto-puro, voz-citação burocrática, claim-vs-bible) — risco real mas baixo (mesma régua + sub-agent fresh do Opus). Mitigação opcional pra ESSA: rodar com `--audit` (dispara `pagina-produto-auditar` em paralelo). Sem `--audit`, user audita quando quiser — paridade com a individual (que também não auto-audita). Ou seja: fence+tamanho são rede automática; `--audit` é a rede extra pro resto.
+4. **Falha silenciosa possível** — sub-agent pode retornar `{ok: true}` mas o `.mdx` ficou com problema sutil. **A subclasse MECÂNICA já é pega pela skill-mãe sempre** (guarda de fence = frontmatter quebrado; guarda de tamanho = shortDescription/pros/cons estourados — ambas no passo 9, determinísticas, com re-dispatch). Resta a subclasse de JULGAMENTO editorial (travessão escapado, HTML inválido em campo texto-puro, voz-citação burocrática, claim-vs-bible) — risco real mas baixo (mesma régua + sub-agent fresh do Opus). Mitigação pra ESSA: rodar com `--audit`, que desde 2026-08-06 não só detecta como **conserta o erro de fato que passa no teste da frase nova** (passo 12). Sem `--audit`, user audita quando quiser — paridade com a individual (que também não auto-audita). Ou seja: fence+tamanho são rede automática do passo 9; `--audit` é a rede do julgamento, e nela o fato de direção única fecha sozinho enquanto o que exige redação vai pro relatório.
+
+   ⚠️ **Medição que motivou o auto-fix** (4 batches de 10 páginas em 2026-08-06, `melhorcaixadesom`, `somprofissional`, `melhordosom`, `compraguia`): as guardas do passo 9 pegaram **zero** dos ~23 claims sem lastro. Todos vieram do `--audit`. A única coisa que a guarda achou foi 1 parágrafo órfão — e era falso positivo. Ou seja, sem `--audit` o batch **não tem rede factual nenhuma**, e com ele metade dos achados era substituição de uma palavra que custava um round-trip inteiro pra aplicar.
 
 5. **Sobreposição CROSS-SITE ~20-25% é ESPERADA e SEO-aceitável — NÃO auto-divergir (canon Marcelo 2026-07-10).** Quando o mesmo produto (mesma bíblia) vira página em sites irmãos, a criação ISOLADA converge naturalmente em ~20-25% de texto idêntico (⇒ ~75-80% diferente). Medido em 3 nichos: aspirador (masp↔escritorioecasa 74% dif), airfryer (melhorairfryer↔-com 73%), impressora (melhorimpressora↔impressoraideal 80%). **Nunca chega aos ~99% que a divergência explícita atinge — e não deveria tentar.** A razão é estrutural, não falta de "liberdade" do Opus: dois sub-agents destilando a MESMA bíblia chegam na forma natural de dizer o mesmo FATO ("bateria de íon de lítio com autonomia de até 25 minutos…"). Mais liberdade não move esse piso; só divergência explícita move.
    - **Política:** ~20% de sobreposição **não prejudica SEO** em página de produto (ativo secundário; indexada + self-canonical + em `sitemap-produtos`, mas de baixo risco; o footprint da rede — template/dono/linkagem/personas — pesa muito mais que 20% de texto igual). O grosso dos 20% é FATO (spec/autonomia/filtro), que o Google espera parecido entre qualquer site descrevendo o mesmo produto.

@@ -26,6 +26,9 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 ## Invariantes
 
 - **Nunca edite o `.mdx`.** Seu output é um relatório em `.audits/products/`. O humano decide o que fazer.
+  ⚠️ **Exceção única:** rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, a
+  skill-mãe pode autorizar o conserto do que passa no **TESTE DA FRASE NOVA** abaixo. Fora
+  desse contexto, e sempre para `warn`, esta skill continua read-only.
 - **Nunca invente findings.** Se não encontrou problema numa categoria, diga "nenhum". Audit vazio é melhor que audit inventado.
 - **Toda afirmação precisa de evidência.** Cite trecho literal do `.mdx` (blockquote < 15 palavras) ou da bíblia.
 - **Respeite as diretrizes** do site e da bíblia.
@@ -478,6 +481,72 @@ Template exato — use blocos idênticos pro painel parsear visualmente:
 - **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4), **tamanho-fora-de-faixa LONGO demais** (régua v1.16.0 — shortDescription >250, pros/cons >180 texto puro; cards viram parágrafos), **fullReview-prefixo-e-ancoras** (régua v1.20.3 — 18a prefixo sem negrito, 18b âncora-CTA em vez do nome, 18c nome do produto não linkado).
 - **🟡 Aviso**: superlativo sem evidência, conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content, voz-citação ficha-técnica burocrática.
 - **🔵 Info**: nota que vale registrar mas não exige ação (ex: "subtitle no limite mínimo de 10 chars, considere expandir").
+
+## TESTE DA FRASE NOVA — o que pode ser consertado sem aprovação
+
+**Canon Marcelo 2026-08-06:** *"se for erro de fato (informações erradas), já poderia fixar na
+hora. Agora se for só warning (frases parecidas com fontes ou páginas irmãs), só reportar."*
+
+Isso **refina** a régua de report-only de 2026-07-10, não a reverte. O que foi barrado lá foi
+auto-consertar **warn** (estilo). Fato é outra coisa.
+
+A linha não é "erro vs aviso" — é uma pergunta única, e ela é verificável:
+
+> ### Dá pra consertar sem escrever nenhuma frase nova?
+
+Se sim, **aplique**. Se não, **reporte com o fix sugerido**. O critério de saída: depois do
+conserto, toda palavra que sobrou vem da bíblia ou já estava na página. **Zero prosa inventada.**
+
+**As três formas que passam:**
+
+```
+APAGAR       a página afirma X, X aparece 0× na bíblia,
+             e a frase continua de pé sem X
+SUBSTITUIR   a página diz "A", a bíblia diz "B" para o mesmo referente
+RESTAURAR    a bíblia diz "número + condição" e a página tem só o número
+```
+
+Medido nos 4 batches de 2026-08-06 (23 achados factuais), a linha separou 9 de 14:
+
+```
+APLICA                                      REPORTA
+"0,5ms MPRT (1ms GtG)"  apaga o parêntese   "Sem som próprio"   apagar não deixa título
+"Rádio FM"              apaga "FM"          "no próprio painel" a frase quebra sem ele
+"água, poeira e tombo"  apaga 2 palavras    "beira da piscina"  buraco na enumeração
+"6 a 7 bandas"          apaga a contagem    "o remoto resolve os 10 m"  o raciocínio
+"alça embutida"         apaga "embutida"                        inteiro está errado
+"prioridade de voz"   → "do microfone"      "app da Philips"    atribuir = frase nova
+"pontos por polegada" → "pixels por"
+"180 Hz"              + "pela DisplayPort"
+"reset sob a tampa"     restaura o hedge
+```
+
+Os cinco da direita são exatamente aqueles em que a redação do substituto foi **escolha
+editorial**, e é isso que precisa de olho humano.
+
+⚠️ **Warn NUNCA aplica**, mesmo parecendo óbvio. Frase parecida com a página irmã, coloquialismo
+acima do teto, redundância entre bullet e parágrafo: só relatório.
+
+### Quando a raiz é a BÍBLIA, não a página
+
+**Se a página contradiz a `decisaoEditorial` MAS obedece outro campo da mesma bíblia, o alvo do
+conserto é a bíblia.** Reporte apontando para lá e **não toque na página**.
+
+Caso real 2026-08-06: `philips-tax4000-78` prometeu o ajuste pelo app da Philips em **três sites**.
+A flag `aplicativo-e-bass-plus-ausentes-do-anuncio` proíbe a promessa, e o `pontosFortes[5]` da
+mesma bíblia endossa o recurso — o redator seguiu o campo que endossa, três vezes. Consertar as
+três páginas calaria o sintoma e garantiria a quarta.
+
+### Como aplicar, quando aplicar
+
+Copie a mecânica da `biblia-auditar-em-massa`, não invente outra:
+
+1. **Backup antes de escrever**, em `docs/painel/.painel-backups/<dia>/`.
+2. Aplique **só** o que passou no teste, com `Edit` cirúrgico. Nunca reescreva o campo inteiro.
+3. **Re-audite o que você tocou**: resolveu? não quebrou outra coisa? não mudou o sentido?
+4. Não convergiu em ≤3 tentativas → **reverte do backup** e vira item de relatório.
+5. O relatório distingue **CORRIGIDO** de **REPORTADO**, com o diff de cada conserto.
+6. ⛔ **Nada de git.** A skill-mãe commita.
 
 ## Boas práticas
 
