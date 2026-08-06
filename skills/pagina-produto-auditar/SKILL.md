@@ -146,7 +146,7 @@ Campo fora dos limites editoriais — pode estar **curto demais** (vazio/incompl
 **Curto demais** (severidade: depende do campo):
 - `subtitle` ausente ou < 10 chars
 - `shortDescription` ausente ou < 50 chars (era 40 antes da v1.16.0)
-- `fullReview` ausente ou < 300 chars (🔴 incompleto); 300-800 chars (🟡 abaixo do alvo — os 4 parágrafos rotulados + 3 links não cabem em <800; alvo 800-3000, paridade com a criação)
+- `fullReview` ausente ou < 300 chars **texto puro** (🔴 incompleto); 300-800 chars (🟡 abaixo do alvo — os 4 parágrafos rotulados + 3 links não cabem em <800; alvo 800-3000, paridade com a criação)
 - `pros` < 3 itens
 - `cons` ausente ou 0 itens
 - `specs` < 3 pares
@@ -156,7 +156,13 @@ Campo fora dos limites editoriais — pode estar **curto demais** (vazio/incompl
 - `shortDescription` > 250 chars (HARD CAP régua v1.16.0; alvo 180-230)
 - `pros[i]` item > 180 chars texto puro (descontando markup `<strong>`/`<a>`)
 - `cons[i]` item > 180 chars texto puro
-- `fullReview` > 3000 chars
+- `fullReview` > 3000 chars **texto puro** (descontando `<p>`/`<strong>`/`<a>` e as URLs da Amazon)
+
+⚠️ **Meça texto puro, não a string HTML.** Isto era ambíguo até 2026-08-06 e
+gerava falso positivo sistemático: o markup é 23-27% do campo, então uma página
+com 2.400 chars de texto aparecia como "2.998 de 3.000, colada no teto". Oito
+páginas da rede constavam como violação sem que nenhuma tivesse 2.600 chars de
+texto. Ao reportar, cite o número em texto puro.
 
 **Padrão técnico-first** (sub-check `tamanho-fora-de-faixa-padrao`, régua v1.17.0):
 - Detecta `shortDescription` que abre com técnico em vez de benefício-first

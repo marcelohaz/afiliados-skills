@@ -181,6 +181,32 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
 ## Os 6 campos
 
+### ⚠ Regra que vale para `subtitle` e `shortDescription`: número curto carrega o qualificador
+
+**Se a bíblia condiciona um número, o condicionante viaja com ele para TODO campo onde
+o número aparecer — inclusive os curtos.** Quando não couber, **corte o número, nunca o
+qualificador**.
+
+Isso existe porque o erro tem uma direção só e ela é sempre a mesma: o `fullReview`
+qualifica certo, e o aperto de espaço do `subtitle`/`shortDescription` derruba a condição.
+E são justamente esses dois campos que circulam **sozinhos**, no card e no snippet da
+SERP, longe do parágrafo que consertaria.
+
+Medido em 4 batches de 10 páginas (2026-08-06), sempre o mesmo desenho:
+
+```
+"180 Hz"            sem "pela DisplayPort"    ← a HDMI do mesmo monitor faz 144
+"120 Hz"            sem "por overclock"       ← o nativo é 100
+"15 horas"          sem "até"                 ← a bíblia marca condição ideal
+"0,3 ms"            sem "MPRT"                ← métrica diferente de GtG
+"Sem som próprio"   afirmando a ausência      ← a bíblia mandou não afirmar
+```
+
+Em todos, o corpo do texto estava certo. O defeito nasceu no encurtamento.
+
+**Teste antes de gravar:** leia o `subtitle` e a `shortDescription` isolados, como se o
+resto da página não existisse. Algum número promete mais do que a bíblia sustenta?
+
 ### 1. `subtitle` (string, 10-150 chars)
 
 Título **descritivo editorial** curto, **sem redundância com o nome do produto**. Aparece como meta-info abaixo do H1. É frase de venda/posicionamento, NÃO dump de specs técnicos.
@@ -210,12 +236,32 @@ Estrutura em 3 partes:
 
 **3 moldes (varie):**
 - **Molde A**: "Ideal pra quem [perfil], entrega [spec]. Você ganha [benefício]."
-- **Molde B**: "[Adjetivos] pra [perfil]. Combina [spec 1] e [spec 2]. Destaque para [diferencial]."
+- **Molde B**: "[Adjetivos] pra [perfil]. Combina [spec 1] e [spec 2]. [Fecho com o diferencial]."
 - **Molde C**: "[Posicionamento curto] pra [perfil]. [Fórmula/spec]. [Embalagem ou diferencial]."
+
+⚠️ **O fecho ROTACIONA — "Destaque para" não é o padrão, é uma opção entre várias.**
+Medido em 2026-08-06: **1.043 de 3.003 páginas da rede (35%)** fecham a
+`shortDescription` com "Destaque para", e nos sites criados por batch passa de 80%. Isso
+deixou de ser fórmula e virou **footprint**: uma assinatura textual que se repete em um
+terço da rede e liga os sites entre si.
+
+Escolha um fecho diferente a cada página, e prefira o que a frase pedir:
+
+```
+o diferencial vira sujeito     "O custo por página é o que segura a conta."
+consequência de uso            "Na prática, dá pra imprimir o mês inteiro sem trocar tinta."
+quem ganha com aquilo          "Quem imprime pouco e esquece a impressora ligada agradece."
+o número fecha sozinho         "São 4.500 páginas em preto por kit."
+a ressalva honesta             "A contrapartida é a velocidade, que não impressiona."
+```
+
+Se o fecho natural for mesmo "Destaque para", **cheque as outras páginas do site antes**
+(`grep -c "Destaque para" sites/{site}/src/content/products/*.mdx`). Passando de um
+terço delas, use outro.
 
 **Exemplos ✅:**
 - ✓ `"Custo-benefício forte e fórmula completa pra iniciantes ou rotina contínua. Combina creatina, beta-alanina, taurina e cafeína anidra em dose pequena de 5g, com pote de 300g que rende 60 doses por cerca de R$ 55."` (Molde C, 211ch)
-- ✓ `"Impressora EcoTank pra uso doméstico ou escritório pequeno. Tanque de tinta recarregável e impressão duplex automática, com rendimento de até 4.500 páginas em preto por kit. Destaque para o custo por página baixo."` (Molde B, 218ch)
+- ✓ `"Impressora EcoTank pra uso doméstico ou escritório pequeno. Tanque de tinta recarregável e impressão duplex automática, com rendimento de até 4.500 páginas em preto por kit. O custo por página é o que segura a conta."` (Molde B, 220ch, fecho com o diferencial como sujeito)
 
 **Exemplo ❌ (técnico-first, REGRESSÃO):**
 - ❌ `"Impressora multifuncional da Epson (linha EcoTank L3250) com tanque de tinta, Wi-Fi Direct, ADF e rendimento de até 4.500 páginas em preto por kit T544. Indicada para uso doméstico ou escritório pequeno com volume médio."` (começa com marca + listagem de specs — perde o leitor)
@@ -230,7 +276,7 @@ Estrutura em 3 partes:
 **Adicionar:**
 - ✅ Adjetivos posicionais ("Versátil", "Premium", "Custo-benefício forte")
 - ✅ Conexão emocional ("Ideal pra quem...", "Você ganha...")
-- ✅ Destaque do diferencial ("Destaque para...")
+- ✅ Um fecho que carregue o diferencial, **rotacionando a forma** (ver o bloco de fechos acima)
 
 **Régua de corte mental**: leia a 1ª frase. Começa com "[Tipo] brasileiro da X..." → ERRADO. Começa com adjetivo posicional ou "Ideal pra..." → CERTO.
 
@@ -273,7 +319,34 @@ specs:
     value: "Imprime, copia, digitaliza"
 ```
 
-### 6. `fullReview` (string HTML, 800-3000 chars)
+### 6. `fullReview` (string HTML, 800-3000 chars de **texto puro**)
+
+⚠️ **A faixa é de TEXTO PURO, descontando o markup** — igual a `shortDescription`,
+`pros` e `cons`, que já diziam isso. Não conte `<p>`, `<strong>` nem as três URLs
+da Amazon com `?tag=...&linkCode=ogi&th=1&psc=1`.
+
+Isto era ambíguo até 2026-08-06 e a ambiguidade custava caro. Medido na rede:
+**o markup come 23% a 27% do campo**, e 8 páginas estouravam os 3.000 sem ter
+2.600 chars de texto em nenhuma delas. Pior, o aperto caía justo em quem tinha
+o que dizer: o p99 dos nichos complexos ficava colado em 2.998 — sub-agents
+parando na linha — enquanto o mesmo p99 em texto puro era ~2.380.
+
+```
+                      p99 bruto   p99 texto puro
+Eletrônicos              2.998           2.383
+Caixas de Som            2.998           2.358
+Impressoras              2.974           2.330
+Creatinas                2.385           1.816   ← nunca chega perto
+```
+
+**A faixa não força ninguém a encher.** Produto simples para onde o conteúdo
+acaba: creatina fica em 1.816 no p99, com o mesmo teto que monitor usa até o
+limite. Se a bíblia não sustenta mais texto, o campo termina antes — o teto é
+proteção contra prolixidade, nunca meta a atingir.
+
+**Quando houver muito o que cobrir**, o caminho é a divisão autorizada do
+"Por que gostamos" (features-chave num parágrafo, specs gerais no seguinte),
+descrita logo abaixo, e não esticar cada parágrafo.
 
 **Estrutura obrigatória — 4 parágrafos marcados, paridade com `formato_full_review` dos prompts de artigo**:
 

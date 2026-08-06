@@ -205,7 +205,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
      - `shortDescription` ≤ 250 chars (alvo 180-230, **padrão benefício-first** — 1ª frase é posicionamento, não ficha técnica)
      - cada item de `pros` ≤ 180 chars (alvo 80-130)
      - cada item de `cons` ≤ 180 chars (alvo 80-130)
-     - `fullReview` 800-3000 chars
+     - `fullReview` 800-3000 chars de texto puro (descontando markup e URLs)
      - Passou? reescreve **só o item que estourou** (não o review inteiro)
    - **Banidas no output** (v1.16.0): grep por `lineup`, `desta seleção`, `do lineup`, `do nosso lineup`, `do nosso comparativo` — se achar, reescreve
    - **Cota cross-produto**: máximo 2 peers citados por bullet/parágrafo (ver Armadilha 7)
@@ -318,7 +318,17 @@ drop "todos declarados pelo fabricante", drop "preço médio em torno", drop pú
 - Começa com "Pré-treino com X mg de Y..." ou "[Tipo] brasileiro da [marca]..." → **ERRADO**. Inverta.
 - Começa com adjetivo posicional, "Ideal pra...", "Você ganha...", "Custo-benefício..." → **CERTO**.
 
-### fullReview (HTML, ~800-3000 chars)
+### fullReview (HTML, ~800-3000 chars de **texto puro**)
+
+⚠️ **A faixa é de TEXTO PURO, descontando o markup** — não conte `<p>`,
+`<strong>` nem os links `<a href="{amazonUrl}">`. Medido em 2.667 reviews da
+rede em 2026-08-06: **o markup é 24% do campo**, e 25 reviews constavam acima
+dos 3.000 sem que **nenhum** passasse de 2.890 chars de texto. O aperto caía
+justo em quem tinha o que dizer — p99 bruto em 2.982, colado na linha, contra
+p99 de 2.399 em texto puro.
+
+A faixa não força ninguém a encher: produto simples termina onde o conteúdo
+acaba. O teto é proteção contra prolixidade, nunca meta a atingir.
 **Estrutura obrigatória — 4 parágrafos marcados** (idêntico ao `formato_full_review` shared):
 
 ```html
