@@ -119,9 +119,19 @@ bun scripts/cf-deploy-r2.ts {slug}
 Sobe o build no R2 (prefixo = **slug da pasta**), mapeia `dominio → slug` no KV e cria as Worker Routes.
 A partir daqui **os dois domínios servem o site em paralelo**.
 
-⚠️ **Se renomeou a pasta, o prefixo antigo do R2 vira órfão.** O prune do deploy só varre dentro do
-prefixo atual. Ficam duas cópias do site no bucket. Podar depois (listar o prefixo antigo pela API CF e
-deletar) ou aceitar o custo — mas **registre no relatório**, porque em silêncio ninguém acha depois.
+⚠️ **Se renomeou a pasta, o R2 fica com DOIS prefixos — e o antigo NÃO é órfão ainda.** O prune do
+deploy só varre o prefixo atual, então o antigo sobrevive. E ele **é o que serve o site vivo** enquanto
+o domínio velho ainda responde, porque o KV segue mapeando `dominio-antigo → slug-antigo`.
+
+**Podar o prefixo antigo antes da Fase 4 derruba o site no ar.** Ele só vira órfão de verdade depois
+que o catch-all sobe e o domínio antigo para de servir conteúdo. Ordem: Fase 4 → conferir o 301 →
+só então podar. Registre no relatório, senão em silêncio ninguém acha depois.
+
+⚠️ **Compare a contagem dos dois prefixos.** Se o novo tem MAIS páginas que o antigo, existe conteúdo
+no repo que nunca foi publicado — o deploy da migração vai publicá-lo de uma vez. Não é defeito, mas
+mude o relatório: são páginas estreando, sem histórico de indexação. Caso real (guiamelhor, 2026-08-08):
+129 páginas no ar contra 193 encenadas, porque 59 páginas transferidas de outro site em 06/08 nunca
+tinham sido deployadas.
 
 **Gate — não seguir sem isso:**
 ```bash
@@ -232,7 +242,11 @@ serve quando a IDENTIDADE muda junto e o slug passaria a mentir. Ele custa: pref
 `pnpm install` na VPS, dir órfão no disco e as duas listas `KNOWN_DIVERGENCES`
 ([[afiliados.armadilha.rename-site-quebra-known-divergences]]). Pergunte antes de assumir.
 
-### 8. Achar que o 404.astro redireciona
+### 8. Podar o prefixo antigo do R2 antes da Fase 4
+Enquanto o domínio velho responde, é ELE que serve o site — o KV ainda mapeia `antigo → slug-antigo`.
+Podar ali derruba o site no ar. Só vira órfão depois do catch-all. Ver Fase 3.
+
+### 9. Achar que o 404.astro redireciona
 Não redireciona. Ele devolve **HTTP 404** com meta-refresh no corpo; o Googlebot lê o status e descarta
 a URL ([[afiliados.armadilha.404-meta-refresh-nao-e-redirect]]). Redirect de verdade só pelo
 `worker/redirects.json`.
