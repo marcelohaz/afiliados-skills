@@ -183,22 +183,33 @@ nenhum**. É o erro mais fácil de cometer aqui.
 dispara antes da resolução no KV (`afiliados-router.ts:91`). Não precisa despublicar nem podar nada
 pro redirect valer.
 
-**Gate:**
+**4.4 — PURGAR o cache das duas zonas.** Sem isso a borda serve as respostas anteriores e o teste
+mente. Medido em 2026-08-09, logo após o deploy do worker: uma URL ainda 301 pra home do domínio
+ANTIGO, uma regra path-específica ainda com destino relativo, e um artigo ainda entregando **200 no
+domínio antigo**. `POST /zones/{id}/purge_cache {"purge_everything":true}` nas duas zonas, esperar
+~20s, e só então testar.
+
+**Gate — use `-L` com contagem de saltos, não `curl -I`:**
 ```bash
-curl -sSI https://{antigo}/{um-artigo}/ | grep -i "^HTTP\|^location"
-# esperado: 301 + location: https://{novo}/{um-artigo}/   ← UM salto só
+curl -sSL -o /dev/null -w 'saltos=%{num_redirects} · %{http_code} · %{url_effective}\n' \
+  https://{antigo}/{um-artigo}/
+# esperado: saltos=1 · 200 · https://{novo}/{um-artigo}/
 ```
-Testar também **uma das regras path-específicas** e uma página de produto.
+⚠️ **`curl -I` sozinho não serve de gate.** No caso real acima ele mostrava 301 pro destino certo e
+parecia sucesso, enquanto o `-L` revelava que a cadeia terminava em 200 no domínio ANTIGO. Testar:
+um artigo, uma página de produto, uma das regras path-específicas, e uma URL inexistente
+(essa vai dar 2 saltos — catch-all + fallback — e está correto, assim como `www.`).
 
 ## Fase 5 — Search Console
 
 1. Adicionar e **verificar** a property do domínio novo.
 2. Submeter os sitemaps do domínio novo.
-3. Rodar **Mudança de Endereço** na property antiga apontando pra nova.
 
-O passo 3 exige as duas properties verificadas e o 301 já ativo, por isso vem por último. **Foi pulado
-no caso de referência** e é o que diz ao Google, explicitamente, que o site inteiro mudou — sem ele o
-Google só infere dos 301, que é mais lento.
+**NÃO usar a Mudança de Endereço do GSC.** Canon Marcelo 2026-08-09, aplicado nas duas migrações da
+rede: *"não vou avisar o GSC a mudança de endereço. No oguiacompra também não foi feito isso."*
+Não propor, não listar como pendência, não chamar de "passo que faltou" — é escolha, não esquecimento.
+O Google recebe o 301 catch-all e os sitemaps do domínio novo, e processa a partir daí.
+Ver [[afiliados.decisao.nao-usar-mudanca-de-endereco-gsc]].
 
 ## Reversão
 
