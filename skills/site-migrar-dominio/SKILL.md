@@ -82,8 +82,15 @@ Nada muda no ar. O site antigo segue servindo normal.
 | 1.8 | `pnpm install --lockfile-only` e conferir 0 ocorrências do nome antigo | `pnpm-lock.yaml` |
 | 1.9 | atualizar `TEMPLATE_KNOWN_DIVERGENCES` e `KNOWN_DIVERGENCES` **se o slug estiver lá** | `server.ts` · `template-diff.ts` |
 
-**O que NÃO muda** (canon do caso de referência): o handle do Facebook em `social`, o nome do autor, e
-qualquer identificador externo que já tenha histórico próprio.
+**O handle do Facebook MUDA** e segue o slug: `facebook.com/{slug-novo}`. Medido em 2026-08-09: **45 dos
+49 sites** da rede usam `facebook.com/{slug}`, e **3 das 4 exceções são resíduo de rename** que ninguém
+corrigiu (`oguiacompra`→escritoriocasa, `impressoracustobeneficio`→impressoraideal, e este caso antes do
+conserto). O caso de referência manteve o handle antigo, mas isso foi **esquecimento, não decisão** —
+canon Marcelo 2026-08-09: *"os facebooks de rodapé são gerados automaticamente, faça como se fosse um
+site novo"*. O handle aparece no rodapé de TODAS as páginas, então deixar o antigo faz cada página da
+marca nova apontar pra marca velha.
+
+**O que NÃO muda:** o nome do autor e credenciais reais da persona.
 
 **Tag de afiliado:** só troque com o id confirmado. `sed 's/tag={antiga}/tag={nova}/g'` nos `.mdx` de
 `reviews/` e `products/`, MAIS o `affiliateTag` do config. Atenção: existe uma segunda camada — o
