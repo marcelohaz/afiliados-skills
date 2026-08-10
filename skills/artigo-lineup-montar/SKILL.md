@@ -494,12 +494,26 @@ ordem de corte, da cauda pra cima:
   1º  dominado ou quase-dominado (passo 2)
   2º  duplica eixo já coberto por outro do lineup
   3º  menor comprasMesPassado  ·  quem tem 0 (sem widget) cai aqui
-  ⛔  representante ÚNICO de marca ou subtipo sai por último
+  ⛔  representante ÚNICO de marca, subtipo OU PERFIL sai por último
 ```
+
+⚠️ **"Perfil" entrou nesse ⛔ em 2026-08-11 e é a adição que mais muda resultado.** Marca e subtipo saltam à vista na tabela; perfil só aparece se você levantar a cobertura (Etapa 7). Foi por não estar aqui que o `WAP High Speed Plus` — 1,25 kg, o mais leve do catálogo, e a única resposta do perfil "força reduzida" — foi cortado por "duplica eixo" sem que ninguém notasse o que ia junto.
 
 Caso real (oguiacompra, tanque de tinta): meu lineup cortou a **única fotográfica** e a **única Brother** do catálogo e ficou com três SKUs da plataforma HP 580. O artigo publicado, com 7 posições, mantém as duas e usa um Smart Tank.
 
 Isso só funciona porque `comprasMesPassado = 0` deixou de eliminar (ver Invariantes) — enquanto ele filtrava, os representantes únicos saíam do pool **antes** de qualquer regra poder preferi-los.
+
+⚠️ **O TETO 11 É LIMITE, NÃO META** (canon Marcelo 2026-08-11). Preencher até 11 porque cabe é o erro. **O tamanho sai da COBERTURA**, e a pergunta por posição é: *este produto tem eixo próprio, OU cobre um perfil que ninguém mais cobre?* Uma das duas basta. Nenhuma das duas = ele não está sustentando a vaga.
+
+```
+tem eixo próprio (vence algum atributo no lineup)   →  fica
+sem eixo, mas é o ÚNICO que atende um perfil        →  fica, e o perfil é o motivo declarado
+sem eixo e sem perfil exclusivo                     →  candidato a sair, com o motivo no relatório
+```
+
+⚠️ **"Sem eixo próprio" NÃO é motivo suficiente pra cortar** — e essa distinção nasceu de um erro medido. Em 2026-08-11 (melhoraspirador-com, `melhor aspirador de pó vertical`) duas execuções da mesma keyword produziram 11 e 9 posições. A de 9 cortou tudo que não vencia um superlativo, e junto foi o **WAP High Speed Plus, 1,25 kg — o mais leve do catálogo inteiro em configuração completa**. O lineup ficou com 1,5 kg como piso e **o perfil "força reduzida" da rubrica descoberto**. Ele não vencia eixo nenhum e era a única resposta de um perfil.
+
+**Por isso a cobertura de perfil é bloco obrigatório do relatório (Etapa 7):** sem esse dado, esta regra não tem como ser aplicada — você não sabe qual perfil ficou descoberto se ninguém for obrigado a olhar.
 
 ---
 
@@ -603,6 +617,7 @@ Colunas obrigatórias, nesta ordem:
 
 - **ASIN é a chave.** Nome é ambíguo (abreviação, variante com uma palavra de diferença), preço muda, posição muda.
 - **Nome e preço LIDOS do `.mdx`**, nunca digitados de memória — inclusive ao montar a tabela.
+- ⚠️ **A célula "Subtítulo sugerido" leva SUBTÍTULO, nunca rótulo de diagnóstico.** `sem eixo próprio`, `a definir`, `eixo fraco` não são subtítulos — são anotação sua, e quem lê a tabela não tem o que fazer com elas. Se o produto não tem diferencial, as saídas legítimas são duas: **tirá-lo do lineup** dizendo por quê, ou **mantê-lo com o melhor subtítulo possível** e sinalizar o eixo fraco **em nota à parte**. Caso real 2026-08-11: entreguei 5 de 11 células com "sem eixo próprio" e o Marcelo respondeu *"cadê o subtítulo, não entendi nada"* — com razão, porque a entrega não era utilizável.
 - **`comprasMesPassado` sempre visível.** É o que deixa você discordar da ordem olhando o dado.
 - **Data de captura da bíblia junto.** Preço e venda envelhecem; quem lê precisa saber de quando é o retrato.
 
@@ -623,6 +638,23 @@ COBERTURA DE SUBTIPO (da rubrica da Etapa 1)
 ```
 
 Sem isso o buraco de cobertura só aparece quando alguém procura. Caso real (oguiacompra, 2026-08-02): o lineup cobria 1 de 4 subtipos que a rubrica pedia, e quem achou foi o audit da Etapa 6 — a rubrica listava a monocromática como *"o subtipo mais mal divulgado do segmento"* e ela estava entre os cortados.
+
+- **Cobertura de PERFIL** — obrigatório, mesmo peso do subtipo (canon Marcelo 2026-08-11). A rubrica da Etapa 1 lista subtipos **e** perfis de uso, e só o primeiro tinha bloco. Mesmo formato: quais perfis o lineup cobre, quais ficaram descobertos e **quem carregava cada um dos que saíram**.
+
+```
+COBERTURA DE PERFIL (da rubrica da Etapa 1)
+   ✅ apartamento pequeno    Mondial AP-36 · PAS1600P
+   ✅ casa grande            Philips Aqua 3000 (60 min)
+   ✅ carpete                PAS4000V (2000 W, página cita carpete)
+   ✅ lavar o chão           Liectroux i7 Pro · Philips Aqua 3000
+   ✅ orçamento de entrada   Mondial AP-36 (R$ 130)
+   ❌ força reduzida         WAP High Speed Plus (1,25 kg, o mais leve do catálogo) ficou fora
+   ❌ pet                    nenhuma página declara escova anti-enrolamento — buraco do CATÁLOGO
+```
+
+⚠️ **Separe buraco DE CORTE de buraco DE CATÁLOGO**, porque a ação é oposta. Descoberto por corte = candidato a repor (é o motivo válido de manter produto sem eixo, ver passo 6). Descoberto porque nenhum produto do catálogo atende = informação pro guia e pra próxima compra de bíblia, não erro do lineup.
+
+Este bloco é o que **alimenta a regra de tamanho do passo 6**. Sem ele, "sem eixo mas cobre perfil exclusivo" é inaplicável, porque ninguém levantou os perfis.
 
 - **Empate na posição 1**, quando dois candidatos ficam próximos em preço, tipo e prós/contras, ou quando empatam no degrau de `comprasMesPassado`.
 - **Aderência à keyword** quando a keyword tem número — valor nominal contra valor útil, como coluna informativa. Não reordena (ver Etapa 3).
@@ -689,6 +721,19 @@ liectroux-i7-pro      Tipo = "Vertical sem fio"
 karcher-vcl-1-stick   Tipo = "Vertical 2 em 1"  ·  Alimentação = "Elétrico com fio, cabo de 5 m"
 wap-robot-w90         Tipo = "Robô aspirador 3 em 1 (varre, aspira, passa pano)"
 ```
+
+⚠️ **MAS O `Tipo` É UMA AFIRMAÇÃO DA PÁGINA, NÃO UM FATO — e ele erra** (2026-08-11). A regra acima resolve o falso positivo do nome e cria um novo ponto cego: confiar cegamente no rótulo. Caso real: `britania-bas1430` declara `Tipo = "Aspirador de pó vertical com saco"` e o produto é **de arrasto**, o eliminatório literal da rubrica. Duas execuções independentes da keyword tiveram que subir pro 2º degrau pra pegar.
+
+**Quando outro campo da MESMA página contradiz o `Tipo`, a contradição vence o rótulo.** O que denunciou, nas duas runs:
+
+```
+dimensão de corpo   32 cm · os 19 verticais reais do catálogo declaram 104-116 cm (a haste)
+mangueira           "mangueira de sucção", "trava de encaixe da mangueira" (6× nas opiniões)
+arquitetura         rodinhas · 2 tubos prolongadores · corpo puxado, não conduzido pela haste
+tanque em litros    é a fronteira de pó-e-água, não de vertical
+```
+
+**A dimensão foi o controle mais barato** — uma linha por produto, e o outlier salta. Isso é ilustração do método, não regra de categoria: em impressora ou tablet os campos denunciadores são outros. O que transfere é **procurar contradição dentro da própria página antes de aceitar o rótulo**, e o corolário: se o `Tipo` errou aqui, ele está errado no `.mdx` e vai contaminar todo artigo futuro que confiar nele — reporte pra correção na fonte.
 
 Os dois erros seriam evitados lendo `specs`. **Leia a tabela da página; regex no nome e no texto bruto é o que produz falso positivo.** Se o `Tipo` faltar em alguma página, aí sim caia pro `Fonte de alimentação` do `specsAmazon` da bíblia como reserva.
 
