@@ -49,7 +49,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 - **6.000 a 25.000 chars** no total do HTML (alvo típico 8-18k — vide canônicos do projeto).
 - **Estrutura: 5 H2 base obrigatórios + H2 extras dirigidos pela SERP.** Os 5 base (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) são sempre obrigatórios; H2 informacionais extras (O que é / gasta energia / receitas / como limpar) entram quando a análise de concorrentes mostra intenção informacional. Faltar qualquer base = ERRO. Ver "Régua editorial — ESTRUTURA" abaixo.
 - **Links Amazon: tag-aware.** PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca" (link de busca da marca), "FAQ" e "Conclusão" (recomendações de produto). Formato: `?tag={tag}&linkCode=ogi&th=1&psc=1` se tag preenchida; URL crua se vazia.
-- **Linkagem interna: 2 a 4 links (ideal ~3), contextuais e naturais** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (ou o total de peers, se o site tiver menos de 2; 0 só se for o 1º artigo do site, sem peers ainda). Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
+- **Linkagem interna: 2 a 4 links (ideal ~3), contextuais e naturais** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (ou o total de peers, se o site tiver menos de 2; 0 se for o 1º artigo do site **ou se nenhum peer passar no teste do "encaminhamento útil"** — ver "Desempate" em "Linkagem interna"). Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
 - **Sem travessão (—).** Use vírgula, ponto, dois pontos ou parênteses.
 - **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Sem superlativos sem evidência** ("o melhor disponível", "incomparável", "imbatível"). "Excelente", "ótimo" OK se contextualizado.
@@ -526,7 +526,7 @@ Antes de inserir <a> pra produto no guide (FAQ/Conclusão):
 
 #### Links internos (peer articles)
 
-- **2-4 links totais (ideal ~3)** no guide inteiro — régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (0 só se o site não tiver peers ainda). Já documentado em "Linkagem interna".
+- **2-4 links totais (ideal ~3)** no guide inteiro — régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (0 se o site não tiver peers ainda, **ou se nenhum peer passar no teste do "encaminhamento útil"** — ver "Desempate" em "Linkagem interna"). Já documentado em "Linkagem interna".
 - **Contextual, NÃO na Conclusão (v1.24.0):** distribuir ao longo do texto, cada um no spot onde o tema do artigo-irmão aparece naturalmente. **Evite a Conclusão** pra links peer/home — fecho com link de navegação é decorativo. Melhor não forçar do que enfiar no fim.
 - Bons encaixes: dentro de H3 de "Como escolher" pra cross-linkar critério com outro artigo (ex: H3 "Com fio ou sem fio" → "/melhor-aspirador-sem-fio-vertical/"); resposta de FAQ que toca no tema do irmão; "Vale a pena" pra apontar a categoria-mãe/home; H3 de marca pra apontar o guia daquela marca.
 
@@ -600,6 +600,18 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 Se algo falhar, **corrijo o trecho antes de aplicar**. Não passa link inventado nem âncora fora da régua.
 
 Se peer list está vazia (1º artigo do site), **ZERO links de peer**.
+
+### ⚖️ Desempate: o piso de 2 NÃO vence o "encaminhamento útil" (canon 2026-08-10)
+
+O piso de 2 e o molde de encaminhamento acima podem se contradizer num caso só: **o site TEM peers, mas nenhum responde a uma decisão que o leitor deste artigo está tomando.** Quando isso acontece, **a régua qualitativa ganha e o artigo vai a ZERO peer**, declarando o motivo no relatório. Não invente ponte pra bater o número.
+
+**O teste é a decisão, não a categoria.** Link peer bom responde a uma bifurcação ("tablet ou Kindle?"), a uma soma ("whey + creatina?") ou a uma ordem de prioridade ("fecha a proteína antes da glutamina"). Se você precisa construir o cenário em que o leitor iria pro outro artigo, o cenário não existe.
+
+**Por que não basta "só linkar dentro da mesma categoria":** medido na rede em 2026-08-10, dos 942 links peer, 229 são cross-categoria — e 227 deles passam no teste da decisão (34 E-reader↔Tablet, 174 entre suplementos, 17 de fitness). Cortar por categoria mataria os 227 pra pegar os 2 ruins, e ilharia 31 artigos de suplemento que hoje se conversam legitimamente. A taxonomia também não ajuda: `Caixas de Som`, `Tablets` e `Impressoras` são todas subs de `Eletrônicos`, igualzinho a `Creatinas` e `Glutamina` sob `Suplementos`.
+
+**Consequência aceita:** o `audit-linkagem.ts` e o critério `linkagem-fraca` vão emitir `warn` nesse artigo (o script conta peer bruto e não sabe avaliar decisão). É `warn`, não bloqueia `readyToLock`, e é o custo certo — melhor um warn conhecido do que um link que não serve ao leitor. Registre no relatório como exceção justificada.
+
+**Caso-origem:** `compraguia/melhor-caixa-de-som-jbl` (2026-08-10). Site generalista com 19 peers de impressora, tablet e Kindle, nenhum de áudio. Pra cumprir o piso saíram 2 links protocolares ("quem monta a mesa de trabalho encontra mais no guia de melhor tablet"), removidos depois. Quando o site ganhar o 2º artigo de som, ele vira peer de mesma categoria e a linkagem acontece sozinha.
 
 ## Como usar as bíblias (contexto, não citação)
 
