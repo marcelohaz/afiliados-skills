@@ -454,10 +454,15 @@ frase   Impressora de Tanque 4 em 1 que digitaliza um maço de uma vez
 ❌ que encosta no armário e some          cena, não fato · vale pra qualquer compacto
 ❌ para quem limpa com gente dormindo      cena · e o produto NÃO era o mais silencioso
 ❌ que vira de mão sem trocar de aparelho  todo 2 em 1 do lineup faz isso
-✅ com 1,65 kg e filtro HEPA removível     o que ESTE tem e os vizinhos não
+❌ com 1,65 kg e filtro HEPA removível     ⚠ PARECE spec, e mesmo assim não diferencia
 ✅ com 2000 W para carpete e tapete grosso a maior potência DA LISTA
 ✅ o mais barato do comparativo            superlativo verdadeiro dentro do lineup
+✅ com 1,1 kg no modo de mão               o mais leve, com o qualificador que o torna verdadeiro
 ```
+
+⚠️ **O 4º ❌ é o erro mais fácil de não ver, e eu cometi ele escrevendo esta própria seção.** "com 1,65 kg e filtro HEPA removível" passa no teste de "não é frase de efeito" — é spec, é factual, tem lastro. E não diferencia nada: no lineup em que foi escrito, três produtos eram MAIS leves (1,1 · 1,5 · 1,6) e **8 dos 11 declaravam HEPA**. Spec verdadeira não é o mesmo que spec distintiva. **O teste não é "isso é fato?", é "ordenando os 11 por esse atributo, este fica em primeiro?"**
+
+⚠️ **Se nenhum atributo coloca o produto em primeiro, ele pode não ter lead.** Isso não é falha de redação, é sinal do passo 5: *produto sem lead disponível é candidato a ficar de fora* — reporte, não force um gancho morno.
 
 **O gancho responde: por que ESTE e não os outros dez?** O vocabulário natural disso é comparativo — mais leve, mais potente, mais barato, menos barulho, maior autonomia — ou de recorte de uso quando o produto é o único que atende: passa pano, para apartamento, com saco, sem fio.
 
