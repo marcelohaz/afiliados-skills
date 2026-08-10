@@ -96,7 +96,17 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 1. **4.1** Invoca `artigo-auditar` (38 categorias editoriais + 4 estruturais hasIntro/hasGuide/productCount≥3/hasMeta + `readyToLock`). Issues críticos → auto-fix dirigido → re-audita (máx 3x). Não-convergido → flag.
 
 ### Etapa 5 — Duplicata vs fonte (comparar + reescrever + re-scan em loop)
-1. **5.1** Roda o comparador `compare-cross-site.py` (nesta pasta) entre o artigo destino e o fonte: frases idênticas (≥6 palavras, HTML→espaço), near-dup (jaccard ≥0.8 e ≥0.6), overlap 5-grama e 8-grama, specs label↔value.
+1. **5.1** Roda o comparador `compare-cross-site.py` **desta pasta**, pelo caminho literal, entre o artigo destino e o fonte: frases idênticas (≥6 palavras, HTML→espaço), near-dup (jaccard ≥0.8 e ≥0.6), overlap 5-grama e 8-grama, specs label↔value.
+
+   ```bash
+   python3 .claude/skills/artigo-clonar-em-massa/compare-cross-site.py \
+     sites/{target}/src/content/reviews/{slug}.mdx \
+     sites/{source}/src/content/reviews/{slug}.mdx
+   ```
+
+   ⚠ **O exit code NÃO é o gate — leia o JSON.** O script sai **1** sempre que `frases_exatas > 0` OU `near_dup_0.8 > 0`, e num clone saudável isso é o estado NORMAL: os 5 H2 base são slots do template e coincidem com a fonte por construção (ver 5.1.5). Gate por exit code reprovaria 100% dos clones. O que decide é a **lista classificada** (`exatas_lista` / `near_lista`) depois de descartar as classes isentas. Mesma armadilha, invertida, do `audit-editorial.ts` na `pagina-produto-criar-em-massa`, que sai 0 mesmo com achado.
+
+   🚨 **PROIBIDO escrever um comparador próprio inline.** Ter a régua no contexto NÃO substitui rodar o script — a implementação dele difere da que você escreveria, e é exatamente nessa diferença que mora o achado. **Caso real (somprofissional/melhor-caixa-de-som-jbl, 2026-08-10):** rodei um comparador inline "equivalente" e ele reportou 3 exatas + 3 near-dup ≥0.8, enquanto o `compare-cross-site.py` reportou **4 + 7** no mesmo par de arquivos. Os 5 a mais eram defeito real (2 títulos de bullet, 1 frase de review, 2 frases do guia, uma delas quase idêntica à da fonte) e teriam ido pro ar. Mesma classe das memórias [[feedback_seguir_skill_a_risca_nao_reusar_contexto]] e [[feedback_clone_regua_fonte_unica_invocar_de_verdade]]: reusar contexto no lugar de rodar a ferramenta.
 1.5. **⚠️ FALSOS POSITIVOS QUE VOCÊ NÃO DEVE CONSERTAR (canon 2026-07-30).** Antes de reescrever qualquer coisa, descarte estas classes — elas convergem **por construção** e "consertar" só quebra consistência:
    - **Os 5 H2 base do guide** (`Vale a pena…` / `Como escolher…` / `Qual a melhor marca…` / `Perguntas Frequentes` / `Conclusão`). São slots do template da `artigo-guia-escrever`, e dois deles são obrigatoriamente literais em toda a rede. Coincidir com o fonte é **esperado**. Não parafraseie para baixar jaccard.
    - **Subtitle keyword-first** do mesmo produto (crit. 22 deriva de keyword+badge, converge por design).
@@ -118,6 +128,16 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
    - Registra `melhorpretreino`/target em `TEMPLATE_KNOWN_DIVERGENCES` (index.astro) no server.ts + scripts/template-diff.ts se o site virar homeReviewSlug e ainda não estiver lá (senão o chip "Template" acusa falso drift).
 3. **6.3 Build** (`pnpm --filter {target} build`): gate Zod/YAML. Falha → conserta (YAML do .mdx) → rebuild.
 3.5. **6.3.5 FAQ-shuffle anti-footprint (OBRIGATÓRIO se há irmão na keyword)**: se o artigo clonado tem irmão(s) na MESMA keyword em outro(s) site(s) da rede (quase sempre o caso num clone, já que a fonte é um irmão), rodar `bun scripts/faq-shuffle.ts {target}/{slug} --apply` ANTES do commit. Determinístico/idempotente (função pura por seed), só reordena a FAQ, não muda redação. NÃO é opcional nem "deixa pro batch depois" — faz parte do fechamento do clone (canon Marcelo 2026-06-24: "já era pra ter feito, nem precisa perguntar"). Rebuildar após o shuffle. Ver [[feedback_aplicar_fix_deterministico_seguro_sem_pedir]].
+3.6. **6.3.6 GATE MECÂNICO ANTES DO COMMIT (obrigatório):**
+
+   ```bash
+   bun scripts/clone-log.ts verify-output {target} {slug}
+   ```
+
+   Exit 1 → **NÃO commite**, conserte e re-rode. Checa o artefato de verdade (fence == 2, sem `contentLocked`, title não-vazio com contagem, `productCount >= 3`, guide com 5 H2, FAQ literal, intro no body fechando em ✅, sem travessão) — coisas que passam despercebidas quando quem confere é a mesma cabeça que escreveu.
+
+   A `artigo-clonar-fila` já exigia isso por artigo; a clone individual não, e a assimetria não fazia sentido: rodar 1 clone sozinho tinha MENOS trava que rodar o mesmo clone dentro de uma fila. Se estiver dentro da fila, ela também roda o `verify` (etapas do clone-log) — aqui basta o `verify-output`, porque a clone individual não mantém o log.
+
 4. **6.4 Commit + push** (`--no-verify`, hook bloqueia .mdx direto) + **regen `gen.ts`** (senão painel mostra "0 artigos") + **restart do dev server** do target (senão getStaticPaths fica stale e a rota nova dá 404 — armadilha conhecida).
 5. **6.5 Verifica infra** (auto): build OK + dev serve a home + `/{slug}/` 200 + painel lista o artigo.
 
