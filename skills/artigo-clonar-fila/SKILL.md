@@ -36,7 +36,7 @@ O `TITLE=` de cada linha é HINT: a `artigo-clonar-em-massa` tem HARD GATE que D
 
 - **1 artigo por vez, em SEQUÊNCIA (não paralelo).** Clonar 2 artigos em paralelo mistura commits e disputa o git. A fila é serial; o paralelismo já existe DENTRO de cada artigo (os N sub-agents de review da Etapa 1.1).
 - **git-verdade antes de cada item (idempotência):** `git log --oneline -- sites/{target}/src/content/reviews/{slug}.mdx`. Se já tem commit → **PULA** (marca "já feito" no relatório). Se existe `.mdx` não-commitado → regenera (trabalho interrompido). Re-rodar a fila é seguro.
-- **clone-log como gate POR ARTIGO (obrigatório):** `bun scripts/clone-log.ts init {t} {slug} --source=...` no começo; `check` a cada etapa; `verify` (etapas rodaram, hard-gates 1.4+4) E `verify-output` (o .mdx saiu certo) ANTES de commitar. `verify` exit 1 = NÃO fechar aquele artigo.
+- **clone-log como gate POR ARTIGO (obrigatório):** `bun scripts/clone-log.ts init {t} {slug} --source=...` no começo; `check` a cada etapa; `verify` (etapas rodaram, hard-gates 1.4+4) E `verify-output --source={sourceSite}` (o .mdx saiu certo **e** não duplica a fonte) ANTES de commitar. `verify` exit 1 = NÃO fechar aquele artigo.
 - **Erro em 1 não derruba a fila.** Item que falha/não-converge vira "⚠ revisar" no relatório; a fila SEGUE pro próximo. Nada ruim é escondido.
 - **NÃO faz deploy. NÃO trava** (`contentLocked` fica false). Commit direto em `main` (régua do projeto). Sub-agents NUNCA fazem git — a skill-mãe/loop controla.
 - **Isolamento cross-nicho:** cada artigo é biblia-only e isolado; a fila nunca compartilha contexto entre artigos (evita vazar nicho de um pro outro).
@@ -60,7 +60,7 @@ Para cada item `FAZER`/`REGERAR`/`RETOMAR`, EM ORDEM:
 1. `bun scripts/clone-log.ts init {target} {slug} --source={source}` (pule se estiver RETOMANDO — o log já existe e apagá-lo perde o progresso).
 2. Roda a `artigo-clonar-em-massa` para o item (Skill tool OU fallback lendo a SKILL.md). Marca cada etapa com `clone-log.ts check {target} {slug} {etapa} "{detalhe}"` conforme conclui (0, 1.1, 1.2, 1.3, 1.4, 2, 2.2, 3, 3.2, 4, 5, 6).
    - Os HARD GATES (1.4 artigo-reviews-auditar, 4 artigo-auditar → readyToLock) são obrigatórios — a `artigo-clonar-em-massa` já os roda; a fila só confirma via clone-log.
-3. ANTES do commit do item (Etapa 6 da clone): `bun scripts/clone-log.ts verify {target} {slug}` (etapas ok?) **E** `bun scripts/clone-log.ts verify-output {target} {slug}` (artefato ok?). Qualquer um exit 1 → NÃO commita; tenta resolver (auto-fix da etapa faltante) ou marca "⚠ revisar" e segue.
+3. ANTES do commit do item (Etapa 6 da clone): `bun scripts/clone-log.ts verify {target} {slug}` (etapas ok?) **E** `bun scripts/clone-log.ts verify-output {target} {slug} --source={sourceSite}` (artefato ok **e** zero frase exata fora dos H2-slot vs a fonte?). Qualquer um exit 1 → NÃO commita; tenta resolver (auto-fix da etapa faltante) ou marca "⚠ revisar" e segue.
 4. Commit/push/gen/VPS do item (a própria `artigo-clonar-em-massa` faz isso na Etapa 6). VPS git-jam → retry (armadilha conhecida).
 5. Cross-check pós-item (memória `afiliados.fluxo.crosscheck-obrigatorio-pos-batch-paralelo`): confirma que o `.mdx` está no `git log` e o build passou.
 6. Próximo item.

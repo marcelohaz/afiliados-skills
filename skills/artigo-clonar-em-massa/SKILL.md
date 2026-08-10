@@ -106,6 +106,8 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 
    ⚠ **O exit code NÃO é o gate — leia o JSON.** O script sai **1** sempre que `frases_exatas > 0` OU `near_dup_0.8 > 0`, e num clone saudável isso é o estado NORMAL: os 5 H2 base são slots do template e coincidem com a fonte por construção (ver 5.1.5). Gate por exit code reprovaria 100% dos clones. O que decide é a **lista classificada** (`exatas_lista` / `near_lista`) depois de descartar as classes isentas. Mesma armadilha, invertida, do `audit-editorial.ts` na `pagina-produto-criar-em-massa`, que sai 0 mesmo com achado.
 
+   ✅ **Desde a v1.91.0 isso é gate, não confiança:** a Etapa 6.3.6 roda o `verify-output --source=` que executa ESTE script e reprova frase exata fora dos H2-slot antes do commit. Rodar aqui na 5.1 continua sendo o certo (é onde você conserta em loop), mas se pular, o 6.3.6 barra.
+
    🚨 **PROIBIDO escrever um comparador próprio inline.** Ter a régua no contexto NÃO substitui rodar o script — a implementação dele difere da que você escreveria, e é exatamente nessa diferença que mora o achado. **Caso real (somprofissional/melhor-caixa-de-som-jbl, 2026-08-10):** rodei um comparador inline "equivalente" e ele reportou 3 exatas + 3 near-dup ≥0.8, enquanto o `compare-cross-site.py` reportou **4 + 7** no mesmo par de arquivos. Os 5 a mais eram defeito real (2 títulos de bullet, 1 frase de review, 2 frases do guia, uma delas quase idêntica à da fonte) e teriam ido pro ar. Mesma classe das memórias [[feedback_seguir_skill_a_risca_nao_reusar_contexto]] e [[feedback_clone_regua_fonte_unica_invocar_de_verdade]]: reusar contexto no lugar de rodar a ferramenta.
 1.5. **⚠️ FALSOS POSITIVOS QUE VOCÊ NÃO DEVE CONSERTAR (canon 2026-07-30).** Antes de reescrever qualquer coisa, descarte estas classes — elas convergem **por construção** e "consertar" só quebra consistência:
    - **Os 5 H2 base do guide** (`Vale a pena…` / `Como escolher…` / `Qual a melhor marca…` / `Perguntas Frequentes` / `Conclusão`). São slots do template da `artigo-guia-escrever`, e dois deles são obrigatoriamente literais em toda a rede. Coincidir com o fonte é **esperado**. Não parafraseie para baixar jaccard.
@@ -131,10 +133,12 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 3.6. **6.3.6 GATE MECÂNICO ANTES DO COMMIT (obrigatório):**
 
    ```bash
-   bun scripts/clone-log.ts verify-output {target} {slug}
+   bun scripts/clone-log.ts verify-output {target} {slug} --source={source-site}
    ```
 
    Exit 1 → **NÃO commite**, conserte e re-rode. Checa o artefato de verdade (fence == 2, sem `contentLocked`, title não-vazio com contagem, `productCount >= 3`, guide com 5 H2, FAQ literal, intro no body fechando em ✅, sem travessão) — coisas que passam despercebidas quando quem confere é a mesma cabeça que escreveu.
+
+   **`--source` é obrigatório em clone** e é o que torna a Etapa 5 um gate de verdade: com ele, o `verify-output` **roda o `compare-cross-site.py` ele mesmo** e reprova qualquer **frase exata** compartilhada com a fonte que não seja um `<h2>` presente nos DOIS guias. Ou seja, não há como commitar sem o comparador canônico ter rodado e voltado limpo — a régua do 5.1 deixou de depender de eu lembrar. Near-dup ≥0.8 e specs idênticas são **impressos pra revisão e não travam** (exigem julgamento: subtitle keyword-first converge por design, ficha é fato). Sem `--source` o script avisa que a checagem de duplicata não rodou.
 
    A `artigo-clonar-fila` já exigia isso por artigo; a clone individual não, e a assimetria não fazia sentido: rodar 1 clone sozinho tinha MENOS trava que rodar o mesmo clone dentro de uma fila. Se estiver dentro da fila, ela também roda o `verify` (etapas do clone-log) — aqui basta o `verify-output`, porque a clone individual não mantém o log.
 
