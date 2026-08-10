@@ -56,11 +56,21 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 ## Pipeline (full-auto, etapa por etapa)
 
 ### Etapa 0 — Pré-flight (auto; aborta cedo se faltar)
+0. **Abre o log de execução** (vale nos DOIS modos, individual e fila):
+   ```bash
+   bun scripts/clone-log.ts init {target} {slug} --source={source-site}/{slug}
+   ```
+   A partir daqui, **feche cada etapa com `check`** assim que ela terminar (não no fim, de memória):
+   ```bash
+   bun scripts/clone-log.ts check {target} {slug} <etapa> "<o que foi feito, com números>"
+   ```
 1. Git pull no repo de trabalho (evita estado stale; painel/Bárbara commitam em paralelo).
 2. Parse args. Valida `targetSite`/`sourceSite` (`[a-z0-9-]+`).
 3. Lê o `.mdx` fonte → extrai: produtos (ASIN, name, image, imageAlt, badge, **rating**, schemaPrice, store), keyword, keywordPlural, listHeading, category, e a estrutura de H2/H3 do `guideContent`. **`rating` é a nota editorial do fonte e DEVE ser preservada — o clone biblia-only NÃO regenera nota, e sem ela o artigo/página perde a fonte de estrela (caso real escritoriocasa 2026-06-11: clones saíram com 0 rating).**
 4. Valida bíblias de TODOS os ASINs: existem em `docs/biblias-v2/{ASIN}.json` + `pontosFortes` não-vazio + `angulosConversao` não-vazio. Falta qualquer → ABORTA listando.
-5. Valida páginas de produto no destino (`sites/{target}/src/content/products/{slug}.mdx`): se existem, links hub-and-spoke do guide resolvem + servem de anti-dup intra-site. Se faltam, AVISA (guide cai pra Amazon /dp/ no fallback) — não bloqueia.
+5. Valida páginas de produto no destino (`sites/{target}/src/content/products/{slug}.mdx`): se existem, links hub-and-spoke do guide resolvem + servem de anti-dup intra-site.
+
+   **🚨 Se faltar alguma, é BUILD-BREAKER — crie a página ANTES do assembler.** Este passo dizia "AVISA, não bloqueia" e isso estava **errado**: o `name`↔slug é resolvido pelo Astro contra `products/`, então produto sem página quebra o build com `Entry products → {slug} was not found`. Não é o link caindo no fallback Amazon, é o site não compilar. Mordeu duas vezes no mesmo dia (10/08, `jbl-sw8a-ms` em `somprofissional` e depois em `compraguia`) — na primeira o build quebrou, na segunda a página foi criada antes justamente por causa da primeira. Rode a `pagina-produto-criar` pra cada faltante e confira também se a imagem existe em `public/` do destino (a da fonte NÃO serve, o filename é por-site).
 6. Lê `affiliateTag` do destino (`sites/{target}/src/config.ts`). Vazia = links crus; preenchida = `?tag=...`.
 7. Confere que o artigo destino NÃO existe travado.
 8. **Decide o TÍTULO do destino AGORA (antes do assembler da Etapa 1)** — aplica a regra `TITLE=` do topo: (a) lê 2-3 títulos de `sites/{target}/src/content/reviews/*.mdx` pra inferir o padrão-assinatura do PRÓPRIO site (P1/P2/P3/P4); (b) lê os títulos dos IRMÃOS cross-site (mesmo slug nos outros sites); (c) se `TITLE=` foi passado, só aceita se JÁ estiver no padrão do destino E divergir dos irmãos, senão DESCARTA; (d) gera/normaliza no padrão do destino (lead = campo `keyword`, sem forçar "Melhor", número N, ≤60 chars, tag-assinatura do site); (e) **HARD GATE**: o título escolhido bate o regex do padrão-assinatura do destino E é ≠ do de TODOS os irmãos (normaliza caixa/acentos antes de comparar). Falhou → regera. Guarda esse título pro assembler usar; a Etapa 6 só re-confere (backstop).
@@ -140,7 +150,9 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 
    **`--source` é obrigatório em clone** e é o que torna a Etapa 5 um gate de verdade: com ele, o `verify-output` **roda o `compare-cross-site.py` ele mesmo** e reprova qualquer **frase exata** compartilhada com a fonte que não seja um `<h2>` presente nos DOIS guias. Ou seja, não há como commitar sem o comparador canônico ter rodado e voltado limpo — a régua do 5.1 deixou de depender de eu lembrar. Near-dup ≥0.8 e specs idênticas são **impressos pra revisão e não travam** (exigem julgamento: subtitle keyword-first converge por design, ficha é fato). Sem `--source` o script avisa que a checagem de duplicata não rodou.
 
-   A `artigo-clonar-fila` já exigia isso por artigo; a clone individual não, e a assimetria não fazia sentido: rodar 1 clone sozinho tinha MENOS trava que rodar o mesmo clone dentro de uma fila. Se estiver dentro da fila, ela também roda o `verify` (etapas do clone-log) — aqui basta o `verify-output`, porque a clone individual não mantém o log.
+   A `artigo-clonar-fila` já exigia isso por artigo; a clone individual não, e a assimetria não fazia sentido: rodar 1 clone sozinho tinha MENOS trava que rodar o mesmo clone dentro de uma fila. Se estiver dentro da fila, ela também roda o `verify` (etapas do clone-log).
+
+   **⚠️ A clone individual TAMBÉM mantém o log agora (canon 2026-08-10).** Antes só a fila mantinha, e o efeito foi medido: em 10/08 duas clones individuais rodaram e **não deixaram rastro nenhum** — os 62 logs existentes eram todos de fila, ou seja, o modo mais usado era o único sem registro. Fluxo igual nos dois modos: `init` na Etapa 0 · `check` ao fechar cada etapa · `note` quando houver desvio ou sugestão · `verify` + `verify-output` no fim. Ver "Log de execução" no fim desta skill.
 
 4. **6.4 Commit + push** (`--no-verify`, hook bloqueia .mdx direto) + **regen `gen.ts`** (senão painel mostra "0 artigos") + **restart do dev server** do target (senão getStaticPaths fica stale e a rota nova dá 404 — armadilha conhecida).
 5. **6.5 Verifica infra** (auto): build OK + dev serve a home + `/{slug}/` 200 + painel lista o artigo.
@@ -219,6 +231,29 @@ Assembler determinístico (Python: json.dumps para campos single-line — subtit
 - **`name`↔slug do destino (anti build-breaker):** pra CADA produto, `slugify(name)` (com a regra `+`→`-plus`) tem que existir como `sites/{target}/src/content/products/{slug}.mdx` OU o produto está na lista de "sem página no destino" registrada na Etapa 0. Senão o build quebra com `Entry products → {slug} was not found`. Confira: pra cada `name`, `test -f sites/{target}/src/content/products/$(slugify name).mdx`. Falhou e o produto TEM página com outro slug → o `name` ficou do fonte; troque pelo `name` exato da página do destino.
 - TODO `image:` e o `featuredImage:` apontam pra arquivo que EXISTE em `sites/{target}/public{path}` (rode `bun scripts/check-broken-images.ts --site {target}` → 0 quebradas). Imagem é do destino, não do fonte.
 Qualquer um falhar = assembler errou; conserte antes de prosseguir. Body intro vazio (Etapa 3). SEM contentLocked.
+
+## Log de execução (clone-log) — o que registrar e por quê
+
+O `clone-log.ts` grava **como a skill foi executada**, não o conteúdo produzido (isso é dos `.audits/articles`). Serve pra ler N runs depois e melhorar a skill com base no que falhou de verdade.
+
+**Três seções, com pesos diferentes:**
+
+| seção | quem escreve | vale pra quê |
+|---|---|---|
+| **Etapas** (`check`) | o agente | saber o que ele AFIRMA ter feito. Um `[x]` não prova nada, e o cabeçalho do log diz isso em voz alta. |
+| **Desvios** e **Sugestões** (`note`) | o agente | é o dado que só ele tem: passo pulado, **passo inventado**, ferramenta trocada, régua ambígua. |
+| **Verificação mecânica** | o `verify-output` | única parte que não passa pelo julgamento do agente: sai de ler o `.mdx` e de rodar o `compare-cross-site.py`. |
+
+**`note` é obrigatório quando** você (a) pulou uma etapa, (b) **criou uma etapa que a skill não tem**, (c) usou ferramenta diferente da que a skill manda, ou (d) achou a régua ambígua/contraditória. Sintaxe:
+
+```bash
+bun scripts/clone-log.ts note {target} {slug} desvio   <etapa|geral> "o que fugiu e por quê"
+bun scripts/clone-log.ts note {target} {slug} sugestao <etapa|geral> "o que na skill atrapalhou"
+```
+
+**Por que os desvios importam mais que as etapas:** das 4 reincidências registradas do agente neste projeto (16/06, 10/07, 06/08, 10/08), **duas foram por INVENTAR etapa**, não por pular. Checklist de etapas não tem onde registrar isso — só o `note` tem. E não adianta esperar que o desvio apareça sozinho: o agente que pula um passo é o mesmo que marca `[x]`.
+
+**Não maquie.** Log com desvio registrado vale mais que log limpo: run sem nenhum `note` em 12 etapas é ou execução perfeita ou desvio não declarado, e as duas se parecem no arquivo. O registro honesto é o que faz a leitura em lote valer alguma coisa.
 
 ## Comparador cross-site
 
