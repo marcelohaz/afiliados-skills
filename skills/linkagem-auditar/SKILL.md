@@ -67,6 +67,10 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 
   A moldura é o **padrão recomendado, não obrigatório**: link integrado ao texto continua válido quando passa nos checks de frase (ex.: *"vale olhar os melhores Kindles"*). O que não passa é a keyword enfiada como objeto de verbo no singular.
 - **Régua de QUANTIDADE (canon Marcelo 2026-06-09): 2 mínimo · ~3 ideal · 4 máximo** peers DISTINTOS de saída, sempre **contextuais e naturais** (nunca decorativos). Não linkar o mesmo peer 2× no mesmo artigo. O **HUB** (artigo-cabeça: `homeReviewSlug` ou frontmatter `pillar: true`) é **isento do teto de 4** — ele linka todos os filhos (hub-and-spoke ideal). O script emite `linkagem-fraca` (<2) e `linkagem-excesso` (>4 não-hub); a régua "~3 ideal" é alvo de julgamento (mire 3 ao ADICIONAR), não um flag por-artigo.
+
+⚠️ **O piso de 2 NÃO vence o "encaminhamento útil" (canon 2026-08-10) — vale sobretudo aqui, porque esta skill ADICIONA links.** Antes de propor um link novo pra resolver `linkagem-fraca`/`orfao`, aplique o teste da decisão: o link responde a uma **bifurcação** ("tablet ou Kindle?"), a uma **soma** ("whey + creatina?") ou a uma **ordem de prioridade** ("fecha a proteína antes da glutamina")? Se você precisa **construir o cenário** em que o leitor iria pro outro artigo, o cenário não existe e o link é protocolar. Nesse caso **NÃO proponha o link**: deixe o artigo em 0 peer e registre o `linkagem-fraca` como exceção justificada no relatório.
+
+Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo de áudio num site de impressora/tablet/Kindle) ganhou 2 links de tablet só pra bater o piso, e eles foram removidos depois. **Esta skill é justamente a que os traria de volta.** E não adianta cortar por categoria: dos 942 links peer da rede, 229 são cross-categoria e **227 passam no teste da decisão** (34 E-reader↔Tablet, 174 entre suplementos, 17 de fitness). Ver "Desempate" na `artigo-guia-escrever`.
 - **Sem travessão.** Português brasileiro editorial.
 
 ## Fluxo
