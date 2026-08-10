@@ -446,9 +446,24 @@ ficha   Impressora de Tanque 4 em 1 com ADF de 30 folhas e Ethernet
 frase   Impressora de Tanque 4 em 1 que digitaliza um maço de uma vez
 ```
 
-**O molde:** LEAD capitalizado + emenda (`que` · `com` · vírgula) + **oração que diz o que o produto FAZ pelo leitor**. O número entra dentro da oração, não como lista. Padrão pescado dos artigos publicados do oguiacompra — `"que vira a folha sozinha"`, `"que dispensa o scanner sem uso"`.
+**O molde:** LEAD capitalizado + emenda (`que` · `com` · vírgula) + **o DIFERENCIAL deste produto dentro deste lineup**. O número entra dentro da oração, não como lista. Padrão pescado dos artigos publicados do oguiacompra — `"que vira a folha sozinha"`, `"que dispensa o scanner sem uso"`.
 
-⚠️ **O gancho não pode citar número em que o produto PERDE pra outro do mesmo lineup.** A `EcoTank L3250` estava no slot "Melhor em Geral" com o gancho *"até 4.500 páginas"*, e três produtos da mesma lista rendem **12.000 por R$ 240 a menos**. O gancho tinha lastro e não contradizia o lead — o defeito é **cross-produto** e escapa de checagem feita produto a produto. **Antes de fechar, ordene o lineup por cada número citado nos ganchos.**
+⚠️ **DIFERENCIAL, não "o que o produto faz pelo leitor"** (canon Marcelo 2026-08-10, corrigindo a redação anterior desta seção). A régua dizia "oração que diz o que o produto FAZ pelo leitor", e isso empurra pro genérico: num comparativo, **quase todos fazem a mesma coisa**. Todo aspirador vertical aspira o chão, todo 2 em 1 vira de mão, toda impressora imprime. Quando o molde pede benefício e o benefício é comum, a saída vira frase de efeito pra soar distinta sem dizer nada.
+
+```
+❌ que encosta no armário e some          cena, não fato · vale pra qualquer compacto
+❌ para quem limpa com gente dormindo      cena · e o produto NÃO era o mais silencioso
+❌ que vira de mão sem trocar de aparelho  todo 2 em 1 do lineup faz isso
+✅ com 1,65 kg e filtro HEPA removível     o que ESTE tem e os vizinhos não
+✅ com 2000 W para carpete e tapete grosso a maior potência DA LISTA
+✅ o mais barato do comparativo            superlativo verdadeiro dentro do lineup
+```
+
+**O gancho responde: por que ESTE e não os outros dez?** O vocabulário natural disso é comparativo — mais leve, mais potente, mais barato, menos barulho, maior autonomia — ou de recorte de uso quando o produto é o único que atende: passa pano, para apartamento, com saco, sem fio.
+
+⚠️ **Consequência direta: o gancho não pode citar número em que o produto PERDE pra outro do mesmo lineup.** Deixou de ser aviso separado e virou o mesmo princípio — se o gancho é o diferencial, citar um número onde você perde é uma contradição, não um descuido. A `EcoTank L3250` estava no slot "Melhor em Geral" com o gancho *"até 4.500 páginas"*, e três produtos da mesma lista rendem **12.000 por R$ 240 a menos**. **Antes de fechar, ordene o lineup por cada número citado nos ganchos.**
+
+⚠️ **E o diferencial precisa de LASTRO, não do nome do produto.** Caso real (2026-08-10, melhoraspirador-com): ia dar ao `WAP Silent Speed Max` o lead "Silencioso", que é o nome comercial dele. A bíblia declara **85 dB**, e o `Electrolux STK15` da posição 1 declara **84 dB** — o "silencioso" era o mais barulhento dos dois. Marca batiza produto por marketing; o diferencial se prova na ficha ou não existe.
 
 ⚠️ **O resultado depende do que já foi atribuído**, por isso este teste é o passo 5 e não o 1. Caso real: a `Go 4` vende **3.000/mês** e a `Go 5` vende **500**. Por venda pura a Go 4 entraria primeiro e levaria o qualificador melhor; a restrição do passo 1 inverte, e a Go 5 fica em #3 com `Boa e Barata` enquanto a Go 4 entra em #4 com `Ultraportátil`.
 
