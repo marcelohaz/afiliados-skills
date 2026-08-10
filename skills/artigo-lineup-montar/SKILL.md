@@ -464,6 +464,16 @@ frase   Impressora de Tanque 4 em 1 que digitaliza um maço de uma vez
 
 ⚠️ **Se nenhum atributo coloca o produto em primeiro, ele pode não ter lead.** Isso não é falha de redação, é sinal do passo 5: *produto sem lead disponível é candidato a ficar de fora* — reporte, não force um gancho morno.
 
+⚠️ **LEAD e EIXO não são a mesma coisa, e a v1.94.2 os confundiu.** São dois testes, e o passo 6 consome o segundo:
+
+```
+LEAD   teste LEXICAL     o qualificador repete o de outro produto?   ("para Apartamento" é livre?)
+EIXO   teste COMPARATIVO ordenando o lineup por esse atributo,
+                         este fica em PRIMEIRO?                       (é o mais leve? o mais barato?)
+```
+
+Um produto pode ter **lead livre e nenhum eixo**: "para Apartamento" não está tomado, e ainda assim ele não é o mais leve, nem o mais barato, nem o mais compacto de ninguém. É esse o caso que enche lineup de posição morna — o lead disfarça a ausência do eixo, porque o subtítulo sai escrito e parece resolvido. **Quando o passo 6 pergunta "tem eixo próprio?", ele está perguntando do teste comparativo, não do lexical.**
+
 **O gancho responde: por que ESTE e não os outros dez?** O vocabulário natural disso é comparativo — mais leve, mais potente, mais barato, menos barulho, maior autonomia — ou de recorte de uso quando o produto é o único que atende: passa pano, para apartamento, com saco, sem fio.
 
 ⚠️ **Consequência direta: o gancho não pode citar número em que o produto PERDE pra outro do mesmo lineup.** Deixou de ser aviso separado e virou o mesmo princípio — se o gancho é o diferencial, citar um número onde você perde é uma contradição, não um descuido. A `EcoTank L3250` estava no slot "Melhor em Geral" com o gancho *"até 4.500 páginas"*, e três produtos da mesma lista rendem **12.000 por R$ 240 a menos**. **Antes de fechar, ordene o lineup por cada número citado nos ganchos.**
