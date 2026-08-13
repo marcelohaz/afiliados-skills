@@ -74,29 +74,38 @@ Detecção:
    - Glob `sites/{site}/src/content/products/*.mdx`
    - Se modo B (subset): filtrar pelo ASIN do frontmatter
    - **Se nenhum: NÃO aborte ainda.** Zero é o sintoma de dessincronia, não só de stub
-     ausente. Antes de abortar, force a VPS a soltar o que ela tem e puxe de novo:
+     ausente. Antes de abortar, cutuque a VPS e puxe de novo:
 
      ```bash
-     # 1) empurra commit que ficou preso na VPS (o /admin/update também pusha)
-     set -a; source .env.painel-skills; set +a
-     A=$(printf '%s:%s' "$PAINEL_USER" "$PAINEL_PASS" | base64 | tr -d '\n')
-     curl -s -m 90 -X POST -H "Authorization: Basic $A" -H "Content-Type: application/json" \
-       "${PAINEL_URL:-https://painel.melhorserum.com.br}/admin/update" | head -c 300
-     # 2) puxa de novo e re-checa os ASINs
+     bash scripts/painel-vps-pull.sh 2>&1 | tail -2   # POST /admin/update: pull + push + gen na VPS
+     # ⚠ o stash é obrigatório AQUI TAMBÉM: o pop do passo 1.5 já sujou a árvore de volta,
+     #   e sem ele este pull morre com "Please commit or stash them" (medido 2026-08-13).
+     git stash push -u -m "skill-preflight-retry" 2>&1 | tail -1
      git pull --rebase origin main 2>&1 | tail -2
+     git stash pop 2>&1 | tail -1
+     echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
      ```
 
-     Só aborte se continuar zero DEPOIS disso, com a mensagem "Site {site} não tem stubs
-     (verifica painel)".
+     ⚠️ **Confira a saída, não presuma.** Se o `git pull` reclamar de árvore suja, o
+     re-check vale nada e você vai abortar por engano de novo. A linha de controle
+     `local × remote` é o que prova que o pull valeu.
 
-   ⚠️ **A VPS commita mas NEM SEMPRE pusha** — a linha antiga desta skill dizia
+     Só aborte se continuar zero DEPOIS disso, com a mensagem "Site {site} não tem stubs
+     (verifica painel)". Se a resposta trouxer *"N commit local enviado pro origin/main"*,
+     era exatamente isto: havia trabalho preso lá.
+
+   ⚠️ **A VPS commita mas NEM SEMPRE pusha na hora** — a linha antiga desta skill dizia
    "commita+pusha automaticamente" e isso é falso. Caso real 2026-08-13 (monitores no
-   `guiamelhorcompra`): os 10 stubs estavam num commit LOCAL da VPS
-   (`e333dba89 scaffold 10 páginas individualis`) que nunca tinha sido empurrado. O
-   `painel-vps-pull.sh` respondia "já estava atualizado" — ele puxa, não empurra. Foi o
-   `POST /admin/update` que soltou ("1 commit local enviado pro origin/main"), e aí o
-   batch rodou normal. Sem esse passo, o abort culpa o user por não ter criado stub que
-   ele criou.
+   `guiamelhorcompra`): os 10 stubs estavam num commit LOCAL da VPS de **11:24**
+   (`e333dba89 scaffold 10 páginas individualis`) e às **13:09** o `/admin/update` ainda
+   respondia só "já estava atualizado". Numa chamada posterior o mesmo endpoint soltou
+   ("1 commit local enviado pro origin/main") e o batch rodou normal.
+
+   ⚠️ **Não invente o mecanismo.** O `painel-vps-pull.sh` e a chamada manual batem no
+   MESMO `POST /admin/update` — não existe um "só puxa" e outro "empurra". Por que a
+   chamada das 13:09 não empurrou e a seguinte empurrou, não está estabelecido. O que
+   está medido é que **chamar de novo, no momento do pré-flight, destravou** — e custa
+   uma chamada. Basta isso pra justificar o passo; não hipotetize causa na SKILL.md.
 
    ⚠️ **`POST /product/:site/_actions/create-from-bible` respondendo 409 "já existe" com
    o arquivo ausente no seu disco é a assinatura desse estado** — a VPS enxerga o próprio
