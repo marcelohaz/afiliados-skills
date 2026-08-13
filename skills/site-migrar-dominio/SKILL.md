@@ -114,9 +114,23 @@ e só o rename entrou no commit. Rode DEPOIS de commitar:
 
 ```bash
 git show --stat HEAD | tail -1                      # ⛔ "0 insertions(+), 0 deletions(-)" = só o rename entrou
-git grep -c '{dominio-antigo}' HEAD -- sites/{novo}/ | head   # tem que ser vazio
+git grep -c '{dominio-antigo}' HEAD -- sites/{novo}/ | head   # domínio: tem que ser vazio
+git grep -n '{Marca Antiga}' HEAD -- sites/{novo}/  | head    # MARCA com espaço: idem (case-SENSITIVE)
 git show HEAD:sites/{novo}/src/config.ts | grep -E 'domain:|affiliateTag:'   # valores NOVOS
 ```
+
+**⚠ Grepe as DUAS formas: o domínio E a marca com espaço.** `tabletideal` e `Tablet Ideal` são
+strings diferentes, e a segunda sobrevive ao `sed` do domínio porque vive na PROSA (bio do autor,
+página /sobre/, hero, descrição de categoria). Caso real 2026-08-13: `/author/gustavo-alves/` foi
+pro ar dizendo *"redator por trás do Tablet Ideal"* e **passou por duas varreduras** que só grepavam
+o domínio (achado da Bárbara, depois de já ter reportado a migração como concluída).
+
+**Use `grep` case-SENSITIVE no Title Case da marca, nunca `-i`.** Marca de rede afiliada costuma ser
+feita de palavras comuns, então `-i` casa com português legítimo e afoga o achado real em ruído:
+medido em 2026-08-14 sobre 8 migrações da rede, `grep -i "Impressora Ideal"` deu **4 falsos
+positivos** — todos em *"a impressora ideal para você"*, que é a frase, não a marca. No Title Case,
+as mesmas 8 migrações dão **0**. Se a marca antiga for genérica demais pra separar por caixa
+(ex.: "Melhor Guia"), grepe e classifique os hits à mão em vez de confiar na contagem.
 
 **A assinatura do defeito é `0 insertions(+), 0 deletions(-)` num commit que deveria carregar rename
 E edição.** `git mv` já deixa o rename staged; o `sed`/`Edit` que vem depois NÃO entra sozinho, e um
@@ -125,7 +139,7 @@ porque o deploy saiu da árvore de trabalho — mas o HEAD fica com **pasta nova
 próximo build pelo painel (ou por qualquer outra máquina) ressuscita a **tag de afiliado antiga**.
 Reincidência medida: `guiamelhorcompra`→`escritoriocasa` (2026-08) e `tabletideal`→`omelhortablet`
 (2026-08-13, pego pela própria Bárbara *depois* de reportar a migração como concluída). Ver
-armadilha 10 e [[afiliados.projeto.transferir-guiamelhorcompra-para-escritoriocasa]].
+armadilhas 10-12 e [[afiliados.projeto.transferir-guiamelhorcompra-para-escritoriocasa]].
 
 ## Fase 2 — zona e DNS do domínio novo
 
@@ -288,7 +302,14 @@ Não redireciona. Ele devolve **HTTP 404** com meta-refresh no corpo; o Googlebo
 a URL ([[afiliados.armadilha.404-meta-refresh-nao-e-redirect]]). Redirect de verdade só pelo
 `worker/redirects.json`.
 
-### 10. `git mv` + `sed`: o commit leva só o rename
+### 10. Grepar só o domínio e achar que varreu a marca
+`tabletideal` e `Tablet Ideal` são strings diferentes. O `sed` do domínio não toca a marca escrita
+por extenso na PROSA (bio do autor, /sobre/, hero, descrição de categoria), e ela vai pro ar
+contradizendo a marca nova. Duas varreduras da Bárbara passaram batido nisso em 2026-08-13. O gate
+pós-commit da Fase 1 grepa as duas formas — e **case-sensitive**, porque `-i` afoga o achado em
+português legítimo ("a impressora ideal para você").
+
+### 11. `git mv` + `sed`: o commit leva só o rename
 A armadilha mais reincidente desta skill, e a mais silenciosa — **o site no ar continua certo**, então
 nada denuncia. `git mv` já entra staged; a edição que vem depois (`sed`, `Edit`) fica unstaged, e um
 `git commit` sem `git add` novo grava pasta nova com config velho. Assinatura: `0 insertions(+),
@@ -296,7 +317,7 @@ nada denuncia. `git mv` já entra staged; a edição que vem depois (`sed`, `Edi
 2026-08, tabletideal 2026-08-13). O gate pós-commit da Fase 1 existe só pra isso: **medir o HEAD**,
 porque todo gate que lê a árvore de trabalho ou o `dist/` passa limpo com o defeito presente.
 
-### 11. Reportar a migração antes de conferir o HEAD
+### 12. Reportar a migração antes de conferir o HEAD
 Corolário da 10, e o motivo de ela sobreviver: as duas reincidências foram **reportadas como
 concluídas** e o erro apareceu depois, na conferência. O relatório final só sai depois do gate
 pós-commit — "testei com `curl` e deu 200" prova o que está no ar, não o que está commitado.
