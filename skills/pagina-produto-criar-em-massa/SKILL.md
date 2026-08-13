@@ -54,16 +54,54 @@ Detecção:
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -m "skill-pagina-produto-criar-em-massa-temp" 2>/dev/null
+   git stash push -u -m "skill-pagina-produto-criar-em-massa-temp" 2>&1 | tail -1
    git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   git stash pop 2>&1 | tail -1
+   # CONTROLE: o pull funcionou mesmo?
+   echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
    ```
-   Painel VPS commita+pusha automaticamente quando user cria stubs novos pela UI. Mac local pode estar 5-30s atrás. Pull antes evita falso-negativo "stub não existe localmente".
+   O user cria os stubs pela UI do painel (VPS) e invoca a skill aqui em seguida. O
+   estado só chega no Mac por git, e **há duas formas de ele não chegar**.
+
+   ⚠️ **Use `-u` e NÃO engula o erro do pull.** `git stash push` com pathspec (ou sem
+   `-u`) deixa modificação de fora, e aí o pull morre com *"cannot pull with rebase: You
+   have unstaged changes"*. Com `2>/dev/null` isso passa despercebido e a skill segue
+   lendo o disco velho. Caso real 2026-08-13: 10 stubs existiam no remote, o pull falhou
+   em silêncio e o passo 2 reportou "SEM STUB 10". A linha de controle acima é o que
+   distingue "puxei e não tem" de "não puxei".
 
 2. **List candidatos**:
    - Glob `sites/{site}/src/content/products/*.mdx`
    - Se modo B (subset): filtrar pelo ASIN do frontmatter
-   - Se nenhum: abortar com mensagem "Site {site} não tem stubs (verifica painel)"
+   - **Se nenhum: NÃO aborte ainda.** Zero é o sintoma de dessincronia, não só de stub
+     ausente. Antes de abortar, force a VPS a soltar o que ela tem e puxe de novo:
+
+     ```bash
+     # 1) empurra commit que ficou preso na VPS (o /admin/update também pusha)
+     set -a; source .env.painel-skills; set +a
+     A=$(printf '%s:%s' "$PAINEL_USER" "$PAINEL_PASS" | base64 | tr -d '\n')
+     curl -s -m 90 -X POST -H "Authorization: Basic $A" -H "Content-Type: application/json" \
+       "${PAINEL_URL:-https://painel.melhorserum.com.br}/admin/update" | head -c 300
+     # 2) puxa de novo e re-checa os ASINs
+     git pull --rebase origin main 2>&1 | tail -2
+     ```
+
+     Só aborte se continuar zero DEPOIS disso, com a mensagem "Site {site} não tem stubs
+     (verifica painel)".
+
+   ⚠️ **A VPS commita mas NEM SEMPRE pusha** — a linha antiga desta skill dizia
+   "commita+pusha automaticamente" e isso é falso. Caso real 2026-08-13 (monitores no
+   `guiamelhorcompra`): os 10 stubs estavam num commit LOCAL da VPS
+   (`e333dba89 scaffold 10 páginas individualis`) que nunca tinha sido empurrado. O
+   `painel-vps-pull.sh` respondia "já estava atualizado" — ele puxa, não empurra. Foi o
+   `POST /admin/update` que soltou ("1 commit local enviado pro origin/main"), e aí o
+   batch rodou normal. Sem esse passo, o abort culpa o user por não ter criado stub que
+   ele criou.
+
+   ⚠️ **`POST /product/:site/_actions/create-from-bible` respondendo 409 "já existe" com
+   o arquivo ausente no seu disco é a assinatura desse estado** — a VPS enxerga o próprio
+   disco, você enxerga o git. Os dois estão certos sobre estados diferentes. Não conclua
+   daí que o produto foi removido do site de propósito.
 
 3. **Classificar cada candidato** (detecção rigorosa):
    - **Stub vazio**: body contém `{/* STUB GERADO POR ` E frontmatter NÃO tem `pros`, `cons`, `specs`, `fullReview`, `subtitle`, `shortDescription`
