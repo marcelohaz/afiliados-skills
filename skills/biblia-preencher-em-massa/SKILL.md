@@ -19,7 +19,7 @@ Args no `$ARGUMENTS`:
 
 ## Modelo
 
-Opus 4.8 (ou mais novo). Sub-agents fixados com `model: opus` no Agent tool. NUNCA Sonnet/Haiku (régua do projeto: skills sempre Opus).
+Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` no Agent tool. NUNCA Sonnet/Haiku (régua do projeto: skills sempre Opus).
 
 ## ⚠️ Playbook anti-contaminação (o coração desta skill)
 

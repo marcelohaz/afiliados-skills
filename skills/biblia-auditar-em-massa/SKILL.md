@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar-em-massa
-description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, SEM passada comparativa). Escopo = FATO + DADO LIMPO + NAMING (a bíblia é fonte de fato e nunca é renderizada direto; voz editorial é do review/página, que reescreve). AUTO-APLICA conserto de direção CONHECIDA — lixo de dado (strip HTML na curadoria, remover caractere invisível/BOM, espaço duplo, marca duplicada no nome, preencher marca vazia derivável dos dados) + reescrita/correção conhecida (voz-comprador→observação analítica, contradição contra a própria decisaoEditorial, fonte atribuída errada, claim curado que contradiz o bruto). Cada conserto passa por RE-AUDITORIA automática (resolveu? não quebrou? não mudou sentido?; não convergiu em ≤3 → reverte do backup + vira flag). NÃO mexe em voz editorial (travessão/muleta "declarado pelo fabricante"/superlativo/concordância = trabalho do review). REPORT-ONLY pro indeterminável (frescor, verificação externa, contradição no bruto sem valor certo, naming que precisa de decisão: marca real incerta, nome linha-vs-fabricante). Re-auditoria + backup substituem a aprovação humana. Roda como 2ª etapa do preencher-em-massa --audit OU sozinha. Sub-agents Opus paralelos (≤10). Sync R2 nas 2 pontas. Botão "🔍 Auditar bíblias" do produtos.html copia o comando.
+description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, sem passada comparativa). Escopo = FATO + DADO LIMPO + NAMING (bíblia é fonte de fato, nunca renderizada; voz editorial é do review). AUTO-APLICA conserto de direção conhecida (lixo de dado, voz-comprador→analítica, contradição com a própria decisaoEditorial, fonte atribuída errada), cada um com re-auditoria automática e reversão do backup se não convergir em ≤3. REPORT-ONLY pro indeterminável (frescor, verificação externa, naming ambíguo). NÃO mexe em voz editorial. Roda como 2ª etapa do preencher-em-massa --audit OU sozinha. Sub-agents paralelos (≤10). Sync R2 nas 2 pontas. Botão '🔍 Auditar bíblias' do produtos.html copia o comando.
 ---
 
 ## Parse de input
@@ -19,7 +19,7 @@ Args no `$ARGUMENTS`:
 
 - **É** o auditor-corretor em massa: roda em N bíblias **já preenchidas**, cada uma isolada, **conserta o que tem solução conhecida**, e lista só o que precisa de você.
 - **NÃO** delega o conserto pra outra skill. A `biblia-auditar` individual vira **fallback** pra mexer numa bíblia só — não é etapa obrigatória depois desta.
-- **NÃO é a IA do painel** (botão "✨ Auditar"). Roda na assinatura (Claude Code), Opus 4.8.
+- **NÃO é a IA do painel** (botão "✨ Auditar"). Roda na assinatura (Claude Code), Opus 5 (ou o Opus mais novo).
 
 ## Garantia de qualidade (= skill individual)
 
@@ -41,7 +41,7 @@ O texto sai igual; a fiscalização vira **automática (re-audit) + pós-fato (r
 
 ## Modelo
 
-Opus 4.8 (ou mais novo). Sub-agents fixados com `model: opus` no Agent tool. NUNCA Sonnet/Haiku.
+Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` no Agent tool. NUNCA Sonnet/Haiku.
 
 ## ⚠️ Playbook anti-contaminação (o coração desta skill)
 

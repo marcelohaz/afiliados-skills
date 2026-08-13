@@ -32,11 +32,11 @@ Slug do artigo destino = mesmo slug do fonte (ex: `melhor-pre-treino`), salvo ov
 
 - **Reusa** as skills-peça (`artigo-review-criar` régua, `artigo-intro-escrever`, `artigo-guia-escrever`, `artigo-meta-escrever`, `artigo-reviews-auditar`, `artigo-auditar`) — NÃO reimplementa régua editorial (evita drift; paridade com `agent-prompts.json`). **Princípio único (v1.54.0): a clone APONTA pra régua, nunca a RE-ESCREVE.** Guide/intro/meta/audits são INVOCADOS via Skill tool (loop principal, sequencial). Os reviews (Etapa 1.1) são N sub-agents PARALELOS e sub-agent não chama Skill tool → cada um LÊ `artigo-review-criar/SKILL.md` direto. Resumo inline de régua = proibido (era a fonte do drift: subtitle desatualizado, voz-comprador vazada, "Para quem é" repetitivo).
 - **Conteúdo 100% do ZERO** a partir das bíblias. O artigo fonte serve SÓ de molde: nº de produtos, lineup, badges, keyword/keywordPlural/listHeading, e a estrutura de H2/H3 do guide. Em `biblia-only` os sub-agents NÃO veem o texto do fonte (sem leakage).
-- **NÃO é a IA do painel.** Roda na assinatura (Claude Code), Opus 4.8. (A op `clone-article` do painel usa API key e está fora do fluxo.)
+- **NÃO é a IA do painel.** Roda na assinatura (Claude Code), Opus 5 (ou o Opus mais novo). (A op `clone-article` do painel usa API key e está fora do fluxo.)
 
 ## Modelo
 
-Opus 4.8 (ou mais novo). Sub-agents herdam o modelo da sessão (`settings.json: opus[1m]`) OU são fixados com `model: opus` no Agent tool. NUNCA Sonnet/Haiku (régua do projeto: skills sempre Opus).
+Opus 5 (ou o Opus mais novo disponível). Sub-agents herdam o modelo da sessão (`settings.json: opus[1m]`) OU são fixados com `model: opus` no Agent tool. NUNCA Sonnet/Haiku (régua do projeto: skills sempre Opus).
 
 ## Ambiente (CRÍTICO)
 

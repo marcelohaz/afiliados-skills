@@ -14,7 +14,7 @@ description: Roda uma FILA de clones de artigo (N artigos, um após o outro), re
 
 ## Modelo
 
-Opus 4.8 (ou mais novo). Sub-agents das etapas herdam o modelo da sessão. NUNCA Sonnet/Haiku.
+Opus 5 (ou o Opus mais novo disponível). Sub-agents das etapas herdam o modelo da sessão. NUNCA Sonnet/Haiku.
 
 ## Parse de input
 
