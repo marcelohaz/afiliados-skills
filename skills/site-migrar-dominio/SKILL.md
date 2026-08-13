@@ -108,6 +108,25 @@ grep -rl '{dominio-antigo}' sites/{novo}/dist | wc -l                           
 próprio hook documenta o bypass pra este caso — `git commit --no-verify`, "migrações grandes". Deixe
 explícito na mensagem que **não foi deployado** e qual item ficou pendente.
 
+**🚨 GATE PÓS-COMMIT — meça o HEAD, não a árvore de trabalho.** O gate acima lê `dist/`, que é
+construído do **working tree**: ele passa mesmo quando as edições de conteúdo ficaram FORA do índice
+e só o rename entrou no commit. Rode DEPOIS de commitar:
+
+```bash
+git show --stat HEAD | tail -1                      # ⛔ "0 insertions(+), 0 deletions(-)" = só o rename entrou
+git grep -c '{dominio-antigo}' HEAD -- sites/{novo}/ | head   # tem que ser vazio
+git show HEAD:sites/{novo}/src/config.ts | grep -E 'domain:|affiliateTag:'   # valores NOVOS
+```
+
+**A assinatura do defeito é `0 insertions(+), 0 deletions(-)` num commit que deveria carregar rename
+E edição.** `git mv` já deixa o rename staged; o `sed`/`Edit` que vem depois NÃO entra sozinho, e um
+`git commit` sem `add` novo leva só a metade. Nada quebra na hora — o que está no ar continua certo,
+porque o deploy saiu da árvore de trabalho — mas o HEAD fica com **pasta nova + config velho**, e o
+próximo build pelo painel (ou por qualquer outra máquina) ressuscita a **tag de afiliado antiga**.
+Reincidência medida: `guiamelhorcompra`→`escritoriocasa` (2026-08) e `tabletideal`→`omelhortablet`
+(2026-08-13, pego pela própria Bárbara *depois* de reportar a migração como concluída). Ver
+armadilha 10 e [[afiliados.projeto.transferir-guiamelhorcompra-para-escritoriocasa]].
+
 ## Fase 2 — zona e DNS do domínio novo
 
 1. Confirmar no **Registro.br** que o domínio está ativo (não confie no `domains.json`).
@@ -269,10 +288,24 @@ Não redireciona. Ele devolve **HTTP 404** com meta-refresh no corpo; o Googlebo
 a URL ([[afiliados.armadilha.404-meta-refresh-nao-e-redirect]]). Redirect de verdade só pelo
 `worker/redirects.json`.
 
+### 10. `git mv` + `sed`: o commit leva só o rename
+A armadilha mais reincidente desta skill, e a mais silenciosa — **o site no ar continua certo**, então
+nada denuncia. `git mv` já entra staged; a edição que vem depois (`sed`, `Edit`) fica unstaged, e um
+`git commit` sem `git add` novo grava pasta nova com config velho. Assinatura: `0 insertions(+),
+0 deletions(-)` num commit que deveria ter as duas coisas. Confirmado 2× na rede (guiamelhorcompra
+2026-08, tabletideal 2026-08-13). O gate pós-commit da Fase 1 existe só pra isso: **medir o HEAD**,
+porque todo gate que lê a árvore de trabalho ou o `dist/` passa limpo com o defeito presente.
+
+### 11. Reportar a migração antes de conferir o HEAD
+Corolário da 10, e o motivo de ela sobreviver: as duas reincidências foram **reportadas como
+concluídas** e o erro apareceu depois, na conferência. O relatório final só sai depois do gate
+pós-commit — "testei com `curl` e deu 200" prova o que está no ar, não o que está commitado.
+
 ## Relatório final
 
 Sempre incluir: commit(s), o que ficou **pendente** (tag, NS, VPS, poda do R2), a data de expiração dos
-dois domínios, e o comando exato de reversão.
+dois domínios, e o comando exato de reversão. **Pré-condição: o gate pós-commit da Fase 1 passou** (o
+HEAD, não a árvore) — sem isso o relatório afirma o que não foi medido.
 
 ## Exemplo de invocação
 
