@@ -57,7 +57,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 - **Nunca invente.** Cada claim numérico tem origem rastreável na bíblia (`specsAmazon`, `doFabricante`, `pontosFortes`, etc).
 - **Conteúdo COMPARATIVO** (diferente da página individual): pode comparar com outros produtos do artigo, citar por nome, dizer "vs HP X" se houver dado na bíblia. Pode falar "neste comparativo", "entre os modelos analisados", "aqui". **Banido no output**: "lineup", "desta seleção", "do lineup". Ver ângulo comparativo no campo `fullReview` abaixo.
-- **Anti-duplicate vs página individual**: leia o `fullReview` da página individual antes (`sites/{site}/src/content/products/{slug-do-produto}.mdx`). O texto do produto-no-artigo deve ter ângulo DIFERENTE — comparativo, posicionamento no comparativo, etc.
+- **Ângulo comparativo por natureza, SEM ler a página individual (canon Marcelo 2026-08-13)**: o produto-no-artigo é comparativo (posição, badge, vizinhos) e a página é autônoma — essa diferença de NATUREZA já diverge os textos. A obrigação antiga de ler a página pra "não repetir" foi cortada por medição: o overlap intra-site já rodava a ~10% de mediana COM a regra ativa, e o custo era ~3-4k tokens por produto sem rendimento. Sobreposição residual factual é aceita (`afiliados.regras.pagina-produto-sobreposicao-crosssite-ok`, mesma régua).
 - **Sem travessão (—)** em nenhum campo.
 - **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Voz analítica**: NUNCA cite compradores/reviews/avaliações/estrelas/Amazon.
@@ -117,7 +117,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 4. **Read bíblia**: `Read docs/biblias-v2/{ASIN}.json`. Se não existir, abortar.
 
-5. **Read página individual**: tenta `Read sites/{site}/src/content/products/{slugify(bíblia.identidade.nome)}.mdx`. Lê o `fullReview` pra **NÃO REPETIR** ângulo no artigo. Se a página individual não tiver `fullReview` (stub puro), tudo bem — só toma cuidado com o conceito.
+5. ~~Read página individual~~ **REMOVIDO (canon 2026-08-13)**: não leia a página individual. O ângulo do review vem do BADGE + posição no comparativo, não de "fugir" do texto da página. Ver invariante "Ângulo comparativo por natureza".
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts`. Pode ser `''` (construção, links crus) ou preenchida.
 
@@ -214,7 +214,6 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
    - Tag correta nos links (ou cruas se config vazia)
    - Voz analítica (zero "compradores", "reviews", "avaliações", "posicionamento Amazon")
    - Voz-citação ficha-técnica (zero "alérgenos confirmam", "atributos declaram", "conforme tipo de dieta", "apontada pelo fabricante como") — spec factual vai direto; atribuição só pra recomendação/calibração do fabricante, ver Armadilha 4
-   - Anti-duplicate vs página individual (frases não-repetidas)
    - Tom natural (v1.32.0): rótulos passam no teste-da-Amazon, zero meta-SEO, máx 1 coloquialismo, sem antropomorfismo com gíria
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-prod-{ASIN}.mdx`. Pattern paralelo ao do painel pra aparecer no card "Histórico de versões".
@@ -559,9 +558,9 @@ Ao decidir QUAL claim vira pro central no artigo vs. spec:
 - ✓ Superlativas qualificadas com dado: "entre as mais econômicas da categoria" (se houver concorrentes na bíblia)
 - Densidade ~5-7 dados quantitativos no fullReview
 
-## Anti-duplicate vs página individual
+## Ângulo comparativo vs autônomo (a página individual NÃO é lida — canon 2026-08-13)
 
-**Antes de gerar**, leia a página individual do produto (`content/products/{slug}.mdx`) e identifique frases-chave do `fullReview`. **Não repita** essas frases no artigo. Use ângulo comparativo (vs autônomo da página individual):
+A divergência entre página e review vem da **natureza** dos dois textos, não de comparação ativa. Escreva o review como COMPARATIVO (posição no artigo, badge, relação com vizinhos) e ele diverge da página sozinho:
 
 | Página individual (autônoma) | Produto no artigo (comparativo) |
 |---|---|
@@ -570,8 +569,8 @@ Ao decidir QUAL claim vira pro central no artigo vs. spec:
 
 ## Armadilhas recorrentes
 
-### 1. Repetir frase exata da página individual
-Confere antes de salvar. Se uma frase específica está na página individual, reescreva.
+### 1. ~~Repetir frase exata da página individual~~ (armadilha desativada, canon 2026-08-13)
+Não há mais checagem contra a página individual — ela nem é lida. Convergência factual residual é aceita; o que segue proibido é copiar verbatim da BÍBLIA sem destilar (categoria E).
 
 ### 2. HTML proibido por hábito
 `<ul>` é tentador pra listar features. Use parágrafos.
