@@ -23,9 +23,15 @@ spec são reportadas à parte (`specs_identicas`) como informação.
 ONDE o redator põe a enumeração. A mesma frase — "woofer de 80 x 45 mm, tweeter de
 cúpula de 16 mm da Peerless e dois radiadores passivos" — era classificada como spec
 (não acionável) quando morava em `specs[].value` e como prosa AUTORAL (acionável)
-quando morava num bullet de `pros`. Medido no lote de 06/08: `acionavel` disparou em
-praticamente todo par comparado, e o top hit era sempre essa recitação de ficha —
-zero foram acionados de fato. Um sinal que sempre acende não carrega informação.
+quando morava num bullet de `pros`.
+
+⚠ **Dimensione a expectativa: isto é conserto de classificação, não faxina de ruído.**
+No lote de áudio de 06/08 o sintoma parecia epidêmico (o `acionavel` acendia em quase
+todo par e o top hit era sempre enumeração de driver), mas medido na rede o efeito é
+mínimo: **425 pares em 70 páginas, 42% acionável antes e 42% depois — 1 par silenciado**.
+Nos outros 41% o `acionavel` aponta prosa autoral de verdade e deve mesmo acender.
+Nichos que recitam ficha em bullet (áudio, suplemento) concentram o caso; o resto da
+rede quase não é afetado. Não conte com esta mudança pra baixar volume de warn.
 
 Agora frases com >=3 medidas (número + unidade) entram no balde `prosa_ficha_*` e
 NÃO acionam. Elas continuam no JSON, com lista própria: o objetivo é tirá-las do
