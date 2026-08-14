@@ -384,3 +384,18 @@ Args canônico que invoco: `Skill(skill="categoria-descricao-escrever", args="es
 ## Limitação intrínseca conhecida
 
 Sem schema Zod programático no output, validação fica editorial. ~3% de chance de algum campo ficar levemente fora do limite editorial (HTML em 2050 chars, 4 parágrafos em vez de 3, alguma tag inline rara). Mitigação principal: validar mentalmente a tag list e os caracteres proibidos (`` ` `` e `${`) antes de aplicar.
+
+## Registrar desvio de execução (obrigatório quando houver)
+
+SE você (a) executou diferente do que esta skill manda, (b) **criou um passo que ela
+não tem**, (c) achou a régua ambígua/contraditória, ou (d) topou com bug numa
+ferramenta dela — ENTÃO registre antes de fechar:
+
+```bash
+bun scripts/skill-log.ts note <skill> <desvio|ambiguidade|bug|inventou-passo> "<o que fugiu e por quê>" [--ctx=site/slug] [--alvo=<etapa>]
+```
+
+Execução limpa **não gera linha** — vazio é dado. O que se lê depois é
+`bun scripts/skill-log.ts report`, que conta por skill e destaca o que já bateu
+mais de uma vez. Sem `--alvo` a nota cai em `geral` e sai do detector de
+reincidência, então **nomeie a etapa** quando ela existir.

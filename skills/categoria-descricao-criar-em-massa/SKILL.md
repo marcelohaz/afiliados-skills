@@ -155,3 +155,18 @@ Build falhou → reverte aquele site do backup e reporta. `--no-verify` porque o
 **O `§3` é o pior ofensor de clone.** "...antes de o produto chegar na sua casa" é niche-agnostic e o modelo copia verbatim em todo lugar. A régua individual manda variar ou omitir — respeitar.
 
 **Nomes de categoria divergem entre sites** ("Pré Treino" vs "Pré-Treino"). Usar o `categoryName` do pré-flight, que vem do `.mdx` daquele site, e não normalizar por conta própria.
+
+## Registrar desvio de execução (obrigatório quando houver)
+
+SE você (a) executou diferente do que esta skill manda, (b) **criou um passo que ela
+não tem**, (c) achou a régua ambígua/contraditória, ou (d) topou com bug numa
+ferramenta dela — ENTÃO registre antes de fechar:
+
+```bash
+bun scripts/skill-log.ts note <skill> <desvio|ambiguidade|bug|inventou-passo> "<o que fugiu e por quê>" [--ctx=site/slug] [--alvo=<etapa>]
+```
+
+Execução limpa **não gera linha** — vazio é dado. O que se lê depois é
+`bun scripts/skill-log.ts report`, que conta por skill e destaca o que já bateu
+mais de uma vez. Sem `--alvo` a nota cai em `geral` e sai do detector de
+reincidência, então **nomeie a etapa** quando ela existir.

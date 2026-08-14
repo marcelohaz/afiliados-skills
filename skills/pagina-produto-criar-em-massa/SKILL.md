@@ -680,3 +680,18 @@ Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evi
    - **Política:** ~20% de sobreposição **não prejudica SEO** em página de produto (ativo secundário; indexada + self-canonical + em `sitemap-produtos`, mas de baixo risco; o footprint da rede — template/dono/linkagem/personas — pesa muito mais que 20% de texto igual). O grosso dos 20% é FATO (spec/autonomia/filtro), que o Google espera parecido entre qualquer site descrevendo o mesmo produto.
    - **⛔ NÃO faça create-already-diverging** (mandar o sub-agent LER as irmãs e divergir na criação): quebra a Isolação, empurra a prosa pro COLOQUIAL (a fuga de 6-gramas vira gíria) e gera warns de naturalidade. Já custou caro (o incidente que gerou esta nota). Isolação é o default correto.
    - **Quem detecta:** o `--audit` (`duplicata-cross-site`). Divergir é **decisão HUMANA**, e só compensa nos **outliers abaixo de ~60% diferente** (metade do texto igual = near-duplicate de verdade). O regime ≥70% fica como está.
+
+## Registrar desvio de execução (obrigatório quando houver)
+
+SE você (a) executou diferente do que esta skill manda, (b) **criou um passo que ela
+não tem**, (c) achou a régua ambígua/contraditória, ou (d) topou com bug numa
+ferramenta dela — ENTÃO registre antes de fechar:
+
+```bash
+bun scripts/skill-log.ts note <skill> <desvio|ambiguidade|bug|inventou-passo> "<o que fugiu e por quê>" [--ctx=site/slug] [--alvo=<etapa>]
+```
+
+Execução limpa **não gera linha** — vazio é dado. O que se lê depois é
+`bun scripts/skill-log.ts report`, que conta por skill e destaca o que já bateu
+mais de uma vez. Sem `--alvo` a nota cai em `geral` e sai do detector de
+reincidência, então **nomeie a etapa** quando ela existir.

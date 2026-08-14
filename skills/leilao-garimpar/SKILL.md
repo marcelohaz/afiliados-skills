@@ -86,3 +86,18 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 - **Cross-ref de blocklist pegou um erro MEU**: recomendei à mão `melhorperfumefeminino`/`masculino`, mas estão na blocklist (faxina beleza-saúde de 2026-05-08). O helper corretamente pulou. **A curadoria manual não tem a memória que o cross-ref tem — sempre confiar na blocklist.** Removidos do histórico.
 - **RESOLVIDO — política beleza-saúde (Marcelo 2026-07-23)**: beleza-saúde **CONSUMÍVEL/cosmético** (perfume, perfumefeminino, perfumemasculino, maquiagem, batom, rímel, sérum, protetor solar) é **OUT do garimpo** — nicho de ROI baixo pra ADQUIRIR domínio novo. Removidos do `PRODUTOS_EXTRA` (o dicionário que faz o garimpo surfaçar candidatos), então não aparecem mais na shortlist. **Devices de grooming high-ticket ficam** (chapinha/secador/modelador/babyliss/depilador/barbeador/aparador — Fase 5 já mandava MANTER). ⚠️ **A regra é escopada só ao GARIMPO**: não afeta domínios/sites de beleza que o Marcelo já tem — esses se trabalham normal (conteúdo/páginas/etc.).
 - **Amostragem ampla** (controle de recall humano): gerar TSV com `alta` (recomendados) + `revisar` (melhor/melhores/os-as-melhores X fora do dict, com flag `[blocklist]`) e o Marcelo filtra. Net amplo demais (`qual`/`guia`/`comprar`/`top`/sufixo) = 95% ruído (colisão "qualidade", "guia de cidade", nome de empresa) — ficar no **melhor-family**. Restam baixo-valor não-pegos: make/amaciante (consumível), applewatchstore (sufixo "store" no JUNK).
+
+## Registrar desvio de execução (obrigatório quando houver)
+
+SE você (a) executou diferente do que esta skill manda, (b) **criou um passo que ela
+não tem**, (c) achou a régua ambígua/contraditória, ou (d) topou com bug numa
+ferramenta dela — ENTÃO registre antes de fechar:
+
+```bash
+bun scripts/skill-log.ts note <skill> <desvio|ambiguidade|bug|inventou-passo> "<o que fugiu e por quê>" [--ctx=site/slug] [--alvo=<etapa>]
+```
+
+Execução limpa **não gera linha** — vazio é dado. O que se lê depois é
+`bun scripts/skill-log.ts report`, que conta por skill e destaca o que já bateu
+mais de uma vez. Sem `--alvo` a nota cai em `geral` e sai do detector de
+reincidência, então **nomeie a etapa** quando ela existir.

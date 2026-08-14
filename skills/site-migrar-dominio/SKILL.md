@@ -334,3 +334,18 @@ HEAD, não a árvore) — sem isso o relatório afirma o que não foi medido.
 Skill(skill="afiliados-skills:site-migrar-dominio", args="escritoriocasa guiamelhor.com.br")
 Skill(skill="afiliados-skills:site-migrar-dominio", args="melhorguia melhortech.com.br --sem-rename")
 ```
+
+## Registrar desvio de execução (obrigatório quando houver)
+
+SE você (a) executou diferente do que esta skill manda, (b) **criou um passo que ela
+não tem**, (c) achou a régua ambígua/contraditória, ou (d) topou com bug numa
+ferramenta dela — ENTÃO registre antes de fechar:
+
+```bash
+bun scripts/skill-log.ts note <skill> <desvio|ambiguidade|bug|inventou-passo> "<o que fugiu e por quê>" [--ctx=site/slug] [--alvo=<etapa>]
+```
+
+Execução limpa **não gera linha** — vazio é dado. O que se lê depois é
+`bun scripts/skill-log.ts report`, que conta por skill e destaca o que já bateu
+mais de uma vez. Sem `--alvo` a nota cai em `geral` e sai do detector de
+reincidência, então **nomeie a etapa** quando ela existir.
