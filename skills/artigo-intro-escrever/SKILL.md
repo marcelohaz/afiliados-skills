@@ -212,7 +212,7 @@ Componentes:
 
 Reescreve se: (a) o título está **stub/fraco**, OU (b) **colide com um irmão** (mesmo slug/keyword em outro site com título igual/quase-igual — ver "Divergência cross-site"), OU (c) a **contagem N envelheceu**. Detecção:
 - **Stub/fraco (arruma)**: minúsculo, sem ano, sem contagem, ou == keyword cru (ex: "Melhor impressora epson", "Melhor Impressora Custo Benefício").
-- **⚠ "Sem contagem" com N≥3 é SEMPRE stub — gatilho OBJETIVO, não inferência (v1.39.0):** se o lineup tem 3+ produtos e o título NÃO tem `\d+ (melhores|opções|Melhores)`, é stub a corrigir **mesmo que o título esteja bem-formado** (Title Case + ano, ex: "Melhor Tablet para Estudar em 2026") **e mesmo que artigos IRMÃOS do site estejam iguais sem contagem**. Irmão sem contagem com N≥3 é **straggler não-corrigido, NÃO assinatura do site** — NUNCA inferir "padrão" a partir de stubs. Contagem só é dispensável com **N<3** (ver Fallback). Caso real (2026-06-22, escritorioecasa/melhor-tablet-para-estudar, N=8): a intro deixou o título sem contagem inferindo que o cluster "para X" (desenho N=7, trabalho N=7, ambos também stubs) era a assinatura. Era armadilha: o gatilho "sem contagem com N≥3" vence qualquer aparência de consistência.
+- **⚠ "Sem contagem" com N≥3 é SEMPRE stub — gatilho OBJETIVO, não inferência (v1.39.0):** se o lineup tem 3+ produtos e **o número N não aparece no título** (teste: `\bN\b`, a contagem real do lineup — NÃO uma lista de substantivos; ver auto-check #6 e o porquê da mudança na v1.103.0), é stub a corrigir **mesmo que o título esteja bem-formado** (Title Case + ano, ex: "Melhor Tablet para Estudar em 2026") **e mesmo que artigos IRMÃOS do site estejam iguais sem contagem**. Irmão sem contagem com N≥3 é **straggler não-corrigido, NÃO assinatura do site** — NUNCA inferir "padrão" a partir de stubs. Contagem só é dispensável com **N<3** (ver Fallback). Caso real (2026-06-22, escritorioecasa/melhor-tablet-para-estudar, N=8): a intro deixou o título sem contagem inferindo que o cluster "para X" (desenho N=7, trabalho N=7, ambos também stubs) era a assinatura. Era armadilha: o gatilho "sem contagem com N≥3" vence qualquer aparência de consistência.
 - **Colide com irmão (arruma p/ divergir)**: título idêntico/quase-igual a um irmão → aplica o padrão de assinatura deste site (pool P1-P4). Mesmo que já esteja "no padrão", se colide, troca.
 - **N mudou (atualiza)**: se o lineup cresceu/encolheu, atualiza o número (a contagem não pode envelhecer).
 - **OK (NÃO toca)**: já no padrão de assinatura do site **com contagem presente** (ou N<3), não colide com irmão, e N certo. "N certo" pressupõe que **a contagem EXISTE** — título sem contagem com N≥3 nunca cai no "OK".
@@ -592,9 +592,23 @@ assert not re.search(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', novo), "duplicação contígu
 # '\. [a-z]' fora de URL → capitalizar
 
 # 6) TÍTULO: sem contagem com N≥3 é stub (v1.39.0) — gatilho objetivo, não inferência
+# v1.103.0: o teste é "o Nº DE PRODUTOS aparece no título", não uma lista de
+# substantivos. O regex antigo (r'\d+\s+([Mm]elhores|opções)') era MAIS ESTREITO
+# que a regra que ele checava e reprovava título com contagem: medido em
+# 2026-08-14, 74 títulos da rede em 8 formas legítimas ("N escolhas para",
+# "N modelos para", "N que valem a pena", "N alternativas"...), incluindo o
+# próprio P2 do pool de assinaturas ("As {N} {KeywordPlural} (Guia 2026)").
+# Tinha ainda bug de caixa: aceitava [Mm]elhores mas só "opções" minúsculo, então
+# "10 Opções para" reprovava. Passavam 258 de 333; agora passam 331.
+# Bônus: pega contagem DESATUALIZADA — título "9 melhores" com N=7 passava no
+# regex antigo e está errado.
+# ⚠ Falso-negativo conhecido: keyword que contém o mesmo dígito de N (ex.: N=3
+# em "Ômega 3", N=11 em "iPad 11") passa sem ter contagem de verdade. Aceito de
+# propósito — o erro cai pro lado de NÃO mexer, e reescrever título bom de página
+# já posicionada custa mais caro que deixar um stub passar.
 N = len(PRODUCTS)  # produtos do lineup
-if N >= 3 and not re.search(r'\d+\s+([Mm]elhores|opções)', TITLE):
-    raise AssertionError(f"título sem contagem com N={N} (>=3) = stub; reescreva com a contagem. "
+if N >= 3 and not re.search(rf'\b{N}\b', TITLE):
+    raise AssertionError(f"título sem a contagem N={N} (>=3) = stub; reescreva com a contagem. "
                          f"NÃO tratar irmão sem contagem como assinatura: {TITLE!r}")
 ```
 
