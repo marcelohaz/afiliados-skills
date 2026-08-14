@@ -252,7 +252,11 @@ O `clone-log.ts` grava **como a skill foi executada**, não o conteúdo produzid
 |---|---|---|
 | **Etapas** (`check`) | o agente | saber o que ele AFIRMA ter feito. Um `[x]` não prova nada, e o cabeçalho do log diz isso em voz alta. |
 | **Desvios** e **Sugestões** (`note`) | o agente | é o dado que só ele tem: passo pulado, **passo inventado**, ferramenta trocada, régua ambígua. |
-| **Verificação mecânica** | o `verify-output` | única parte que não passa pelo julgamento do agente: sai de ler o `.mdx` e de rodar o `compare-cross-site.py`. |
+| **Verificação mecânica** | o `verify-output` | única parte que não passa pelo julgamento do agente: sai de ler o `.mdx`, de rodar o `compare-cross-site.py` e do **gate de invocação** (abaixo). |
+
+**⛔ GATE DE INVOCAÇÃO (v1.102.0) — executar à mão o que a skill faria NÃO passa.** O `verify-output` confere no **transcript da sessão** se `artigo-reviews-auditar` (1.4), `artigo-guia-escrever` (2), `artigo-intro-escrever` + `artigo-meta-escrever` (3) e `artigo-auditar` (4) foram de fato invocadas via Skill tool, **com os args deste artigo e depois do `init` desta run**. Faltando qualquer uma: exit 1, sem commit.
+
+Por que existe: em 14/08 as etapas 1.4/3.1/4.1 foram rodadas como script inline (um deles adaptado com `sed` do clone anterior) e marcadas de boa-fé no log. Custo medido ao re-rodar as skills de verdade: **7 defeitos que a passagem inline não pegou, 2 deles INTRODUZIDOS por ela** — a auditoria inline cobriu 32 de 38 categorias, faltando justamente `claim-vs-bible` e `decisao-editorial-violada`. Nenhum checkbox distingue "rodei a skill" de "fiz o que eu achei que a skill faz"; o transcript distingue, porque quem escreve nele é o harness. A janela por `init` é o que impede as invocações do clone anterior de satisfazerem este (foi exatamente o par HP → fotos).
 
 **`note` é obrigatório quando** você (a) pulou uma etapa, (b) **criou uma etapa que a skill não tem**, (c) usou ferramenta diferente da que a skill manda, ou (d) achou a régua ambígua/contraditória. Sintaxe:
 
