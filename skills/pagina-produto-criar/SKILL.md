@@ -240,12 +240,12 @@ Regra prática: se subtitle parece "ficha técnica resumida", reescreva como pos
 Estrutura (sem molde fixo de palavras — a estrutura é a mesma, o fraseado nasce do produto):
 1. **1ª frase: para quem serve ou o que faz de melhor**, dita de forma literal ("Impressora com tanque de tinta para casa e escritório pequeno" / "Creatina pura, sem aditivo, para uso contínuo").
 2. **2-3 dados essenciais** que justificam.
-3. **Fecho: um fato** (rendimento, embalagem, diferencial concreto, preço aproximado). Sem "Você ganha…", sem sacada.
+3. **Fecho: um fato** (rendimento, embalagem, diferencial concreto, acessório na caixa). O preço já está na página: **não use preço como fecho padrão** (teto: metade das páginas do site). Sem "Você ganha…", sem sacada.
 
 ⚠️ **Sem fecho-molde.** Medido em 2026-08-06: **1.043 de 3.003 páginas da rede (35%)** fechavam com "Destaque para", e "Ideal pra quem" abria 18% (2026-08-15) — assinatura textual que liga os sites entre si. O fecho é uma frase de fato ("São 4.500 páginas em preto por kit."), não um molde e não uma frase esperta ("o custo por página é o que segura a conta", "quem esquece a impressora ligada agradece" eram sugestões desta skill até 2026-08-15 e saíram: verbo fora do sentido).
 
 **Exemplos ✓:**
-- ✓ `"Impressora com tanque de tinta para casa e escritório pequeno. Imprime, copia e digitaliza, com Wi-Fi e rendimento de até 4.500 páginas em preto por kit. Custa cerca de R$ 1.100."` (≈180ch)
+- ✓ `"Impressora com tanque de tinta para casa e escritório pequeno. Imprime, copia e digitaliza, com Wi-Fi e rendimento de até 4.500 páginas em preto por kit."` (≈150ch) — exemplo de outra categoria de propósito: NÃO reuse a abertura literal
 - ✓ `"Creatina pura para uso contínuo, sem aditivo nem sabor. São 5 g por dose, pote de 300 g que rende 60 doses e laudo de pureza de laboratório independente."` (≈160ch)
 
 **Exemplos ❌:**
@@ -449,14 +449,16 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
-| ❌ Como saiu (2026-08-15) | ✓ Como uma pessoa escreve |
+| ❌ Como saiu (casos reais) | ✓ Como uma pessoa escreve |
 |---|---|
-| se você quer resolver a casa inteira sem escolher entre potência e preço | se você quer limpar a casa toda sem escolher entre potência e preço |
-| sem transformar a limpeza numa produção | sem muito esforço |
-| a conta da potência vem no peso | a potência tem um custo: o peso |
-| casa grande ainda pede remanejo | em casa grande você ainda troca de tomada algumas vezes |
-| Se não têm, ele é o que resolve. | Se não têm, ele é a melhor opção. |
-| O de tomada não se cansa. | O modelo com fio não perde força durante o uso. |
+| a impressora resolve o mês inteiro com um kit | um kit de tinta imprime cerca de 4.500 páginas |
+| sem transformar a troca de tinta numa produção | sem muito esforço |
+| a conta do rendimento vem no preço do kit | o rendimento alto tem um custo: o kit é caro |
+| a creatina pede coqueteleira | a creatina dissolve melhor com coqueteleira |
+| Se não tem, ela é a que resolve. | Se não tem, ela é a melhor opção. |
+| O tanque não se cansa. | O tanque de tinta rende o mesmo até o fim. |
+
+⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela (ou nos exemplos de shortDescription), reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
 
 ## Como usar a bíblia
 

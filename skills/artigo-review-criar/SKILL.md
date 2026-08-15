@@ -254,20 +254,20 @@ Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L32
 Estrutura (sem molde fixo de palavras — a estrutura é a mesma, o fraseado nasce do produto):
 1. **1ª frase: para quem serve ou o que faz de melhor**, dita de forma literal ("Para casa pequena e limpeza diária" / "Creatina pura, sem aditivo, para uso contínuo").
 2. **2-3 dados essenciais** que justificam.
-3. **Fecho: um fato** (embalagem, diferencial concreto, preço aproximado). Sem "Você ganha…", sem "Destaque para…" obrigatório, sem sacada.
+3. **Fecho: um fato** (embalagem, diferencial concreto, acessório que vem na caixa). O preço já está na tabela e no Resumo: **não use preço como fecho padrão** (no melhoraspirador 15/08 saíram 9 de 11 fechando com "Preço médio de R$ X"; o teto é metade dos produtos, e a auditoria 1b conserta o excesso). Sem "Você ganha…", sem "Destaque para…" obrigatório, sem sacada.
 
 **Exemplos ✓** (2026-08-15, canon voz natural):
 
 ```
 "Creatina pura para uso contínuo, sem aditivo nem sabor. São 5 g por dose,
-pote de 300 g que rende 60 doses e laudo de pureza de laboratório independente,
-por cerca de R$ 60."
-(≈170 ch)
+pote de 300 g que rende 60 doses e laudo de pureza de laboratório independente."
+(≈150 ch)
 
-"Aspirador com fio para apartamento pequeno e limpeza rápida. Tem 1100 W,
-coletor de 1,3 litro sem saco e três bocais na caixa, e pesa cerca de 1,5 kg,
-pelo menor preço deste comparativo."
-(≈190 ch)
+"Impressora com tanque de tinta para casa e escritório pequeno. Imprime, copia
+e digitaliza, com Wi-Fi e rendimento de até 4.500 páginas em preto por kit."
+(≈150 ch)
+
+⚠️ Exemplos de outra categoria de propósito: NÃO reuse a abertura nem a estrutura literal ("Aspirador vertical com fio para…" abriu 6 de 11 descrições no melhoraspirador 15/08 porque o exemplo era de aspirador).
 ```
 
 **Exemplos ❌:**
@@ -390,14 +390,16 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
-| ❌ Como saiu (2026-08-15) | ✓ Como uma pessoa escreve |
+| ❌ Como saiu (casos reais) | ✓ Como uma pessoa escreve |
 |---|---|
-| se você quer resolver a casa inteira sem escolher entre potência e preço | se você quer limpar a casa toda sem escolher entre potência e preço |
-| sem transformar a limpeza numa produção | sem muito esforço |
-| a conta da potência vem no peso | a potência tem um custo: o peso |
-| casa grande ainda pede remanejo | em casa grande você ainda troca de tomada algumas vezes |
-| Se não têm, ele é o que resolve. | Se não têm, ele é a melhor opção. |
-| O de tomada não se cansa. | O modelo com fio não perde força durante o uso. |
+| a impressora resolve o mês inteiro com um kit | um kit de tinta imprime cerca de 4.500 páginas |
+| sem transformar a troca de tinta numa produção | sem muito esforço |
+| a conta do rendimento vem no preço do kit | o rendimento alto tem um custo: o kit é caro |
+| a creatina pede coqueteleira | a creatina dissolve melhor com coqueteleira |
+| Se não tem, ela é a que resolve. | Se não tem, ela é a melhor opção. |
+| O tanque não se cansa. | O tanque de tinta rende o mesmo até o fim. |
+
+⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela (ou nos exemplos de shortDescription), reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
 
 ## Subtitle humano = ângulo do review (v1.34.0, canon Marcelo 2026-06-10)
 
