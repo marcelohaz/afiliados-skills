@@ -71,16 +71,16 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 - **⚠️ SE `FILA=yes`: NÃO arme.** Há **um único** despertar pendente por sessão e cada `ScheduleWakeup` substitui o anterior (medido na fila, 2026-07-30). Se você armar com o comando de 1 artigo, o prompt da fila some e ela não volta. A fila re-arma antes de cada item e cobre este.
 - **Ao acordar (`RETOMAR=yes`)**: (1) re-arme o heartbeat como PRIMEIRO ATO; (2) `git log -- sites/{target}/src/content/reviews/{slug}.mdx` + `bun scripts/clone-log.ts verify {target} {slug}`: se commitado e verify OK → `ScheduleWakeup(stop:true)` e relatório curto "já concluído"; (3) senão, leia o clone-log e retome da **primeira etapa não marcada**; reviews persistidos em `<scratchpad>/rev-{slug}.json` (Etapa 2.5) são reusados; se 1.1 está marcada e o arquivo não existe, refaça 1.1 (não confie no log sem o disco); (4) `clone-log init` NÃO roda de novo (apagaria o progresso).
 - **Circuit breaker** (igual à fila): guarde em `<scratchpad>/clone-{target}-{slug}-heartbeat.json` `{etapasMarcadas, streakSemProgresso}`; despertar sem etapa nova = streak++; **streak ≥ 3 (~1h30 parado) → `ScheduleWakeup(stop:true)`** + relatório dizendo em que etapa travou e o erro visto. Não tente para sempre.
-- **Stop obrigatório**: `ScheduleWakeup(stop:true)` **antes** do Relatório final (Etapa 6 concluída) e no aborto do pré-flight. Sem isso o despertar dispara depois do fim e reagenda à toa. Se o usuário mandar parar/pausar: `stop:true` na hora.
+- **Stop obrigatório (SÓ quando foi você que armou, ou seja, standalone)**: `ScheduleWakeup(stop:true)` **antes** do Relatório final (Etapa 6 concluída) e no aborto do pré-flight. Sem isso o despertar dispara depois do fim e reagenda à toa. Se o usuário mandar parar/pausar: `stop:true` na hora. **⚠️ Com `FILA=yes` esta skill NÃO chama `ScheduleWakeup` NUNCA — nem para armar, nem para parar.** O despertar pendente é o da fila; um `stop:true` seu aqui mataria a fila em silêncio no próximo fim de turno (é a fila que para o dela na F2).
 
 **Regra 3 — Chat só no fim; ramo de exceção tem fallback, não pergunta.**
 - Progresso = `clone-log check` (arquivo). Nenhuma etapa termina com "mensagem de estado" no chat. Uma linha curta por etapa **é permitida só se a mesma mensagem continua com chamadas de ferramenta** — o que encerra o turno não é a linha, é ela ser a última coisa. Antes da Etapa 6 + relatório, **não existe mensagem final**.
-- Pré-flight abortou → `stop:true` + relatório de aborto (é o único fim antecipado legítimo). Sub-agent morreu/deu timeout → refaz **inline** no mesmo turno (nunca "pulei a etapa, quer que eu rode depois?"). Ambiguidade que a régua não resolve → decide pelo lado conservador, registra em skill-notes como `ambiguidade`, segue. Fix determinístico → aplica (canon 24/06). Decisão que a régua já resolveu (título pelo HARD GATE, desempate de peer) → vai no relatório final, não em turno próprio (incidente 12/08).
+- Pré-flight abortou → relatório de aborto (+ `stop:true` só se standalone; com `FILA=yes` a fila trata o item como "⚠ abortado" e segue). É o único fim antecipado legítimo. Sub-agent morreu/deu timeout → refaz **inline** no mesmo turno (nunca "pulei a etapa, quer que eu rode depois?"). Ambiguidade que a régua não resolve → decide pelo lado conservador, registra em skill-notes como `ambiguidade`, segue. Fix determinístico → aplica (canon 24/06). Decisão que a régua já resolveu (título pelo HARD GATE, desempate de peer) → vai no relatório final, não em turno próprio (incidente 12/08).
 
 ## Pipeline (full-auto, etapa por etapa)
 
 ### Etapa 0 — Pré-flight (auto; aborta cedo se faltar)
-0. **Arma o heartbeat** (só se NÃO for `FILA=yes`; ver "## Turno vivo" Regra 2): `ScheduleWakeup(1800, prompt="/artigo-clonar-em-massa {args} RETOMAR=yes")`. Se `RETOMAR=yes`, re-arme e **pule o `init` abaixo** (leia o clone-log e retome da primeira etapa não marcada).
+0. **Arma o heartbeat** (só se NÃO for `FILA=yes` — com `FILA=yes` esta skill não toca em `ScheduleWakeup`, nem arma nem para; ver "## Turno vivo" Regra 2): `ScheduleWakeup(1800, prompt="/artigo-clonar-em-massa {args} RETOMAR=yes")`. Se `RETOMAR=yes`, re-arme e **pule o `init` abaixo** (leia o clone-log e retome da primeira etapa não marcada).
 0b. **Abre o log de execução** (vale nos DOIS modos, individual e fila):
    ```bash
    bun scripts/clone-log.ts init {target} {slug} --source={source-site}/{slug}
@@ -186,7 +186,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 
 ### Relatório final (o que o humano lê)
 
-**Antes de escrever o relatório: `ScheduleWakeup(stop:true)` se você armou heartbeat (standalone).** O relatório final é a ÚNICA mensagem que encerra o turno neste pipeline.
+**Antes de escrever o relatório: `ScheduleWakeup(stop:true)` se você armou heartbeat (standalone). Com `FILA=yes`, NÃO chame `ScheduleWakeup` (o despertar é da fila).** O relatório final é a ÚNICA mensagem que encerra o turno neste pipeline.
 - Artigo criado: site/slug, título, N produtos (ordem final + badges), home sim/não.
 - Por etapa: o que cada audit pegou, o que foi auto-corrigido, **o que NÃO convergiu** (⚠ revisar).
 - Comparação vs fonte: frases idênticas, near-dup, overlap, specs — antes e depois da reescrita.

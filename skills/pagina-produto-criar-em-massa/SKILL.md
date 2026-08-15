@@ -549,7 +549,8 @@ Se o ambiente impedir o sub-agent de ler `pagina-produto-criar/SKILL.md` (raro, 
   > nessas ASINs antes de criar páginas individuais em massa."
 
 ### Sub-agent falha individual
-- Falha não-fatal: skill mãe agrega no `falhas[]`, continua
+- **Sub-agent morreu/deu timeout ou deixou página parcial → a skill mãe TERMINA aquela página inline, no mesmo turno** (canon 2026-08-15; a página parcial viraria "stub parcial", protegida, e a retomada pularia — nunca "roda a individual depois").
+- Falha não-fatal de validação: skill mãe agrega no `falhas[]`, continua
 - Tipos comuns: bíblia bate em erro de parse, .mdx do stub não existe,
   validação editorial falhou (HTML allowlist violado, tamanho fora do
   limite, travessão escapou)
