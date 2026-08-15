@@ -228,7 +228,17 @@ Detecção:
    |---|---|---|
    | fence, `shortDescription` >250, `pros`/`cons` >180 | ✓ | ✓ |
    | 4 `<p>` com os 4 rótulos | ✓ | ✓ (`fullReview-prefixo-e-ancoras`) |
+   | `fullReview` ausente/duplicado · corpo do `.mdx` não-vazio | ✓ (2026-08-14) | **✗** |
    | travessão · `;` em prosa · HTML em texto-puro · termo banido · YAML inválido | **✗** | ✓ |
+
+   ⚠ A linha nova é a única em que a guarda é **superset**, e é por isso que ela
+   segue obrigatória mesmo quando você roda `--audit`. Ela cobre a classe que ficou
+   **meses invisível** (canon 2026-08-14): resenha gravada no CORPO do `.mdx` em vez
+   do campo `fullReview`. Corpo de página de produto não renderiza — o `SlugPage` só
+   monta `<Content />` quando `type === 'review'` — então o efeito é idêntico a campo
+   vazio: página no ar sem resenha, build passando, ninguém reclamando. Foram 7
+   páginas em 3 sites. Nenhuma das duas ferramentas via isso antes: o `audit-editorial`
+   audita os campos que existem, e a guarda saía em silêncio quando o campo não existia.
 
    A guarda continua no fluxo porque tem o modo `--rede` (agregação por site com dono/live), que o `audit-editorial` não tem.
 
@@ -492,7 +502,7 @@ PASSO 1 — LEIA a régua canônica e EXECUTE À RISCA (não improvise, não use
   anti-dup vs review-no-artigo → gerar os 6 campos pela seção "Os 6 campos" → validar →
   backup → Write + AUTO-CHECK de fence (`grep -c '^---$'` == 2).
   TODA a régua daquele arquivo vale; reforço as que costumam escapar:
-  benefício-first + hard caps (shortDescription ≤250, pros/cons ≤180 texto-puro),
+  **Voz natural** (verbo/substantivo no sentido do dicionário, sem sacada, "para", sem molde "Ideal pra quem/Você ganha/Destaque para") + hard caps (shortDescription ≤250, pros/cons ≤180 texto-puro),
   subtitle = ângulo (v1.34, vinculante se o stub já traz subtitle/badge),
   destilação categoria D (voz-comprador implícita → observação analítica),
   **Peso por fonte** (specsAmazon sozinho NÃO vira pró central, só tabela specs),

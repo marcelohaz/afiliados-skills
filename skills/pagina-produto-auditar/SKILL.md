@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 21 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, antropomorfismo, jargão financeiro — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 21 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, palavra fora do sentido/verbo-curinga com sujeito-coisa, frase-sacada, jargão financeiro, tiques com teto — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
 ---
 
 ## Parse de input
@@ -48,6 +48,8 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 2. **Read .mdx**: `Read sites/{site}/src/content/products/{slug}.mdx`. Se 404, abortar com mensagem clara.
 
 3. **Parsear frontmatter**: extrair os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview). Se algum vazio/ausente, registra como issue `tamanho-fora-de-faixa` (sub-tipo curto).
+
+   ⚠ **`fullReview` ausente NÃO é `tamanho-fora-de-faixa`** — vai pra categoria 19b `texto-no-lugar-errado`, que é 🔴 Crítico. Rotular ausência como problema de tamanho é o que fez 7 páginas passarem meses sem ninguém olhar: um aviso de "conteúdo curto" convida a ignorar, enquanto o defeito real é página no ar sem resenha. E confira o **corpo do `.mdx`** no mesmo passo (a 19b explica por quê) — o parse de frontmatter sozinho é cego pra ele.
 
 4. **Read bíblia**: `Read docs/biblias-v2/{asin}.json`. Sem bíblia, audit não tem como cruzar claims — abortar com mensagem.
 
@@ -156,7 +158,7 @@ Campo fora dos limites editoriais — pode estar **curto demais** (vazio/incompl
 
 **Longo demais** (severidade: Crítico — quebra escanabilidade do card):
 - `subtitle` > 150 chars
-- `shortDescription` > 250 chars (HARD CAP régua v1.16.0; alvo 180-230)
+- `shortDescription` > 250 chars (HARD CAP régua v1.16.0)
 - `pros[i]` item > 180 chars texto puro (descontando markup `<strong>`/`<a>`)
 - `cons[i]` item > 180 chars texto puro
 - `fullReview` > 3000 chars **texto puro** (descontando `<p>`/`<strong>`/`<a>` e as URLs da Amazon)
@@ -172,8 +174,9 @@ texto. Ao reportar, cite o número em texto puro.
 - **Antipadrões na 1ª frase** (flag):
   - "[Tipo] brasileiro/a da [marca]..." (ex: "Impressora multifuncional da Epson...")
   - "[Tipo] com X mg de Y..." / "[Tipo] com [spec técnica]..."
-- **Padrões OK na 1ª frase**: adjetivo posicional, "Ideal pra quem...", "Você ganha...", posicionamento direto
-- Fix: inverter ordem — posicionamento/benefício na 1ª frase, técnico justifica depois. Ver moldes A/B/C em `pagina-produto-criar` v1.17.0.
+- **Padrões OK na 1ª frase**: para quem serve ou o que faz de melhor, dito de forma literal ("Impressora com tanque de tinta para casa e escritório pequeno", "Creatina pura para uso contínuo").
+- **Também flagrar (canon 2026-08-15, ver 20c/20e)**: molde "Ideal pra quem…", "Feito pra quem…", "Você ganha…", "Destaque para…" — eram "padrões OK" até 2026-08-15 e viraram assinatura da rede (18% e 35% das páginas).
+- Fix: 1ª frase literal (para quem é / o que faz), técnico na 2ª, fecho de fato. Ver seção shortDescription em `pagina-produto-criar`.
 
 **Como contar pros/cons sem HTML**: olhe o bullet sem `<strong>...</strong>` e sem `<a href="...">...</a>` mantendo só o texto interno. Se passa de 180 = flag.
 
@@ -282,7 +285,14 @@ Lê `docs/painel/_data/chavoes-por-nicho.json` baseado em `niche` do site (`docs
 
 Aplica limites de `_genericos` + bloco do nicho específico (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam imediatamente; demais flagam quando passam do `_max` definido.
 
-Fix: variação léxica (alternativas PT-BR documentadas) + destilação cirúrgica.
+Fix: encurtar/omitir a frase repetida + destilação cirúrgica. NÃO "variação léxica" por sinônimo figurado (é o defeito do 20c).
+**⚠ `_sites_aplicaveis` é o GATE do bloco de nicho, e o `_genericos` é obrigatório (canon 2026-08-15).**
+
+1. **Bloco de nicho só vale se o slug do site estiver em `_sites_aplicaveis`.** Não force o bloco pelo `niche` do `sites-meta.json`. Caso real: `melhoraspirador-com` tem `niche: "Aspiradores"`, mas o bloco `Aspiradores` lista `_sites_aplicaveis: ["melhoraspirador"]`, que é OUTRO site — o bloco não se aplica. Precedente consistente na rede (`.audits/products/oguiacompra-wap-high-speed-plus-last.md`, `guiaesportivo-vitafor-v-fort`, `compraguia-melhor-impressora-epson`): site fora da lista → **vale só o `_genericos`**. Se o bloco DEVERIA cobrir o site, reporte como sugestão de incluí-lo em `_sites_aplicaveis` — é descalibração do JSON, **não achado contra o texto**.
+2. **CONTE O `_genericos` SEMPRE, e conte PRIMEIRO.** Ele não tem gate, vale em qualquer site, e é o que costuma disparar de verdade: `termos_banidos_absoluto`, `chavoes_estruturais_max` (as 4 variantes de "seleção" têm cap **0**, são banidas — salvo as `frases_excecao_canon`) e `industrial_max` (`declarado` 3, `fabricante` 12, `rótulo` 20, `preço médio` 15).
+
+**Incidente-origem (2026-08-15, `melhoraspirador-com/melhor-aspirador-de-po-vertical`):** três auditorias seguidas contaram só o bloco de nicho. Erro duplo — reprovaram o artigo por 4 termos de um bloco que nem se aplicava, e deixaram passar o achado real: 8 ocorrências de "nesta/desta/da seleção" (cap 0 no `_genericos`) no `guideContent`.
+
 
 ### 14. `capitalizacao-duplicacao` (régua v1.18.3, severidade: 🔴 Crítico)
 
@@ -410,7 +420,47 @@ corrige só a prosa que de fato colou.
 **Não flag** se `peers_encontrados: 0` (produto só existe neste site), se só
 houver `specs_identicas`, ou se a prosa ficou abaixo dos limites.
 
-### 20. `naturalidade` (régua v1.33.0, canon Marcelo 2026-06-10, severidade: 🔴 a/b · 🟡 c/d)
+### 19b. `texto-no-lugar-errado` (régua 2026-08-14, severidade: 🔴 Crítico)
+
+O texto existe e é bom, mas está onde ninguém lê. **Não é falta de conteúdo, é
+endereço errado** — e por isso escapa de toda auditoria que só olha os campos
+que existem.
+
+**Mecânica:** o `SlugPage` só monta `<Content />` quando `type === 'review'`.
+Numa página de produto, **o corpo do `.mdx` nunca renderiza**. Resenha gravada
+ali produz página no ar sem resenha, com build passando e painel sem acusar.
+
+**Dois sub-checks, ambos determinísticos:**
+
+| sub | condição | o que significa |
+|---|---|---|
+| `fullReview-ausente` | `grep -c '^fullReview:'` == 0 | página vai pro ar sem resenha |
+| `fullReview-duplicado` | `grep -c '^fullReview:'` > 1 | YAML ambíguo, o último vence em silêncio |
+| `corpo-nao-vazio` | corpo após a 2ª fence, descontando `{/* … */}`, tem qualquer char | texto morto no arquivo |
+
+Rode a guarda em vez de conferir a olho — ela é a implementação canônica:
+
+```bash
+bun scripts/pagina-produto-guardas.ts {site} {slug}
+```
+
+**Casos reais (2026-08-14, os dois achados na mesma varredura):**
+- **7 páginas em 3 sites** com a resenha inteira no corpo e o campo ausente.
+  Ficaram **meses** assim. O conserto certo foi **MOVER** o texto pro campo, não
+  regerar: o texto já era original por site (jaccard 6-grama 0,00-0,02 contra o
+  irmão) e regerar jogaria isso fora, recriando um risco de duplicata cross-site
+  que media zero. **Regra: quando o defeito é de endereço, mude o endereço.**
+- **1 página** (`guiaesportivo/vitafor-vita-d3-2000ui-gotas`) com a resenha NOVA
+  no campo e 2.222 chars da VELHA esquecidos no corpo — resíduo de reescrita que
+  gravou no frontmatter e não limpou o corpo. Uma varredura que procura só
+  "campo ausente" **não acha esta**: o campo está lá. Procurar pelo sintoma não
+  encontra a causa. Ver [[feedback_controle_positivo_antes_de_afirmar_ausencia]].
+
+**Fix:** corpo com texto e campo ausente → mover. Corpo com texto e campo
+preenchido → conferir se o corpo é versão velha (quase sempre é) e apagar o
+corpo. Comentário MDX no corpo é intencional e não se toca.
+
+### 20. `naturalidade` (régua v1.33.0, canon Marcelo 2026-06-10, severidade: 🔴 a/b · 🟡 c/d/e, c vira 🔴 com ≥3)
 
 Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já aplica
 `naturalidade_banidos` e `naturalidade_max` quando o bloco do nicho os define, ex.
@@ -423,8 +473,26 @@ Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já 
 - **20b — meta-SEO** (🔴): NUNCA comentar a busca/intenção do leitor no texto
   ("tem gente que digita X na busca", "quem pesquisa por Y quer..."). O texto
   fala do produto, não do Google.
-- **20c — antropomorfismo com gíria** (🟡): "no batente", "se reconserta",
-  "trabalha sem reclamar" = 0. Máximo 1 coloquialismo leve por página.
+- **20c — palavra fora do sentido / verbo-curinga com sujeito-coisa** (🟡; 🔴 com
+  ≥3 na mesma página — canon Marcelo 2026-08-15, substitui "antropomorfismo com
+  gíria"): a **classe** que mais dá "cara de IA" e passa em toda lista de termo.
+  Palavra comum usada fora do sentido do dicionário, quase sempre colocação inglesa
+  vertida: objeto/preço/peso que "resolve, dá conta, entrega, segura, pede, exige,
+  aguenta, sustenta, encara, cobra, junta, trabalha, cobre, vira, brilha" ("resolver
+  a casa", "o aparelho pede espaço", "a conta da potência vem no peso", "sem
+  transformar a limpeza numa produção"); substantivo-figura ("a conta", "degrau",
+  "porta de entrada", "pacote", "produção", "trunfo", "fôlego"); frase-sacada
+  ("não é X: é Y", "o que X é Y", "é aí que…"); fecho com rótulo de público ("é a
+  escolha de quem", "faz sentido pra quem", "ele é o que resolve"); "pra" no texto
+  público. Teste: a palavra está no sentido em que você a usaria falando com um
+  cliente? Fix: sujeito concreto + verbo literal, "para". Repetir a palavra exata
+  NÃO é defeito. Verbo inventado/gíria ("se reconserta", "no batente") continua
+  aqui. Máximo 1 coloquialismo leve por página.
+- **20e — tiques com teto por PÁGINA** (🟡, vale em todo nicho): "resolve" ≤2 ·
+  "pede/pedem" ≤2 · "entrega" ≤2 · "dá conta" ≤1 · "segura" ≤1 · "vira" ≤2 ·
+  "de verdade" ≤1 · "com folga"/"de sobra" ≤1 · "o grande ponto" 0 · "Ideal pra
+  quem" 0 · "Destaque para" 0 · "preço médio acessível" 0 · "é a escolha de quem"/
+  "faz sentido pra quem" ≤1. Some com `naturalidade_max` do nicho se houver.
 - **20d — jargão financeiro/burocrático** (🟡): "desembolso" → "preço" ·
   "reprografia" → "cópia e digitalização" · "aquisição" → "compra".
 

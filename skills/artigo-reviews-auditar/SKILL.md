@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 23 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta), naturalidade (rótulo de categoria inventado, meta-SEO, antropomorfismo, tiques com teto por artigo), subtitle-keyword-first, badge-ausente. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 23 critérios — tone-clone, redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, número sem lastro na bíblia, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante" muleta), naturalidade (rótulo de categoria inventado, meta-SEO, palavra fora do sentido/verbo-curinga com sujeito-coisa, frase-sacada, tiques com teto por artigo), subtitle-keyword-first, badge-ausente. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -186,7 +186,7 @@ Conta ocorrências no `.mdx` inteiro (reviews + intro + guide). Flag se passar d
 
 Severidade: **Crítico** pra "lineup" + "do lineup" (banidas) E "seleção" se > 4 ocorrências totais; **Médio** pras outras (chavão).
 
-Fix proposto: variação léxica + suprimir muletas. Ex: "ocupa nesta seleção o papel" → "ocupa o papel"; "da seleção" → "analisados"; "nesta seleção é a presença" → "é a presença".
+Fix proposto: suprimir muletas (não trocar por sinônimo figurado). Ex: "ocupa nesta seleção o papel" → "ocupa o papel"; "da seleção" → "analisados"; "nesta seleção é a presença" → "é a presença".
 
 ### 3. `incoherence` — contradição interna
 
@@ -249,6 +249,43 @@ Verificar comparações de preço/spec entre produtos do lineup contra dados rea
 **Caso real (commit a58a33b)**: L1250 dizia "menor preço entre opções de tanque" mas Smart Tank 581 (R$ 820) é mais barata que L1250 (R$ 850). Comparação falsa, requer correção.
 
 Sugestão de fix: reformular pra escopo verdadeiro ("menor preço entre as Epson EcoTank" em vez de "entre as opções de tanque") ou remover o claim.
+
+### 7b. `numero-sem-lastro-na-biblia` — todo número do review tem que existir na bíblia (régua 2026-08-14)
+
+Irmão do 7: o 7 confere o número **contra o lineup**, este confere **contra a
+bíblia do próprio produto**. É a checagem mais barata que existe e a que mais
+rende, porque o sub-agent de criação arredonda, troca dígito ou herda número de
+modelo irmão sem perceber.
+
+**Rode, não confira a olho** — é varredura de conjunto, não leitura:
+
+```python
+import json, re
+b = json.dumps(json.load(open(f'docs/biblias-v2/{asin}.json')), ensure_ascii=False)
+na_biblia = set(re.findall(r'\d[\d\.\,]*', b.replace('.', '').replace(',', '')))
+no_review = set(re.findall(r'\d[\d\.]*', campos_do_produto.replace('.', '')))
+orfaos = [n for n in no_review if len(n) >= 3 and n not in na_biblia]
+```
+
+**Como ler a saída:** a lista é de **candidatos**, não veredito. Número
+composto ("2 anos" virando 24 meses), soma feita pelo redator e ano corrente
+saem como órfãos legítimos. O que importa é olhar cada um e achar a origem —
+se você não consegue apontar de onde o número veio, ele é invenção.
+
+**Caso real 2026-08-14** (`guiamelhorcompra/melhores-impressoras-multifuncionais`,
+clone biblia-only): o scan devolveu **um** órfão, `5500`, na Epson EcoTank L8180.
+A bíblia trazia `snapshot.precoBRL = 5400` e `observacoesAgente` repetia "~R$
+5.400"; o `schemaPrice` do próprio produto no artigo era `5400` e o guia já
+escrevia "R$ 5.400". Só o review dizia R$ 5.500, em dois lugares. **O artigo se
+contradizia sozinho e o gate mecânico da Etapa 1.2 passou limpo**, porque ele
+confere forma (travessão, `;`, links, rótulos, tamanho) e não confere fato. Foi
+parar na `artigo-auditar` (Etapa 4), duas etapas e um guia inteiro depois.
+Rodando aqui, custa um script e para na hora.
+
+**Bloqueia?** Sim quando o órfão é fato do produto (preço, rendimento,
+velocidade, capacidade, peso, garantia). Fix = usar o número da bíblia, e
+conferir se o mesmo número errado não vazou pro `schemaPrice`, pras specs e pro
+guia.
 
 ### 8. `voz-citacao-ficha-tecnica` — marcadores de procedência burocráticos
 
@@ -382,12 +419,9 @@ Bullets e shortDescriptions inchados quebram a leitura escannável que o card e 
   - "[Tipo] brasileiro/a da [marca]..." (ex: "Pré-treino brasileiro da Black Skull...")
   - "[Tipo] com X mg de Y..." (ex: "Pré-treino com 400 mg de cafeína...")
   - "[Tipo] multifuncional/premium/etc da [marca]..."
-- **Padrões OK na 1ª frase**:
-  - Adjetivo posicional ("Custo-benefício forte", "Vegano", "Premium", "Foco mental")
-  - "Ideal pra quem..."
-  - "Você ganha..."
-  - Posicionamento direto ("Combustível pra sessões longas", "Energia gradual pra cardio")
-- Fix proposto: inverter ordem — colocar posicionamento/benefício na 1ª frase, mover técnico pra 2ª frase. Ver 3 moldes em `artigo-review-criar` v1.17.0.
+- **Padrões OK na 1ª frase**: para quem serve ou o que faz de melhor, dito de forma literal ("Aspirador com fio para apartamento pequeno e limpeza rápida", "Creatina pura para uso contínuo", "Vegano, sem cafeína, para treino noturno").
+- **Também flagrar (canon 2026-08-15, ver 21c/21f)**: molde de abertura/fecho "Ideal pra quem…", "Feito pra quem…", "Você ganha…", "Destaque para…", "Custo-benefício forte pra…" — eram os "padrões OK" até 2026-08-15 e viraram assinatura da rede; e figura no lugar de posicionamento ("Combustível pra sessões longas").
+- Fix proposto: 1ª frase literal (para quem é / o que faz), técnico na 2ª, fecho de fato. Ver seção shortDescription em `artigo-review-criar`.
 
 **12b — bullet pros/cons longo demais:**
 - Mede chars do bullet (texto puro, descontando tags `<strong>`/`<a>`)
@@ -405,6 +439,13 @@ Bullets e shortDescriptions inchados quebram a leitura escannável que o card e 
 
 ### 13. `chavoes-por-nicho` (régua v1.18.0, severidade: 🔴 Crítico)
 
+**⚠ `_sites_aplicaveis` é o GATE do bloco de nicho, e o `_genericos` é obrigatório (canon 2026-08-15).**
+
+1. **Bloco de nicho só vale se o slug do site estiver em `_sites_aplicaveis`.** Não force o bloco pelo `niche` do `sites-meta.json`. Caso real: `melhoraspirador-com` tem `niche: "Aspiradores"`, mas o bloco `Aspiradores` lista `_sites_aplicaveis: ["melhoraspirador"]`, que é OUTRO site — o bloco não se aplica. Precedente consistente na rede (`.audits/products/oguiacompra-wap-high-speed-plus-last.md`, `guiaesportivo-vitafor-v-fort`, `compraguia-melhor-impressora-epson`): site fora da lista → **vale só o `_genericos`**. Se o bloco DEVERIA cobrir o site, reporte como sugestão de incluí-lo em `_sites_aplicaveis` — é descalibração do JSON, **não achado contra o texto**.
+2. **CONTE O `_genericos` SEMPRE, e conte PRIMEIRO.** Ele não tem gate, vale em qualquer site, e é o que costuma disparar de verdade: `termos_banidos_absoluto`, `chavoes_estruturais_max` (as 4 variantes de "seleção" têm cap **0**, são banidas — salvo as `frases_excecao_canon`) e `industrial_max` (`declarado` 3, `fabricante` 12, `rótulo` 20, `preço médio` 15).
+
+**Incidente-origem (2026-08-15, `melhoraspirador-com/melhor-aspirador-de-po-vertical`):** três auditorias seguidas contaram só o bloco de nicho. Erro duplo — reprovaram o artigo por 4 termos de um bloco que nem se aplicava, e deixaram passar o achado real: 8 ocorrências de "nesta/desta/da seleção" (cap 0 no `_genericos`) no `guideContent`.
+
 Lê `docs/painel/_data/chavoes-por-nicho.json` baseado no `niche` do site. Para cada termo definido em `_genericos` + bloco do nicho, conta ocorrências NO TEXTO PÚBLICO (excluindo nomes de produto + frontmatter YAML técnico). Flag Crítico se passar do limite.
 
 Filtros:
@@ -416,7 +457,7 @@ Severidade:
 - `termos_banidos_absoluto` > 0 → Crítico (lineup, SKU, ASIN, trade-off, hardcore, etc.)
 - Limite numérico ultrapassado → Crítico se passou 50%+, Médio se 10-50%, Info se <10%
 
-Fix proposto: variação léxica conforme alternativas PT-BR documentadas em `artigo-review-criar` v1.17.x ou destilação cirúrgica.
+Fix proposto: encurtar/omitir a frase repetida ou destilação cirúrgica. NÃO "variação léxica" por sinônimo figurado (é o defeito do 21c).
 
 
 
@@ -486,7 +527,7 @@ if abertura_template > 2:
 - "Entre as opções sem cafeína..." (contexto comparativo)
 - "Combina melhor com quem busca..." (conexão funcional)
 - "A proposta aqui é atender quem..." (proposta direta)
-- "O grande ponto deste produto é..." (diferencial-âncora)
+- "A fórmula não tem aditivos, e isso decide para quem..." (diferencial-âncora; NÃO "o grande ponto deste produto é", virou molde)
 - "Se você imprime poucas páginas..." (cenário concreto)
 
 ### 17. `numeros-em-excesso` (régua v1.19.0, severidade: 🟡 Médio)
@@ -570,13 +611,13 @@ for produto in products:
 
 **21b — meta-SEO / quebra da 4ª parede** (🔴): texto comentando a busca do leitor ("tem gente que digita 'melhor impressora' na busca...", "quando a busca esconde uma necessidade..."). Fix: cenário direto ("Nem toda impressora é pra casa...").
 
-**21c — antropomorfismo com gíria / verbo inventado** (🟡): aparelho "no batente todo dia", rede que "se reconserta", "equipamento que fica parado", impressora que "quer" algo. Fix: ação literal ("usa todo dia", "se conserta sozinha"). Personificação leve que EXPLICA ("o Wi-Fi se conserta sozinho") não flagra.
+**21c — palavra fora do sentido / verbo-curinga com sujeito-coisa (canon Marcelo 2026-08-15, substitui "antropomorfismo com gíria")** (🟡; 🔴 quando ≥3 no mesmo review ou repetido como fecho em ≥3 produtos): é a **classe** que mais produz "cara de IA" e passa em toda lista de termo. Palavra comum usada num sentido que não é o do dicionário, quase sempre colocação inglesa vertida: objeto/preço/peso que "resolve, dá conta, entrega, segura, pede, exige, aguenta, sustenta, encara, cobra, junta, trabalha, cobre, vira, brilha" ("resolver a casa inteira", "o aparelho pede tomada", "a conta da potência vem no peso", "sem transformar a limpeza numa produção", "o que os R$ 295 compram", "casa grande pede remanejo"); substantivo-figura ("a conta", "degrau", "piso", "porta de entrada", "pacote", "produção", "trunfo", "fôlego"); frase-sacada ("não é X: é Y", "o que X é Y", "é aí que…"); fecho com rótulo de público ("é a escolha de quem", "faz sentido pra quem", "ele é o que resolve"); "pra" no texto público. **Teste**: a palavra está no sentido em que você a usaria falando com um cliente? Fix: sujeito concreto + verbo literal ("limpar a casa toda", "precisa de tomada", "a potência tem um custo: o peso", "sem muito esforço", "por R$ 295 você tem…", "você troca de tomada algumas vezes"), "para". Repetir a palavra exata ("aspira" 3×) NÃO é defeito e não deve ser trocada por sinônimo figurado. Personificação que EXPLICA ("o Wi-Fi se conecta sozinho") não flagra; verbo inventado/gíria ("se reconserta", "no batente") continua flagrando aqui.
 
 **21d — jargão financeiro/burocrático** (🟡): "desembolso", "comprometer dinheiro", "reprografia", "na(s) frente(s) de". Fix: "preço", "gastar", "cópia e digitalização".
 
 **21e — gramática/ambiguidade que trava a leitura** (🔴): casos reais: "só imprime em preto e a laser" (faltou "é"); "que ainda não aquece a tinta" (lê-se "ainda não"); "papel cortado pela metade" (parece papel rasgado); "cabe na escrivaninha sem virar uma estação de trabalho" (sujeito ambíguo); "troca inteligente pela Epson" (direção invertida). Inclui atribuição elíptica "conta da Epson" (= "segundo a Epson", muleta v1.21.1 → número direto).
 
-**21f — tiques com teto por ARTIGO** (🟡): ler `naturalidade_max` do bloco do nicho em `docs/painel/_data/chavoes-por-nicho.json` e contar no artigo INTEIRO. Padrão Impressoras: "daqui" ≤2 · "pede/pedem" (personificação) ≤3 · "trunfo" ≤1 · "fôlego" ≤1 · "telinha" ≤1 · "enxuto/enxuga" ≤2 · abertura "No conjunto," ≤1 · fórmula "O custo de X é Y" ≤1 · "o preço é o filtro" ≤1 · "leva X a sério" ≤1. Caso real: "daqui" 13× e "pede" 9× no impressoraideal/melhor-impressora-multifuncional.
+**21f — tiques com teto por ARTIGO** (🟡): complemento mecânico do 21c, não substituto. Vale em TODO nicho (não só onde `naturalidade_max` existe no `chavoes-por-nicho.json`): "daqui" ≤2 · "pede/pedem" (sujeito-coisa) ≤3 · "resolve/resolvem" (sujeito-coisa) ≤3 · "dá/dão conta" ≤2 · "entrega/entregam" ≤3 · "segura/seguram" ≤2 · "vira/viram" ≤3 · "de verdade" ≤1 · "com folga"/"de sobra" ≤1 · "trunfo"/"fôlego"/"degrau"/"porta de entrada" ≤1 cada · fecho "ele/ela resolve" / "é o que resolve" ≤1 · abertura "No conjunto," ≤1 · "o grande ponto" ≤1. Se o bloco do nicho tiver `naturalidade_max`/`naturalidade_banidos`, some (o mais restritivo vence). Casos reais: "daqui" 13× e "pede" 9× no impressoraideal/melhor-impressora-multifuncional; "resolve" 33×, "pede" 23×, "daqui" 11× no melhoraspirador-com/melhor-aspirador-de-po-vertical (2026-08-15, passou sem flag porque Aspiradores não tinha teto).
 
 ### 22. `subtitle-keyword-first` (v1.56.0, canon Marcelo 2026-06-24, severidade: 🟡 Médio)
 
@@ -613,7 +654,7 @@ TODO produto do `products[]` precisa do campo `badge` (etiqueta do card). Conven
 ## Filtros de severidade
 
 - **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0), **badge-ausente** (23, canon 2026-06-22 — todo produto leva etiqueta, alinha com o gate da `artigo-auditar`)
-- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (antropomorfismo+gíria, jargão financeiro, tiques acima do teto — v1.32.0), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
+- **Médio** (propor mudança): tone-clone óbvio, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (palavra fora do sentido/verbo-curinga, jargão financeiro, tiques acima do teto — v1.32.0 + canon 2026-08-15; 21c vira Crítico com ≥3 no mesmo review), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório
@@ -637,6 +678,7 @@ Apresentar em chat após análise:
 | 5 | buyer-reference | ✓/⚠/n.a. | ... |
 | 6 | links-incorretos | ✓/⚠/n.a. | ... |
 | 7 | claim-vs-lineup-fato | ✓/⚠/n.a. | ... |
+| 7b | **numero-sem-lastro-na-biblia** (RODAR o scan, não conferir a olho) | ✓/⚠/n.a. | ... |
 | 8 | voz-citacao-ficha-tecnica | ✓/⚠/n.a. | ... |
 | 9 | voz-comprador-implicita | ✓/⚠/n.a. | ... |
 | 10 | termos-tecnico-industriais | ✓/⚠/n.a. | ... |

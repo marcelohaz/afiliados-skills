@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Stub precisa existir (criado no painel via "+ Nova página de produto"). Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json`. Aplica régua editorial: concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription benefício-first, voz consultiva. Cria backup, commit, push, dispatch VPS pull.
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Stub precisa existir (criado no painel via "+ Nova página de produto"). Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json`. Aplica régua editorial: concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal). Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -80,6 +80,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
    - Identifique `niche` do site em `docs/painel/sites-meta.json`
    - Read `docs/painel/_data/chavoes-por-nicho.json`
    - Use `_genericos` + bloco do nicho (ex: `Pré Treino`, `Creatinas`, `Tablets`)
+   - **⚠ `_sites_aplicaveis` é o gate (canon 2026-08-15):** site fora da lista do bloco de nicho → **só o `_genericos` vale**. Não force pelo `niche`. E conte o `_genericos` SEMPRE: `chavoes_estruturais_max` tem as 4 variantes de "seleção" em cap **0**, e `industrial_max` tem `declarado` em 3.
    - Limites aplicam como guard rail editorial:
      - `termos_banidos_absoluto` → 0 ocorrências (peers/claim/stack/SKU/ASIN/lineup)
      - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0) → aplicar quando o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada pra rotina" → "feita pra")
@@ -138,6 +139,15 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 11. **Write `.mdx`**: monta o novo conteúdo:
     - **Frontmatter**: preserva todos os campos base existentes (asin, name, image, imageAlt, category, categorySlug, publishDate, contentLocked se existir). **Adiciona** os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview).
     - **Body**: remove o marker de stub (`{/* STUB GERADO POR ... [TODO: preencher] */}`). Body fica vazio ou com 1 linha em branco.
+
+      🚨 **O TEXTO VAI NO CAMPO `fullReview:` DO FRONTMATTER, NUNCA NO CORPO DO `.mdx`.** Corpo de página de produto **não renderiza**: o `SlugPage` só monta `<Content />` quando `type === 'review'`. Escrever a resenha no corpo produz uma página que vai pro ar **sem resenha nenhuma**, e nada reclama — build passa, painel não acusa, a página abre bonita e vazia. **Caso real 2026-08-14:** 7 páginas em 3 sites ficaram **meses** assim; o texto existia, completo e bom, no lugar que ninguém lê. Foram consertadas MOVENDO o texto pro campo (não regerando — o texto já era original por site). Na mesma varredura apareceu a variante: `guiaesportivo/vitafor-vita-d3-2000ui-gotas` com a resenha NOVA no campo e 2.222 chars da resenha VELHA esquecidos no corpo, resíduo de uma reescrita que gravou no frontmatter e não limpou o corpo. **Ao reescrever uma página que já existe, apague o corpo — não basta preencher o campo.**
+
+    - **AUTO-CHECK DE CORPO E CAMPO (OBRIGATÓRIO pós-Write, canon 2026-08-14)**:
+      ```bash
+      bun scripts/pagina-produto-guardas.ts {site} {slug}
+      ```
+      Reprova `fullReview-ausente` (campo não existe → página sem resenha), `fullReview-duplicado` (>1 ocorrência) e `corpo-nao-vazio` (texto no corpo, comentário MDX não conta). **Por que o check nasceu:** a guarda anterior fazia `findIndex` do campo e saía em silêncio quando ele não existia — ausência passava como "nada a conferir", que é exatamente o buraco por onde as 7 páginas caíram. Zero é defeito, não isenção.
+
     - **AUTO-CHECK DE FENCE (OBRIGATÓRIO pós-Write)**: rode `grep -c '^---$'` no `.mdx` — tem que dar **exatamente 2** (abre+fecha o frontmatter). Se der **1**, faltou a fence de fechamento (o block scalar `>-` do `fullReview`, último campo, correu até o EOF) → **anexe `\n---\n` no fim do arquivo** e re-confira. Sem isso o build quebra com `asin: Required / name: Required` (caso real Bárbara 2026-06-15).
 
     - **AUTO-CHECK MECÂNICO DETERMINÍSTICO (OBRIGATÓRIO pós-Write, canon 2026-07-24)** — NÃO conte char de cabeça:
@@ -223,62 +233,34 @@ Exemplos ruins:
 
 Regra prática: se subtitle parece "ficha técnica resumida", reescreva como posicionamento editorial. Specs vivem na tabela `specs`.
 
-### 2. `shortDescription` (string, 50-250 chars, alvo 180-230) — padrão BENEFÍCIO-FIRST
+### 2. `shortDescription` (string, 50-250 chars) — o que o produto é e para quem, em linguagem literal
 
-1-2 frases que aparecem no hero, abaixo do nome. **HARD CAP 250 chars.** Apesar de a página individual ter mais "espaço editorial" que a tabela do artigo, o shortDescription fica num card hero — texto longo passa de 3-4 linhas e quebra escanabilidade. Canon `melhoraspirador`: 225 média.
+1-2 frases que aparecem no hero, abaixo do nome. **HARD CAP 250 chars** (card hero: texto longo passa de 3-4 linhas e quebra escanabilidade). **Não é ficha técnica** (não começa com marca nem com lista de specs), mas também **não é frase de efeito**.
 
-**Padrão obrigatório (régua v1.17.0): benefício/posicionamento PRIMEIRO, técnico DEPOIS.**
+Estrutura (sem molde fixo de palavras — a estrutura é a mesma, o fraseado nasce do produto):
+1. **1ª frase: para quem serve ou o que faz de melhor**, dita de forma literal ("Impressora com tanque de tinta para casa e escritório pequeno" / "Creatina pura, sem aditivo, para uso contínuo").
+2. **2-3 dados essenciais** que justificam.
+3. **Fecho: um fato** (rendimento, embalagem, diferencial concreto, preço aproximado). Sem "Você ganha…", sem sacada.
 
-Estrutura em 3 partes:
-1. **Abertura**: posicionamento, perfil ou adjetivo posicional (engancha)
-2. **Meio**: 2-3 specs essenciais (justifica)
-3. **Fecho**: destaque, diferencial ou benefício (reforça)
+⚠️ **Sem fecho-molde.** Medido em 2026-08-06: **1.043 de 3.003 páginas da rede (35%)** fechavam com "Destaque para", e "Ideal pra quem" abria 18% (2026-08-15) — assinatura textual que liga os sites entre si. O fecho é uma frase de fato ("São 4.500 páginas em preto por kit."), não um molde e não uma frase esperta ("o custo por página é o que segura a conta", "quem esquece a impressora ligada agradece" eram sugestões desta skill até 2026-08-15 e saíram: verbo fora do sentido).
 
-**3 moldes (varie):**
-- **Molde A**: "Ideal pra quem [perfil], entrega [spec]. Você ganha [benefício]."
-- **Molde B**: "[Adjetivos] pra [perfil]. Combina [spec 1] e [spec 2]. [Fecho com o diferencial]."
-- **Molde C**: "[Posicionamento curto] pra [perfil]. [Fórmula/spec]. [Embalagem ou diferencial]."
+**Exemplos ✓:**
+- ✓ `"Impressora com tanque de tinta para casa e escritório pequeno. Imprime, copia e digitaliza, com Wi-Fi e rendimento de até 4.500 páginas em preto por kit. Custa cerca de R$ 1.100."` (≈180ch)
+- ✓ `"Creatina pura para uso contínuo, sem aditivo nem sabor. São 5 g por dose, pote de 300 g que rende 60 doses e laudo de pureza de laboratório independente."` (≈160ch)
 
-⚠️ **O fecho ROTACIONA — "Destaque para" não é o padrão, é uma opção entre várias.**
-Medido em 2026-08-06: **1.043 de 3.003 páginas da rede (35%)** fecham a
-`shortDescription` com "Destaque para", e nos sites criados por batch passa de 80%. Isso
-deixou de ser fórmula e virou **footprint**: uma assinatura textual que se repete em um
-terço da rede e liga os sites entre si.
-
-Escolha um fecho diferente a cada página, e prefira o que a frase pedir:
-
-```
-o diferencial vira sujeito     "O custo por página é o que segura a conta."
-consequência de uso            "Na prática, dá pra imprimir o mês inteiro sem trocar tinta."
-quem ganha com aquilo          "Quem imprime pouco e esquece a impressora ligada agradece."
-o número fecha sozinho         "São 4.500 páginas em preto por kit."
-a ressalva honesta             "A contrapartida é a velocidade, que não impressiona."
-```
-
-Se o fecho natural for mesmo "Destaque para", **cheque as outras páginas do site antes**
-(`grep -c "Destaque para" sites/{site}/src/content/products/*.mdx`). Passando de um
-terço delas, use outro.
-
-**Exemplos ✅:**
-- ✓ `"Custo-benefício forte e fórmula completa pra iniciantes ou rotina contínua. Combina creatina, beta-alanina, taurina e cafeína anidra em dose pequena de 5g, com pote de 300g que rende 60 doses por cerca de R$ 55."` (Molde C, 211ch)
-- ✓ `"Impressora EcoTank pra uso doméstico ou escritório pequeno. Tanque de tinta recarregável e impressão duplex automática, com rendimento de até 4.500 páginas em preto por kit. O custo por página é o que segura a conta."` (Molde B, 220ch, fecho com o diferencial como sujeito)
-
-**Exemplo ❌ (técnico-first, REGRESSÃO):**
-- ❌ `"Impressora multifuncional da Epson (linha EcoTank L3250) com tanque de tinta, Wi-Fi Direct, ADF e rendimento de até 4.500 páginas em preto por kit T544. Indicada para uso doméstico ou escritório pequeno com volume médio."` (começa com marca + listagem de specs — perde o leitor)
+**Exemplos ❌:**
+- ❌ `"Impressora multifuncional da Epson (linha EcoTank L3250) com tanque de tinta, Wi-Fi Direct, ADF e rendimento de até 4.500 páginas em preto por kit T544. Indicada para uso doméstico..."` (começa com marca + listagem de specs)
+- ❌ `"Ideal pra quem imprime em casa, entrega 4.500 páginas por kit. Você ganha meses sem trocar tinta. Destaque para o Wi-Fi."` (molde + "entrega/ganha" fora do sentido literal)
 
 **Drop SEMPRE:**
 - ❌ "[Tipo] brasileira/o da [marca]" — marca já no campo `name`
 - ❌ "todos declarados pelo fabricante" — implícito
-- ❌ "preço médio em torno de R$ X" — preço já está nas specs
+- ❌ "preço médio em torno de R$ X" como abertura — preço pode fechar, não abrir
 - ❌ Público-alvo verboso ("Voltada para quem precisa de... e quer manter...")
 - ❌ Listagem completa de ingredientes — pega só 2-3 chave
+- ❌ Moldes de abertura/fecho ("Ideal pra quem", "Feito pra quem", "Você ganha", "Destaque para", "Custo-benefício forte pra")
 
-**Adicionar:**
-- ✅ Adjetivos posicionais ("Versátil", "Premium", "Custo-benefício forte")
-- ✅ Conexão emocional ("Ideal pra quem...", "Você ganha...")
-- ✅ Um fecho que carregue o diferencial, **rotacionando a forma** (ver o bloco de fechos acima)
-
-**Régua de corte mental**: leia a 1ª frase. Começa com "[Tipo] brasileiro da X..." → ERRADO. Começa com adjetivo posicional ou "Ideal pra..." → CERTO.
+**Régua de corte mental**: releia a 1ª frase: diz para quem é ou o que faz, com verbo no sentido literal? Começa com marca ou lista → inverta. Começa com "Ideal pra quem… entrega…" → reescreva literal.
 
 ### 3. `pros` (array de strings, 3-8 itens, cada 60-180 chars com alvo 80-130)
 
@@ -443,49 +425,38 @@ Os reviews têm voz de **quem testou/analisou** o produto. Tom: "nós identifica
 - ❌ "Nº 1 mais vendido na Amazon"
 
 **Reescreva** insights da bíblia em voz analítica:
-- ✓ "O custo-benefício se destaca: {dado concreto}"
+- ✓ "Custa cerca de R$ X e rende Y páginas por kit" (o dado concreto no lugar de "custo-benefício se destaca")
 - ✓ "Uma limitação a considerar é..."
-- ✓ "O equipamento entrega {feature} em {condição}"
+- ✓ "O aparelho tem {feature} / faz {ação} em {condição}" (verbo literal, não "entrega")
 
 > **Sobre citar o fabricante**: regra diferente de citar comprador/Amazon. Spec factual (rendimento, velocidade, economia) vai afirmado direto, sem "segundo X". Atribuir só vale pra recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês"). Ver Armadilha 7 abaixo pra régua completa.
 
-## Tom conversacional (CRÍTICO)
+## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 5 skills de criação e nos prompts canônicos do painel)
 
-A pergunta-teste antes de salvar qualquer campo:
-> *"Um amigo que não entende disso entenderia e saberia o que fazer?"*
+Especialista explicando a um amigo, cumprido com **simplicidade**, não com efeito. Pergunta-teste: *"um amigo que não entende disso entenderia e saberia o que fazer?"* Sem jargão corporativo, sem formalidade institucional, **sem sacada**.
 
-Se não → simplifica.
+O que faz texto soar como IA não é gíria nem termo técnico: é **palavra comum usada fora do sentido do dicionário** ("resolver a casa", "dar conta da poeira", "transformar a limpeza numa produção", "o aparelho pede tomada", "a conta da potência vem no peso"), quase sempre frase feita do inglês vertida (*make a production, handle, delivers, covers, calls for, the math*). Cada palavra é comum, então lista de termo não pega; a régua é uma **classe**:
 
-Reviews afiliados são **especialista explicando pra amigo ou vizinho**: claro, direto, fluido. Sem jargão corporativo, sem formalidade institucional. Use 2ª pessoa quando faz sentido ("se você imprime em casa..."), descreva uso real ("você abre uma tampa, derrama a garrafa direto, e pronto"), conecte com a situação do leitor ("está cansado de gastar com cartucho").
+1. **Sujeito concreto + verbo no sentido do dicionário.** Aspirador aspira, impressora imprime, bateria dura, produto custa/tem/funciona. Objeto, preço, peso ou potência NÃO "resolvem, dão conta, entregam, seguram, pedem, exigem, aguentam, sustentam, encaram, cobram, juntam, trabalham, cobrem, viram, brilham". Teste: é o sentido em que você usaria a palavra falando com um cliente?
+2. **Substantivo literal.** Nada de "a conta", "degrau", "piso", "porta de entrada", "pacote", "proposta", "produção", "remanejo", "trunfo", "fôlego" como figura. Diga o que é (preço, faixa de preço, o mais barato, conjunto de recursos).
+3. **Sem frase-sacada.** Nada de "não é X: é Y", "o que X é Y", "é aí que…", fecho com dois-pontos que "revela". Dois-pontos só para explicação ou lista.
+4. **Repita a palavra certa.** "Aspira" 3× é normal. Chavão é frase-molde repetida, não palavra exata. **Nunca troque a palavra certa por sinônimo figurado para "variar"** (limpar → "resolver a casa" → "dar conta" é exatamente o defeito).
+5. **"para", não "pra"**, no texto público.
+6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
+7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
+8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
+9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-**Padrões de tom — antes/depois:**
+**Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
-| ❌ Formal/corporativo | ✓ Conversacional |
+| ❌ Como saiu (2026-08-15) | ✓ Como uma pessoa escreve |
 |---|---|
-| "atende quem busca dose alta de EPA e DHA" | "se você quer dose cheia de EPA e DHA em poucas cápsulas" |
-| "O posicionamento da X em suplementação esportiva" | "se você treina e quer um da linha esportiva" |
-| "alinhado à narrativa de procedência" | "isso encaixa com a história de pureza do produto" |
-| "estrutura química mais próxima do óleo de peixe in natura" | "molécula mais parecida com o óleo natural" |
-| "perfil de absorção favorável" | "absorve melhor" |
-| "uma rotina de suplementação séria" | "uma rotina contínua" |
-| "números compatíveis com" | "boa dose pra" |
-| "tradicionalmente associada a" | "conhecida por" |
-
-**Referências canônicas do projeto pra calibrar tom** (leia se desconfia que o output está formal demais):
-- `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`
-- `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx`
-
-## Tom natural e rótulos REAIS (v1.32.0, canon Marcelo 2026-06-10)
-
-Conversacional ≠ personagem. Caso real: a home do melhorimpressora acumulou "máquina de trabalho", "impressora para imagem", "no batente", "se reconserta", "desembolso" — 16 trechos não-naturais num artigo só. Régua:
-
-1. **Teste-da-Amazon pros rótulos**: só use rótulo de categoria que EXISTE no varejo (digitaria na busca?). ❌ "máquina de trabalho"→✓ "impressora de escritório" · ❌ "impressora para imagem"→✓ "fotográfica" · ❌ "preço de custo-benefício"→✓ "preço justo".
-2. **Elipse de categoria LIBERADA**: "a barata", "a doméstica", "a laser", "as de tanque" são português natural — não invente substituto.
-3. **PROIBIDO meta-SEO**: nunca mencionar a busca/keyword do leitor ("tem gente que digita X...").
-4. **Antropomorfismo com gíria = 0**: "no batente", "se reconserta", aparelho que "quer". Personificação só quando explica ("se conserta sozinho" ✓).
-5. **Jargão financeiro/burocrático**: "desembolso"→"preço" · "comprometer dinheiro"→"gastar" · "reprografia"→"cópia e digitalização".
-6. **Atribuição elíptica = muleta** (v1.21.1): "conta da Epson" → número direto.
-7. **Máx 1 coloquialismo leve por página**; analogia só quando explica. Teste: ler em voz alta pra um cliente.
+| se você quer resolver a casa inteira sem escolher entre potência e preço | se você quer limpar a casa toda sem escolher entre potência e preço |
+| sem transformar a limpeza numa produção | sem muito esforço |
+| a conta da potência vem no peso | a potência tem um custo: o peso |
+| casa grande ainda pede remanejo | em casa grande você ainda troca de tomada algumas vezes |
+| Se não têm, ele é o que resolve. | Se não têm, ele é a melhor opção. |
+| O de tomada não se cansa. | O modelo com fio não perde força durante o uso. |
 
 ## Como usar a bíblia
 
@@ -524,7 +495,7 @@ A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conf
 | **B) Claim do fabricante repetível** | "Forma triglicerídeo, apontada pelo fabricante como mais absorvível" | "Forma triglicerídeo, considerada mais absorvível" |
 | **C) Claim institucional / PR** | "Marca tradicional brasileira segundo o próprio fabricante" | "Marca brasileira" (ou omite se não agrega) |
 | **D) Voz comprador implícita** | "Cápsulas sem sabor segundo relatos de compradores" | "Cápsulas sem sabor" |
-| **E) Registro coloquial da bíblia** | "700W pra tostar as fatias no tempo do café passar" · "as fatias sobem sozinhas, sem precisar ficar de olho" · "não só pão de forma fininho" | "700W, potência que dá conta das fatias enquanto o café fica pronto" → **melhor**: "700W nas duas fatias" · "elevação automática ao fim do ciclo" · "aceita fatias de espessuras diferentes" |
+| **E) Registro coloquial da bíblia** | "700W pra tostar as fatias no tempo do café passar" · "as fatias sobem sozinhas, sem precisar ficar de olho" · "não só pão de forma fininho" | "700W nas duas fatias" · "elevação automática ao fim do ciclo" · "aceita fatias de espessuras diferentes" (NÃO "potência que dá conta das fatias": trocar a gíria da bíblia por verbo figurado é o mesmo defeito em outra roupa) |
 
 **Categoria E — por que existe** (canon 2026-07-16): `angulosConversao` (e às vezes `sentimentoCompradores`) vêm em **registro de venda**, coloquial de propósito, porque servem de matéria-prima pra copy. Colar verbatim importa a gíria: no lote cozinhaideal de 9 páginas, 8 saíram com 6 a 9 coloquialismos contra o teto de 1 — e dois auditores independentes rastrearam a origem pra frases **literais** da bíblia ("no tempo do café passar", "sem precisar ficar de olho", "fininho"). O sub-agent não estava improvisando: a régua mandava "usar" o ângulo e ele usou. **Pegue o FATO da frase de ângulo e reescreva em voz analítica.** Se você copiou ≥5 palavras seguidas de uma `frase` de `angulosConversao`, você NÃO destilou.
 
@@ -692,35 +663,19 @@ Args canônico que invoco: `Skill(skill="pagina-produto-criar", args="melhorimpr
 
 ### Auto-check de concordância PT-BR (régua v1.19.0, canon 2026-05-28)
 
-**Bug-class real** (batch melhorpretreino v1.17-1.18 — ChatGPT-Bárbara identificou 11+ casos): substituições mecânicas (BCAAs→aminoácidos, parestesia→formigamento, fórmula→composição) **NÃO reconcordaram** plural/gênero/artigo.
+**Bug-class real** (batch melhorpretreino v1.17-1.18): substituições mecânicas (BCAAs→aminoácidos, parestesia→formigamento, fórmula→composição) **NÃO reconcordaram** plural/gênero/artigo (11+ casos em 2 artigos). Antes de gravar, grep dos padrões abaixo em cada campo; achou → corrija antes de gravar.
 
-**Auto-check antes de gravar — grep regex**:
+| Padrão | Fix |
+|---|---|
+| `composiçãos`, `combinaçãos`, `porçãos`, `opçãos` | `composições`, `combinações`, `porções`, `opções` |
+| `a produto`, `a formigamento`, `a ingrediente`, `esta ativo` | `o produto`, `o formigamento`, `o ingrediente`, `este ativo` |
+| `o fórmula`, `o dose`, `o composição`, `este tolerância` | `a fórmula`, `a dose`, `a composição`, `esta tolerância` |
+| `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
+| `disponíveis no em 2026` | `disponíveis em 2026` |
+| `Pra a maioria/primeira/melhor` | `Para a maioria/primeira/melhor` |
+| `as produtos`, `os fórmulas`, `as ingredientes` | gênero certo |
 
-```python
-import re
-
-# Para cada campo (subtitle, shortDescription, pros, cons, specs.value, fullReview):
-
-# 1) Plural errado em -ãos (deve ser -ões)
-re.search(r'\b(composição|combinação|porção|injeção|reação|opção|posição)s\b', campo)
-# composiçãos → composições, combinaçãos → combinações
-
-# 2) Artigo errado antes de substantivo masculino
-re.search(r'\b(a|na|da|esta|nessa|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto)\b', campo, re.IGNORECASE)
-# "a produto" → "o produto" / "a formigamento" → "o formigamento"
-
-# 3) Artigo errado antes de substantivo feminino
-re.search(r'\b(o|no|do|este|nesse|neste|esse) (fórmula|dose|porção|composição|tolerância)\b', campo, re.IGNORECASE)
-
-# 4) Adjetivo concordância quebrada
-re.search(r'produto[s]? elaborada[s]?\b|produto ampla|formula natural', campo, re.IGNORECASE)
-# "produto ampla" → "fórmula ampla" / "formula natural" → "fórmula natural"
-
-# 5) Duplicação preposicional "no em 20XX"
-re.search(r'\b(?:disponíveis?|disponível) no em \d{4}', campo, re.IGNORECASE)
-```
-
-Se achar — corrija antes de gravar.
+Regex de referência (se quiser rodar): `\b(composição|combinação|porção|opção|posição)s\b` · `\b(a|na|da|esta|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto|atleta)\b` · `\b(o|no|do|este|neste|esse) (fórmula|dose|porção|composição|combinação|tolerância)\b` · `\bPra a \w+`.
 
 ### Health absolutes YMYL banidos (régua v1.19.0, canon 2026-05-28)
 
@@ -762,49 +717,16 @@ Termos corporativos quebram voz especialista→amigo. Caps no JSON:
 - `diferencial central`: 2 / `posicionamento`: 3 / `segmento`: 3 / `proposta de valor`: 0
 
 **Substituições**:
-| ❌ Corporativo | ✓ Conversacional |
+| ❌ Corporativo | ✓ Direto (literal, sem molde) |
 |---|---|
-| "O diferencial central é..." | "O grande ponto é..." |
-| "Posicionamento de mercado premium" | "Categoria premium" / "Linha mais cara" |
-| "Atende ao segmento de X" | "Funciona pra quem X" |
+| "O diferencial central é a fórmula sem aditivos" | "A fórmula não tem aditivos" (NÃO "o grande ponto é…": virou molde em 289 páginas) |
+| "Posicionamento de mercado premium" | "Linha mais cara" |
+| "Atende ao segmento de X" | "Serve para quem X" |
 
 ### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
 
-**Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
+Substituições mecânicas causam (caso real melhorpretreino `a72e7d9`): **14a** duplicação contígua (`sem empilhar suplementos sem empilhar suplementos`; regex `([a-zA-ZÀ-ÿ\s]{8,40})\1`) · **14b** bullet começando com minúscula dentro de `<strong>` (`<strong>aminoácidos…`) · **14c** minúscula após ponto em texto editorial (`(maior dose). pra emagrecer`; ignorar URLs e listas numeradas). Rodar em shortDescription, fullReview, pros, cons, specs.value antes de gravar; achou → corrija.
 
-**Auto-check obrigatório ANTES de gravar**:
-
-```python
-import re
-
-# Para cada campo gerado (shortDescription, fullReview, pros, cons, specs.value):
-
-# a) Duplicação contígua (>=8 chars repetidos em sequência)
-for m in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
-    print(f"⚠ duplicação: {m.group(0)}")
-    # → Reescreve removendo a metade duplicada
-
-# b) Bullet começa com minúscula (em pros/cons)
-for bullet in pros + cons:
-    if re.match(r'<strong>[a-záéíóúâêôãõàèìòùç]', bullet):
-        print(f"⚠ bullet minúsculo: {bullet[:60]}")
-        # → Capitalize primeira letra dentro de <strong>...</strong>
-
-# c) Minúscula após ponto (texto editorial — excluir URLs)
-for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
-    ctx = campo[max(0,m.start()-30):m.end()+30]
-    if 'http' in ctx or 'amazon.com.br' in ctx: continue
-    if re.search(r'\d+\. \w', ctx[:50]): continue  # lista numerada
-    print(f"⚠ minúsc após ponto: ...{ctx}...")
-    # → Capitalize a letra (.+ espaço + Letra)
-```
-
-**Exemplos reais** (commit a72e7d9, melhorpretreino):
-- a: `"sem empilhar suplementos sem empilhar suplementos"`
-- b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
-- c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
-
-Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
 
 ## Limitação intrínseca conhecida
 
