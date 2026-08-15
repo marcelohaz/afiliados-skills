@@ -65,6 +65,8 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    - Read `docs/painel/_data/chavoes-por-nicho.json` — use `_genericos` + bloco do nicho
    - Aplique limites como guard rail: não passar de `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`
    - Banidos absolutos sempre: lineup, SKU, ASIN, datasheet, notificado, trade-off, hardcore
+   - **⚠ `_sites_aplicaveis` é o gate do bloco de nicho (canon 2026-08-15):** se o slug do site não está na lista do bloco, **o bloco não vale** e sobra só o `_genericos`. Não force pelo `niche`. Reporte como sugestão de incluir o site no JSON, nunca como defeito do texto.
+   - **O `_genericos` vale SEMPRE e é o que mais dispara:** `termos_banidos_absoluto`, `chavoes_estruturais_max` (as 4 variantes de "seleção" têm cap **0**) e `industrial_max` (`declarado` 3, `fabricante` 12). Conte ele antes de qualquer bloco de nicho.
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+` em ambos.
 
@@ -376,8 +378,8 @@ Eles carregam a intenção comercial/comparativa + os links de afiliado (Marca/F
 #### 1. Vale a pena comprar...?
 **3 parágrafos:**
 - **P1**: argumento central da categoria + critérios estruturais (ex: tanque vs cartucho, ecossistema, perfis de uso).
-- **P2**: âncoras de preço REAIS do lineup (ex: *"Os preços desta seleção vão de R$ X (Modelo Y) a R$ Z (Modelo W)"*). Cita 2-3 modelos como referência de preço (esta é a EXCEÇÃO à régua "geral").
-- **P3**: quando **NÃO** vale a pena comprar (perfil errado, alternativas melhores). Importante editorialmente — protege credibilidade.
+- **P2**: âncoras de preço REAIS do lineup, citando 2-3 modelos como referência (esta é a EXCEÇÃO à régua "geral"). Frase literal e variada: "O mais barato do comparativo é o Modelo Y, por cerca de R$ X, e o mais caro é o Modelo W, por volta de R$ Z." — NÃO a mesma abertura em todo artigo ("Os preços desta seleção vão de…" apareceu em ~45 guias e virou assinatura).
+- **P3**: quando **NÃO** vale a pena comprar (perfil errado, alternativas melhores). Importante editorialmente — protege credibilidade. Sem o rótulo-molde "Quando não vale a pena:" (43 guias): escreva a frase ("Não compensa para quem…").
 
 #### 2. Como escolher o melhor...?
 **Intro (1 parágrafo curto) + 4-7 subseções `<h3>`** — cada H3 é um critério.
@@ -429,7 +431,7 @@ Régua de cada FAQ (profundidade por completude, **não cota** — régua canon 
 
 ### Tamanho típico
 
-**Alvo: 8.000-18.000 chars** pra keyword comparativa (5 base). **Keyword informacional (com H2 extras): mirar 16.000-22.000 chars** — os H2 informacionais + marca/FAQ aprofundadas naturalmente puxam pra cima. Range válido sempre: 6.000-25.000.
+**Range válido: 6.000-25.000 chars.** Guia comparativo (5 H2 base) costuma ficar em 8-18k; keyword informacional com H2 extras, em 16-22k. **Isso é medida do que sai quando os tópicos são cobertos, não meta**: não escreva para chegar num número (o enchimento vira cauda ", então… / o que…" e é onde a prosa perde naturalidade).
 
 Canônicos atuais (referência):
 - `melhor-tablet-custo-beneficio` — 17.847 chars
@@ -437,7 +439,7 @@ Canônicos atuais (referência):
 - `melhor-tablet-samsung` — 20.073 chars
 - `kindle-qual-o-melhor` — 15.518 chars
 
-Guide bem feito tem ~12-18k chars (comparativo) ou ~16-22k (informacional com extras). Menos que 6k provavelmente faltou cobertura; mais que 25k vira walls of text. **Profundidade vem de cobrir mais tópicos REAIS (H2 informacionais, marca/FAQ completas), nunca de encher parágrafo (ver anti-padding nas seções 3 e 4).**
+Menos que 6k provavelmente faltou cobertura; mais que 25k vira walls of text. **Profundidade vem de cobrir mais tópicos REAIS (H2 informacionais, marca/FAQ completas), nunca de encher parágrafo (ver anti-padding nas seções 3 e 4).**
 
 ### Listas (opcionais, dentro das seções)
 
@@ -655,16 +657,37 @@ Carrego TODAS as bíblias dos produtos do artigo pra ENTENDER:
 - **Educativa, factual, neutra.** Tom de quem explica critérios pra alguém aprendendo a comprar.
 - **Não comercial.** Não promete que a pessoa vai encontrar o produto "perfeito". Promete entender critérios.
 - **Sem "nós" exagerado.** "A decisão começa por X" > "Nós recomendamos X" (mais educativo, menos prescritivo).
-- **Português brasileiro editorial.** Sem gírias, sem anglicismos desnecessários.
+- **Português brasileiro editorial.** Sem gírias, sem anglicismos (inclusive os de sentido: "entrega", "cobre", "pede", "a conta"), "para" e não "pra". Ver "## Voz natural" abaixo.
 - **NUNCA cite compradores/reviews/avaliações/Amazon** (padrão do projeto).
 
-## Tom conversacional (CRÍTICO)
+## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 5 skills de criação e nos prompts canônicos do painel)
 
-Pergunta-teste antes de salvar: *"Um amigo que não entende disso entenderia?"* Se não → simplifica.
+Especialista explicando a um amigo, cumprido com **simplicidade**, não com efeito. Pergunta-teste: *"um amigo que não entende disso entenderia e saberia o que fazer?"* Sem jargão corporativo, sem formalidade institucional, **sem sacada**.
 
-Guide é educativo mas não acadêmico. Evite jargão corporativo (❌ "alinhado à narrativa", "perfil favorável", "estrutura química mais próxima do natural"). Use linguagem direta (✓ "vale procurar dose alta", "molécula mais parecida com o óleo natural"). NUNCA cite procedência burocrática ("conforme tipo de dieta declarado", "alérgenos confirmam") — destila o critério direto.
+O que faz texto soar como IA não é gíria nem termo técnico: é **palavra comum usada fora do sentido do dicionário** ("resolver a casa", "dar conta da poeira", "transformar a limpeza numa produção", "o aparelho pede tomada", "a conta da potência vem no peso"), quase sempre frase feita do inglês vertida (*make a production, handle, delivers, covers, calls for, the math*). Cada palavra é comum, então lista de termo não pega; a régua é uma **classe**:
 
-Referência canônica pra calibrar tom + densidade visual: `sites/melhoraspirador/src/content/reviews/melhor-aspirador-de-po-vertical.mdx` (campo `guideContent`). Esse é o padrão atual de qualidade — 5,3 `<strong>` por 1k chars + links Amazon concentrados em Marca/FAQ/Conclusão (0 Amazon em Vale a pena/Como escolher). Outros bons exemplos: `sites/melhorestablets/src/content/reviews/melhor-tablet-custo-beneficio.mdx`, `sites/qualamelhorcreatina/src/content/reviews/qual-a-melhor-creatina.mdx`.
+1. **Sujeito concreto + verbo no sentido do dicionário.** Aspirador aspira, impressora imprime, bateria dura, produto custa/tem/funciona. Objeto, preço, peso ou potência NÃO "resolvem, dão conta, entregam, seguram, pedem, exigem, aguentam, sustentam, encaram, cobram, juntam, trabalham, cobrem, viram, brilham". Teste: é o sentido em que você usaria a palavra falando com um cliente?
+2. **Substantivo literal.** Nada de "a conta", "degrau", "piso", "porta de entrada", "pacote", "proposta", "produção", "remanejo", "trunfo", "fôlego" como figura. Diga o que é (preço, faixa de preço, o mais barato, conjunto de recursos).
+3. **Sem frase-sacada.** Nada de "não é X: é Y", "o que X é Y", "é aí que…", fecho com dois-pontos que "revela". Dois-pontos só para explicação ou lista.
+4. **Repita a palavra certa.** "Aspira" 3× é normal. Chavão é frase-molde repetida, não palavra exata. **Nunca troque a palavra certa por sinônimo figurado para "variar"** (limpar → "resolver a casa" → "dar conta" é exatamente o defeito).
+5. **"para", não "pra"**, no texto público.
+6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
+7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
+8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
+9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
+
+**Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
+
+| ❌ Como saiu (2026-08-15) | ✓ Como uma pessoa escreve |
+|---|---|
+| se você quer resolver a casa inteira sem escolher entre potência e preço | se você quer limpar a casa toda sem escolher entre potência e preço |
+| sem transformar a limpeza numa produção | sem muito esforço |
+| a conta da potência vem no peso | a potência tem um custo: o peso |
+| casa grande ainda pede remanejo | em casa grande você ainda troca de tomada algumas vezes |
+| Se não têm, ele é o que resolve. | Se não têm, ele é a melhor opção. |
+| O de tomada não se cansa. | O modelo com fio não perde força durante o uso. |
+
+**Referência de DENSIDADE VISUAL (negrito por 1k chars, links Amazon só em Marca/FAQ/Conclusão)**: `sites/melhoraspirador/src/content/reviews/melhor-aspirador-de-po-vertical.mdx` (campo `guideContent`). ⚠ É referência de estrutura e densidade, **não de tom**: o texto dele tem o registro que a régua de 2026-08-15 corrige ("o de tomada não se cansa", "marca que só divulga watt está divulgando a conta de luz"). Para tom, siga o bloco acima.
 
 ## Filtros editoriais
 
@@ -682,6 +705,7 @@ Referência canônica pra calibrar tom + densidade visual: `sites/melhoraspirado
 - **Linkagem interna**: 2-4 links (ideal ~3) pra peer articles reais (slug REAL, NUNCA derivado do keyword), âncora = keyword do destino (singular preferido); link de produto = nome completo COM marca. Sem `target`/`rel`. **Links peer/home são contextuais e NÃO entram na Conclusão** (v1.24.0) — vão no spot onde o tema aparece (FAQ/Marca/Vale a pena/Como escolher). Links de PRODUTO podem ficar na Conclusão (recomendação).
 - Sem travessão `—` nem `–`.
 - Sem superlativos sem evidência ("o melhor disponível", "incomparável", "imbatível").
+- **Voz natural** (canon 2026-08-15): verbo e substantivo no sentido do dicionário (produto não "resolve/entrega/pede/segura/cobre"), sem frase-sacada ("não é X: é Y", "é aí que…"), "para" no texto público, sem molde repetido de abertura de seção ("Não existe marca que ganhe em tudo", "Seja qual for o perfil", "Escolher bem é menos sobre X e mais sobre Y", "Quando não vale a pena:").
 - **Citação de produto específico**: PROIBIDA em "Vale a pena" (exceto âncoras de preço — *"R$ X do Modelo Y a R$ Z do Modelo W"*) e "Como escolher" (exceto exceções editoriais pontuais, ex: *"Procreate é exclusivo do iPadOS"*). PERMITIDA em "Melhor marca" (1 H3 por marca), "FAQ" (recomendação direta) e "Conclusão" (recomendação central).
 - Sem citação a compradores/reviews/avaliações/Amazon **como entidade** ("compradores avaliam", "X estrelas"). Link Amazon como destino de compra está OK em FAQ/Marca/Conclusão.
 - Sem `<h1>`, `<img>`, `<table>`, `<script>`, `<iframe>`, `<style>`, `<div>`, `<span>`, `<form>`.
@@ -715,7 +739,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 | ❌ Corporativo | ✓ Conversacional |
 |---|---|
-| "diferencial central" | "o grande ponto é" |
+| "diferencial central" | dizer o fato ("a fórmula não tem aditivos"); NÃO "o grande ponto é" (virou molde) |
 | "posicionamento" | "categoria" |
 | "segmento de X" | "tipo de X" |
 | "proposta de valor" | drop sempre |
@@ -821,37 +845,14 @@ P2 da seção "Vale a pena" pede âncoras de preço reais do lineup. Modelo tend
 ### 17. Parágrafos densos com 3+ conceitos
 Cada parágrafo deve cobrir **1 ideia principal** (com 1-2 conceitos relacionados, no máximo). Quando um parágrafo lista 3+ conceitos distintos com `<strong>` dedicado pra cada (ex: "Wi-Fi Direct, AirPrint, Mopria e Bivolt automático" tudo junto), divide em 2 ou 3 parágrafos menores. **Regra prática**: se você usa 3+ tags `<strong>` no mesmo parágrafo pra introduzir conceitos diferentes, considere dividir.
 
-Exemplos de divisão (corrigindo padrão denso):
-
-❌ **Denso (1 parágrafo, 4 conceitos)**:
-```html
-<p><strong>Wi-Fi Direct</strong> permite imprimir sem roteador. <strong>AirPrint</strong>
-é o padrão Apple. <strong>Mopria</strong> é o equivalente Android. <strong>Bivolt
-automático</strong> é diferencial brasileiro: liga em 110V ou 220V sem configuração.</p>
-```
-
-✅ **Dividido (2 parágrafos, 1 ideia cada)**:
-```html
-<p>Pra impressão pelo celular, três padrões cobrem os principais cenários: <strong>Wi-Fi
-Direct</strong> permite imprimir sem roteador (útil em redes instáveis), <strong>AirPrint</strong>
-é o padrão Apple (iPhone/iPad imprimem sem app), <strong>Mopria</strong> é o equivalente
-Android.</p>
-
-<p><strong>Bivolt automático</strong> é diferencial brasileiro: a impressora liga em 110V ou
-220V sem configuração, prático pra quem muda de casa ou cidade.</p>
-```
+Ex.: "Wi-Fi Direct / AirPrint / Mopria / Bivolt automático" com `<strong>` em cada um num parágrafo só → separe: os 3 padrões de impressão pelo celular num parágrafo, o bivolt em outro.
 
 Mesma regra aplica em listas tipo "tipos de impressora" (cartucho/tanque/laser) — cada tipo merece parágrafo próprio pra leitor escanear. Leitor cansa em parágrafos densos; SEO também premia conteúdo escaneável.
 
 ### 18. Negrito esparso (frases conceituais sem destaque)
 Inverso da armadilha 17. Modelo tende a negritar SÓ specs numéricos (R$ 450, 12W, 4.500 páginas) e deixar frases-chave conceituais em texto normal. Resultado: guide com 2 strongs/1k chars (visualmente fraco) em vez do alvo 4-5/1k dos canônicos.
 
-Antes de salvar, escaneie cada parágrafo procurando **frases-chave conceituais sem negrito**. Padrões típicos a negritar:
-- *"o ponto que define X é Y"* → negritar Y
-- *"diferente das outras opções, esta tem Z"* → negritar Z
-- *"o porém real: ..."* → negritar o porém (a contrapartida)
-- *"o que importa de verdade é A"* → negritar A
-- *"perfil de quem imprime B"* → negritar B (perfil)
+Antes de salvar, escaneie cada parágrafo procurando **frases-chave conceituais sem negrito**: o critério que decide a compra, a limitação real, o perfil de uso, o valor de referência ("8 GB é o suficiente para a maioria"). Negrite o **termo**, não a frase inteira. ⚠ Isso não é licença para escrever em molde ("o ponto que define X é Y", "o que importa de verdade é A", "o porém real:") — esses clefts eram sugeridos aqui até 2026-08-15 e viraram assinatura; a frase é literal, o negrito é o que a torna escaneável.
 
 **Exemplo real do canon melhoraspirador** (`<h3>Peso e ergonomia</h3>`):
 
@@ -924,41 +925,8 @@ Args canônico que invoco: `Skill(skill="artigo-guia-escrever", args="melhorimpr
 
 ### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
 
-**Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
+Substituições mecânicas causam (caso real melhorpretreino `a72e7d9`): **14a** duplicação contígua (`sem empilhar suplementos sem empilhar suplementos`; regex `([a-zA-ZÀ-ÿ\s]{8,40})\1`) · **14b** bullet começando com minúscula dentro de `<strong>` (`<strong>aminoácidos…`) · **14c** minúscula após ponto em texto editorial (`(maior dose). pra emagrecer`; ignorar URLs e listas numeradas). Rodar no guideContent inteiro antes de gravar; achou → corrija.
 
-**Auto-check obrigatório ANTES de gravar**:
-
-```python
-import re
-
-# Para cada campo gerado (shortDescription, fullReview, pros, cons, specs.value):
-
-# 14a) Duplicação contígua (>=8 chars repetidos em sequência)
-for m in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
-    print(f"⚠ duplicação: {m.group(0)}")
-    # → Reescreve removendo a metade duplicada
-
-# 14b) Bullet começa com minúscula (em pros/cons)
-for bullet in pros + cons:
-    if re.match(r'<strong>[a-záéíóúâêôãõàèìòùç]', bullet):
-        print(f"⚠ bullet minúsculo: {bullet[:60]}")
-        # → Capitalize primeira letra dentro de <strong>...</strong>
-
-# 14c) Minúscula após ponto (texto editorial — excluir URLs)
-for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
-    ctx = campo[max(0,m.start()-30):m.end()+30]
-    if 'http' in ctx or 'amazon.com.br' in ctx: continue
-    if re.search(r'\d+\. \w', ctx[:50]): continue  # lista numerada
-    print(f"⚠ minúsc após ponto: ...{ctx}...")
-    # → Capitalize a letra (.+ espaço + Letra)
-```
-
-**Exemplos reais** (commit a72e7d9, melhorpretreino):
-- 14a: `"sem empilhar suplementos sem empilhar suplementos"`
-- 14b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
-- 14c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
-
-Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
 
 ## Limitação intrínseca conhecida
 

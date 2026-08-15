@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only: 38 categorias editoriais (claim-vs-bible, tag-affiliate contextual — error se site live, warn em construção —, travessão, voz-comprador explícita+implícita, HTML inválido, qualidade de intro/title/meta/listHeading, estrutura/tamanho/links do guide, link interno quebrado, linkagem, chavões por nicho, concordância PT-BR, YMYL, badge-ausente) + 4 checks estruturais (hasIntro, hasGuide, ≥3 produtos, hasMeta) e calcula readyToLock pro contentLocked:true. NÃO modifica o .mdx. Imprime o relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). Aceita URL do painel OU site/slug.
+description: Audita artigo inteiro read-only: 39 categorias editoriais (claim-vs-bible, tag-affiliate contextual — error se site live, warn em construção —, travessão, voz-comprador explícita+implícita, HTML inválido, qualidade de intro/title/meta/listHeading, estrutura/tamanho/links do guide, link interno quebrado, linkagem, chavões por nicho, naturalidade (palavra fora do sentido/verbo-curinga, frase-sacada, molde), concordância PT-BR, YMYL, badge-ausente) + 4 checks estruturais (hasIntro, hasGuide, ≥3 produtos, hasMeta) e calcula readyToLock pro contentLocked:true. NÃO modifica o .mdx. Imprime o relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). Aceita URL do painel OU site/slug.
 ---
 
 ## Parse de input
@@ -97,7 +97,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-7. **Rodar auditoria IA** nas 38 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
+7. **Rodar auditoria IA** nas 39 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
@@ -150,7 +150,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (38 categorias)
+## Critérios de auditoria (39 categorias)
 
 Use exatamente esses valores em `rule`:
 
@@ -548,7 +548,7 @@ Audit dos limites editoriais de tamanho nos campos do produto-no-artigo. Bullets
 
 **Sub-checks (sub-tipos do mesmo critério, todos level=`error`)**:
 - `shortDescription-longa`: campo > 250 chars
-- `shortDescription-tecnico-first` (régua v1.17.0): 1ª frase abre com técnico em vez de benefício/posicionamento. Antipadrões detectáveis na abertura: "[Tipo] brasileiro/a da [marca]..." (ex: "Pré-treino brasileiro da X..."), "[Tipo] com X mg de Y...", "[Tipo] multifuncional/premium da [marca]...". Padrões OK: adjetivo posicional ("Custo-benefício forte", "Vegano"), "Ideal pra quem...", "Você ganha...". Fix: inverter ordem — posicionamento na 1ª frase, técnico justifica depois. Ver moldes A/B/C em `artigo-review-criar` v1.17.0.
+- `shortDescription-tecnico-first` (régua v1.17.0): 1ª frase abre com técnico em vez de benefício/posicionamento. Antipadrões detectáveis na abertura: "[Tipo] brasileiro/a da [marca]..." (ex: "Pré-treino brasileiro da X..."), "[Tipo] com X mg de Y...", "[Tipo] multifuncional/premium da [marca]...". Padrões OK: 1ª frase literal dizendo para quem é ou o que faz de melhor ("Aspirador com fio para apartamento pequeno e limpeza rápida"). Molde "Ideal pra quem… / Você ganha… / Destaque para…" NÃO é OK desde 2026-08-15 (virou assinatura da rede; flagra em `naturalidade`). Fix: 1ª frase literal, técnico na 2ª, fecho de fato. Ver seção shortDescription em `artigo-review-criar`.
 - `bullet-longo`: pros[i] ou cons[i] texto puro > 180 chars
 - `listagem-peers-exaustiva`: bullet/parágrafo cita 4+ peers (lista virou tabela em texto)
 - `palavra-chavao-banida`: ocorrência de "lineup", "do lineup", "do nosso lineup", "desta seleção", "do nosso comparativo" em qualquer campo do produto
@@ -586,7 +586,18 @@ Lê `docs/painel/_data/chavoes-por-nicho.json` pelo `niche` do site (`docs/paine
 
 Aplica `_genericos` + bloco do nicho (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam imediatamente; os demais quando passam do `_max`. **Autoritativo — absorve o fragmento `palavra-chavao-alta-freq`** de `tamanho-escannavel-produto` (thresholds hardcoded eram um subconjunto cru; aqui o limite vem do JSON por nicho, igual ao gate intermediário `artigo-reviews-auditar` e à `pagina-produto-auditar`).
 
-Fix: variação léxica (alternativas PT-BR documentadas) + destilação cirúrgica. **Bloqueia readyToLock** (error).
+Fix: encurtar/omitir a frase repetida + destilação cirúrgica. NUNCA "variação léxica" por sinônimo figurado (é o defeito do critério `naturalidade`). **Bloqueia readyToLock** (error).
+**⚠ `_sites_aplicaveis` é o GATE do bloco de nicho, e o `_genericos` é obrigatório (canon 2026-08-15).**
+
+1. **Bloco de nicho só vale se o slug do site estiver em `_sites_aplicaveis`.** Não force o bloco pelo `niche` do `sites-meta.json`. Caso real: `melhoraspirador-com` tem `niche: "Aspiradores"`, mas o bloco `Aspiradores` lista `_sites_aplicaveis: ["melhoraspirador"]`, que é OUTRO site — o bloco não se aplica. Precedente consistente na rede (`.audits/products/oguiacompra-wap-high-speed-plus-last.md`, `guiaesportivo-vitafor-v-fort`, `compraguia-melhor-impressora-epson`): site fora da lista → **vale só o `_genericos`**. Se o bloco DEVERIA cobrir o site, reporte como sugestão de incluí-lo em `_sites_aplicaveis` — é descalibração do JSON, **não achado contra o texto**.
+2. **CONTE O `_genericos` SEMPRE, e conte PRIMEIRO.** Ele não tem gate, vale em qualquer site, e é o que costuma disparar de verdade: `termos_banidos_absoluto`, `chavoes_estruturais_max` (as 4 variantes de "seleção" têm cap **0**, são banidas — salvo as `frases_excecao_canon`) e `industrial_max` (`declarado` 3, `fabricante` 12, `rótulo` 20, `preço médio` 15).
+
+**Incidente-origem (2026-08-15, `melhoraspirador-com/melhor-aspirador-de-po-vertical`):** três auditorias seguidas contaram só o bloco de nicho. Erro duplo — reprovaram o artigo por 4 termos de um bloco que nem se aplicava, e deixaram passar o achado real: 8 ocorrências de "nesta/desta/da seleção" (cap 0 no `_genericos`) no `guideContent`.
+
+
+### `naturalidade` (level=`warn`; `error` com ≥3 ocorrências no mesmo review ou ≥8 no artigo — canon Marcelo 2026-08-15)
+
+Vale em TODO o texto público (intro, guia, campos de cada review) e em TODO nicho, sem depender de lista no JSON. Classe: **palavra comum fora do sentido do dicionário**, quase sempre colocação inglesa vertida — objeto/preço/peso como agente ("resolve, dá conta, entrega, segura, pede, exige, aguenta, sustenta, encara, cobra, cobre, trabalha, vira, brilha": "resolver a casa inteira", "o aparelho pede tomada", "casa grande pede remanejo", "O de tomada não se cansa"); substantivo-figura ("a conta da potência", "degrau", "piso", "porta de entrada", "pacote", "produção", "trunfo", "fôlego"); frase-sacada ("não é X: é Y", "o que X é Y", "é aí que…"); fecho com rótulo de público ("é a escolha de quem", "faz sentido pra quem", "ele é o que resolve" — 8 dos 11 Resumos do melhoraspirador-com/melhor-aspirador-de-po-vertical em 2026-08-15); moldes ("Ideal pra quem", "o grande ponto", "Destaque para", "preço médio acessível", "Os preços desta seleção vão de", "Não existe marca que ganhe em tudo", "Seja qual for o perfil"); "pra" no texto público. Teste: a palavra está no sentido em que você a usaria falando com um cliente? Repetir a palavra exata ("aspira" 3×) NÃO é ocorrência. Detalhe da régua e fixes: `artigo-reviews-auditar` 21c/21f, `pagina-produto-auditar` 20c/20e, `artigo-guia-auditar` 12c. Não bloqueia readyToLock em `warn`; bloqueia em `error`.
 
 ### `capitalizacao-duplicacao` (level=`error`, régua v1.18.3)
 

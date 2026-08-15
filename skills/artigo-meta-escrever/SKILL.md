@@ -158,10 +158,10 @@ A meta vende o **GANHO do leitor** (o que ele economiza, resolve ou consegue), n
 
 Exemplos bons (benefício-first):
 
-- ✓ `"Qual a melhor impressora tanque de tinta em 2026? Comparamos os modelos pra você imprimir muito gastando pouco com tinta, sem voltar ao cartucho."` (~146 chars)
+- ✓ `"Qual a melhor impressora tanque de tinta em 2026? Comparamos os modelos para imprimir muito gastando pouco com tinta, sem voltar ao cartucho."` (~146 chars)
 - ✓ `"Cansou do cartucho caro? Veja as melhores impressoras de 2026 que rendem milhares de páginas com tinta barata, da básica à fotográfica."` (~134 chars)
-- ✓ `"Qual a melhor creatina em 2026? Veja quais valem o preço pra ganho de força, com pureza Creapure e bom custo por dose."` (~116 chars)
-- ✓ `"Tablet travando ou tela pequena? Os melhores tablets baratos de 2026 pra estudo, vídeo e leitura sem pesar no bolso."` (~114 chars)
+- ✓ `"Qual a melhor creatina em 2026? Veja quais valem o preço para ganho de força, com pureza Creapure e bom custo por dose."` (~116 chars)
+- ✓ `"Tablet travando ou tela pequena? Os melhores tablets baratos de 2026 para estudo, vídeo e leitura, por um preço baixo."` (~114 chars)
 
 Exemplos ruins:
 
@@ -177,10 +177,9 @@ Exemplos ruins:
 - **Verbos de análise**: "comparativo", "análise", "guia para escolher", "panorama das opções".
 - **Concreto, mas não ficha técnica**: um benefício ou ganho concreto (economia, perfil, resultado) bate mais que "tudo o que você precisa saber". Não encadeie specs como lista.
 
-## Tom conversacional (CRÍTICO)
+## Voz natural (canon Marcelo 2026-08-15 — versão curta do bloco das skills de criação)
 
-Mesmo em 50-160 chars: pergunta-teste *"Um amigo entenderia?"*. Evite jargão corporativo (❌ "uma análise das melhores opções da categoria"). Linguagem direta (✓ "comparativo das X mais econômicas em 2026"). NÃO cite "Amazon", "fabricante", "ficha técnica" na meta.
-
+Mesmo em 50-160 chars: pergunta-teste *"Um amigo entenderia?"*. Sem jargão corporativo (❌ "uma análise das melhores opções da categoria"), sem sacada, sem palavra fora do sentido do dicionário (❌ "pra dar conta da poeira", "pra você acertar no que a sua casa pede" → ✓ "para limpar a casa", "para escolher o certo para a sua casa"). "para", não "pra". Verbo literal: comparamos, mostramos, explicamos.
 
 ## Régua editorial PT-BR (v1.19.2, 2026-05-28)
 
@@ -210,7 +209,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 | ❌ Corporativo | ✓ Conversacional |
 |---|---|
-| "diferencial central" | "o grande ponto é" |
+| "diferencial central" | dizer o fato; NÃO "o grande ponto é" (virou molde) |
 | "posicionamento" | "categoria" |
 | "segmento de X" | "tipo de X" |
 | "proposta de valor" | drop sempre |

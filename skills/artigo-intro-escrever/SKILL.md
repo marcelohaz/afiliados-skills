@@ -43,8 +43,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 - **300 a 800 chars no total** (todo o body somado). Alvo: 500-700 chars. Antes era 300-1500 e sub-agents miravam 900-1400, tornando a intro cansativa — apertado em 2026-05-26 após feedback "muito longa, muito explicativa".
 - **KEYWORD CEDO (v1.31.0, canon Marcelo 2026-06-10)**: o `**{keyword}**` começa dentro das **primeiras ~5 palavras** do §1. A abertura é um verbo de busca curto ("Procurando a", "Precisa de uma", "Quer saber qual a"); TODO o enriquecimento da pergunta (cenário, dor, benefício) vem DEPOIS da keyword, na mesma frase.
 - **ANTI-CLONE INTRA-SITE (v1.31.0)**: gerar SÓ depois de ler as intros dos outros artigos do site (passo 6.5). Proibido: qualquer sequência de ≥6 palavras igual a uma intro irmã; repetir a família de abertura/arremate/miolo/CTA já usada no site. Incidente-origem: 3 intros idênticas no melhorimpressora (2026-06-10) porque a skill copiava o exemplo canônico.
-- **TOM NATURAL (v1.31.0)**: no máximo **1 expressão coloquial leve por intro** (pode ser zero); analogia só quando EXPLICA algo (não pra enfeitar); sem apelidos fofos ("faz-tudo"). Teste: ler em voz alta como se explicasse pra um cliente — soou personagem, simplifica.
-- **Tom conversacional alinhado com os reviews** (NOVA régua 2026-05-26). Escreva como amigo que pesquisou explicando, NÃO como consultor científico/médico ditando. Linguagem cotidiana, sem registro acadêmico. Os reviews do mesmo artigo são o padrão tonal — intro NÃO pode soar mais formal que eles.
+- **VOZ NATURAL (canon 2026-08-15, substitui "tom natural v1.31" + "tom conversacional 2026-05-26")**: ver bloco "## Voz natural" abaixo. Em resumo: verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, sem molde de abertura/arremate/CTA, no máximo 1 expressão coloquial leve. A intro não pode soar mais formal que os reviews, nem mais "esperta" que eles.
 - **NÃO citar instituições científicas** (OMS, FAO, ANVISA, FDA, INMETRO, IFOS). Esse tipo de menção quebra o tom de comparador editorial e vira página de saúde. Se a info importa, ela aparece nos reviews (como feature de produto certificado) ou no guide.
 - **NÃO dar recomendações com número** ("X recomenda N mg/dia"). Números OK quando aparecem nos reviews depois (são features dos produtos comparados). Na intro, números viram recomendação acadêmica e quebram o tom.
 - **NÃO entrar em critérios técnicos detalhados** que pertencem ao `guideContent` H2 "Como escolher". Listar "três fatores que diferenciam premium de entrada" é função do guia, não da intro. Intro fica em PERFIL DE USO e PANORAMA, sem ensinar a escolher.
@@ -64,6 +63,8 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
    - Read `docs/painel/_data/chavoes-por-nicho.json` — use `_genericos` + bloco do nicho
    - Aplique limites como guard rail: não passar de `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`
    - Banidos absolutos sempre: lineup, SKU, ASIN, datasheet, notificado, trade-off, hardcore
+   - **⚠ `_sites_aplicaveis` é o gate do bloco de nicho (canon 2026-08-15):** se o slug do site não está na lista do bloco, **o bloco não vale** e sobra só o `_genericos`. Não force pelo `niche`. Reporte como sugestão de incluir o site no JSON, nunca como defeito do texto.
+   - **O `_genericos` vale SEMPRE e é o que mais dispara:** `termos_banidos_absoluto`, `chavoes_estruturais_max` (as 4 variantes de "seleção" têm cap **0**) e `industrial_max` (`declarado` 3, `fabricante` 12). Conte ele antes de qualquer bloco de nicho.
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+` em ambos.
 
@@ -125,7 +126,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
    - §1 contém `?` (pergunta) E `**{keyword}**` bold — e a keyword COMEÇA dentro das primeiras ~5 palavras do §1 (v1.31.0)
    - §final contém `**{keywordPlural}**` bold E termina com `. ✅` ou `! ✅`
    - ANTI-CLONE: zero sequências de ≥6 palavras iguais a qualquer intro irmã (passo 6.5); famílias de abertura/arremate/miolo/CTA inéditas no site
-   - TOM NATURAL: máx 1 expressão coloquial leve; sem analogia decorativa; sem apelido fofo
+   - VOZ NATURAL: verbo/substantivo no sentido literal, sem frase-sacada, "para" (não "pra"), sem arremate/CTA-molde, máx 1 expressão coloquial leve
    - **Exatamente 2 bolds no body inteiro** (keyword no §1, keywordPlural no §final). NADA mais em bold — sem `**ano**`, sem `**marca**`, sem nenhum outro destaque.
    - Sem travessão `—` nem `–`
    - Sem `<b>` ou `<strong>` (só `**markdown**`)
@@ -244,7 +245,7 @@ Se o artigo está `contentLocked: true`, **NÃO mexe no título** (título é H1
 
 A fórmula é fixa; o RECHEIO de cada slot RODA entre os artigos do site. **Slots: [pergunta com keyword cedo] → [arremate de acolhimento] → [miolo] → [fechamento + CTA]**. A mesma família de recheio NÃO repete em outra intro do mesmo site (por isso o passo 6.5 lê as irmãs antes de gerar).
 
-### §1 — pergunta com a keyword CEDO + arremate de acolhimento
+### §1 — pergunta com a keyword CEDO + arremate opcional (literal)
 
 **Regra dura (v1.31.0, canon Marcelo 2026-06-10): o `**{keyword}**` começa dentro das primeiras ~5 palavras.** Molde:
 
@@ -267,12 +268,7 @@ A fórmula é fixa; o RECHEIO de cada slot RODA entre os artigos do site. **Slot
 
 ❌ **Pergunta SECA proibida como padrão**: "Está em dúvida sobre qual a **{keyword}** em {ano}?" sem enriquecimento — foi este template que clonou 3 intros do melhorimpressora (incidente 2026-06-10).
 
-**Arremate de acolhimento (1 frase curta após a pergunta — pool, varie):**
-- "Então você está no lugar certo!"
-- "Então este guia/comparativo é pra você!"
-- "Boa notícia: ela existe, e a gente encontrou!"
-- "Esse comparativo nasceu pra resolver exatamente essa dúvida!"
-- "A gente fez essa conta pra você!"
+**Arremate após a pergunta: OPCIONAL, 1 frase curta e literal, sem exclamação obrigatória.** Ex.: "Este comparativo reúne os modelos que valem a pena em {ano}." / "Abaixo estão os modelos que comparamos." Medido em 2026-08-15: 64% das intros da rede fechavam o §1 com "!" e frases-molde ("A gente fez essa conta pra você!" 11×, "Então este comparativo é pra você!" 10×, "Esse comparativo nasceu pra resolver…" 7×) — viraram assinatura. Não use essas nem variações delas.
 
 **SEM mencionar marcas/modelos/ASINs específicos** (exceto marca que faz parte da keyword, ex: "melhor impressora Epson").
 
@@ -280,9 +276,9 @@ A fórmula é fixa; o RECHEIO de cada slot RODA entre os artigos do site. **Slot
 
 Escolha uma família AINDA NÃO usada nas intros irmãs (passo 6.5):
 
-1. **Contexto-da-categoria** — o que a categoria mudou/resolve: "o tanque de tinta mudou a conta da impressão em casa: em vez de trocar cartucho toda hora, você reabastece com garrafas que custam pouco e rendem milhares de páginas."
+1. **Contexto-da-categoria** — o que a categoria mudou/resolve: "o tanque de tinta mudou o custo de imprimir em casa: em vez de trocar cartucho toda hora, você reabastece com garrafas que custam pouco e rendem milhares de páginas."
 2. **Cenário-que-não-basta** — o improviso atual falha em situações concretas: "fotografar documento com o celular até resolve, mas tem hora que não basta: uma cópia legível do RG, um contrato digitalizado em boa qualidade, dez páginas pra entregar amanhã."
-3. **Quebra-de-objeção** — valida o orçamento/receio do leitor: "mesmo com um orçamento limitado, ainda é possível encontrar modelos eficientes..." / "a etiqueta engana nos dois sentidos: tem modelo barato que sai caro em um ano, e opção mais cara que se paga em meses."
+3. **Quebra-de-objeção** — valida o orçamento/receio do leitor: "mesmo com um orçamento limitado, ainda é possível encontrar modelos eficientes..." / "tem modelo barato que sai caro em um ano de tinta, e modelo mais caro que compensa em poucos meses."
 4. **Panorama-da-linha** (keywords de marca) — os modelos parecem iguais e se separam no uso: "um foi pensado pra documento todo dia, outro pra quem copia e digitaliza, outro pra foto."
 5. **Tricolon de perfis** — "quem A...; quem B...; e quem C...": PERMITIDO, mas no máximo 1 artigo por site (era o esqueleto repetido em 3+ intros antes da v1.31.0).
 6. **Cenário-dor** (estilo impressora-para-fotos) — a cena ruim que motiva a compra. Pode até abrir o §1, DESDE que a pergunta com a keyword cedo venha logo em seguida no mesmo parágrafo.
@@ -293,11 +289,11 @@ Regras do miolo: **concreto > genérico** ("rendem milhares de páginas" informa
 
 `[ponte] + **{keywordPlural}** de {ano} + [2-3 critérios de comparação] + [CTA convidando]`
 
-**Pontes (pool, varie):** "Pra facilitar sua escolha, reunimos..." / "Pra te ajudar a escolher bem, comparamos..." / "Por isso, colocamos as ... lado a lado" / "Separamos as ..." / "No comparativo abaixo você encontra as ..."
+**Pontes (varie, sem repetir irmã):** "Para facilitar sua escolha, reunimos..." / "Para ajudar, comparamos..." / "Por isso, colocamos as ... lado a lado" / "Separamos as ..." / "No comparativo abaixo você encontra as ..."
 
 **Critérios**: 2-3, concretos da categoria ("rendimento da tinta, qualidade do scanner e facilidade de uso" / "preço de compra, gasto com tinta e funções extras").
 
-**CTA final (pool, varie — convite direto em 1 frase):** "Confira qual faz mais sentido pra sua casa ou trabalho!" / "Confira qual combina com a sua rotina de impressão!" / "Confira antes de fechar negócio!" / "Descubra qual delas atende melhor o seu dia a dia!" / "Dá uma olhada e escolha a sua gastando pouco!"
+**CTA final: OPCIONAL, 1 frase curta e literal.** Ex.: "Veja abaixo qual serve para o seu uso." Medido em 2026-08-15: 52% das intros da rede terminavam com "Veja/Confira/Descubra qual (combina/encaixa/cabe) no seu…" — virou molde; não use essa forma nem "Dá uma olhada". Se o §final já convida ("reunimos as X de {ano}, comparando A, B e C"), não precisa de CTA.
 
 Termina **OBRIGATORIAMENTE** com `. ✅` ou `! ✅` (pontuação, espaço, emoji, nada depois).
 
@@ -308,33 +304,33 @@ Termina **OBRIGATORIAMENTE** com `. ✅` ou `! ✅` (pontuação, espaço, emoji
 ### Exemplo A — multifuncional (CANON DE TOM, aprovado Marcelo 2026-06-10 · família "cenário-que-não-basta")
 
 ```
-Procurando a **melhor impressora multifuncional** pra imprimir, copiar e digitalizar com um aparelho só? Então você está no lugar certo!
+Procurando a **melhor impressora multifuncional** para imprimir, copiar e digitalizar com um aparelho só? Este comparativo reúne os modelos que valem a pena em 2026.
 
-Fotografar documento com o celular até resolve, mas tem hora que não basta: uma cópia legível do RG, um contrato digitalizado em boa qualidade, dez páginas de apostila pra entregar amanhã. A multifuncional cobre essas três situações em um único aparelho, sem ocupar muito espaço na mesa.
+Fotografar documento com o celular funciona em muitos casos, mas não em todos: uma cópia legível do RG, um contrato digitalizado em boa qualidade, dez páginas de apostila para entregar amanhã. A multifuncional faz essas três coisas em um único aparelho e ocupa pouco espaço na mesa.
 
-Pra facilitar sua escolha, reunimos as **melhores impressoras multifuncionais** de 2026, comparando rendimento da tinta, qualidade do scanner e facilidade de uso. Confira qual faz mais sentido pra sua casa ou trabalho! ✅
+Para facilitar sua escolha, reunimos as **melhores impressoras multifuncionais** de 2026, comparando rendimento da tinta, qualidade do scanner e facilidade de uso. ✅
 ```
 
-**Por quê funciona**: keyword na 3ª palavra; o enriquecimento da pergunta ecoa o produto (imprimir/copiar/digitalizar = o 3-em-1); miolo com 3 situações CONCRETAS (RG, contrato, apostila) e zero gíria; CTA convidando sem forçar. ~650 chars, 3 §, 2 bolds.
+**Por quê funciona**: keyword na 3ª palavra; o enriquecimento da pergunta ecoa o produto (imprimir/copiar/digitalizar = o 3-em-1); miolo com 3 situações CONCRETAS (RG, contrato, apostila) em frases literais ("faz", "ocupa"), sem exclamação nem CTA-molde. ~600 chars, 3 §, 2 bolds. (Versão revisada em 2026-08-15: a anterior tinha "Então você está no lugar certo!", "até resolve, mas tem hora que não basta", "cobre essas três situações" e "Confira qual faz mais sentido pra sua casa!" — o registro que virou molde na rede.)
 
 ### Exemplo B — barata (família "cenário concreto + quebra de objeção")
 
 ```
-Precisa de uma **impressora barata** para imprimir o trabalho da escola, o boleto e uns documentos de vez em quando? Boa notícia: ela existe, e a gente encontrou!
+Precisa de uma **impressora barata** para imprimir o trabalho da escola, o boleto e uns documentos de vez em quando? Existem modelos bons por menos de R$ 500, e é isso que comparamos aqui.
 
-Cada folha impressa fora de casa parece custar pouco, até a semana em que aparecem dez de uma vez. Pra quem imprime pouco, não faz sentido investir em uma máquina cheia de recursos: o que resolve é um modelo simples, que conecta no celular e imprime sem complicação.
+Imprimir fora de casa parece barato até a semana em que aparecem dez folhas de uma vez. Quem imprime pouco não precisa de uma impressora cheia de recursos: um modelo simples, que conecta no celular e imprime sem configuração complicada, já atende.
 
-Separamos as **impressoras baratas** de 2026 que valem o que custam, comparando preço, facilidade de instalação e impressão direto do celular. Dá uma olhada e escolha a sua gastando pouco! ✅
+Separamos as **impressoras baratas** de 2026 que valem o que custam, comparando preço, facilidade de instalação e impressão direto do celular. ✅
 ```
 
 ### Exemplo C — Epson (família "intenção de marca + panorama da linha")
 
 ```
-Quer saber qual a **melhor impressora Epson** agora que a marca já está decidida e só falta o modelo? Esse comparativo nasceu pra resolver exatamente essa dúvida!
+Quer saber qual a **melhor impressora Epson** agora que a marca já está decidida e só falta o modelo? Comparamos os principais modelos da linha para responder isso.
 
-Dentro da mesma marca, os modelos se parecem na vitrine e se separam no uso: um foi pensado pra documento todo dia, outro pra quem copia e digitaliza com frequência, outro pra foto com cores fiéis. E a diferença que mais pesa no bolso, o quanto rende cada recarga de tinta, é justamente a que não aparece na etiqueta.
+Dentro da mesma marca, os modelos parecem iguais e servem a usos diferentes: um foi pensado para documento todo dia, outro para quem copia e digitaliza com frequência, outro para foto com cores fiéis. A diferença que mais afeta o gasto, quanto rende cada recarga de tinta, não aparece na etiqueta de preço.
 
-No comparativo abaixo você encontra as **melhores impressoras Epson** de 2026, separadas por perfil de uso, rendimento e custo da recarga. Descubra qual delas atende melhor o seu dia a dia! ✅
+No comparativo abaixo você encontra as **melhores impressoras Epson** de 2026, separadas por uso, rendimento e custo da recarga. ✅
 ```
 
 ### Exemplo D — ômega 3 (BAD vs GOOD pareado, caso real 2026-05-26)
@@ -356,10 +352,10 @@ Por que está errado:
 - "Posologia", "manutenção cardiovascular e cognitiva" — jargão médico
 - 924 chars — acima do range 300-800
 
-**✅ GOOD** (~500c, tom conversacional, contextual):
+**✅ GOOD** (~500c, voz natural, contextual):
 
 ```
-Qual o **melhor ômega 3** pra escolher em 2026? Pra quem não come peixe gordo na rotina, o suplemento virou prática comum, especialmente entre quem busca apoio cardiovascular ou cognitivo. Mas o mercado tem opções bem diferentes em concentração, certificação e preço, e nem todo pote entrega o que promete pelo valor.
+Qual o **melhor ômega 3** para escolher em 2026? Para quem não come peixe gordo com frequência, o suplemento virou prática comum, especialmente entre quem busca apoio cardiovascular ou cognitivo. Mas o mercado tem opções bem diferentes em concentração, certificação e preço, e nem todo pote vale o que custa.
 
 Para te ajudar, reunimos as **melhores ômega 3** disponíveis no Brasil em 2026, comparadas por concentração de EPA e DHA, certificação de pureza e custo por dose. ✅
 ```
@@ -378,7 +374,7 @@ Por que está OK:
 - §1 contém `?` (pergunta) E `**{keyword}**` em bold markdown, com a keyword começando dentro das primeiras ~5 palavras (v1.31.0)
 - §final contém `**{keywordPlural}**` em bold markdown E termina com `. ✅` ou `! ✅`
 - ANTI-CLONE intra-site: zero sequências de ≥6 palavras iguais a intro irmã; família de abertura/arremate/miolo/CTA inédita no site (v1.31.0)
-- Tom natural: máx 1 expressão coloquial leve por intro; analogia só quando explica; sem apelidos (v1.31.0)
+- Voz natural (canon 2026-08-15): verbo/substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, sem arremate/CTA-molde, máx 1 expressão coloquial leve, analogia só quando explica
 - **Apenas 2 bolds totais no body**: keyword no §1 + keywordPlural no §final. NADA mais em bold.
 - Bold em markdown `**texto**`. NUNCA `<b>` ou `<strong>`.
 - Começa direto com prosa, SEM heading. NÃO use `## Introdução` nem qualquer h2/h3.
@@ -391,7 +387,7 @@ Por que está OK:
 - **NÃO citar instituições científicas/regulatórias** (OMS, FAO, ANVISA, FDA, INMETRO, IFOS). Registro acadêmico quebra o tom de comparador editorial.
 - **NÃO dar recomendações com número** ("X recomenda N mg/dia"). Números só nos reviews (são features dos produtos comparados, não recomendações).
 - **NÃO entrar em critérios técnicos detalhados** (forma química, distinções acadêmicas, listas tipo "três fatores"). Esse trabalho é do `guideContent` H2 "Como escolher". Intro fica em PERFIL DE USO + PANORAMA.
-- **Tom conversacional, NÃO científico-médico**. Escreve como amigo que pesquisou, não como consultor. Use os reviews do mesmo artigo como referência tonal — intro NÃO pode soar mais formal que eles.
+- **Nem científico-médico, nem "esperto"**. Escreve como uma pessoa que pesquisou explicando, não como consultor nem como redator tentando ser criativo. A intro não pode soar mais formal que os reviews, nem mais figurada.
 
 ### Título (quando reescrito)
 - Padrão `{Keyword Title Case}: {os|as} {N} melhores em {ano}` (N≥3) ou fallback `{Keyword Title Case} em {ano}` (N<3). **Sem ponto final.**
@@ -427,15 +423,32 @@ Carrega TODAS as bíblias dos produtos do lineup pra ENTENDER:
 - **Português brasileiro editorial** — sem gírias, sem anglicismos desnecessários.
 - **NUNCA cite compradores/reviews/avaliações/estrelas/Amazon** como entidade. Padrão de toda a voz editorial do projeto (`02-estilo-editorial.md`).
 
-## Tom conversacional (CRÍTICO)
+## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 5 skills de criação e nos prompts canônicos do painel)
 
-Pergunta-teste antes de salvar: *"Um amigo que não entende disso entenderia?"* Se não → simplifica.
+Especialista explicando a um amigo, cumprido com **simplicidade**, não com efeito. Pergunta-teste: *"um amigo que não entende disso entenderia e saberia o que fazer?"* Sem jargão corporativo, sem formalidade institucional, **sem sacada**.
 
-Evite jargão corporativo (❌ "alinhado à narrativa", "perfil favorável", "posicionamento de mercado", "uma rotina X séria"). Use linguagem direta (✓ "se você imprime em casa", "boa dose pra rotina contínua"). NUNCA cite procedência burocrática ("alérgenos da Amazon confirmam", "atributos declaram") — destila o claim direto.
+O que faz texto soar como IA não é gíria nem termo técnico: é **palavra comum usada fora do sentido do dicionário** ("resolver a casa", "dar conta da poeira", "transformar a limpeza numa produção", "o aparelho pede tomada", "a conta da potência vem no peso"), quase sempre frase feita do inglês vertida (*make a production, handle, delivers, covers, calls for, the math*). Cada palavra é comum, então lista de termo não pega; a régua é uma **classe**:
 
-Referência canônica pra calibrar tom:
-- `sites/melhorimpressora/src/content/reviews/melhor-impressora-multifuncional.mdx` (intro = canon de tom aprovado pelo Marcelo em 2026-06-10; ver Exemplo A)
+1. **Sujeito concreto + verbo no sentido do dicionário.** Aspirador aspira, impressora imprime, bateria dura, produto custa/tem/funciona. Objeto, preço, peso ou potência NÃO "resolvem, dão conta, entregam, seguram, pedem, exigem, aguentam, sustentam, encaram, cobram, juntam, trabalham, cobrem, viram, brilham". Teste: é o sentido em que você usaria a palavra falando com um cliente?
+2. **Substantivo literal.** Nada de "a conta", "degrau", "piso", "porta de entrada", "pacote", "proposta", "produção", "remanejo", "trunfo", "fôlego" como figura. Diga o que é (preço, faixa de preço, o mais barato, conjunto de recursos).
+3. **Sem frase-sacada.** Nada de "não é X: é Y", "o que X é Y", "é aí que…", fecho com dois-pontos que "revela". Dois-pontos só para explicação ou lista.
+4. **Repita a palavra certa.** "Aspira" 3× é normal. Chavão é frase-molde repetida, não palavra exata. **Nunca troque a palavra certa por sinônimo figurado para "variar"** (limpar → "resolver a casa" → "dar conta" é exatamente o defeito).
+5. **"para", não "pra"**, no texto público.
+6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
+7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
+8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
+9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
+**Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
+
+| ❌ Como saiu (2026-08-15) | ✓ Como uma pessoa escreve |
+|---|---|
+| se você quer resolver a casa inteira sem escolher entre potência e preço | se você quer limpar a casa toda sem escolher entre potência e preço |
+| sem transformar a limpeza numa produção | sem muito esforço |
+| a conta da potência vem no peso | a potência tem um custo: o peso |
+| casa grande ainda pede remanejo | em casa grande você ainda troca de tomada algumas vezes |
+| Se não têm, ele é o que resolve. | Se não têm, ele é a melhor opção. |
+| O de tomada não se cansa. | O modelo com fio não perde força durante o uso. |
 
 ## Régua editorial PT-BR (v1.19.2, 2026-05-28)
 
@@ -465,7 +478,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 | ❌ Corporativo | ✓ Conversacional |
 |---|---|
-| "diferencial central" | "o grande ponto é" |
+| "diferencial central" | dizer o fato ("a fórmula não tem aditivos"); NÃO "o grande ponto é" (virou molde) |
 | "posicionamento" | "categoria" |
 | "segmento de X" | "tipo de X" |
 | "proposta de valor" | drop sempre |
@@ -523,8 +536,8 @@ O maior bug histórico desta skill: o "exemplo canônico" único virou texto-fon
 ### 12. Keyword tarde no §1
 "Cansou de gastar com cartucho e está procurando a **{keyword}**..." enterra a keyword na 8ª palavra. Inverta: abertura curta + keyword + enriquecimento ("Procurando a **{keyword}** pra imprimir sem medo da conta de cartucho?").
 
-### 13. Empilhar coloquialismos (feedback Marcelo 2026-06-10)
-"Quebra um galho", "pra ontem", "gambiarra", "faz-tudo" na MESMA intro = personagem forçado. Máximo 1 expressão coloquial leve por intro; corte apelidos e analogias decorativas ("mostra a que veio"). Trocas: "quebra um galho"→"até resolve" · "pra ontem"→"pra amanhã" · "máquina parruda"→"modelo mais avançado" · "sem drama"→"sem complicação".
+### 13. Empilhar coloquialismos e palavras fora do sentido (feedback Marcelo 2026-06-10 e 2026-08-15)
+"Quebra um galho", "pra ontem", "gambiarra", "faz-tudo" na MESMA intro = personagem forçado. E o defeito mais comum não é gíria: é palavra comum em sentido figurado ("dar conta da poeira", "sem transformar a limpeza numa produção", "resolver a casa"). Ver "## Voz natural". Trocas: "quebra um galho"→"funciona" · "pra ontem"→"para amanhã" · "máquina parruda"→"modelo mais avançado" · "sem drama"→"sem complicação" · "dar conta da poeira"→"aspirar a poeira" · "numa produção"→"em muito esforço".
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
@@ -591,28 +604,17 @@ for f in glob.glob(f'sites/{SITE}/src/content/reviews/*.mdx'):
 assert not re.search(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', novo), "duplicação contígua"
 # '\. [a-z]' fora de URL → capitalizar
 
-# 6) TÍTULO: sem contagem com N≥3 é stub (v1.39.0) — gatilho objetivo, não inferência
-# v1.103.0: o teste é "o Nº DE PRODUTOS aparece no título", não uma lista de
-# substantivos. O regex antigo (r'\d+\s+([Mm]elhores|opções)') era MAIS ESTREITO
-# que a regra que ele checava e reprovava título com contagem: medido em
-# 2026-08-14, 74 títulos da rede em 8 formas legítimas ("N escolhas para",
-# "N modelos para", "N que valem a pena", "N alternativas"...), incluindo o
-# próprio P2 do pool de assinaturas ("As {N} {KeywordPlural} (Guia 2026)").
-# Tinha ainda bug de caixa: aceitava [Mm]elhores mas só "opções" minúsculo, então
-# "10 Opções para" reprovava. Passavam 258 de 333; agora passam 331.
-# Bônus: pega contagem DESATUALIZADA — título "9 melhores" com N=7 passava no
-# regex antigo e está errado.
-# ⚠ Falso-negativo conhecido: keyword que contém o mesmo dígito de N (ex.: N=3
-# em "Ômega 3", N=11 em "iPad 11") passa sem ter contagem de verdade. Aceito de
-# propósito — o erro cai pro lado de NÃO mexer, e reescrever título bom de página
-# já posicionada custa mais caro que deixar um stub passar.
+# 6) TÍTULO: sem contagem com N≥3 é stub (v1.39.0). v1.103.0: o teste é "o Nº DE PRODUTOS aparece
+# no título" (regex antigo r'\d+\s+([Mm]elhores|opções)' era mais estreito que a regra e reprovava
+# 8 formas legítimas + tinha bug de caixa; passavam 258/333, agora 331). Falso-negativo aceito:
+# keyword com o mesmo dígito de N ("Ômega 3", "iPad 11") passa sem contagem — erra pro lado de NÃO mexer.
 N = len(PRODUCTS)  # produtos do lineup
 if N >= 3 and not re.search(rf'\b{N}\b', TITLE):
     raise AssertionError(f"título sem a contagem N={N} (>=3) = stub; reescreva com a contagem. "
                          f"NÃO tratar irmão sem contagem como assinatura: {TITLE!r}")
 ```
 
-Checagem de olho (não-greppável): família de abertura/arremate/miolo/CTA inédita vs as irmãs lidas no passo 6.5 · máx 1 coloquialismo leve · nenhuma frase reusada dos Exemplos A-D · 300-800 chars · 2-3 §.
+Checagem de olho (não-greppável): família de abertura/arremate/miolo/CTA inédita vs as irmãs lidas no passo 6.5 · voz natural (verbo/substantivo no sentido literal, sem sacada, "para", sem molde de arremate/CTA) · nenhuma frase reusada dos Exemplos A-D · 300-800 chars · 2-3 §.
 
 ## Limitação intrínseca conhecida
 

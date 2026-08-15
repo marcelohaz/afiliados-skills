@@ -167,21 +167,21 @@ Não é estrita, mas é o pattern dos exemplos canônicos:
 Apresenta o nicho e o desafio de escolher na categoria. Lista 3-6 critérios técnicos em `<strong>...</strong>`. Tom de "vou te ajudar a entender".
 
 **Exemplo** (categoria "creatinas"):
-> `<p>Escolher a creatina certa pode parecer simples, mas o mercado brasileiro oferece dezenas de opções com propostas muito diferentes entre si. Aqui você encontra comparativos e guias organizados para facilitar sua decisão, considerando critérios como <strong>tipo de creatina</strong>, <strong>pureza</strong>, <strong>quantidade por dose</strong>, <strong>sabor</strong>, <strong>custo-benefício</strong> e <strong>certificações de qualidade</strong>: os fatores que realmente fazem diferença nos seus resultados.</p>`
+> `<p>Escolher a creatina certa pode parecer simples, mas o mercado brasileiro oferece dezenas de opções com propostas muito diferentes entre si. Aqui você encontra comparativos e guias organizados para facilitar sua decisão, considerando critérios como <strong>tipo de creatina</strong>, <strong>pureza</strong>, <strong>quantidade por dose</strong>, <strong>sabor</strong>, <strong>custo-benefício</strong> e <strong>certificações de qualidade</strong>: os fatores que fazem diferença no resultado.</p>`
 
 ### §2 — Perfis de uso: tipos/nichos cobertos pelos artigos
 
 Lista os perfis de comprador/uso que aparecem nos artigos da categoria. Cada perfil em `<strong>...</strong>` (3-5 perfis). Tom de "cobrimos isso".
 
 **Exemplo**:
-> `<p>Cobrimos os principais perfis de uso: desde creatinas para <strong>ganho de massa muscular</strong> e <strong>performance atlética</strong>, até opções voltadas para <strong>veganismo</strong>, <strong>dietas específicas</strong> e <strong>praticantes iniciantes</strong>. Cada perfil tem pontos fortes específicos, e nossas análises ajudam você a entender qual se encaixa melhor na sua rotina de treino.</p>`
+> `<p>Cobrimos os principais perfis de uso: desde creatinas para <strong>ganho de massa muscular</strong> e <strong>performance atlética</strong>, até opções voltadas para <strong>veganismo</strong>, <strong>dietas específicas</strong> e <strong>praticantes iniciantes</strong>. Cada perfil tem prioridades diferentes, e as análises mostram qual produto atende melhor a cada uma.</p>`
 
 ### §3 — Convite ao leitor (opcional)
 
 Chama pra navegar pelos artigos. Pode ser omitido se a descrição fica grande demais.
 
 **Exemplo**:
-> `<p>Navegue pelos artigos, leia os prós e contras reais de cada produto e chegue à sua próxima compra com confiança, sabendo exatamente o que esperar antes de o produto chegar na sua casa.</p>`
+> `<p>Navegue pelos artigos, leia os prós e contras reais de cada produto e escolha sabendo o que esperar do produto antes de comprar.</p>`
 
 ## Régua ANTI-CLONE (CRÍTICO — v1.20.0, canon 2026-06-12)
 
@@ -251,13 +251,34 @@ Mesma regra editorial de todo o projeto. Vírgula, ponto, dois pontos.
 - **NÃO cite compradores/reviews/avaliações/Amazon.** Padrão da voz editorial do projeto.
 - **Tom de conhecimento, não de vendedor.** "Cobrimos os principais perfis" > "Encontre o melhor X aqui!".
 
-## Tom conversacional (CRÍTICO)
+## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 5 skills de criação e nos prompts canônicos do painel)
 
-Pergunta-teste antes de salvar: *"Um amigo que não entende disso entenderia?"* Se não → simplifica.
+Especialista explicando a um amigo, cumprido com **simplicidade**, não com efeito. Pergunta-teste: *"um amigo que não entende disso entenderia e saberia o que fazer?"* Sem jargão corporativo, sem formalidade institucional, **sem sacada**.
 
-Evite jargão corporativo (❌ "alinhado à narrativa de categoria", "posicionamento de mercado"). Use linguagem direta de quem orienta (✓ "se você procura X, considere Y"). NÃO cite procedência burocrática ("conforme dados", "segundo Amazon") — descrição de categoria não precisa justificar fonte.
+O que faz texto soar como IA não é gíria nem termo técnico: é **palavra comum usada fora do sentido do dicionário** ("resolver a casa", "dar conta da poeira", "transformar a limpeza numa produção", "o aparelho pede tomada", "a conta da potência vem no peso"), quase sempre frase feita do inglês vertida (*make a production, handle, delivers, covers, calls for, the math*). Cada palavra é comum, então lista de termo não pega; a régua é uma **classe**:
 
-Referência canônica: leia outras descrições de categoria já travadas em `sites/*/src/config.ts` (`categoryDescriptions`).
+1. **Sujeito concreto + verbo no sentido do dicionário.** Aspirador aspira, impressora imprime, bateria dura, produto custa/tem/funciona. Objeto, preço, peso ou potência NÃO "resolvem, dão conta, entregam, seguram, pedem, exigem, aguentam, sustentam, encaram, cobram, juntam, trabalham, cobrem, viram, brilham". Teste: é o sentido em que você usaria a palavra falando com um cliente?
+2. **Substantivo literal.** Nada de "a conta", "degrau", "piso", "porta de entrada", "pacote", "proposta", "produção", "remanejo", "trunfo", "fôlego" como figura. Diga o que é (preço, faixa de preço, o mais barato, conjunto de recursos).
+3. **Sem frase-sacada.** Nada de "não é X: é Y", "o que X é Y", "é aí que…", fecho com dois-pontos que "revela". Dois-pontos só para explicação ou lista.
+4. **Repita a palavra certa.** "Aspira" 3× é normal. Chavão é frase-molde repetida, não palavra exata. **Nunca troque a palavra certa por sinônimo figurado para "variar"** (limpar → "resolver a casa" → "dar conta" é exatamente o defeito).
+5. **"para", não "pra"**, no texto público.
+6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
+7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
+8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
+9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
+
+**Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
+
+| ❌ Como saiu (2026-08-15) | ✓ Como uma pessoa escreve |
+|---|---|
+| se você quer resolver a casa inteira sem escolher entre potência e preço | se você quer limpar a casa toda sem escolher entre potência e preço |
+| sem transformar a limpeza numa produção | sem muito esforço |
+| a conta da potência vem no peso | a potência tem um custo: o peso |
+| casa grande ainda pede remanejo | em casa grande você ainda troca de tomada algumas vezes |
+| Se não têm, ele é o que resolve. | Se não têm, ele é a melhor opção. |
+| O de tomada não se cansa. | O modelo com fio não perde força durante o uso. |
+
+Referência canônica de ESTRUTURA: outras descrições já travadas em `sites/*/src/config.ts` (`categoryDescriptions`); para tom, siga o bloco acima.
 
 ## Filtros editoriais (paridade com outras skills)
 
@@ -293,7 +314,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 | ❌ Corporativo | ✓ Conversacional |
 |---|---|
-| "diferencial central" | "o grande ponto é" |
+| "diferencial central" | dizer o fato ("a fórmula não tem aditivos"); NÃO "o grande ponto é" (virou molde) |
 | "posicionamento" | "categoria" |
 | "segmento de X" | "tipo de X" |
 | "proposta de valor" | drop sempre |

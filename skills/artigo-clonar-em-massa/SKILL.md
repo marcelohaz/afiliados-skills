@@ -175,7 +175,7 @@ Você vai gerar os 6 campos do review-no-artigo de UM produto, em modo biblia-on
 
 PASSO 1 — LEIA a régua canônica (NÃO improvise, NÃO use resumo de memória):
 - Read `.claude/skills/artigo-review-criar/SKILL.md` (régua INTEIRA: subtitle híbrido fluindo,
-  "Para quem é" variar-abertura + cap "ocupa o papel ≤2", shortDescription benefício-first,
+  "Para quem é" variar-abertura + cap "ocupa o papel ≤2", shortDescription literal sem molde, bloco "Voz natural" (verbo/substantivo no sentido do dicionário, sem sacada, "para"),
   pros/cons formato, fullReview 4 parágrafos com rótulos LITERAIS, voz analítica categoria D,
   sem travessão, sem ";", texto-puro, links tag-aware, health YMYL, hard caps, jargão dev banido).
 - Read `docs/painel/_data/chavoes-por-nicho.json` → use `_genericos` + bloco do nicho deste site

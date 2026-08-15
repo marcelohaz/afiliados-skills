@@ -369,7 +369,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 | ❌ Corporativo | ✓ Conversacional |
 |---|---|
-| "diferencial central" | "o grande ponto é" |
+| "diferencial central" | dizer o fato; NÃO "o grande ponto é" (virou molde) |
 | "posicionamento" | "categoria" |
 | "segmento de X" | "tipo de X" |
 | "proposta de valor" | drop sempre |

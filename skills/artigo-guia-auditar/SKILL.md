@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-auditar
-description: Audita o guideContent de um artigo E aplica correções CIRÚRGICAS por seção (nunca rewrite total) — contraparte da artigo-reviews-auditar pro guide. Aceita URL do painel OU site/slug. Critérios: produto do lineup fora do guide, claim stale, estrutura 5 H2, tamanho, HTML allowlist, links hub-and-spoke, link quebrado, peer na Conclusão, âncora≠keyword, travessão, voz-comprador, chavões por nicho, superlativo sem lastro, concordância PT-BR, e faq-order-shuffle (anti-footprint determinístico — só reordena a FAQ, não muda redação). Relatório com diffs por seção; user aprova granular ('aplica 1,3' / 'aplica tudo'). Usa artigo-guia-escrever (rewrite total) só com guia ausente/stub ou 3+ H2 faltando.
+description: Audita o guideContent de um artigo E aplica correções CIRÚRGICAS por seção (nunca rewrite total) — contraparte da artigo-reviews-auditar pro guide. Aceita URL do painel OU site/slug. Critérios: produto do lineup fora do guide, claim stale, estrutura 5 H2, tamanho, HTML allowlist, links hub-and-spoke, link quebrado, peer na Conclusão, âncora≠keyword, travessão, voz-comprador, chavões por nicho, superlativo sem lastro, naturalidade (palavra fora do sentido/verbo-curinga, frase-sacada, molde de seção), concordância PT-BR, e faq-order-shuffle (anti-footprint determinístico — só reordena a FAQ, não muda redação). Relatório com diffs por seção; user aprova granular ('aplica 1,3' / 'aplica tudo'). Usa artigo-guia-escrever (rewrite total) só com guia ausente/stub ou 3+ H2 faltando.
 ---
 
 ## Parse de input
@@ -52,7 +52,7 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 
 - **EDIÇÃO MÍNIMA, NUNCA REWRITE.** Só toca nas seções/trechos com violação clara. O resto do `guideContent` fica byte-a-byte intacto. Se você está reescrevendo o guia inteiro, está usando a skill errada.
 - **CONVERGÊNCIA.** Seção que já passa em todos os critérios não entra em `changes`. Re-run no mesmo guia não deve gerar mudança aleatória.
-- **APLICA O ÓBVIO, PROPÕE O JULGAMENTO (canon Marcelo 2026-07-24, alinha com `biblia-auditar`).** Fix **determinístico de direção única** → **APLICA DIRETO** (sem esperar) e marca ✅ CORRIGIDO no relatório: `faq-order-shuffle` (reorder por seed idempotente, zero mudança de redação), `link-interno-quebrado` (href pro slug REAL / remover `<a>` mantendo texto), `link-home-errado` (`/{homeReviewSlug}/`→`/`), `anchor-nao-keyword` e `peer-article-nao-linkado` de âncora (+ a reconciliação de concordância artigo↔âncora), `travessao`, `;`, `concordancia-pt-br`. **Julgamento** → **propor→aprovar** (espera aprovação granular): `voz-comprador`, `superlativo-sem-evidencia`, `peer-link-na-conclusao` (mover placement), reescrita de texto, adicionar conteúdo. Na dúvida, trate como julgamento (proponha).
+- **APLICA O ÓBVIO, PROPÕE O JULGAMENTO (canon Marcelo 2026-07-24, alinha com `biblia-auditar`).** Fix **determinístico de direção única** → **APLICA DIRETO** (sem esperar) e marca ✅ CORRIGIDO no relatório: `faq-order-shuffle` (reorder por seed idempotente, zero mudança de redação), `link-interno-quebrado` (href pro slug REAL / remover `<a>` mantendo texto), `link-home-errado` (`/{homeReviewSlug}/`→`/`), `anchor-nao-keyword` e `peer-article-nao-linkado` de âncora (+ a reconciliação de concordância artigo↔âncora), `travessao`, `;`, `concordancia-pt-br`. **Julgamento** → **propor→aprovar** (espera aprovação granular): `voz-comprador`, `superlativo-sem-evidencia`, `naturalidade`, `peer-link-na-conclusao` (mover placement), reescrita de texto, adicionar conteúdo. Na dúvida, trate como julgamento (proponha).
 - **Preservar o block scalar `|`.** NUNCA parseYaml/stringifyYaml o frontmatter (bagunça o HTML multilinha). Sempre `Edit` cirúrgico no trecho-alvo do `guideContent`.
 - **Preservar tudo fora do `guideContent`.** Não tocar em title, description, keyword, products, intro do body.
 - **Sem travessão (—).**
@@ -86,7 +86,7 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 
 8. **Decisão rewrite vs cirúrgico**: se 3+ H2 obrigatórios faltando OU guia fora de tema → NÃO propor remendos; recomendar `artigo-guia-escrever` e encerrar. Senão, seguir cirúrgico.
 
-9. **Reportar em chat** (formato abaixo) + **aplicar o óbvio, esperar aprovação só do julgamento** (canon 2026-07-24): os fixes **determinísticos** (faq-shuffle, link quebrado/home-errado, âncora-keyword/produto-sem-nome + concordância, travessão, `;`, concordância PT-BR) **aplicam direto** no passo 11 sem esperar, marcados ✅ CORRIGIDO. Só os de **julgamento** (voz-comprador, superlativo, mover placement, reescrita) esperam aprovação granular ("aplica tudo" / "aplica 1,3" / "rejeita 2"). Se não houver nenhum de julgamento, pula a espera.
+9. **Reportar em chat** (formato abaixo) + **aplicar o óbvio, esperar aprovação só do julgamento** (canon 2026-07-24): os fixes **determinísticos** (faq-shuffle, link quebrado/home-errado, âncora-keyword/produto-sem-nome + concordância, travessão, `;`, concordância PT-BR) **aplicam direto** no passo 11 sem esperar, marcados ✅ CORRIGIDO. Só os de **julgamento** (voz-comprador, superlativo, naturalidade, mover placement, reescrita) esperam aprovação granular ("aplica tudo" / "aplica 1,3" / "rejeita 2"). Se não houver nenhum de julgamento, pula a espera.
 
 9.5. **Gravar marcador de auditoria** (registra QUANDO o guia foi auditado — alimenta a pill "Guia auditado", o chip "Auditar Guia" da barra FALTAM e o log de atividade do editor-artigo). Roda **SEMPRE**, logo após o relatório, mesmo que o user depois rejeite todas as correções (auditar é o evento; aplicar é outro):
    - `Write` em `docs/biblias-v2/.audits/guide/{site}-{slug}-last.md` com: título (`# Auditoria do guia: {site}/{slug}`), `- Critérios checados: {N}`, `- Achados: {M}` (+ lista curta dos critérios disparados, ou "nenhum"). A data é só pra leitura humana — **NÃO** invente timestamp pra sort (a fonte de tempo é o commit do git; `Date().toISOString()` cai no bug de timezone). Crie o diretório se não existir.
@@ -200,7 +200,7 @@ Fix (quando NÃO for a exceção acima): adicionar/enxugar peer(s) em spot **con
 Voz-comprador explícita ("compradores citam", "avaliações") OU implícita ("divide opiniões", "um comprador relata", "bem recebido", "elogios recorrentes") no guia. Fix: reescrever como observação analítica (régua "destilação categoria D").
 
 ### 12. `chavoes-por-nicho` (level=`warn`)
-Carregar `docs/painel/_data/chavoes-por-nicho.json` pelo `niche` do site. `termos_banidos_absoluto` (lineup, SKU, ASIN, etc.) > 0 → flag. Limites de frequência ultrapassados → flag. Fix: variação léxica.
+Carregar `docs/painel/_data/chavoes-por-nicho.json` pelo `niche` do site. `termos_banidos_absoluto` (lineup, SKU, ASIN, etc.) > 0 → flag. Limites de frequência ultrapassados → flag. Fix: encurtar ou omitir a frase repetida, NUNCA trocar a palavra exata por sinônimo figurado (é o defeito do critério 12c).
 
 ### 12b. `superlativo-sem-evidencia` (level=`warn`, v1.69.0 — 2026-07-02)
 
@@ -217,6 +217,16 @@ Absoluto de VITRINE sem lastro na prosa do guia. **Faltava esta checagem aqui** 
 - Qualificadores positivos simples: "excelente", "ótimo", "muito bom".
 
 Regra mental: **absoluto de MERCADO/MUNDO sem lastro = flag; keyword, escopo local, ou ancorado em fato = OK.** Fix cirúrgico: escopar ("...deste comparativo"), ancorar no fato, ou trocar por qualificador simples.
+
+### 12c. `naturalidade` (level=`warn`; `error` se ≥5 no guia — canon Marcelo 2026-08-15, JULGAMENTO → propor→aprovar)
+
+O guia é 50-60% do texto do artigo e até 2026-08-15 não tinha nenhum critério de tom. A classe a flagrar é **palavra comum fora do sentido do dicionário** (quase sempre colocação inglesa vertida), não gíria nem termo técnico:
+- objeto/preço/peso como agente com verbo humano: "resolve, dá conta, entrega, segura, pede, exige, aguenta, sustenta, encara, cobra, cobre, trabalha, vira, brilha" ("O de tomada não se cansa", "casa grande pede remanejo", "o sem fio se paga", "reorganiza a categoria inteira");
+- substantivo-figura: "a conta", "degrau", "piso", "porta de entrada", "pacote", "produção", "cenário", "posicionamento", "ressalva honesta", "trunfo", "fôlego";
+- frase-sacada / aforismo: "não é X: é Y", "não é X, e sim Y", "é aí que mora", "e é justamente", "Marca que só divulga watt está divulgando a conta de luz", "Modelo sem reposição no mercado tem prazo de validade";
+- moldes de seção repetidos na rede: "Os preços desta seleção vão de", "Quando não vale a pena:", "Não existe marca que ganhe em tudo", "A escolha gira em torno de", "Escolher bem é menos sobre X e mais sobre Y", "Para a maioria das pessoas, o X é a escolha mais equilibrada", "Seja qual for o perfil";
+- "pra" no texto público; ", então" e ", o que" em mais de 1 frase por parágrafo; frase >35 palavras.
+Teste: a palavra está no sentido em que você a usaria falando com um cliente? Fix cirúrgico por frase: sujeito concreto + verbo literal ("o modelo com fio não perde força", "você troca de tomada algumas vezes"), "para", quebrar frase longa em duas, trocar o molde pela frase literal. Repetir a palavra exata ("aspira" 3×) NÃO é defeito. NÃO reescrever seção inteira: é a `artigo-guia-escrever` que faz rewrite, esta skill conserta frase a frase.
 
 ### 13. `concordancia-quebrada-pt-br` (level=`error`)
 Bugs de substituição mecânica (composiçãos, "a produto", "no em 20XX", termo duplicado entre parênteses). Regex igual `artigo-reviews-auditar` critério 15. Fix: corrigir concordância.

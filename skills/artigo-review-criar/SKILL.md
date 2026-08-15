@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription benefício-first, voz consultiva (não corporativa), "Para quem é" varia abertura. Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal), "Para quem é" varia abertura. Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -84,6 +84,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    ```
    Use o bloco `_genericos` + o bloco do nicho específico (ex: `Pré Treino`, `Creatinas`). Durante geração, **respeite os limites como guard rail editorial**:
    - `termos_banidos_absoluto` → 0 ocorrências (inclui peers/claim/stack/SKU/ASIN/lineup)
+   - **⚠ `_sites_aplicaveis` é o gate (canon 2026-08-15):** site fora da lista do bloco de nicho → **só o `_genericos` vale**. Não force pelo `niche`. E conte o `_genericos` SEMPRE: `chavoes_estruturais_max` tem as 4 variantes de "seleção" em cap **0**, e `industrial_max` tem `declarado` em 3.
    - `ingles_max` (vive nos blocos de NICHO, não em `_genericos`) → não passar do número
    - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0 corrige drift) → calibrar/empilhar/pico-e-queda = 0 QUANDO o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada pra rotina" → "feita pra")
    - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
@@ -152,9 +153,9 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 | **Contexto comparativo** | "Entre as opções sem cafeína da seleção, este produto se destaca..." |
 | **Conexão funcional** | "Combina melhor com quem busca pump intenso e foco mental..." |
 | **Proposta direta** | "A proposta aqui é atender quem precisa de dose alta de creatina..." |
-| **Diferencial-âncora** | "O grande ponto deste produto é a fórmula sem aditivos artificiais..." |
+| **Diferencial-âncora** | "A fórmula não tem aditivos artificiais, e isso decide para quem..." (NÃO "o grande ponto deste produto é": virou molde) |
 | **Cenário concreto** | "Se você imprime poucas páginas por mês e quer custo baixo de entrada..." |
-| **Adjetivo posicional + perfil** | "Vegano e com sabor agradável, é ideal pra quem..." |
+| **Adjetivo posicional + perfil** | "Vegano e com sabor agradável, serve para quem..." |
 
 **Limite duro**: máximo **2 produtos por artigo** podem usar "ocupa o papel de [badge]" (já está no JSON como `chavoes_estruturais_max.ocupa o papel: 2`). Os demais variam.
 
@@ -198,11 +199,11 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 - **subtitle** (10-150 chars): título descritivo curto, sem redundância com nome.
 
-- **shortDescription** (50-250 chars, alvo 180-230): padrão BENEFÍCIO-FIRST. 1-2 frases que abrem com posicionamento/perfil, técnico justifica depois. **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
+- **shortDescription** (50-250 chars): para quem é / o que faz de melhor em linguagem literal, depois 2-3 dados, fecho de fato. Sem molde ("Ideal pra quem… Você ganha…"). **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
 
 9. **Validar mentalmente** antes de salvar:
    - **Tamanhos** (hard caps — v1.16.0):
-     - `shortDescription` ≤ 250 chars (alvo 180-230, **padrão benefício-first** — 1ª frase é posicionamento, não ficha técnica)
+     - `shortDescription` ≤ 250 chars (1ª frase diz para quem é / o que faz, literal; não é ficha técnica nem molde)
      - cada item de `pros` ≤ 180 chars (alvo 80-130)
      - cada item de `cons` ≤ 180 chars (alvo 80-130)
      - `fullReview` 800-3000 chars de texto puro (descontando markup e URLs)
@@ -246,88 +247,55 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 ### subtitle (10-150 chars)
 Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L3250": "Multifuncional EcoTank com Wi-Fi, ideal para casa e home office".
 
-### shortDescription (50-250 chars, alvo 180-230) — padrão BENEFÍCIO-FIRST
+### shortDescription (50-250 chars) — o que o produto é e para quem, em linguagem literal
 
-**HARD CAP em 250 chars.** Aparece num card visual (TabelaProdutos / TopPickCard) e é a primeira coisa que o leitor lê pra decidir se quer ler mais. **NÃO PODE SER FICHA TÉCNICA** — tem que enganchar pelo benefício/posicionamento.
+**HARD CAP em 250 chars.** Aparece num card visual (TabelaProdutos / TopPickCard) e é a primeira coisa que o leitor lê. **Não é ficha técnica** (não começa com marca nem com lista de specs), mas também **não é frase de efeito**.
 
-**Padrão obrigatório (régua v1.17.0, canon 2026-05-28): benefício/posicionamento PRIMEIRO, técnico DEPOIS.**
+Estrutura (sem molde fixo de palavras — a estrutura é a mesma, o fraseado nasce do produto):
+1. **1ª frase: para quem serve ou o que faz de melhor**, dita de forma literal ("Para casa pequena e limpeza diária" / "Creatina pura, sem aditivo, para uso contínuo").
+2. **2-3 dados essenciais** que justificam.
+3. **Fecho: um fato** (embalagem, diferencial concreto, preço aproximado). Sem "Você ganha…", sem "Destaque para…" obrigatório, sem sacada.
 
-Estrutura geral em 3 partes:
-1. **Frase de abertura: benefício, posicionamento ou perfil** — engancha o leitor
-2. **2-3 specs essenciais** — justifica com o concreto
-3. **Destaque, diferencial ou fecho com benefício** — reforça
-
-**3 moldes recomendados (varie entre produtos do mesmo artigo):**
-
-**Molde A — Perfil + benefício** (estilo "câmera de segurança"):
-> "Ideal pra quem [perfil/objetivo], entrega [função/spec curta]. Você ganha [benefício]."
-
-**Molde B — Adjetivo posicional + spec + destaque** (estilo "aspirador"):
-> "[Adjetivos] pra [perfil]. Combina/Reúne [spec 1] e [spec 2]. Destaque para [diferencial]."
-
-**Molde C — Posicionamento direto + técnico justifica** (estilo "Custo-benefício forte..."):
-> "[Posicionamento curto] pra [perfil]. [Fórmula/spec essencial]. [Embalagem ou diferencial]."
-
-**Exemplos ✅** (canon `melhorpretreino` V4, validado editorialmente):
+**Exemplos ✓** (2026-08-15, canon voz natural):
 
 ```
-"Custo-benefício forte e fórmula completa pra iniciantes ou rotina contínua.
-Combina creatina, beta-alanina, taurina e cafeína anidra em dose pequena de 5g,
-com pote de 300g que rende 60 doses por cerca de R$ 55."
-(211 ch — Molde C: posicionamento + spec + embalagem)
+"Creatina pura para uso contínuo, sem aditivo nem sabor. São 5 g por dose,
+pote de 300 g que rende 60 doses e laudo de pureza de laboratório independente,
+por cerca de R$ 60."
+(≈170 ch)
 
-"Vegano, com sabor agradável Pink Lemonade e sem o formigamento da beta-alanina.
-Entrega 150mg de cafeína moderada e 16g de palatinose (energia gradual) em
-embalagem de 500g, a maior da categoria."
-(195 ch — Molde B: adjetivos + perfil + spec + destaque)
-
-"Ideal pra quem treina à noite ou é sensível a estimulantes, entrega disposição
-muscular via 2g de beta-alanina e aminoácidos, sem cafeína na fórmula.
-Você ganha mais intensidade no treino sem comprometer o descanso."
-(225 ch — Molde A: perfil + spec + benefício)
+"Aspirador com fio para apartamento pequeno e limpeza rápida. Tem 1100 W,
+coletor de 1,3 litro sem saco e três bocais na caixa, e pesa cerca de 1,5 kg,
+pelo menor preço deste comparativo."
+(≈190 ch)
 ```
 
-**Exemplos ❌ (técnico-first, REGRESSÃO real do melhorpretreino pré-v1.17.0):**
+**Exemplos ❌:**
 
 ```
 "Pré-treino brasileiro da Adaptogen Science com 400 mg de cafeína, 2 g de beta-alanina,
-1 g de creatina e 1 g de taurina por porção de 10 g, todos declarados pelo fabricante.
-Sabor morango, pote de 300 g, preço médio em torno de R$ 78. Voltado para quem treina
-em rotina de emagrecimento e quer manter intensidade no treino..."
-(391 ch — começa com marca + listagem completa de specs; perde o leitor antes de
-chegar no posicionamento que está no fim)
-```
+1 g de creatina e 1 g de taurina por porção de 10 g, todos declarados pelo fabricante..."
+(ficha técnica: começa com marca + lista completa; o leitor não sabe para quem é)
 
-→ **Fix**: inverta. Coloca posicionamento/benefício na 1ª frase. Drop "brasileiro da X",
-drop "todos declarados pelo fabricante", drop "preço médio em torno", drop público verboso.
+"Ideal pra quem treina à noite, entrega disposição muscular via 2g de beta-alanina.
+Você ganha mais intensidade no treino sem comprometer o descanso."
+(molde "Ideal pra quem… entrega… Você ganha…": era o padrão até 2026-08-15 e virou
+assinatura em 18% das páginas da rede; "entrega" e "ganha" fora do sentido literal)
+```
 
 **Drop SEMPRE:**
 - ❌ "**brasileiro da [marca]**" — marca já está no campo `name` (renderizado no card acima)
 - ❌ "**todos declarados pelo fabricante**" — implícito
-- ❌ "**preço médio em torno de R$ X**" — preço já está nas specs e na tabela
+- ❌ "**preço médio em torno de R$ X**" como abertura — preço pode fechar, não abrir
 - ❌ **Público-alvo verboso** ("Voltado para quem treina em rotina de emagrecimento e quer manter intensidade no treino mesmo em déficit calórico...")
 - ❌ **Lista completa de ingredientes** — pega só 2-3 chave, resto vai pro fullReview
+- ❌ Moldes de abertura/fecho ("Ideal pra quem", "Feito pra quem", "Você ganha", "Destaque para", "Custo-benefício forte pra")
 
-**Adicionar:**
-- ✅ **Adjetivos posicionais** ("Custo-benefício forte", "Vegano", "Premium", "Foco mental")
-- ✅ **Conexão emocional/funcional** ("Ideal pra quem...", "Você ganha...", "Pra quem...")
-- ✅ **Destaque do diferencial** ("Destaque para...")
-
-**Régua de corte mental** — antes de salvar, leia a 1ª frase do shortDescription:
-- Começa com "Pré-treino com X mg de Y..." ou "[Tipo] brasileiro da [marca]..." → **ERRADO**. Inverta.
-- Começa com adjetivo posicional, "Ideal pra...", "Você ganha...", "Custo-benefício..." → **CERTO**.
+**Régua de corte mental** — releia a 1ª frase: ela diz para quem é ou o que faz, com verbo no sentido literal? Se começa com marca ou lista de mg → inverta. Se começa com "Ideal pra quem… entrega…" → reescreva literal.
 
 ### fullReview (HTML, ~800-3000 chars de **texto puro**)
 
-⚠️ **A faixa é de TEXTO PURO, descontando o markup** — não conte `<p>`,
-`<strong>` nem os links `<a href="{amazonUrl}">`. Medido em 2.667 reviews da
-rede em 2026-08-06: **o markup é 24% do campo**, e 25 reviews constavam acima
-dos 3.000 sem que **nenhum** passasse de 2.890 chars de texto. O aperto caía
-justo em quem tinha o que dizer — p99 bruto em 2.982, colado na linha, contra
-p99 de 2.399 em texto puro.
-
-A faixa não força ninguém a encher: produto simples termina onde o conteúdo
-acaba. O teto é proteção contra prolixidade, nunca meta a atingir.
+⚠️ **A faixa é de TEXTO PURO, descontando o markup** (`<p>`, `<strong>`, `<a>`), que é ~24% do campo (medido em 2.667 reviews, 2026-08-06). A faixa não força ninguém a encher: produto simples termina onde o conteúdo acaba. O teto é proteção contra prolixidade, nunca meta a atingir.
 **Estrutura obrigatória — 4 parágrafos marcados** (idêntico ao `formato_full_review` shared):
 
 ```html
@@ -404,57 +372,32 @@ Idêntica à da página individual (mesma régua):
 
 > **Sobre citar o fabricante**: regra diferente. Spec factual (rendimento, velocidade, economia) vai afirmado direto, sem "segundo X". Atribuir só vale pra recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês"). Ver Armadilha 4 abaixo pra régua completa.
 
-## Tom conversacional (CRÍTICO)
+## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 5 skills de criação e nos prompts canônicos do painel)
 
-A pergunta-teste antes de salvar qualquer campo:
-> *"Um amigo que não entende disso entenderia e saberia o que fazer?"*
+Especialista explicando a um amigo, cumprido com **simplicidade**, não com efeito. Pergunta-teste: *"um amigo que não entende disso entenderia e saberia o que fazer?"* Sem jargão corporativo, sem formalidade institucional, **sem sacada**.
 
-Se não → simplifica.
+O que faz texto soar como IA não é gíria nem termo técnico: é **palavra comum usada fora do sentido do dicionário** ("resolver a casa", "dar conta da poeira", "transformar a limpeza numa produção", "o aparelho pede tomada", "a conta da potência vem no peso"), quase sempre frase feita do inglês vertida (*make a production, handle, delivers, covers, calls for, the math*). Cada palavra é comum, então lista de termo não pega; a régua é uma **classe**:
 
-Reviews afiliados são **especialista explicando pra amigo ou vizinho**: claro, direto, fluido. Sem jargão corporativo, sem formalidade institucional. Use 2ª pessoa quando faz sentido ("se você imprime em casa..."), descreva uso real ("você abre uma tampa, derrama a garrafa direto, e pronto"), conecte com a situação do leitor ("está cansado de gastar com cartucho").
+1. **Sujeito concreto + verbo no sentido do dicionário.** Aspirador aspira, impressora imprime, bateria dura, produto custa/tem/funciona. Objeto, preço, peso ou potência NÃO "resolvem, dão conta, entregam, seguram, pedem, exigem, aguentam, sustentam, encaram, cobram, juntam, trabalham, cobrem, viram, brilham". Teste: é o sentido em que você usaria a palavra falando com um cliente?
+2. **Substantivo literal.** Nada de "a conta", "degrau", "piso", "porta de entrada", "pacote", "proposta", "produção", "remanejo", "trunfo", "fôlego" como figura. Diga o que é (preço, faixa de preço, o mais barato, conjunto de recursos).
+3. **Sem frase-sacada.** Nada de "não é X: é Y", "o que X é Y", "é aí que…", fecho com dois-pontos que "revela". Dois-pontos só para explicação ou lista.
+4. **Repita a palavra certa.** "Aspira" 3× é normal. Chavão é frase-molde repetida, não palavra exata. **Nunca troque a palavra certa por sinônimo figurado para "variar"** (limpar → "resolver a casa" → "dar conta" é exatamente o defeito).
+5. **"para", não "pra"**, no texto público.
+6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
+7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
+8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
+9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-**Padrões de tom — antes/depois:**
+**Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
-| ❌ Formal/corporativo | ✓ Conversacional |
+| ❌ Como saiu (2026-08-15) | ✓ Como uma pessoa escreve |
 |---|---|
-| "atende quem busca dose alta de EPA e DHA" | "se você quer dose cheia de EPA e DHA em poucas cápsulas" |
-| "O posicionamento da X em suplementação esportiva" | "se você treina e quer um da linha esportiva" |
-| "alinhado à narrativa de procedência" | "isso encaixa com a história de pureza do produto" |
-| "estrutura química mais próxima do óleo de peixe in natura" | "molécula mais parecida com o óleo natural" |
-| "perfil de absorção favorável" | "absorve melhor" |
-| "uma rotina de suplementação séria" | "uma rotina contínua" |
-| "números compatíveis com" | "boa dose pra" |
-| "tradicionalmente associada a" | "conhecida por" |
-
-**Referências canônicas do projeto pra calibrar tom** (leia se desconfia que o output está formal demais):
-- `sites/melhorimpressora/src/content/products/epson-ecotank-l3250.mdx`
-- `sites/melhorimpressora/src/content/reviews/melhor-impressora-custo-beneficio.mdx`
-
-## Tom natural e rótulos REAIS (v1.32.0, canon Marcelo 2026-06-10)
-
-Conversacional ≠ personagem. Caso real: a home do melhorimpressora acumulou "máquina de trabalho", "impressora para imagem", "no batente", "se reconserta", "desembolso" — 16 trechos não-naturais num artigo só.
-
-**1. Teste-da-Amazon pros rótulos de categoria**: só use rótulo que EXISTE no varejo (você digitaria isso na busca da Amazon?).
-
-| ❌ Inventado | ✓ Real |
-|---|---|
-| "máquina de trabalho" | "impressora de escritório" |
-| "impressora para imagem" | "impressora fotográfica" |
-| "faixa fotográfica" | "conjunto de 6 tintas" |
-| "cadência de negócio" | "velocidade pra escritório" |
-| "preço de custo-benefício" | "preço justo" |
-
-**2. Elipse de categoria é LIBERADA** (não invente substituto): "a barata", "a doméstica", "a laser", "as de tanque", "a fotográfica" são português natural — use-as pra não repetir o nome da categoria 40 vezes.
-
-**3. PROIBIDO meta-SEO**: nunca mencionar a busca/keyword do leitor ("tem gente que digita X na busca...", "quando a busca esconde..."). O leitor não veio ler sobre a própria pesquisa — reescreva pelo cenário direto ("Nem toda impressora é pra casa...").
-
-**4. Antropomorfismo com gíria = 0**: aparelho "no batente", rede que "se reconserta" (verbo inventado), impressora que "quer um canto". Personificação leve SÓ quando explica ("o Wi-Fi se conserta sozinho" ✓).
-
-**5. Jargão financeiro/burocrático**: "desembolso"→"preço" · "comprometer dinheiro"→"gastar" · "reprografia"→"cópia e digitalização" · "na frente do consumível"→"no consumível".
-
-**6. Atribuição elíptica é a mesma muleta de "segundo a [marca]"** (v1.21.1): "tinta pra milhares de páginas, conta da Epson" → afirme o número direto ("tinta pra 6.600 páginas em preto").
-
-**7. Máximo 1 expressão coloquial leve por review** (pode ser zero); analogia só quando explica algo. Teste final: leia em voz alta como se explicasse pra um cliente — soou personagem ou corporativo, simplifica.
+| se você quer resolver a casa inteira sem escolher entre potência e preço | se você quer limpar a casa toda sem escolher entre potência e preço |
+| sem transformar a limpeza numa produção | sem muito esforço |
+| a conta da potência vem no peso | a potência tem um custo: o peso |
+| casa grande ainda pede remanejo | em casa grande você ainda troca de tomada algumas vezes |
+| Se não têm, ele é o que resolve. | Se não têm, ele é a melhor opção. |
+| O de tomada não se cansa. | O modelo com fio não perde força durante o uso. |
 
 ## Subtitle humano = ângulo do review (v1.34.0, canon Marcelo 2026-06-10)
 
@@ -481,7 +424,7 @@ A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conf
 | **B) Claim do fabricante repetível** | "Forma triglicerídeo, apontada pelo fabricante como mais absorvível" | "Forma triglicerídeo, considerada mais absorvível" |
 | **C) Claim institucional / PR** | "Marca tradicional brasileira segundo o próprio fabricante" | "Marca brasileira" (ou omite se não agrega) |
 | **D) Voz comprador implícita** | "Cápsulas sem sabor segundo relatos de compradores" | "Cápsulas sem sabor" |
-| **E) Registro coloquial da bíblia** | "700W pra tostar as fatias no tempo do café passar" · "as fatias sobem sozinhas, sem precisar ficar de olho" · "não só pão de forma fininho" | "700W, potência que dá conta das fatias enquanto o café fica pronto" → **melhor**: "700W nas duas fatias" · "elevação automática ao fim do ciclo" · "aceita fatias de espessuras diferentes" |
+| **E) Registro coloquial da bíblia** | "700W pra tostar as fatias no tempo do café passar" · "as fatias sobem sozinhas, sem precisar ficar de olho" · "não só pão de forma fininho" | "700W nas duas fatias" · "elevação automática ao fim do ciclo" · "aceita fatias de espessuras diferentes" (NÃO "potência que dá conta das fatias": trocar a gíria da bíblia por verbo figurado é o mesmo defeito em outra roupa) |
 
 **Categoria E — por que existe** (canon 2026-07-16): `angulosConversao` (e às vezes `sentimentoCompradores`) vêm em **registro de venda**, coloquial de propósito, porque servem de matéria-prima pra copy. Colar verbatim importa a gíria: no lote cozinhaideal de 9 páginas, 8 saíram com 6 a 9 coloquialismos contra o teto de 1 — e dois auditores independentes rastrearam a origem pra frases **literais** da bíblia ("no tempo do café passar", "sem precisar ficar de olho", "fininho"). O sub-agent não estava improvisando: a régua mandava "usar" o ângulo e ele usou. **Pegue o FATO da frase de ângulo e reescreva em voz analítica.** Se você copiou ≥5 palavras seguidas de uma `frase` de `angulosConversao`, você NÃO destilou. (O caso real foi em página individual, mas o review-em-artigo consome as MESMAS `frases` de `angulosConversao` — o risco é idêntico.)
 
@@ -556,7 +499,7 @@ Ao decidir QUAL claim vira pro central no artigo vs. spec:
 - Sem superlativos ABSOLUTOS sem evidência ("o melhor", "o mais X", "incomparável", "único", "imbatível")
 - ✓ Qualificadores positivos simples ("excelente", "ótimo", "muito bom") são OK — reviews são levemente inclinados ao positivo por design (diretriz #2 da bíblia)
 - ✓ Superlativas qualificadas com dado: "entre as mais econômicas da categoria" (se houver concorrentes na bíblia)
-- Densidade ~5-7 dados quantitativos no fullReview
+- Dados quantitativos no fullReview: os que a bíblia sustenta e o leitor usa (tipicamente 3-7). Não encha para chegar a um número; não corte fato útil para caber
 
 ## Ângulo comparativo vs autônomo (a página individual NÃO é lida — canon 2026-08-13)
 
@@ -645,7 +588,7 @@ Frases idênticas literais (ou quase) repetidas em N reviews viram chavão e per
 |---|---|
 | "Gestantes, lactantes, hipertensos e cardíacos devem consultar profissional antes do consumo" (em 4 reviews idênticas) | Move pro `guideContent` (FAQ "faz mal à saúde"). NÃO repete no review individual |
 | "Beta-alanina pode causar parestesia leve (formigamento na pele) nos primeiros minutos, efeito esperado e benigno" (em 8 bullets cons) | 1ª menção: explica completo. 2ª em diante: "mesma parestesia já descrita" ou só "formigamento leve" |
-| "ativo que dá suporte à recuperação muscular" (sobre creatina ausente, em 5 cons) | Encurta pra "ativo importante pra recuperação" e varia léxico |
+| "ativo que dá suporte à recuperação muscular" (sobre creatina ausente, em 5 cons) | Encurta pra "ativo importante para recuperação". Repetir a palavra exata ("creatina", "recuperação") é normal; o chavão é a FRASE repetida, e o conserto é encurtar ou omitir, nunca sinônimo figurado |
 | "declarados pelo fabricante" colado a cada lista de mg | Drop quase sempre (info do rótulo já é por definição do fabricante) |
 
 **Régua**: se uma frase específica aparece **literal em 3+ reviews do mesmo artigo**, é chavão. Encurta a partir da 2ª aparição.
@@ -670,54 +613,19 @@ Mecânica: depois de gerar o review completo, antes do Edit tool, faz 1 passada 
 
 ### 10. Auto-check de concordância PT-BR (régua v1.19.0, canon 2026-05-28)
 
-**Bug-class real** (batch melhorpretreino v1.17-1.18): substituições mecânicas (BCAAs→aminoácidos, parestesia→formigamento, fórmula→composição) **NÃO reconcordaram** plural/gênero/artigo. ChatGPT-Bárbara identificou 11+ casos novos só nos 2 artigos pré-treino.
+**Bug-class real** (batch melhorpretreino v1.17-1.18): substituições mecânicas (BCAAs→aminoácidos, parestesia→formigamento, fórmula→composição) **NÃO reconcordaram** plural/gênero/artigo (11+ casos em 2 artigos). Antes de gravar, grep dos padrões abaixo em cada campo; achou → corrija antes de gravar.
 
-**Padrões mais comuns + auto-check**:
+| Padrão | Fix |
+|---|---|
+| `composiçãos`, `combinaçãos`, `porçãos`, `opçãos` | `composições`, `combinações`, `porções`, `opções` |
+| `a produto`, `a formigamento`, `a ingrediente`, `esta ativo` | `o produto`, `o formigamento`, `o ingrediente`, `este ativo` |
+| `o fórmula`, `o dose`, `o composição`, `este tolerância` | `a fórmula`, `a dose`, `a composição`, `esta tolerância` |
+| `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
+| `disponíveis no em 2026` | `disponíveis em 2026` |
+| `Pra a maioria/primeira/melhor` | `Para a maioria/primeira/melhor` |
+| `as produtos`, `os fórmulas`, `as ingredientes` | gênero certo |
 
-```python
-import re
-
-# 10a) Plural errado em -ãos (em vez de -ões)
-for m in re.finditer(r'\b(composição|combinação|porção|injeção|reação|opção|posição)s\b', campo):
-    print(f"⚠ plural errado: {m.group(0)} → use -ões")
-    # composiçãos → composições, combinaçãos → combinações
-
-# 10b) Artigo errado antes de substantivo masculino (com "a/na/da/esta")
-for m in re.finditer(r'\b(a|na|da|esta|nessa|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto|atleta)\b', campo, re.IGNORECASE):
-    print(f"⚠ artigo errado: {m.group(0)} → use 'o/no/do/este'")
-
-# 10c) Artigo errado antes de substantivo feminino (com "o/no/do/este")
-for m in re.finditer(r'\b(o|no|do|este|nesse|neste|esse) (fórmula|dose|porção|composição|combinação|tolerância)\b', campo, re.IGNORECASE):
-    print(f"⚠ artigo errado: {m.group(0)} → use 'a/na/da/esta'")
-
-# 10d) Concordância de adjetivo quebrada
-for m in re.finditer(r'produto[s]? elaborada[s]?\b|produto ampla|formula natural', campo, re.IGNORECASE):
-    print(f"⚠ concordância: {m.group(0)}")
-    # "produto ampla" → "fórmula ampla"; "formula natural" → "fórmula natural"
-
-# 10e) "no em 20XX" (sobra de substituição)
-for m in re.finditer(r'\b(?:disponíveis?|disponível) no em \d{4}', campo, re.IGNORECASE):
-    print(f"⚠ duplicação prep: {m.group(0)} → 'em 20XX'")
-
-# 10f) "Pra a" / "no o" / sobras de contração
-for m in re.finditer(r'\bPra a (maioria|minoria|primeira|melhor|pior)\b', campo):
-    print(f"⚠ Pra a → Pra ou Para a")
-
-# 10g) "as produtos" / "os fórmulas" — gênero errado
-for m in re.finditer(r'\b(as produtos|os fórmulas|as ingredientes)\b', campo, re.IGNORECASE):
-    print(f"⚠ gênero errado: {m.group(0)}")
-```
-
-**Casos reais** (commits 2026-05-28, melhorpretreino):
-- 10a: `composiçãos` (11x), `combinaçãos` (4x) — devem ser composições/combinações
-- 10b: `a produto` (4x), `a formigamento` (7x), `causa a formigamento` (2x)
-- 10c: nenhum recente
-- 10d: `produto ampla` (1x), `produtos elaboradas` (1x), `melhor formula natural` (1x)
-- 10e: `disponíveis no em 2026` (1x)
-- 10f: `Pra a maioria` (1x)
-- 10g: `as produtos em geral` (1x)
-
-Se achar qualquer bug: corrija ANTES de gravar. Skill atualmente faz isso mentalmente; tempo de re-check é trivial (~5s por campo).
+Regex de referência (se quiser rodar): `\b(composição|combinação|porção|opção|posição)s\b` · `\b(a|na|da|esta|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto|atleta)\b` · `\b(o|no|do|este|neste|esse) (fórmula|dose|porção|composição|combinação|tolerância)\b` · `\bPra a \w+`.
 
 ### 11. Voz consultiva, não corporativa (régua v1.19.0, ChatGPT-Bárbara)
 
@@ -732,11 +640,11 @@ Se achar qualquer bug: corrija ANTES de gravar. Skill atualmente faz isso mental
 - `proposta de valor`: 0 (banido)
 
 **Substituições editoriais**:
-| ❌ Corporativo | ✓ Conversacional |
+| ❌ Corporativo | ✓ Direto (literal, sem molde) |
 |---|---|
-| "O diferencial central é a fórmula sem aditivos" | "O grande ponto é a fórmula sem aditivos" |
-| "Posicionamento de mercado premium" | "Categoria premium" / "Linha mais cara" |
-| "Atende ao segmento de emagrecimento" | "Funciona pra quem está emagrecendo" |
+| "O diferencial central é a fórmula sem aditivos" | "A fórmula não tem aditivos" (NÃO "o grande ponto é…": virou molde em 289 páginas) |
+| "Posicionamento de mercado premium" | "Linha mais cara" |
+| "Atende ao segmento de emagrecimento" | "Serve para quem está emagrecendo" |
 | "Proposta de valor única" | drop sempre — vazio retórico |
 | "Categoria de pré-treinos sem cafeína" | "Os pré-treinos sem cafeína" |
 
@@ -775,68 +683,18 @@ O encaminhamento genérico a profissional ("consulte/converse/alinhe a dose com 
 - **NUNCA** a mesma frase carimbada produto após produto. Teto prático: ~5 por artigo (a `artigo-auditar` flagra acima disso).
 - Restrição factual específica do produto (ex: "o fabricante não indica pra gestantes", alérgeno) continua valendo onde for real — não é disclaimer genérico.
 
-### 13b. Auto-check max 2 valores numéricos por frase (régua v1.19.0, canon 2026-05-28)
+### 13b. Máximo 2 valores numéricos por frase (régua v1.19.0, canon 2026-05-28)
 
-**Bug-class** (ChatGPT-Bárbara ponto 10): frases comparativas viram tabela em prosa quando listam 3+ valores em mg/g/R$.
+Frases comparativas viram tabela em prosa quando listam 3+ valores em mg/g/R$. **Limite duro: 2 valores por frase** em comparações cross-produto; mais que isso → quebre em 2 frases ou use categoria ("entre os mais altos"). Auto-check: por frase, conte `\d+[\.,]?\d*\s*(mg|g|R\$)`; >2 → reescreva.
 
-**Limite duro**: máximo **2 valores numéricos por frase** em comparações cross-produto. Mais que isso → quebrar em 2 frases OU substituir por categoria ("entre os mais altos", "no piso da Anvisa").
-
-**Auto-check**:
-```python
-import re
-# Contar mg/g/R$ por frase
-for frase in re.split(r'[.!?]\s+', campo):
-    valores = re.findall(r'\d+[\.,]?\d*\s*(?:mg|g|R\$)', frase, re.IGNORECASE)
-    if len(valores) > 2:
-        print(f"⚠ {len(valores)} valores em 1 frase: {frase[:200]}")
-```
-
-**Exemplo real** (caso melhorpretreino emagrecer):
-> ❌ "R$ 130 fica abaixo só do Essential Nutrition Beta Action (R$ 225) e acima do Dux Pre Workout (R$ 110), Vitafor V-Fort (R$ 95), Darkness Évora XT e Night Train (R$ 90 cada), 3VS Prohibido (R$ 80), Adaptogen Panic (R$ 78), Black Skull..."
-> (8 preços em 1 frase = tabela em prosa)
-
+> ❌ "R$ 130 fica abaixo só do Essential Nutrition Beta Action (R$ 225) e acima do Dux Pre Workout (R$ 110), Vitafor V-Fort (R$ 95), Darkness Évora XT e Night Train (R$ 90 cada)..." (8 preços = tabela em prosa)
 > ✓ "Preço médio R$ 130, entre os 3 mais caros analisados. Abaixo só do Essential Nutrition Beta Action (R$ 225)."
-> (2 valores na 1ª frase, 1 na 2ª = legível)
 
-**Exceção canônica**: tabela específica de doses comparativa em **1 lugar único** do fullReview (ex: parágrafo dedicado a comparar cafeína entre 3 produtos) pode usar 3 valores SE houver gancho narrativo claro. Vale 1x por review, não como muleta.
+**Exceção canônica**: 1 parágrafo dedicado a comparar doses entre 3 produtos pode usar 3 valores SE houver gancho narrativo claro. Vale 1x por review.
 
 ### 14. Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
 
-**Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
-
-**Auto-check obrigatório ANTES de gravar**:
-
-```python
-import re
-
-# Para cada campo gerado (shortDescription, fullReview, pros, cons, specs.value):
-
-# 14a) Duplicação contígua (>=8 chars repetidos em sequência)
-for m in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
-    print(f"⚠ duplicação: {m.group(0)}")
-    # → Reescreve removendo a metade duplicada
-
-# 14b) Bullet começa com minúscula (em pros/cons)
-for bullet in pros + cons:
-    if re.match(r'<strong>[a-záéíóúâêôãõàèìòùç]', bullet):
-        print(f"⚠ bullet minúsculo: {bullet[:60]}")
-        # → Capitalize primeira letra dentro de <strong>...</strong>
-
-# 14c) Minúscula após ponto (texto editorial — excluir URLs)
-for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
-    ctx = campo[max(0,m.start()-30):m.end()+30]
-    if 'http' in ctx or 'amazon.com.br' in ctx: continue
-    if re.search(r'\d+\. \w', ctx[:50]): continue  # lista numerada
-    print(f"⚠ minúsc após ponto: ...{ctx}...")
-    # → Capitalize a letra (.+ espaço + Letra)
-```
-
-**Exemplos reais** (commit a72e7d9, melhorpretreino):
-- 14a: `"sem empilhar suplementos sem empilhar suplementos"`
-- 14b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
-- 14c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
-
-Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
+Substituições mecânicas causam (caso real melhorpretreino `a72e7d9`): **14a** duplicação contígua (`sem empilhar suplementos sem empilhar suplementos`; regex `([a-zA-ZÀ-ÿ\s]{8,40})\1`) · **14b** bullet começando com minúscula dentro de `<strong>` (`<strong>aminoácidos…`) · **14c** minúscula após ponto em texto editorial (`(maior dose). pra emagrecer`; ignorar URLs e listas numeradas). Rodar em shortDescription, fullReview, pros, cons, specs.value antes de gravar; achou → corrija.
 
 ### 15. Voz-eximir-responsabilidade (régua v1.19.1, canon 2026-05-28)
 
