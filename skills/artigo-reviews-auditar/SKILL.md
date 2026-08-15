@@ -112,6 +112,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 9. **Aplicar o óbvio + esperar aprovação só do julgamento** (canon 2026-07-24):
    - **Mudanças puramente mecânicas** (travessão, `;`, concordância PT-BR — sem tocar voz/claim/estrutura) → **APLICA DIRETO** junto com o backup+Edit dos passos 10-11, sem esperar, e marca ✅ CORRIGIDO no relatório.
+   - **Repetição intra-artigo (1b)**: apagar a cópia excedente quando o fato já está num pró/tabela/outra frase do MESMO produto = mecânico (aplica direto); reescrever pelos 3 movimentos literais = julgamento (espera). Em pipeline (clone gate 1.4) os dois são auto-fix, sempre com a verificação de que os verbos-curinga não subiram.
    - **Mudanças com julgamento editorial** (voz-comprador, claim-vs-lineup, redundância, quality, tone-clone, badge, subtitle) → **espera resposta do user**, granularidade per-produto:
      - `aplica tudo` / `aplica todos` → todas as mudanças editoriais
      - `aplica produto 1, 3` → granular por número
@@ -162,7 +163,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 - Sequência de **6+ palavras** igual: **≤3 ocorrências = INFO** (fica; entra no relatório só como registro). **≥4 = FIX**: reduzir a 3.
 - **Abertura igual** (4 primeiras palavras da shortDescription ou do "Para quem é") em **≥4 produtos = FIX**: variar as excedentes; 3 = INFO.
 - **Fecho de preço** ("…preço médio de R$ X" como última frase da shortDescription ou do Resumo) em **>50% dos produtos = FIX**: deixar em no máximo metade (o preço já está na tabela).
-- Fora do cálculo (o script já exclui): os 4 rótulos, nomes de produto, keyword/keywordPlural, URLs. Repetir **palavra** ("aspira", "sem saco", "cabo") nunca é achado.
+- Fora do cálculo (o script já exclui): os 4 rótulos, nomes de produto, keyword/keywordPlural, URLs. Repetir **palavra** ("aspira", "sem saco", "cabo") nunca é achado. **Spec pura repetida** ("Wi-Fi dual band 2,4 e 5 GHz", "1450 W de potência") é fato, não frase-molde: o script marca como INFO mesmo acima de 4; só vira FIX se a frase inteira em volta da spec for a mesma.
 
 **Conserto — as 5 salvaguardas (o risco real é trocar repetição por frase estranha, o defeito que a régua de voz acabou de tirar):**
 1. **Apagar antes de reescrever.** Se o fato da cópia já está num pró, na tabela de specs ou em outra frase do mesmo review, a cópia é apagada. É o caso mais comum ("sem trocar de tomada" ao lado de "cabo de X metros").

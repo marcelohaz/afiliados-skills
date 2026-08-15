@@ -14,7 +14,7 @@ O que mede (só nos campos de produto: subtitle, shortDescription, pros, cons, f
      cobra, cobre, vira, brilha) — pra conferir que o CONSERTO não trocou repetição por frase estranha:
      rode antes e depois; o número não pode subir.
 
-Limiar canônico (canon Marcelo 2026-08-15): repetição ≤3 ocorrências = INFO (deixa); ≥4 = FIX (reduzir a 3,
+Limiar canônico (canon Marcelo 2026-08-15): repetição ≤3 ocorrências = INFO (deixa); ≥4 = FIX (exceto spec pura — número/unidade/tecnologia — que é fato repetido e fica INFO) (reduzir a 3,
 apagando a cópia quando o fato já está em pró/tabela/outra frase, ou reescrevendo SÓ por movimento literal:
 número vira sujeito / fundir na vizinha / mover pra pró-contra). Abertura igual em ≥4 produtos = FIX (varia
 as excedentes). Fecho de preço em >50% dos produtos = FIX (deixa em ≤ metade). 2-3 produtos = INFO.
@@ -22,6 +22,8 @@ as excedentes). Fecho de preço em >50% dos produtos = FIX (deixa em ≤ metade)
 import re, sys, json, collections, yaml
 
 ROTULOS = ['para quem é', 'por que gostamos', 'pontos de atenção', 'resumo']
+# spec pura (número + unidade, nome de tecnologia): fato repetido, não frase-molde → INFO mesmo acima de 4
+SPEC = re.compile(r"\d|\b(wi fi|bluetooth|hepa|usb|hdmi|ghz|mah|rpm|dpi|ppm|dual band)\b", re.I)
 CURINGA = re.compile(r"\b(resolv\w*|d[áa]o? conta|entreg(?:a|am)|segur(?:a|am)|pede[m]?|exig(?:e|em)|aguent\w*|sustent\w*|encar\w*|cobra[m]?|cobre[m]?|vira[m]?|brilh\w*)\b", re.I)
 
 def strip(h): return re.sub(r'<[^>]+>', ' ', h or '')
@@ -118,7 +120,7 @@ def main():
     out = {
         'produtos': N,
         'min_words': n,
-        'repeticoes': [{'frase': s, 'produtos': np_, 'ocorrencias': no, 'nivel': 'FIX' if no >= 4 else 'INFO'} for s, np_, no in merged],
+        'repeticoes': [{'frase': s, 'produtos': np_, 'ocorrencias': no, 'nivel': ('INFO' if (no < 4 or SPEC.search(s)) else 'FIX'), 'spec': bool(SPEC.search(s))} for s, np_, no in merged],
         'aberturas_shortDescription': [{'abertura': k, 'produtos': v, 'nivel': 'FIX' if v >= 4 else 'INFO'} for k, v in open_sd.items() if v >= 3],
         'aberturas_para_quem_e': [{'abertura': k, 'produtos': v, 'nivel': 'FIX' if v >= 4 else 'INFO'} for k, v in open_pq.items() if v >= 3],
         'fecho_preco': {'shortDescription': price_sd, 'resumo': price_res, 'nivel': 'FIX' if (price_sd > N/2 or price_res > N/2) else 'INFO'},
@@ -130,6 +132,8 @@ def main():
     fix = [r for r in out['repeticoes'] if r['nivel'] == 'FIX']; info = [r for r in out['repeticoes'] if r['nivel'] == 'INFO']
     print(f"## FIX (≥4 ocorrências): {len(fix)}")
     for r in fix: print(f"  {r['ocorrencias']}× em {r['produtos']} produtos: “{r['frase']}”")
+    spec_info = [r for r in info if r.get('spec')]
+    if spec_info: print(f"  (+{len(spec_info)} sequências com número/spec ficaram INFO mesmo ≥4: fato repetido não é frase-molde)")
     print(f"\n## INFO (2-3 ocorrências, deixa): {len(info)}")
     for r in info[:25]: print(f"  {r['ocorrencias']}× em {r['produtos']} produtos: “{r['frase']}”")
     if len(info) > 25: print(f"  … +{len(info)-25}")
