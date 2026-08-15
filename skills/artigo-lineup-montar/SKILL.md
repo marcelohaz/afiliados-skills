@@ -43,7 +43,7 @@ Detecção: se tem `/` seguido de kebab-case → artigo existente. Senão → ke
 
 A restrição vale pro contexto principal também, não só pro sub-agent. Chegou aqui, ainda não leu `.mdx` de produto nenhum.
 
-**Sub-agent Opus ISOLADO**, sem acesso ao catálogo nem a arquivo nenhum. Pergunta única: **como escolher {keyword}**, pedindo quatro coisas.
+**Sub-agent Opus ISOLADO**, sem acesso ao catálogo nem a arquivo nenhum, **em primeiro plano (`run_in_background: false`)** — o turno espera a resposta e segue; nunca "aguardo a consulta, te aviso" (foi assim que o lineup de 02/08 pulou a Etapa 3 e parou: a consulta "não voltou" porque o turno tinha acabado). Se a chamada falhar, refaça inline no mesmo turno. Pergunta única: **como escolher {keyword}**, pedindo quatro coisas.
 
 1. **Critérios ELIMINATÓRIOS e de QUALIDADE, separados.** Eliminatório tira o produto da conversa (não atende o recorte da keyword). Qualidade é o que faz um ser melhor que outro **entre os que passaram**.
 2. **Quais formatos/linhas convivem sob esse rótulo** e como diferenciar na prática. É a pergunta que mais rende quando a keyword tem número (litros, polegadas, ppm), porque o número costuma cobrir coisas fisicamente diferentes.
@@ -542,11 +542,13 @@ SEMÂNTICA    "0 = sem widget, não = zero venda"      →  ACEITO. Por isso ord
 
 O número continua válido como referência **relativa** dentro do mesmo catálogo. Não reabra o eixo frescor.
 
-### Etapa 6 — audit do lineup (SEMPRE, sub-agent ISOLADO)
+### Etapa 6 — audit do lineup (SEMPRE, sub-agent ISOLADO, em primeiro plano)
 
 **Roda ANTES do relatório, não depois.** Sem `--aplicar`, o relatório **é** a entrega — auditar depois dele é te mostrar algo que eu já sei que pode estar torto.
 
 ⚠️ **Não pode ser você mesmo.** Quem acabou de montar o lineup passou a etapa inteira se convencendo de cada escolha e vai carimbar. É o mesmo motivo pelo qual a Etapa 1 é isolada.
+
+Roda com `run_in_background: false`: o relatório só sai depois que ele voltar, no mesmo turno. Sub-agent que não voltou = refazer inline, não "Etapa 6 não rodou, quer que eu dispare depois?" (02/08).
 
 **O sub-agent RECEBE:** site · keyword · o lineup final (ASIN, ordem, subtítulo) · a lista de **excluídos com motivo e prova alegada** · a rubrica · acesso aos arquivos.
 **NÃO recebe:** o seu raciocínio, a sua narrativa, nem o relatório escrito. Lendo como você chegou ali, ele concorda com você.

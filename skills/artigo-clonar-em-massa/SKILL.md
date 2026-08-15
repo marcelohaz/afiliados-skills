@@ -22,6 +22,8 @@ melhorpretreino SOURCE=melhorpretreino-com/melhor-pre-treino TITLE="Os 11 melhor
      - `TITLE` passado → trata como **HINT, não literal**. Só usa se JÁ estiver no padrão do destino E divergir de todos os irmãos. Se for o título da FONTE/de um irmão ou estiver em outro padrão, **DESCARTA e regera** no padrão do destino, avisando no relatório.
   4. **HARD GATE** (rodado na **Etapa 0 passo 8**, ao decidir o título, ANTES do assembler; re-conferido na Etapa 6 antes do build): o título final (a) bate o regex do padrão-assinatura do destino E (b) é diferente do de TODOS os irmãos (normalizar caixa/acentos + comparar). Falhou qualquer um → regera. Causa-raiz dos 21 títulos idênticos (auditoria 2026-06-13) + reincidência via `TITLE` explícito (2026-06-14): a clone não validava o título contra o padrão do destino.
 - `HOME=` (opcional, default `no`): se `yes`, configura o artigo como home do site (homeReviewSlug).
+- `FILA=yes` (opcional): a `artigo-clonar-fila` passa isso quando invoca esta skill por item. Efeito único: **NÃO armar heartbeat próprio** (o da fila já cobre; há um só despertar pendente por sessão e o seu substituiria o dela). Ver "## Turno vivo".
+- `RETOMAR=yes` (opcional): esta invocação nasceu de um despertar do heartbeat. Efeito: pular o `clone-log init` (o log existe), ler o clone-log e retomar da primeira etapa não marcada. Ver "## Turno vivo".
 - `MODE=` (opcional, default `biblia-only`): `biblia-only` (texto 100% da bíblia, zero leakage do fonte) ou `hybrid` (top-3 da bíblia, 4+ pode considerar o fonte). **Default e recomendado: biblia-only.**
 
 Slug do artigo destino = mesmo slug do fonte (ex: `melhor-pre-treino`), salvo override futuro.
@@ -48,15 +50,38 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 - **NÃO faz deploy.** Para em "commitado + buildado + preview pronto". Deploy exige aprovação humana explícita (régua do projeto).
 - **NÃO trava** (`contentLocked` fica false/ausente) — editável após revisão.
 - **Full-auto, sem checkpoint humano no meio.** Cada etapa: gera → audita (auto) → auto-fix loop → segue. Humano só vê o final + relatório.
+- **O turno não termina antes do relatório final** (canon Marcelo 2026-08-15). "Full-auto" só é verdade enquanto o turno está vivo: sub-agents em primeiro plano, heartbeat armado quando standalone, progresso no clone-log e não no chat. Ver "## Turno vivo" — é a seção que faz as três linhas acima valerem na prática.
 - **Auto-fix com limite + não-bloqueia.** Cada gate que falha dispara correção e re-valida (máx 3 tentativas). Se não convergir, NÃO trava o pipeline — registra "⚠ não convergiu, revisar" no relatório final e segue. Nada ruim é escondido.
 - **Commit/push do conteúdo: sim** (fluxo de criação). Deploy: não.
 - **Português brasileiro editorial**, voz analítica.
 - **Idempotência defensiva:** se o artigo destino já existe e está `contentLocked: true`, ABORTAR (não sobrescrever trabalho travado). Se existe sem lock, perguntar/abortar conforme contexto.
 
+## Turno vivo — primeiro plano + heartbeat + chat só no fim (canon Marcelo 2026-08-15)
+
+**Por que existe (medido):** em ~80 clone-runs desde 15/07, 9 pararam no meio e só voltaram quando o Marcelo cutucou ("travou?", "fez os artigos?"). **Em nenhum dos 9 a skill mandava parar.** O turno do agente terminou por um destes motivos, e "seguir pra próxima etapa" só acontece com o turno vivo: (a) esperar sub-agent/skill em background escrevendo "aguardo… te aviso" (23/07 gate 1.4; 02/08 consulta cega do lineup); (b) mensagem de progresso no meio (fim de item, plano, checkpoint: 30/07 três vezes); (c) ramo de exceção que virou pergunta (pré-flight abortou; sub-agent não voltou; ambiguidade no gate 14/08); (d) cota estourada. As três regras abaixo atacam a mecânica, não a "vontade" (dizer "não pare" mais uma vez não segura: já está escrito 3× nesta skill).
+
+**Regra 1 — Primeiro plano, sempre.**
+- Sub-agents (Agent tool) rodam com `run_in_background: false`. **Paralelismo = várias chamadas `Agent(...)` no MESMO bloco de ferramentas** (todas bloqueiam até voltar; foi assim que os 10 reviews sempre deveriam rodar). NUNCA `run_in_background: true` para trabalho do pipeline.
+- Auditoras e skills-peça via Skill tool executam **inline, no turno**. O gate 1.4 e o 4.1 NUNCA viram sub-agent em background.
+- Se um resultado depende de processo externo (script longo, VPS), **bloqueie com espera ativa** dentro do turno (`until [ -f {arquivo} ]; do sleep 5; done` em Bash, ≤10 min por chamada, repita) — o turno não termina para esperar.
+- **Encerrar o turno para esperar é defeito**, não paciência. A frase "te aviso quando voltar" é proibida.
+
+**Regra 2 — Heartbeat próprio quando standalone (`ScheduleWakeup`).** Mesmo com a Regra 1, o turno pode morrer por cota, compactação ou erro. O heartbeat é o que faz a etapa seguinte começar sozinha depois disso.
+- **Passo 0 da Etapa 0** (antes do `clone-log init`): `ScheduleWakeup(1800, prompt="/artigo-clonar-em-massa {os MESMOS args desta invocação} RETOMAR=yes")`. 1800s, não 3600: com retomada por etapa o despertar espúrio é barato e o tempo morto máximo cai pela metade.
+- **⚠️ SE `FILA=yes`: NÃO arme.** Há **um único** despertar pendente por sessão e cada `ScheduleWakeup` substitui o anterior (medido na fila, 2026-07-30). Se você armar com o comando de 1 artigo, o prompt da fila some e ela não volta. A fila re-arma antes de cada item e cobre este.
+- **Ao acordar (`RETOMAR=yes`)**: (1) re-arme o heartbeat como PRIMEIRO ATO; (2) `git log -- sites/{target}/src/content/reviews/{slug}.mdx` + `bun scripts/clone-log.ts verify {target} {slug}`: se commitado e verify OK → `ScheduleWakeup(stop:true)` e relatório curto "já concluído"; (3) senão, leia o clone-log e retome da **primeira etapa não marcada**; reviews persistidos em `<scratchpad>/rev-{slug}.json` (Etapa 2.5) são reusados; se 1.1 está marcada e o arquivo não existe, refaça 1.1 (não confie no log sem o disco); (4) `clone-log init` NÃO roda de novo (apagaria o progresso).
+- **Circuit breaker** (igual à fila): guarde em `<scratchpad>/clone-{target}-{slug}-heartbeat.json` `{etapasMarcadas, streakSemProgresso}`; despertar sem etapa nova = streak++; **streak ≥ 3 (~1h30 parado) → `ScheduleWakeup(stop:true)`** + relatório dizendo em que etapa travou e o erro visto. Não tente para sempre.
+- **Stop obrigatório**: `ScheduleWakeup(stop:true)` **antes** do Relatório final (Etapa 6 concluída) e no aborto do pré-flight. Sem isso o despertar dispara depois do fim e reagenda à toa. Se o usuário mandar parar/pausar: `stop:true` na hora.
+
+**Regra 3 — Chat só no fim; ramo de exceção tem fallback, não pergunta.**
+- Progresso = `clone-log check` (arquivo). Nenhuma etapa termina com "mensagem de estado" no chat. Uma linha curta por etapa **é permitida só se a mesma mensagem continua com chamadas de ferramenta** — o que encerra o turno não é a linha, é ela ser a última coisa. Antes da Etapa 6 + relatório, **não existe mensagem final**.
+- Pré-flight abortou → `stop:true` + relatório de aborto (é o único fim antecipado legítimo). Sub-agent morreu/deu timeout → refaz **inline** no mesmo turno (nunca "pulei a etapa, quer que eu rode depois?"). Ambiguidade que a régua não resolve → decide pelo lado conservador, registra em skill-notes como `ambiguidade`, segue. Fix determinístico → aplica (canon 24/06). Decisão que a régua já resolveu (título pelo HARD GATE, desempate de peer) → vai no relatório final, não em turno próprio (incidente 12/08).
+
 ## Pipeline (full-auto, etapa por etapa)
 
 ### Etapa 0 — Pré-flight (auto; aborta cedo se faltar)
-0. **Abre o log de execução** (vale nos DOIS modos, individual e fila):
+0. **Arma o heartbeat** (só se NÃO for `FILA=yes`; ver "## Turno vivo" Regra 2): `ScheduleWakeup(1800, prompt="/artigo-clonar-em-massa {args} RETOMAR=yes")`. Se `RETOMAR=yes`, re-arme e **pule o `init` abaixo** (leia o clone-log e retome da primeira etapa não marcada).
+0b. **Abre o log de execução** (vale nos DOIS modos, individual e fila):
    ```bash
    bun scripts/clone-log.ts init {target} {slug} --source={source-site}/{slug}
    ```
@@ -78,7 +103,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 ### Etapa 1 — Reviews (gerar + auditar + auto-fix)
 1. **1.0 Lineup + shuffle**: ordem = top-3 do fonte FIXOS + posições 4+ embaralhadas com shuffle determinístico (seed = hash do target+source+slug; FNV-1a + xorshift32, igual `agent-edit.ts`). Badge **e `rating`** viajam COM o produto (mapeados por ASIN). Top-3 fixo garante "Melhor Escolha" na posição 1.
    - **GATE DE BADGE — TODO produto leva etiqueta (HARD GATE):** a convenção da rede é que **cada produto do comparativo tem badge** (ex.: melhor-impressora-hp e melhor-impressora-tanque-de-tinta = 7 produtos / 7 badges). Como o badge viaja por ASIN, **buraco no fonte vira buraco no destino** (causa-raiz 2026-06-14: o fonte sublimática tinha badge só nos 2 primeiros → o clone propagou L3250/L1250 SEM etiqueta nos 2 sites). Regra: os 2 primeiros mantêm os de ranking ("Melhor Escolha"/"Boa Alternativa"); **toda posição sem badge recebe um badge DESCRITIVO curto** derivado do ângulo/categoria do produto (ex.: "Multifuncional Adaptável", "Mais Barata", "Laser Monocromática", "Fotográfica", "Frente e Verso Automático", "Boa e Barata"). Badge é **texto livre**: renderiza com a cor padrão (`#1a56db`) via fallback de `getBadgeLabel`/`getBadgeColor`, **sem precisar registrar no `packages/ui/src/utils/amazon.ts`** (registro só pra cor custom, ex.: cinza de "Fora de Linha"). **AUTO-CHECK pós-lineup (OBRIGATÓRIO):** `nº de produtos com badge == nº de produtos`. Se faltar qualquer um, atribuir antes de seguir. Esse mesmo invariante é re-conferido na Etapa 4 (`artigo-auditar` critério `badge-ausente`).
-2. **1.1 Geração**: N sub-agents Opus paralelos (levas de até 10). Cada um gera os campos do review-no-artigo (subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos) — **biblia-only** (vê SÓ a bíblia do produto — não lê a página individual nem irmãos; ver canon 2026-08-13 na Etapa 1.3). NUNCA vê o texto do fonte (`biblia-only`).
+2. **1.1 Geração**: N sub-agents Opus paralelos (levas de até 10), **todos no MESMO bloco de chamadas `Agent(...)`, com `run_in_background: false`** — o turno fica bloqueado até a leva voltar e a 1.2 começa no mesmo turno (Regra 1 do "Turno vivo"). Cada um gera os campos do review-no-artigo (subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos) — **biblia-only** (vê SÓ a bíblia do produto — não lê a página individual nem irmãos; ver canon 2026-08-13 na Etapa 1.3). NUNCA vê o texto do fonte (`biblia-only`).
    - **⚠️ RÉGUA = FONTE ÚNICA, NÃO RESUMO (régua v1.54.0).** O prompt de cada sub-agent **manda LER `.claude/skills/artigo-review-criar/SKILL.md` INTEIRA + `docs/painel/_data/chavoes-por-nicho.json` (bloco do nicho + `_genericos`) e APLICAR a régua dela na geração** — NÃO um resumo destilado inline. Sub-agent do Agent tool não consegue invocar a Skill tool (skills rodam no loop principal, e aqui são N agents PARALELOS), por isso ele LÊ o arquivo canônico em vez de invocar. Isso elimina o DRIFT nos campos cuja régua de CRIAÇÃO vive na review-criar: "Para quem é" (variar abertura + cap "ocupa o papel ≤2", v1.19.0), shortDescription benefício-first (cap ≤250), voz-comprador (lista AMPLA categoria D), jargão dev (SKU/ASIN/datasheet), concordância PT-BR e capitalização, hard caps — passam a vir SEMPRE da skill viva, sem o resumo da clone ficar pra trás quando a `artigo-review-criar` evolui. **Subtitle**: a criação segue a review-criar (subtitle = ângulo, derivado do badge no modo biblia-only — v1.34.0); a normalização **híbrido fluindo / keyword-first cross-produto (crit.22) NÃO é da review-criar, é da Etapa 1.4** (`artigo-reviews-auditar`), que tem visão do conjunto. A clone só acrescenta os **deltas dela** (ver "Prompt do sub-agent de review" abaixo): biblia-only, superlativo-só-posição-1, retornar JSON.
    - Os 4 parágrafos do fullReview usam os rótulos canônicos LITERAIS (`Para quem é:` / `Por que gostamos:` / `Pontos de atenção:` / `Resumo:`), NUNCA parafraseados — o audit (regra `review`) exige os literais (canon Marcelo 2026-06-14).
 2.5. **PERSISTIR os reviews em disco ANTES de seguir (obrigatório).** Os 6 campos que os N sub-agents retornaram vivem só no contexto do orquestrador e **evaporam se o turno morrer**. Grave o dicionário `{asin: {subtitle, shortDescription, pros, cons, specs, fullReview}}` em `<scratchpad-da-sessão>/rev-{slug}.json` (o diretório de scratchpad informado no system prompt da sessão) **antes** do gate 1.2 — ou, na variante em que cada worker persiste sozinho, um `rev-{slug}/{ASIN}.json` por produto (**nunca** um arquivo compartilhado entre agentes paralelos — ver o aviso no fim do "Prompt do sub-agent"). Se estiver retomando um item interrompido e esse arquivo existir, **reuse-o em vez de re-disparar os sub-agents**. ⚠️ E só marque `clone-log check {t} {slug} 1.1` **depois** que o arquivo estiver gravado — marcar antes faz o log mentir, e a retomada pula pra 1.2 sem ter os dados. Sem esta etapa, uma queda no meio do item joga fora todos os sub-agents Opus já pagos.
@@ -90,7 +115,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
    - **O que segura o overlap baixo é a VARIAÇÃO ESTRUTURAL** (lineup embaralhado, badges distintos, ângulo por posição, guide por gaps), que continua toda em pé — não a obrigação de divergir. Prova inversa: páginas de produto do mesmo ASIN cross-site, que sempre operaram sem divergência forçada, convergem a 6,65% mediana / 22% máx. Artigos ficam em 0,5% porque a montagem varia.
    - **Sobreposição residual com irmãos intra-site é ACEITA por padrão** (mesma régua de `afiliados.regras.pagina-produto-sobreposicao-crosssite-ok`). Spec é spec, número factual repete. NÃO invente ângulo, NÃO contorça texto, NÃO leia a página individual pra "fugir" dela.
    - O que continua protegendo: gate **1.2** (mecânico), audit **1.4** (tone-clone/redundância pega frase concreta repetida entre os reviews DO artigo), e o **`verify-output --source`** na 6.3.6 (frase exata vs fonte). Medição completa em `docs/proposta-afrouxar-antidup.md`.
-5. **1.4 Audit cross-produto** (`artigo-reviews-auditar`): tone-clone, redundância, incoerência, claim-vs-lineup, buyer-refs, etc. → AUTO-APLICA as correções propostas → re-audita (máx 3x). Não-convergido → flag no relatório.
+5. **1.4 Audit cross-produto** (`artigo-reviews-auditar`, **inline via Skill tool, no turno — nunca como sub-agent em background**; foi aqui que o clone de 23/07 parou): tone-clone, redundância, incoerência, claim-vs-lineup, buyer-refs, etc. → AUTO-APLICA as correções propostas → re-audita (máx 3x). Não-convergido → flag no relatório.
 
 ### Etapa 2 — Guide (gerar + auditar + auto-fix)
 1. **2.1 INVOCAR DE VERDADE** `artigo-guia-escrever` **via Skill tool** (`Skill(skill="afiliados-skills:artigo-guia-escrever", args="{target}/{slug}")`), passando a estrutura de H2/H3 do guide do fonte como **mapa de tópicos** (referência estrutural, NÃO copia frases). Prosa do zero.
@@ -104,7 +129,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 2. **3.2 Confirmar que as skills rodaram** (NÃO re-listar a régua): só o ESSENCIAL ESTRUTURAL — intro gravada (2-3 parágrafos, §1 com keyword bold + §final com keywordPlural bold `. ✅`, exatos 2 bolds, sem heading/travessão/marca) e meta gravada (50-160 chars, single-line). Anti-clone intra-site da intro e benefício-first da meta são da skill invocada. Inlinou em vez de invocar → RE-INVOQUE. Falha → re-rodar a skill ou auto-fix → re-valida.
 
 ### Etapa 4 — Audit do artigo inteiro (auto-fix)
-1. **4.1** Invoca `artigo-auditar` (38 categorias editoriais + 4 estruturais hasIntro/hasGuide/productCount≥3/hasMeta + `readyToLock`). Issues críticos → auto-fix dirigido → re-audita (máx 3x). Não-convergido → flag.
+1. **4.1** Invoca `artigo-auditar` (**inline, no turno; nunca em background**) (38 categorias editoriais + 4 estruturais hasIntro/hasGuide/productCount≥3/hasMeta + `readyToLock`). Issues críticos → auto-fix dirigido → re-audita (máx 3x). Não-convergido → flag.
 
 ### Etapa 5 — Duplicata vs fonte: SÓ FRASE EXATA (canon Marcelo 2026-08-13)
 1. **5.1** Roda o comparador `compare-cross-site.py` **desta pasta**, pelo caminho literal, entre o artigo destino e o fonte: frases idênticas (≥6 palavras, HTML→espaço), near-dup (jaccard ≥0.8 e ≥0.6), overlap 5-grama e 8-grama, specs label↔value.
@@ -160,6 +185,8 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 5. **6.5 Verifica infra** (auto): build OK + dev serve a home + `/{slug}/` 200 + painel lista o artigo.
 
 ### Relatório final (o que o humano lê)
+
+**Antes de escrever o relatório: `ScheduleWakeup(stop:true)` se você armou heartbeat (standalone).** O relatório final é a ÚNICA mensagem que encerra o turno neste pipeline.
 - Artigo criado: site/slug, título, N produtos (ordem final + badges), home sim/não.
 - Por etapa: o que cada audit pegou, o que foi auto-corrigido, **o que NÃO convergiu** (⚠ revisar).
 - Comparação vs fonte: frases idênticas, near-dup, overlap, specs — antes e depois da reescrita.
@@ -274,6 +301,8 @@ bun scripts/clone-log.ts note {target} {slug} sugestao <etapa|geral> "o que na s
 `compare-cross-site.py` (nesta pasta): recebe dois `.mdx` de artigo (destino + fonte), extrai texto (products[].subtitle/shortDescription/pros/cons/fullReview + guideContent + body intro), strip HTML→espaço, e reporta: frases idênticas (≥6 palavras), pares near-dup (jaccard ≥0.8 e ≥0.6), overlap 5/8-grama, specs label↔value divergentes. Saída estruturada pra a Etapa 5 decidir o que reescrever.
 
 ## Armadilhas (todas já mordidas neste projeto — embutir)
+
+0. **Encerrar o turno no meio** (9 casos medidos em ~80 runs, 15/07→15/08): esperar sub-agent em background com "te aviso", mensagem de progresso, ramo de exceção virando pergunta. Ver "## Turno vivo": primeiro plano + heartbeat quando standalone + chat só no fim.
 
 1. **Dev server stale**: criar conteúdo com o dev rodando deixa `getStaticPaths` stale → rota nova dá 404 no preview. SEMPRE restart do dev do target no fim (Etapa 6.4). HMR/touch NÃO resolve (data-store cache).
 2. **gen.ts não auto-regenera** em commit cru de .mdx → painel mostra "0 artigos/páginas". SEMPRE `bun docs/painel/gen.ts` no fim.

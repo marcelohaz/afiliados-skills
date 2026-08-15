@@ -13,6 +13,8 @@ Aceita 2 formatos no $ARGUMENTS, com flag opcional `--audit`:
 **B) Site + lista de ASINs** (modo "subset"):
 - `melhorpretreino/B07XYZ123A,B08ABC456B` → só esses ASINs (filtra pelos slugs/asins correspondentes)
 
+**Flag opcional `RETOMAR=yes`**: invocação nascida do heartbeat (ver Invariantes → Turno vivo). Re-arme, re-rode o pré-flight e dispare só os stubs ainda vazios; se não sobrou nenhum, `ScheduleWakeup(stop:true)` + relatório curto.
+
 **Flag opcional `--audit`** (default OFF — opt-in pra qualidade extra):
 - `melhorpretreino --audit` → após criar páginas, roda `pagina-produto-auditar` em paralelo pra cada uma
 - ⚠️ **`--audit` não é mais só relatório.** Desde 2026-08-06 ele **conserta o erro de FATO** que
@@ -43,6 +45,7 @@ Detecção:
 - **Sub-agents NÃO fazem git operations.** Eles só fazem `Read` (bíblia/config/.mdx/artigos), `Edit/Write` no `.mdx` do produto e backup. **Skill mãe controla TUDO de git** (1 commit lote no fim, 1 push, 1 VPS pull).
 - **Detecção rigorosa de stub vazio.** Só processa stubs 100% vazios (marker no body + ausência de TODOS os 6 campos editoriais no frontmatter). Stub parcial NÃO entra no batch — protege trabalho manual em andamento.
 - **Pre-flight bíblias é obrigatório.** Skill aborta antes do paralelo se alguma bíblia faltar `pontosFortes` ou `angulosConversao` — senão sub-agent vai produzir página fraca em silêncio.
+- **Turno vivo (canon Marcelo 2026-08-15).** O lote só anda enquanto o turno está vivo. (1) Sub-agents SEMPRE com `run_in_background: false`, N chamadas `Agent(...)` no MESMO bloco (bloqueiam até voltar). (2) **O plano e a primeira leva de `Agent(...)` vão na MESMA mensagem** — imprimir o plano e parar foi o que travou o lote de 30/07 04:27 (o plano não pergunta nada, mas ser a última coisa da mensagem encerra o turno). (3) Heartbeat: `ScheduleWakeup(1800, prompt="/pagina-produto-criar-em-massa {os MESMOS args} RETOMAR=yes")` como passo 0; ao acordar, re-arme, re-rode o pré-flight (ele é idempotente: só stubs ainda vazios entram) e dispare só o que falta; `ScheduleWakeup(stop:true)` antes do relatório final e no aborto do pré-flight; circuit breaker: 3 despertares sem página nova → `stop` + relatório. (4) Pré-flight sem stub vazio = fim legítimo com relatório de 3 linhas, **não** lista de opções esperando resposta (30/07 05:01). (5) Sub-agent que morreu → refaz inline no mesmo turno.
 - **Plano automático (SEM confirmação S/N).** Mostra lista de stubs encontrados + o que pula + tempo estimado, e **dispara direto** — não pergunta, não espera "S/N". A barreira de segurança é o pré-flight (aborta em site inexistente, zero stubs vazios, ou bíblia incompleta), não um beat humano. Decisão do Marcelo 2026-07-24: o pré-flight já protege qualidade; a confirmação era só atrito. O plano continua sendo IMPRESSO (transparência), mas é notificação, não pergunta.
 - **Limite de paralelismo: 10 sub-agents simultâneos.** Acima disso, batch é dividido em levas (10 + 10 + ...). Throttling do harness pode degradar acima de 10.
 - **Erro em 1 não quebra batch.** Sub-agent que falha retorna `{ok: false, error: ...}`. Skill mãe agrega e reporta no fim. Outros sub-agents continuam.
@@ -131,7 +134,7 @@ Detecção:
    - Se bíblia tem `pontosFortes=[]` ou `angulosConversao=[]`: adicionar à lista de "curadoria incompleta"
    - Se houver QUALQUER problema: **abortar batch** com lista dos ASINs e instrução pra rodar `biblia-preencher` antes
 
-5. **Imprimir plano e PROSSEGUIR (sem confirmação)**:
+5. **Imprimir plano e PROSSEGUIR (sem confirmação) — na MESMA mensagem em que dispara a 1ª leva** (Turno vivo):
 
    Chegou aqui = o pré-flight (passos 2-4) passou (site existe, há stubs vazios, bíblias completas). Imprime o plano como **notificação de transparência** e dispara os sub-agents **direto**, sem perguntar `S/N`:
 
@@ -158,7 +161,7 @@ Detecção:
 
 6. **Read affiliateTag do site** (uma única vez, passa pros sub-agents): `Read sites/{site}/src/config.ts` → extrai via regex `/affiliateTag:\s*['"]([^'"]*)['"]/`.
 
-7. **Dispara sub-agents em paralelo**:
+7. **Dispara sub-agents em paralelo** (primeiro plano, `run_in_background: false`; a leva inteira num só bloco de chamadas):
    - Se `stubsVazios.length <= 10`: 1 leva (todos paralelos)
    - Se `stubsVazios.length > 10`: divide em levas de 10 (sequencial entre levas, paralelo dentro)
 
@@ -593,6 +596,9 @@ Stub com `subtitle` preenchido mas resto vazio é trabalho manual em andamento. 
 
 ### 4. Commit por sub-agent (race condition)
 Sub-agents simultâneos fazendo `git add + commit + push` = race condition garantida. Skill mãe controla TODO o git. Sub-agents só escrevem `.mdx`.
+
+### 4b. Imprimir o plano e encerrar o turno / esperar sub-agent em background (canon 2026-08-15)
+O plano não pergunta nada, mas se for a última coisa da mensagem o turno acaba e nada dispara (30/07 04:27, "travou?"). Plano + primeira leva de `Agent(...)` na mesma mensagem; sub-agents sem background; heartbeat armado no passo 0. Ver Invariantes → Turno vivo.
 
 ### 5. Pedir confirmação `S/N` (atrito desnecessário)
 **NÃO pergunte `S/N` antes de disparar** (mudança 2026-07-24). A régua antiga exigia confirmação; hoje a barreira é o pré-flight (passos 2-4), que aborta em site inexistente, zero stubs vazios ou bíblia incompleta. Se o pré-flight passou, imprime o plano (transparência) e dispara direto. Perguntar de novo só duplica o beat que o pré-flight já dá. Ambiguidade real (slug/ASIN que não casa com stub) é abort do passo 2/3, não pedido de confirmação.
