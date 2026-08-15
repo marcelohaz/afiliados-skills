@@ -207,7 +207,7 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
 2. **Rewrite do guide.** É cirúrgico por trecho; nunca reescreva o guide inteiro (isso é `artigo-guia-escrever`).
 3. **parseYaml/stringify no frontmatter.** Bagunça o block scalar `|`. Sempre `Edit` no trecho.
 4. **Forçar link novo decorativo.** Só proponha se o spot REALMENTE toca no tema do destino. Melhor 0 honestas que 5 forçadas.
-5. **Aplicar sem aprovar.** Esta skill é propor→aprovar. Imprime os diffs e espera.
+5. **Aplicar JULGAMENTO sem aprovar.** O mecânico (âncora=keyword, link quebrado, `/{homeReviewSlug}/`→`/`) aplica direto (canon 24/07); links novos e placement (julgamento) imprimem os diffs e esperam.
 6. **Esquecer `--no-verify`.** O hook Fase J bloqueia `reviews/*.mdx`.
 7. **Editar artigo travado.** `contentLocked: true` → pular + avisar.
 8. **Achar que o painel não atualiza.** Atualiza: `/admin/update` roda `gen.ts` full → `linkagem-{site}.html` regenera. Não precisa de passo extra.

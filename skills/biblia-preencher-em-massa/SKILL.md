@@ -61,7 +61,7 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 0.3. **Carregar cada bíblia** (`docs/biblias-v2/<ASIN>.json`). Ausente local (mesmo após sync) → pular + listar.
 
 0.4. **Classificar cada uma** (decide quem entra no lote):
-   - **Já preenchida** (`angulosConversao` + `pontosFortes` + `pontosFracos` todos não-vazios = coreDone) → **PULA** (idempotência) — **EXCETO no modo `--enriquecer`**, cujo alvo são justamente as coreDone: aí a chave é `imagensVerificadasEm` — ausente, ou anterior à última mudança da lista de imagens (`conteudoBrutoFabricanteImagens`/`doFabricanteImagens`) → **ENTRA**; presente e atual → PULA. Sem esta regra o lote enriquecer não processa ninguém (bug até 15/08).
+   - **Já preenchida** (`angulosConversao` + `pontosFortes` + `pontosFracos` todos não-vazios = coreDone) → **PULA** (idempotência) — **EXCETO no modo `--enriquecer`**, cujo alvo são justamente as coreDone: aí a chave é `imagensVerificadasEm` — **ausente → ENTRA; presente → PULA** (a lista de imagens não tem timestamp próprio; se você sabe que ela mudou depois do carimbo, passe os ASINs explicitamente pra forçar). Sem esta regra o lote enriquecer não processa ninguém (bug até 15/08).
    - **Sem dados brutos** (todos vazios: `sobreEsteItem`/`doFabricante`/`specsAmazon`/`opinioesCompradores`/`descricaoProduto`) → **EXCLUI** + lista "sem matéria-prima, capturar antes".
    - **Contaminada** — roda `bun scripts/check-contamination.ts <ASIN>`; se `hasContamination: true` com hard issue (`cross-brand-mention`) → **EXCLUI** + lista "informações erradas, corrigir à mão (biblia-preencher individual)".
 

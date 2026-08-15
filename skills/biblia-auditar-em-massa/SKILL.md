@@ -63,7 +63,7 @@ Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` n
 - **`auditFlags` gravado junto do `lastAuditedAt`** (Etapa 3.6): avisos semânticos `{type,label}` pro chip do painel (`'wrong-info'`/`'off-niche'`/`'review'`) — vêm dos `report_C` que sobraram. **Esvaziar (`[]`) quando limpo** é obrigatório (chip preso = bug). É o que surfaça contaminação cross-produto que o detector mecânico não pega.
 - **NUNCA compartilha contexto entre bíblias** nem faz passada comparativa.
 - **Só audita PREENCHIDA** (coreDone). Pendente → pula ("preencha primeiro"). Contaminada-hard → exclui (corrigir à mão na individual). Sem-dados-brutos → exclui.
-- **Sync R2**: pull no começo; push no fim SÓ se aplicou algum fix.
+- **Sync R2**: pull no começo; push no fim SEMPRE (toda bíblia auditada leva carimbo `lastAuditedAt` + `auditFlags`, mesmo read-only — Etapa 5).
 - **NÃO faz deploy.**
 - **Cap de paralelismo: 10 sub-agents.** Acima → levas.
 - **Nunca inventa achado.** Categoria sem problema = "nenhum". Toda flag/conserto precisa de evidência (trecho literal < 15 palavras).
@@ -158,7 +158,7 @@ Pra **cada** bíblia auditada (consertada ou não), no MESMO write: backup (se a
 ## Armadilhas (embutir)
 
 1. **Bíblia só no R2**: sync 0.1 resolve.
-2. **Clobber do lastModified**: bump via `toISOString()` SÓ quando aplicou. Sem isso o `--push` vira `recebido`.
+2. **Clobber do lastModified**: bump via `toISOString()` em TODA bíblia auditada (o carimbo é sempre uma escrita); sem o bump o `--push` vira `recebido`.
 3. **NÃO comparar bíblias**: isolamento é a defesa nº1.
 4. **Falso-positivo do grep**: "EAN" em `dadosInconsistentes` (campo interno) NÃO é problema; "rita lobo" em 2 produtos da mesma marca NÃO é contaminação. **A regex de duplicação contígua da Etapa 1 (`([a-zA-ZÀ-ÿ\s]{8,40})\1`) casa através de fronteira de palavra e dá falso-positivo em expressão idiomática:** `"guiada passo a passo"` casa como `"a passo "` + `"a passo "` (o "a" final de *guiada* mais *passo a passo*). Antes de "consertar" duplicação, **imprima o trecho e leia** — se as duas cópias começam no meio de uma palavra, é ruído da regex, não do dado. Confirmar contexto antes de aplicar; na dúvida, (C).
 5. **Re-auditoria é obrigatória**: nunca dar (B) por aplicado sem o passo 3.5. É ela que substitui sua aprovação.

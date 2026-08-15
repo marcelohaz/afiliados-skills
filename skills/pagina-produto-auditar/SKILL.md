@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 22 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, palavra fora do sentido/verbo-curinga com sujeito-coisa, frase-sacada, jargão financeiro, tiques com teto — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
+description: Audita página individual de produto (read-only para julgamento; aplica direto só o mecânico — travessão, `;`, concordância —, régua comum das auditoras), cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 22 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, palavra fora do sentido/verbo-curinga com sujeito-coisa, frase-sacada, jargão financeiro, tiques com teto — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
 ---
 
 ## Parse de input
@@ -25,10 +25,8 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 ## Invariantes
 
-- **Nunca edite o `.mdx`.** Seu output é um relatório em `.audits/products/`. O humano decide o que fazer.
-  ⚠️ **Exceção única:** rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, a
-  skill-mãe pode autorizar o conserto do que passa no **TESTE DA FRASE NOVA** abaixo. Fora
-  desse contexto, e sempre para `warn`, esta skill continua read-only.
+- **Não edite julgamento no `.mdx`.** Seu output é um relatório em `.audits/products/`; o humano decide o que muda texto/sentido/fato.
+  ⚠️ **Duas exceções:** (1) o **mecânico** (travessão, `;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI`) **aplica direto** com backup + Edit + commit, marcado ✅ CORRIGIDO — régua comum das auditoras (`docs/PADROES.md`, canon 2026-08-15); (2) rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, a skill-mãe pode autorizar o conserto de **fato** que passa no **TESTE DA FRASE NOVA** abaixo. Fora disso, e sempre para `warn` de julgamento, esta skill é read-only.
 - **Nunca invente findings.** Se não encontrou problema numa categoria, diga "nenhum". Audit vazio é melhor que audit inventado.
 - **Toda afirmação precisa de evidência.** Cite trecho literal do `.mdx` (blockquote < 15 palavras) ou da bíblia.
 - **Respeite as diretrizes** do site e da bíblia.

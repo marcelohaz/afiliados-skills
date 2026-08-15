@@ -86,6 +86,7 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
    - Editar os campos curados (óbvios + aprovados) **e o naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (script que lê o JSON, muta os campos, escreve `JSON.stringify(b, null, 2) + '\n'`). NUNCA tocar nos campos brutos.
    - **Bumpar `b.lastModified = new Date().toISOString()`** (ver invariante — sem isso o push é clobberado). Manter `lastAuthor`.
 
+9.5. **Reescrever o `-last.md` e recommitar depois do apply** (canon 2026-08-15): o relatório do passo 4 foi escrito ANTES dos consertos; sem este passo o `-last.md` no git (o que o painel exibe) não tem os "✅ CORRIGIDO" nem os diffs aplicados. Regrave os dois arquivos do passo 4 com o estado final e repita o commit do passo 5.
 10. **Sync R2 + confirmar (SEMPRE roda)**: `bun scripts/sync-biblias-r2.ts --apply --push`. Roda mesmo em audit read-only — a Etapa 4.5 sempre grava `lastAuditedAt` no JSON, então há sempre algo pra subir. Conferir que a linha do ASIN é `enviado` (local mais novo) e não `recebido` (clobber). Re-rodar o sync: deve dar `0 enviadas, 0 recebidas` (steady-state = local==R2). Reportar o que foi aplicado + status do push.
 
 ## As 5 categorias
