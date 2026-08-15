@@ -31,7 +31,7 @@ Detecção: se tem `/` seguido de kebab-case → artigo existente. Senão → ke
 - **Classificar tipo pela tabela `specs` da PÁGINA, nunca por regex no nome.** O campo `Tipo` responde direto. Ver Armadilha 1 — errei duas vezes no mesmo dia e a página tinha a resposta nas duas.
 - **Página é fonte principal, bíblia é apoio.** Fato e classificação saem da página; vendas, marca, disponibilidade e `pontosFracos` saem da bíblia, porque a página não tem os três primeiros e **pode perder o quarto**.
 - **`comprasMesPassado = 0` ORDENA, não elimina** (corrigido 2026-08-02). Não é "vendeu zero": é "a Amazon não exibe o widget", threshold estimado em **>50/mês** ([[afiliados.semantica.compras-mes-passado-0]]). É **ausência de sinal**, não sinal negativo — e a régua tratava como corte duro na linha seguinte à que citava essa memória. Agora o `0` manda o produto pro **fim da fila**, e quem corta é o teto de tamanho.
-- **Todo item do relatório carrega o ASIN**, e nome/preço saem LIDOS do `.mdx`, nunca de memória. Ver Armadilha 4.
+- **Todo item do relatório carrega o ASIN**; o **nome** sai LIDO do `.mdx` (nunca de memória) e o **preço** sai de `snapshot.precoBRL` da bíblia (dado datado; o `schemaPrice` da página é arredondamento editorial) — se divergirem >20%, reporte os dois. Ver Armadilha 4 e a regra de preço na Etapa 4.
 - **Não faz deploy, não escreve `.mdx` de review.** Com `--aplicar` ela só chama os endpoints do painel, que são os mesmos dos botões da UI.
 - **Terminologia:** "lineup" é jargão técnico interno (o `products[]` do frontmatter). No texto editorial dos `.mdx` a palavra é BANIDA — a `artigo-reviews-auditar` flagra como crítico. Aqui é a régua descrevendo a si mesma, igual nos nomes de critério.
 
@@ -73,7 +73,11 @@ Os de qualidade **não ordenam o lineup hoje**. Ordenar por eles exige resolver 
 
 ### Etapa 2 — universo e pré-flight, nesta ordem interna
 
-**2a. Listar (barato).** O universo de entrada é a **lista de páginas de produto do `categorySlug` alvo**, não um filtro sobre bíblias. Só ASIN e nome por enquanto.
+**2a. Listar (barato).** O universo de entrada é a **lista de páginas de produto do `categorySlug` alvo**, não um filtro sobre bíblias. Só ASIN e nome por enquanto. Como chegar lá: o `categorySlug` alvo é o da categoria do site que cobre a keyword (`sites/{site}/src/config.ts` → `categoryDescriptions`/taxonomia; em dúvida, o mais específico que contém a keyword); depois
+```bash
+grep -l 'categorySlug: "{categorySlug}"' sites/{site}/src/content/products/*.mdx   # universo
+grep -L 'categorySlug:' sites/{site}/src/content/products/*.mdx                    # páginas SEM categoria (ver aviso abaixo)
+```
 
 Essa direção é obrigatória e foi aprendida errando: na 3ª execução o escopo bíblia-first devolveu **13 de 23** produtos, porque exige adivinhar um filtro de busca. A lista de páginas é conjunto fechado e não depende de palpite.
 
@@ -529,7 +533,7 @@ sem eixo e sem perfil exclusivo                     →  candidato a sair, com o
 
 #### Transversal — onde a sequência briga
 
-**Onde a sequência empata, REPORTE.** Os passos 5 e 6 podem colidir. Caso real: o lineup fechou com 12 produtos e o ideal é 9 ou 11; cortar pelo tamanho tiraria a `PartyBox Ultimate` (100/mês), justamente o topo de linha e o único eixo "evento grande" da lista. Não existe precedência entre "tamanho ideal" e "eixo distinto", e inventar uma seria pior que reportar.
+**Onde a sequência empata, REPORTE.** Os passos 5 e 6 podem colidir. Caso real: o lineup fechou com 12 produtos e o teto é 11; cortar pelo tamanho tiraria a `PartyBox Ultimate` (100/mês), justamente o topo de linha e o único eixo "evento grande" da lista. Não existe precedência entre "tamanho ideal" e "eixo distinto", e inventar uma seria pior que reportar.
 
 **Sobre o `comprasMesPassado = 0`, dois argumentos distintos e só um caiu:**
 
@@ -566,7 +570,7 @@ Roda com `run_in_background: false`: o relatório só sai depois que ele voltar,
 2  todo gancho tem lastro E não contradiz o próprio lead?
    "12 Litros ... com cesto de 5 litros" é contradição interna, não falta de lastro.
 
-3  nome e preço batem com o .mdx, caractere a caractere?
+3  nome bate com o .mdx caractere a caractere? preço bate com snapshot.precoBRL da bíblia (ou divergência reportada)?
 
 4  sobrou par de gêmeo / sucessão / rebadge não resolvido?
    prefixo de ASIN compartilhado · specs iguais em ≥4 dimensões · mesmo defeito.
@@ -593,7 +597,7 @@ Os dois são casos reais de 2026-08-02, e os dois eu reportei como buraco da ré
 
 | tipo | exemplos | conduta |
 |---|---|---|
-| **erro objetivo** | nome/preço divergente do `.mdx` · >13 palavras · dois-pontos · gêmeo não resolvido · gancho sem lastro | **conserte antes de mostrar** |
+| **erro objetivo** | nome divergente do `.mdx` / preço divergente da bíblia sem reporte · >13 palavras · dois-pontos · gêmeo não resolvido · gancho sem lastro | **conserte antes de mostrar** |
 | **julgamento** | exclusão sem prova citável · problema que some ao desfazer exclusão · gancho que contradiz o lead | **vai pro relatório, o usuário decide** |
 
 ⚠️ **Não abafe.** Os achados de julgamento entram no relatório **com o texto do sub-agent**, não com a sua paráfrase. Você é parte interessada.
@@ -681,11 +685,16 @@ Este bloco é o que **alimenta a regra de tamanho do passo 6**. Sem ele, "sem ei
 Mesmos endpoints dos botões do painel — `site-detail.js:3239` e `editor-artigo.html:4167`. O resultado é indistinguível de ter feito na mão.
 
 ```bash
-POST /agent/site/{site}/make-reviews-stub
-     { keyword, slug, products: [{asin, subtitle}] }     # 1-3 produtos
+# host + auth: os mesmos do scripts/painel-vps-pull.sh — PAINEL_URL (default https://painel.melhorserum.com.br)
+# e Basic Auth com PAINEL_USER/PAINEL_PASS lidos de .env.painel-skills (gitignored, cada pessoa tem o seu)
+source .env.painel-skills; PAINEL_URL="${PAINEL_URL:-https://painel.melhorserum.com.br}"
+curl -sS -u "$PAINEL_USER:$PAINEL_PASS" -H 'content-type: application/json' \
+  -X POST "$PAINEL_URL/agent/site/{site}/make-reviews-stub" \
+  -d '{"keyword":"...","slug":"...","products":[{"asin":"...","subtitle":"..."}]}'      # 1-3 produtos
 
-POST /agent/article/{site}/{slug}/add-products-stub
-     { products: [{asin, subtitle}] }                    # 1-3 por chamada
+curl -sS -u "$PAINEL_USER:$PAINEL_PASS" -H 'content-type: application/json' \
+  -X POST "$PAINEL_URL/agent/article/{site}/{slug}/add-products-stub" \
+  -d '{"products":[{"asin":"...","subtitle":"..."}]}'                                     # 1-3 por chamada, 5 s entre chamadas
 ```
 
 `subtitle` é aceito pelos DOIS, apesar do comentário do código só documentar `{asin, badge?}` — conferido na implementação.
@@ -800,7 +809,7 @@ O caso que exercita os que faltam é o **`melhor aspirador de pó` do melhoraspi
 
 Declarados de propósito — hoje são resolvidos por julgamento e reportados, o que é ruim de escala mas não produz erro silencioso.
 
-- **Tamanho não tem critério de decisão.** "Mínimo 3, ideal 5/9/11, média ~9" descreve a rede, não escolhe. Na 3ª execução parei em 8 porque foi quem sobrou.
+- ~~Tamanho não tem critério de decisão~~ — resolvido em 02/08: **TETO 11, PISO 4** (Etapa 4) + cobertura de tipos; abaixo de 4 o recorte não sustenta artigo.
 - **Catálogo pobre não tem tratamento.** Escada de preço quebrada é reportada, mas nada diz se o lineup sai assim ou se aquilo é sinal de garimpar mais produto antes.
 - **Rubrica × catálogo** (acima).
 

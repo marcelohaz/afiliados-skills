@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 21 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, palavra fora do sentido/verbo-curinga com sujeito-coisa, frase-sacada, jargão financeiro, tiques com teto — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
+description: Audita página individual de produto read-only, cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 22 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, palavra fora do sentido/verbo-curinga com sujeito-coisa, frase-sacada, jargão financeiro, tiques com teto — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
 ---
 
 ## Parse de input
@@ -54,8 +54,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 4. **Read bíblia**: `Read docs/biblias-v2/{asin}.json`. Sem bíblia, audit não tem como cruzar claims — abortar com mensagem.
 
 5. **Read affiliateTag**: `Read sites/{site}/src/config.ts`. Determinar regra:
-   - Tag preenchida: links Amazon devem ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
-   - Tag vazia: links Amazon devem ser **crus** sem `?tag=...`
+   - Serve só pra detectar tag **diferente** (`?tag=X` ≠ config, `AFFILIATE_TAG_AQUI`). URL crua `/dp/{ASIN}` é OK: o build injeta a tag (`injectAffiliateTag`).
 
 6. **Read reviews que citam o ASIN** (anti-duplicate): `Grep` em `sites/{site}/src/content/reviews/*.mdx` por `asin:.*{asin}`. Se houver, leia o `fullReview` do produto-no-artigo pra comparar com o `fullReview` da página individual — flag se for muito parecido (parágrafo inteiro idêntico, frases-chave repetidas).
 
@@ -97,9 +96,10 @@ Afirmação em qualquer campo (subtitle, shortDescription, pros, cons, specs, fu
 Exemplo flag: `fullReview` diz "velocidade de 12 ppm" mas bíblia diz "10 ppm".
 
 ### 2. `tag-affiliate`
-Links Amazon no `fullReview` que violam a regra do site:
-- Config com tag → links devem ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
-- Config vazia → links devem ser **crus** sem `?tag=...`
+Links Amazon no `fullReview` com tag **diferente** da do config (canon 2026-08-15):
+- URL crua `/dp/{ASIN}` = OK (o build injeta `siteConfig.affiliateTag` — `injectAffiliateTag`, ver passo 6.7 acima).
+- Flag: `?tag=X` com X ≠ config, `AFFILIATE_TAG_AQUI`, tag de outro site.
+- Config sem tag em site live: defeito do config, não do link.
 
 ### 3. `tone-comprador`
 Texto cita 'compradores', 'reviews', 'avaliações', 'estrelas', 'usuários' (proibido — voz é analítica).
@@ -488,11 +488,12 @@ Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já 
   cliente? Fix: sujeito concreto + verbo literal, "para". Repetir a palavra exata
   NÃO é defeito. Verbo inventado/gíria ("se reconserta", "no batente") continua
   aqui. Máximo 1 coloquialismo leve por página.
-- **20e — tiques com teto por PÁGINA** (🟡, vale em todo nicho): "resolve" ≤2 ·
-  "pede/pedem" ≤2 · "entrega" ≤2 · "dá conta" ≤1 · "segura" ≤1 · "vira" ≤2 ·
-  "de verdade" ≤1 · "com folga"/"de sobra" ≤1 · "o grande ponto" 0 · "Ideal pra
-  quem" 0 · "Destaque para" 0 · "preço médio acessível" 0 · "é a escolha de quem"/
-  "faz sentido pra quem" ≤1. Some com `naturalidade_max` do nicho se houver.
+- **20e — tiques com teto por PÁGINA** (🟡, vale em todo nicho): tetos = **metade** dos de
+  `_genericos.naturalidade_max` do `chavoes-por-nicho.json` (regra escrita no `_doc` da chave:
+  "página de produto: metade"; ex.: resolve 3→1,5 = arredonda pra 1 acima de 1,5), e
+  `_genericos.naturalidade_banidos` = 0 ("Ideal pra quem", "Destaque para", "preço médio
+  acessível"…). Some com o bloco do nicho se o site está em `_sites_aplicaveis`. Não copie a
+  lista pra cá: cite a chave (a lista que vivia aqui já divergia do JSON).
 - **20d — jargão financeiro/burocrático** (🟡): "desembolso" → "preço" ·
   "reprografia" → "cópia e digitalização" · "aquisição" → "compra".
 
@@ -592,8 +593,10 @@ APLICA                                      REPORTA
 Os cinco da direita são exatamente aqueles em que a redação do substituto foi **escolha
 editorial**, e é isso que precisa de olho humano.
 
-⚠️ **Warn NUNCA aplica**, mesmo parecendo óbvio. Frase parecida com a página irmã, coloquialismo
-acima do teto, redundância entre bullet e parágrafo: só relatório.
+⚠️ **Warn de JULGAMENTO nunca aplica** (frase parecida com a página irmã, coloquialismo acima do
+teto, redundância entre bullet e parágrafo: só relatório). **Warn MECÂNICO aplica direto** — travessão,
+`;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI` (régua comum das auditoras,
+`docs/PADROES.md`, canon 2026-08-15; antes esta skill era a única que deixava até o mecânico só no relatório).
 
 ### Quando a raiz é a BÍBLIA, não a página
 

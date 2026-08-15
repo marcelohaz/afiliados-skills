@@ -32,7 +32,7 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 
 - **Nunca toque em nenhum outro campo do .mdx.** Só a linha `description: "..."` do frontmatter. Title, listHeading, intro, products, guideContent — tudo intacto.
 - **50 a 160 chars.** Google trunca em ~155 chars, toleramos até 160 antes de cortar. Abaixo de 50 chars é texto preguiçoso. Hard limit.
-- **1 sentença completa** — sem reticências, sem cortes meio do pensamento.
+- **1 a 2 sentenças completas** (pergunta + resposta é o padrão dos exemplos bons) — sem reticências, sem cortes meio do pensamento.
 - **Keyword principal nos primeiros 60 chars.** Extrai do `title` (H1) ou do campo `keyword` se existir no frontmatter. Ex: title "Melhor Impressora Custo Benefício:" → keyword "melhor impressora custo benefício" → primeiros 60 chars da description devem incluir isso.
 - **Linguagem direta, factual.** Sem superlativos sem evidência ("a melhor opção", "incomparável", "imbatível").
 - **Sem travessão (—).** Use vírgula ou ponto.
@@ -87,7 +87,7 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
    - Sem aspa dupla interna `"` (escapa pra `\"` ou parafraseia)
    - Sem `\n` ou quebras de linha
    - Keyword aparece nos primeiros 60 chars
-   - 1 sentença completa terminando em `.`
+   - 1 a 2 sentenças completas terminando em `.`
 
 9. **Backup** ANTES de sobrescrever (paridade com pattern do painel):
    ```bash
@@ -154,7 +154,7 @@ A meta vende o **GANHO do leitor** (o que ele economiza, resolve ou consegue), n
 
 - Pergunta + resposta: `Qual a melhor {keyword} em {ano}? {benefício/ganho concreto}.`
 - Dor → solução: `{Dor do leitor}? {Keyword}: {como resolve}.`
-- Benefício + alcance: `As melhores {keywordPlural} de {ano} pra {objetivo}, de {X} a {Y}.`
+- Benefício + alcance: `As melhores {keywordPlural} de {ano} para {objetivo}, de {X} a {Y}.`
 
 Exemplos bons (benefício-first):
 
@@ -194,7 +194,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 | `o fórmula`, `o dose`, `o composição` | `a fórmula`, `a dose`, `a composição` |
 | `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
 | `disponíveis no em 2026` | `disponíveis em 2026` |
-| `Pra a maioria/primeira` | `Pra` ou `Para a` |
+| `Pra a maioria/primeira` | `Para a maioria/primeira` |
 
 ### Linguagem artificial banida (calques de inglês, jargão pseudo-técnico)
 
@@ -259,13 +259,8 @@ O user precisa saber se ficou perto do limite (problemático em 155-160). Sempre
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
-```
-docs/painel/_data/agent-prompts.json:rewrite_meta_description  (SOURCE OF TRUTH editorial)
-    ├── handler do painel (POST /agent/article/:site/:slug/rewrite-meta-description)
-    └── esta SKILL.md (versão local executável)
-```
+**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.rewrite_meta_description` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
 
-Quando Marcelo edita régua editorial (via `agent-config.html` no painel), atualiza `agent-prompts.json` canônico. Esta SKILL.md pode ficar atrasada — atualizar manualmente quando notar drift.
 
 ## Exemplo de invocação
 

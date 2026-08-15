@@ -5,8 +5,8 @@ description: Migra um site inteiro da rede de um domínio para outro, com 301 ca
 
 ## Parse de input
 
-- `escritoriocasa guiamelhor.com.br` → migra o site `escritoriocasa` pro domínio novo, COM rename da pasta
-- `escritoriocasa guiamelhor.com.br --sem-rename` → só troca o domínio, mantém o slug da pasta
+- `{site} {dominio-novo}` (ex.: `escritoriocasa guiamelhor.com.br`, caso real de 08/08 — a pasta hoje é `oguiacompra`) → migra o site pro domínio novo, COM rename da pasta
+- `{site} {dominio-novo} --sem-rename` → só troca o domínio, mantém o slug da pasta
 - URL do painel (`site-{slug}.html`) também resolve o slug
 
 O domínio de destino é **sempre** do usuário. A skill não escolhe e não sugere sozinha.
@@ -50,12 +50,13 @@ python3 -c "import json;m=json.load(open('docs/painel/sites-meta.json'))['$SITE'
 # 2. artigos travados (escapam da troca de tag)
 grep -l "contentLocked: true" sites/$SITE/src/content/reviews/*.mdx
 # 3. onde o domínio antigo está escrito na mão
-grep -rl "$(grep -oP "domain:\s*'\K[^']+" sites/$SITE/src/config.ts)" sites/$SITE/src/
+ANTIGO=$(python3 -c "import re;print(re.search(r\"domain:\s*'([^']+)'\",open('sites/$SITE/src/config.ts').read()).group(1))")   # sem grep -P: BSD grep do macOS não tem
+grep -rl "$ANTIGO" sites/$SITE/src/
 # 4. regras que JÁ existem no worker pro host antigo
 python3 -c "
 import json;r=json.load(open('worker/redirects.json'))
 rows=r if isinstance(r,list) else r.get('redirects',r)
-print([x for x in rows if x.get('hostname','').startswith('$SITE'.replace('-','')) ])"
+print([x for x in rows if x.get('hostname','') in ('$ANTIGO','www.$ANTIGO','$NOVO','www.$NOVO')])"   # pelo DOMÍNIO lido do config, não pelo slug (slug sem hífen não casa 'melhoraspirador.com' e casa irmão)
 # 5. o domínio novo resolve? tem zona?
 curl -sS -o /dev/null -w "%{http_code}\n" --max-time 12 "https://$NOVO/"
 ```

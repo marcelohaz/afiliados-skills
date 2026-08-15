@@ -5,7 +5,7 @@ description: Analisa a lista "processo de liberação" do Registro.br pra garimp
 
 # Garimpo da lista de leilão afiliado (processo de liberação Registro.br)
 
-**Input** ($ARGUMENTS): caminho do `lista-processo-liberacao.txt` (Marcelo baixa e manda; header `# Processo de liberação no período de X a Y`, ~110-130k domínios).
+**Input** ($ARGUMENTS): caminho do `lista-processo-liberacao.txt` (header `# Processo de liberação no período de X a Y`, ~110-130k domínios). **Sem argumento = baixe você mesmo** com `bun scripts/refresh-leilao-afiliados.ts` (baixa a lista do Registro.br e roda o mesmo processador) — não pare para pedir o arquivo (canon 2026-08-15).
 
 **Objetivo**: devolver a shortlist dos **bons domínios afiliado produto-físico** que estão sendo liberados — livres em breve, intenção comercial, alto ticket.
 

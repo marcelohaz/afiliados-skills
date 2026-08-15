@@ -73,6 +73,8 @@ Detecção:
    em silêncio e o passo 2 reportou "SEM STUB 10". A linha de controle acima é o que
    distingue "puxei e não tem" de "não puxei".
 
+   **Chave-mestra do site (CLAUDE.md):** antes de escrever em `sites/{site}/src/content/**`, `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"` — `True` → PARE e avise (o site está com edição travada; destravar no painel → Proteção). Sem isso o `pre-push` barra no fim, depois de todo o trabalho.
+
 2. **List candidatos**:
    - Glob `sites/{site}/src/content/products/*.mdx`
    - Se modo B (subset): filtrar pelo ASIN do frontmatter

@@ -41,14 +41,14 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 - **Disclosure Amazon** obrigatória no /sobre/ (Independência editorial).
 - **YMYL** (nicho saúde): disclaimer obrigatório — /sobre/ tem "Um lembrete importante"; /author/ embute no "Meu compromisso".
 - **DISTINÇÃO sobre↔autor**: a /author/ NÃO repete "Independência editorial" nem "Como avaliamos os produtos" do /sobre/. /sobre/ = o que o SITE faz; /author/ = quem a PESSOA é + como ELA trabalha (1ª pessoa).
-- **ANTI-CLONE cross-site = só VOZ, nunca cobertura**: personas são reusadas (Eduardo ×9, Gustavo ×3) E sites do mesmo nicho cobrem OS MESMOS tópicos (SERP-monopoly — ex: "melhor impressora sublimática" e "plotter de recorte" vão estar em TODOS os sites de impressora). Logo é PROIBIDO diferenciar por "este site cobre X, o outro Y" — todos cobrem tudo. A diferenciação é 100% redação/ângulo/tom. Antes de gerar, LER as /sobre/ e /author/ das sites-irmãs da MESMA persona e variar a prosa (zero sequência ≥6 palavras igual). Risco máximo: mesma persona + mesmo nicho (3 creatinas do Eduardo; impressoraideal+melhorimpressora do Gustavo).
-- **VOZ NATURAL, sem figura de linguagem (canon Marcelo 2026-07-05)**: o tom especialista→amigo é cumprido com **simplicidade**, não com metáfora/personificação/hipérbole. Tem que soar como PESSOA REAL explicando, não prosa literária. Ver seção **"Voz natural"** abaixo — mesma família da régua de "Voz humana" da `artigo-review-criar` (antropomorfismo=0, máx 1 coloquialismo leve).
+- **ANTI-CLONE cross-site = só VOZ, nunca cobertura**: personas são reusadas (Eduardo ×9, Gustavo ×16 — medido 15/08) E sites do mesmo nicho cobrem OS MESMOS tópicos (SERP-monopoly — ex: "melhor impressora sublimática" e "plotter de recorte" vão estar em TODOS os sites de impressora). Logo é PROIBIDO diferenciar por "este site cobre X, o outro Y" — todos cobrem tudo. A diferenciação é 100% redação/ângulo/tom. Antes de gerar, LER as /sobre/ e /author/ das sites-irmãs da MESMA persona e variar a prosa (zero sequência ≥6 palavras igual). Risco máximo: mesma persona + mesmo nicho (3 creatinas do Eduardo; impressoraideal+melhorimpressora do Gustavo).
+- **VOZ NATURAL (canon 2026-07-05 + bloco transversal 2026-08-15)**: o tom especialista→amigo é cumprido com **simplicidade**, não com metáfora/personificação/hipérbole. Tem que soar como PESSOA REAL explicando, não prosa literária. Ver seção **"Voz natural"** abaixo — mesma família da régua de "Voz humana" da `artigo-review-criar` (antropomorfismo=0, máx 1 coloquialismo leve).
 - **`contentLocked: false`** nas duas. PT-BR editorial, tom especialista→amigo, sem travessão. **NÃO faz deploy.**
 
 ## Fluxo
 
 1. Parse → slug.
-2. **Git pull** (stash/pull --rebase/pop).
+2. **Git pull** (`git stash push -u`/pull --rebase/pop, sem engolir erro). **Chave-mestra do site:** `sites-meta.json[site].contentLocked === true` → PARE e avise (páginas institucionais são `src/content/pages`, cobertas pelo lock e pelo `pre-push`).
 3. **Coleta**: config (name, domain, contactEmail, author{name,role,href→slug,bio}); niche; **subtipos do NICHO** (campo `subtipos` em chavoes-por-nicho.json[niche], OU conhecimento do nicho — **NÃO derivar dos artigos atuais**: sites do mesmo nicho convergem pra cobertura COMPLETA, então o /sobre/ descreve o escopo do nicho, não a lista de artigos de hoje; ex Impressoras: tanque, laser, multifuncional, fotográfica, sublimática, plotter de recorte, impressora para personalizados, barata); chavões do nicho; authors.json (persona). **Sites-irmãs da persona**: listar outros sites cujo `config.author.name` == este autor; ler as /sobre/ + /author/ deles (anti-clone).
 4. **Stub/overwrite**: se sobre.html ou autor.html já têm conteúdo real, PERGUNTAR antes de sobrescrever.
 5. **Detecta saúde/YMYL**: niche casa `/creatina|whey|pré.?treino|pre.?treino|ô?mega|omega|vitamina|suplemento|colágeno|proteína/i`.
@@ -94,41 +94,45 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 **Regra:** pra CADA seção abaixo, escolha um molde da família que NENHUMA irmã da persona já usou (leia as irmãs no passo 3). É a ESTRUTURA da frase que varia, não só sinônimo solto. Os pools são sementes — gere fresco a partir deles, não copie verbatim.
 
 - **Boas-vindas (§1 do /sobre/):** "Que bom ter você por aqui." / "Bem-vindo ao {Site}." / "Se você chegou até aqui, é porque…" / "{Site} existe por um motivo simples:" / (abre direto pela dor, sem saudação).
-- **Assinatura ("Quem está por trás"):** "O conteúdo daqui é assinado por {Autor}…" / "Cada análise leva a assinatura de {Autor}…" / "Quem escreve por aqui é {Autor}…" / "Por trás das recomendações está {Autor}…". O 2º movimento ("é ela quem decide…") também rotaciona: "É dela a palavra final sobre…" / "É quem define o que entra na lista…" / "Cabe a ela escolher…". O encaminhamento pra /author/ varia também: "vale dar uma passada na página dela" / "é só abrir a página da autora" / "conheça o método dela na página de autor".
-- **Abre do "Como avaliamos":** "Antes de indicar qualquer modelo, avaliamos…" / "Cada recomendação passa por uma análise de…" / "Toda indicação aqui nasce de…" / "Pra entrar na lista, o modelo é avaliado por…". (Mantém vago-evaluativo + anti-spec; só muda a estrutura.)
-- **Critérios (a redação de cada `<li>`):** o CONCEITO repete entre sites (custo, capacidade, etc. são os mesmos), mas a FRASE de cada bullet varia. Ex. custo: "pesando o preço contra o uso real" / "equilibrando o valor com o que você de fato vai usar" / "se o preço se paga no uso do dia a dia".
-- **Disclosure (parte NÃO-Amazon):** o nome "Programa de Associados da Amazon Brasil" é fixo (citação), mas a prosa ao redor varia: "podemos ganhar uma pequena comissão, sem custo a mais pra você" / "recebemos uma porcentagem da compra, e o preço pra você não muda" / "ganhamos uma comissão da loja, nunca do seu bolso". A parte do "não aceito brinde/pagamento" idem: "não aceito aparelho cortesia em troca de resenha boa" / "nenhum fabricante paga pra subir na lista" / "produto grátis não compra elogio aqui".
+- **Assinatura ("Quem está por trás"):** "O conteúdo daqui é assinado por {Autor}…" / "Cada análise leva a assinatura de {Autor}…" / "Quem escreve por aqui é {Autor}…" / "Por trás das recomendações está {Autor}…". O 2º movimento ("é ela quem decide…") também rotaciona: "É dela a palavra final sobre…" / "É quem define o que entra na lista…" / "Cabe a ela escolher…". O encaminhamento para /author/ varia também: "vale dar uma passada na página dela" / "é só abrir a página da autora" / "conheça o método dela na página de autor".
+- **Abre do "Como avaliamos":** "Antes de indicar qualquer modelo, avaliamos…" / "Cada recomendação passa por uma análise de…" / "Toda indicação aqui nasce de…" / "Para entrar na lista, o modelo é avaliado por…". (Mantém vago-evaluativo + anti-spec; só muda a estrutura.)
+- **Critérios (a redação de cada `<li>`):** o CONCEITO repete entre sites (custo, capacidade, etc. são os mesmos), mas a FRASE de cada bullet varia. Ex. custo: "pesando o preço contra o uso real" / "equilibrando o valor com o que você de fato vai usar" / "se o preço compensa no uso do dia a dia".
+- **Disclosure (parte NÃO-Amazon):** o nome "Programa de Associados da Amazon Brasil" é fixo (citação), mas a prosa ao redor varia: "podemos ganhar uma pequena comissão, sem custo a mais para você" / "recebemos uma porcentagem da compra, e o preço para você não muda" / "ganhamos uma comissão da loja, nunca do seu bolso". A parte do "não aceito brinde/pagamento" idem: "não aceito aparelho cortesia em troca de resenha boa" / "nenhum fabricante paga para subir na lista" / "produto grátis não garante elogio aqui".
 - **Fecho ("Fale conosco"):** o e-mail é fixo, mas o convite e o link variam: "mande sua mensagem pela página de contato" / "fale com a gente pela página de contato" / "passe pela página de contato". NUNCA repetir "use a nossa página de contato" se uma irmã já usa.
 
-## Voz natural — sem figura de linguagem (canon Marcelo 2026-07-05)
+## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 5 skills de criação e nos prompts canônicos do painel)
 
-O tom é especialista→amigo, mas **cumprido com SIMPLICIDADE, não com figuras de
-linguagem**. A voz tem que soar como uma pessoa real explicando, não como prosa
-literária ou "IA se esforçando pra ser bacana". Vale nas DUAS páginas, com risco
-maior na /author/ (1ª pessoa tenta "dar personalidade" e escorrega pro personagem).
-Caso que disparou a régua: o /author/ do tabletparatrabalho (Lucas Ferreira,
-2026-07-05) foi REJEITADO por excesso de metáfora e personificação.
+Especialista explicando a um amigo, cumprido com **simplicidade**, não com efeito. Pergunta-teste: *"um amigo que não entende disso entenderia e saberia o que fazer?"* Sem jargão corporativo, sem formalidade institucional, **sem sacada**.
 
-**PROIBIDO (o que fez o author ser rejeitado):**
-- **Metáfora rebuscada / personificação forçada**: "esse aparelho só parece firme na vitrine", "o que muda quando o aparelho **encara** e-mail, planilha e reunião" (aparelho não encara nada), "quero sentir como o aparelho se vira no aperto real".
-- **Hipérbole**: "número de processador e memória como se isso, sozinho, **resolvesse a sua vida**".
-- **Clichê-narrativo / voz de personagem**: "tentando ser aquele conhecido que já **garimpou tudo antes de você abrir a carteira**", "**tenho birra** de ficha que empilha número".
+O que faz texto soar como IA não é gíria nem termo técnico: é **palavra comum usada fora do sentido do dicionário** ("resolver a casa", "dar conta da poeira", "transformar a limpeza numa produção", "o aparelho pede tomada", "a conta da potência vem no peso"), quase sempre frase feita do inglês vertida (*make a production, handle, delivers, covers, calls for, the math*). Cada palavra é comum, então lista de termo não pega; a régua é uma **classe**:
 
-**CERTO (a reescrita aprovada):**
-- Direto e concreto: *"o que quero saber é direto: ele realmente aguenta a correria de um expediente? Não me prendo só ao número do processador ou à quantidade de memória, porque uma ficha técnica cheia nem sempre significa um bom aparelho no uso."*
+1. **Sujeito concreto + verbo no sentido do dicionário.** Aspirador aspira, impressora imprime, bateria dura, produto custa/tem/funciona. Objeto, preço, peso ou potência NÃO "resolvem, dão conta, entregam, seguram, pedem, exigem, aguentam, sustentam, encaram, cobram, juntam, trabalham, cobrem, viram, brilham". Teste: é o sentido em que você usaria a palavra falando com um cliente?
+2. **Substantivo literal.** Nada de "a conta", "degrau", "piso", "porta de entrada", "pacote", "proposta", "produção", "remanejo", "trunfo", "fôlego" como figura. Diga o que é (preço, faixa de preço, o mais barato, conjunto de recursos).
+3. **Sem frase-sacada.** Nada de "não é X: é Y", "o que X é Y", "é aí que…", fecho com dois-pontos que "revela". Dois-pontos só para explicação ou lista.
+4. **Repita a palavra certa.** "Aspira" 3× é normal. Chavão é frase-molde repetida, não palavra exata. **Nunca troque a palavra certa por sinônimo figurado para "variar"** (limpar → "resolver a casa" → "dar conta" é exatamente o defeito).
+5. **"para", não "pra"**, no texto público.
+6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
+7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
+8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
+9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-**Regra prática:** se um trecho usa metáfora/personificação/hipérbole pra dizer algo
-que caberia numa frase direta, **reescreve direto**. Personificação leve SÓ quando
-descreve um fato de uso comum ("a bateria segura o dia", "um teclado ruim manda a
-gente de volta pro notebook" — ok). Máx 1 coloquialismo leve por página. **Teste
-final: leia em voz alta como se explicasse pra um amigo — se soou "personagem" ou
-"poético demais", simplifica.** Herda a régua de "Voz humana" da `artigo-review-criar`
-(mesma família: antropomorfismo com gíria = 0, jargão burocrático fora, máx 1 coloquialismo).
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta por artigo (página = metade); escreva já dentro do teto.
 
-⚠ **A reescrita naturalizadora RECOLA nas irmãs** (frase direta converge entre sites
-da mesma persona) — depois de naturalizar, RODE DE NOVO o gate de 6-gramas vs cada
-irmã (caso real 2026-07-05: naturalizar o author criou 7 colisões novas que só o
-re-run pegou). Naturalizar e anti-clone são o MESMO loop, não passadas separadas.
+**Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
+
+| ❌ Como saiu (casos reais) | ✓ Como uma pessoa escreve |
+|---|---|
+| a impressora resolve o mês inteiro com um kit | um kit de tinta imprime cerca de 4.500 páginas |
+| sem transformar a troca de tinta numa produção | sem muito esforço |
+| a conta do rendimento vem no preço do kit | o rendimento alto tem um custo: o kit é caro |
+| a creatina pede coqueteleira | a creatina dissolve melhor com coqueteleira |
+| Se não tem, ela é a que resolve. | Se não tem, ela é a melhor opção. |
+| O tanque não se cansa. | O tanque de tinta rende o mesmo até o fim. |
+
+⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela (ou nos exemplos de shortDescription), reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
+**Caso que disparou a régua nesta skill (2026-07-05, /author/ do tabletparatrabalho, REJEITADO):** "esse aparelho só parece firme na vitrine", "o que muda quando o aparelho **encara** e-mail", "como se isso, sozinho, **resolvesse a sua vida**", "aquele conhecido que já **garimpou tudo antes de você abrir a carteira**", "**tenho birra** de ficha". Reescrita aprovada: *"o que quero saber é direto: ele funciona bem num expediente inteiro? Não me prendo só ao número do processador ou à quantidade de memória, porque uma ficha técnica cheia nem sempre significa um bom aparelho no uso."* Vale nas DUAS páginas, com risco maior na /author/ (1ª pessoa tenta "dar personalidade" e escorrega pro personagem).
+
+⚠ **A reescrita naturalizadora RECOLA nas irmãs** (frase direta converge entre sites da mesma persona) — depois de naturalizar, RODE DE NOVO o gate de 6-gramas vs cada irmã (caso real 2026-07-05: 7 colisões novas que só o re-run pegou). Naturalizar e anti-clone são o MESMO loop.
 
 ## Régua de CONTEÚDO (as duas)
 
@@ -156,7 +160,7 @@ re-run pegou). Naturalizar e anti-clone são o MESMO loop, não passadas separad
 1. **Duplicar sobre↔autor** (caso real: 12 sites tinham "Como avaliamos os produtos"+"Independência" iguais nas duas) — autor é PESSOA/1ª pessoa, sobre é SITE. Papéis distintos.
 2. **Alegar teste físico** — proibido explícito.
 3. **Expor método de mesa** (caso real impressoraideal 2026-06-12) — "lendo as especificações linha por linha", "cruzamos com opiniões" fazem parecer que não houve análise. Evaluativo-vago + anti-spec framing.
-4. **Footprint cross-persona** — Eduardo ×9 (3 creatinas mesmo nicho), Gustavo ×3 (2 impressoras). Sites da mesma persona+nicho com autor/sobre colados = footprint. As bios já são variadas por site; estender a variação pra sobre+autor. LER as irmãs antes. **RODAR o check de 6-gramas TAMBÉM cross-site** (novo site vs cada irmã da mesma persona) — caso real melhorimpressora vs impressoraideal 06-12: escaparam "e para quem cada um compensa" (critério) e "mercado brasileiro, como Epson e HP" (intro), só o check pegou. PODEM repetir (não são footprint): o **nome "Programa de Associados da Amazon Brasil"** (citação obrigatória) e a **credencial real do autor** ("redator especialista em home office" — é fato, mesma pessoa). NÃO podem: prosa do disclosure (varie "comissão sobre as compras..."), critérios, missão, intro.
+4. **Footprint cross-persona** — Eduardo ×9 (3 creatinas mesmo nicho), Gustavo ×16 (medido 15/08) (2 impressoras). Sites da mesma persona+nicho com autor/sobre colados = footprint. As bios já são variadas por site; estender a variação pra sobre+autor. LER as irmãs antes. **RODAR o check de 6-gramas TAMBÉM cross-site** (novo site vs cada irmã da mesma persona) — caso real melhorimpressora vs impressoraideal 06-12: escaparam "e para quem cada um compensa" (critério) e "mercado brasileiro, como Epson e HP" (intro), só o check pegou. PODEM repetir (não são footprint): o **nome "Programa de Associados da Amazon Brasil"** (citação obrigatória) e a **credencial real do autor** ("redator especialista em home office" — é fato, mesma pessoa). NÃO podem: prosa do disclosure (varie "comissão sobre as compras..."), critérios, missão, intro.
 5. **Inventar credencial** — usar role/bio reais do config; honesto se não for especialista do nicho.
 6. **Esquecer YMYL** em saúde (sobre "Um lembrete importante" + autor "Meu compromisso").
 7. **/author/ inexistente** — criar o dir + arquivo (melhoraspirador, melhorcozinha).

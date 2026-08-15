@@ -17,7 +17,7 @@ Marcelo e Bárbara). **Frescor:** trabalhando NO repo, a fonte da verdade é
 `.claude/skills/{nome}/SKILL.md` (regra completa no CLAUDE.md, seção
 "IA editorial"). Fallback pra "Unknown skill": `Read` do arquivo do repo.
 
-Args: todas aceitam URL do painel OU args canônicos. User falou informal
+Args: as skills de objeto (bíblia, página, artigo e partes, categoria, institucionais, linkagem) aceitam URL do painel OU args canônicos; clone/fila/lineup/leilão/migração aceitam só args canônicos. User falou informal
 ("preenche a L3250 no melhorimpressora") → mapear pro canônico antes; ambíguo → perguntar.
 
 ## Bíblia v2
@@ -58,16 +58,16 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 
 | Skill | Quando |
 |---|---|
-| `artigo-reviews-auditar` | TODOS os reviews como conjunto (23 critérios cross-produto; normaliza subtitle/badge) — a cada 3 produtos ou antes de travar |
+| `artigo-reviews-auditar` | TODOS os reviews como conjunto (24 critérios cross-produto; normaliza subtitle/badge) — a cada 3 produtos ou antes de travar |
 | `artigo-guia-auditar` | só o guideContent, correção cirúrgica por seção + faq-shuffle |
-| `artigo-auditar` | artigo INTEIRO read-only (38 categorias + estruturais + readyToLock) — gate final antes de `contentLocked` |
+| `artigo-auditar` | artigo INTEIRO read-only (39 categorias + estruturais + readyToLock) — gate final antes de `contentLocked` |
 
 ## Escala / rede
 
 | Skill | Quando |
 |---|---|
 | `artigo-clonar-em-massa` | clonar um artigo pra site irmão, conteúdo 100% novo das bíblias (full-auto, não deploya, não trava) |
-| `artigo-clonar-fila` | N clones em sequência (lista do botão "▶ Copiar fila" do painel) |
+| `artigo-clonar-fila` | N clones em sequência (lista do botão "▶ Agendar fila" do painel) |
 | `linkagem-auditar` | linkagem interna do SITE inteiro (propor→aprovar; 2-4 peers/artigo, hub isento) |
 | `categoria-descricao-escrever` | descrição de UMA categoria (`/categoria/{slug}/`) |
 | `categoria-descricao-criar-em-massa` | várias categorias, agrupadas por categorySlug cross-site (anti-duplicata entre irmãs) |

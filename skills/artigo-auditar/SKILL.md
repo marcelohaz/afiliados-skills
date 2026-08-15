@@ -7,6 +7,8 @@ description: Audita artigo inteiro read-only: 39 categorias editoriais (claim-vs
 
 Aceita 2 formatos no $ARGUMENTS:
 
+**`PIPELINE=yes`** (opcional, canon 2026-08-15): passado pela `artigo-clonar-em-massa`. Efeito: o relatório é entregue à clone (que faz o auto-fix dirigido e re-audita), sem esperar aprovação humana e sem encerrar o turno para perguntar. Fora de pipeline, comportamento normal (read-only + relatório).
+
 **A) URL do painel** (forma preferida):
 - `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do query string
@@ -18,7 +20,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Auditar artigo (skill única, read-only)
 
-> Versão executável local do prompt canônico em `docs/painel/_data/agent-prompts.json:audit_article` enriquecido com structural checks + readyToLock (antes esses 2 elementos viviam em `final_review`, hoje consolidados aqui).
+> Esta SKILL.md é a fonte da verdade (canon 2026-08-15); o `agent-prompts.json:audit_article` do painel é espelho parcial (não tem ~30 das 39 categorias). Structural checks + readyToLock vivem aqui.
 
 Você é o auditor read-only do artigo. O usuário passa `{site}/{slug}` e quer um diagnóstico completo: claims cruzados com bíblia, tag de afiliado correta, travessão, voz analítica, **mais checks estruturais** (intro/guide/produtos/meta) **mais veredito readyToLock**.
 
@@ -68,9 +70,10 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 5. **Read `affiliateTag` + `live` status** (canon 2026-05-26):
    - `affiliateTag` de `sites/{site}/src/config.ts` via regex (pode ser `''`).
    - `live` de `docs/painel/sites-meta.json[{site}].live` (boolean).
-   - Regra de validação dos links Amazon:
-     - Tag preenchida → links DEVEM ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
-     - Tag vazia → links DEVEM ser crus (sem `?tag=...`)
+   - Regra de validação dos links Amazon (canon 2026-08-15, alinha com a injeção no build):
+     - URL crua `/dp/{ASIN}` = **OK sempre** (info): `injectAffiliateTag` em `packages/ui/src/utils/amazon.ts` carimba `siteConfig.affiliateTag` no build; o `audit-article.ts` já trata como info.
+     - Flag SÓ quando o link traz **tag DIFERENTE** da do config (ou `AFFILIATE_TAG_AQUI`) — isso o build não conserta.
+     - Tag vazia no config + site live = problema do CONFIG (não do link): 🔴 error.
    - Severity contextual da `tag-affiliate`:
      - `live: true` → divergência é 🔴 error crítico (bloqueia readyToLock)
      - `live: false` → divergência é 🟡 warn (site em construção, tag preenche pré-deploy)
@@ -102,7 +105,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
 
-8. **Detectar meta description placeholder específico** (paridade com `detectMetaDescPlaceholder` do painel — agent-edit.ts:1221-1235):
+8. **Detectar meta description placeholder específico** (placeholder `[descrição a definir` — a mesma string que o `editor-artigo.html` insere no stub):
    ```js
    if (description.includes('[descrição a definir')) {
      issues.unshift({
@@ -160,9 +163,9 @@ Afirmação no review (subtitle, shortDescription, fullReview, pros, cons, specs
 **Exemplo**: review diz "5.000 páginas por kit" mas bíblia diz "4.500 páginas".
 
 ### `tag-affiliate` (level=`error` se site live, `warn` se em construção)
-Link Amazon com tag diferente da esperada.
-- Tag preenchida no config: links DEVEM ter `?tag={tag}&linkCode=ogi&th=1&psc=1`
-- Tag vazia: links DEVEM ser crus (sem `?tag=...`)
+Link Amazon com tag **diferente** da do config (canon 2026-08-15). **URL crua `/dp/{ASIN}` NÃO é defeito**: desde 2026-08-02 `injectAffiliateTag` (`packages/ui/src/utils/amazon.ts`) injeta `siteConfig.affiliateTag` no build; o source fica limpo de propósito (rotação de tag sem reescrever 100+ links). O `scripts/audit-article.ts` já classifica cru como `info` — esta skill não pode reclassificar como error (era o falso positivo que bloqueava `readyToLock` em artigos corretos).
+- Flag: `?tag=X` com X ≠ `affiliateTag` do config, ou `AFFILIATE_TAG_AQUI` literal, ou tag de OUTRO site.
+- Tag vazia no config em site live: error, mas o defeito é do CONFIG (reportar como tal), não de cada link.
 
 **Severity contextual** (canon 2026-05-26): a skill lê `sites-meta.json[site].live`.
 - `live: true` (site no ar): divergência de tag é **🔴 error** crítico — bloqueia readyToLock (não pode publicar sem afiliação correta).
@@ -185,7 +188,7 @@ Absoluto de VITRINE sem lastro: "imbatível", "incomparável", "insuperável", "
 
 Regra: absoluto de mercado/mundo sem lastro = flag; keyword, escopo local ou ancorado em fato = OK. (v1.69.0: explicita o whitelist — antes o "o mais X" genérico sobre-flagava escopo/keyword.)
 
-### `atribuicao-comprador` (level=`warn`)
+### `atribuicao-comprador` (level=`error` — canon 2026-08-15: citação explícita de comprador é Crítico nas 4 auditoras; bloqueia readyToLock)
 Usa "compradores" (plural) sem ter múltiplas opiniões na bíblia; OU cita "1 comprador" como se fosse consenso. Voz analítica é o padrão — citações explícitas de comprador/Amazon/reviews devem ser reescritas.
 
 ### `tone-clone` (level=`info`)
@@ -372,7 +375,7 @@ Audit da estrutura do `guideContent` HTML (Fase 3, canon 2026-05-27; estrutura S
 - **Ordem RELATIVA dos 5 base importa**: os 5 base devem aparecer na ordem Vale a pena → Como escolher → Marca → FAQ → Conclusão (com extras podendo aparecer no meio). H2 base fora dessa ordem relativa vira issue (ex: "Conclusão" antes de "FAQ"). Extras intercalados NÃO são desordem.
 - **6º opcional clássico** ("Por que confiar") continua permitido, entre FAQ e Conclusão.
 - **H2 extra educacional não pode ter link Amazon**: se um H2 informacional (O que é / energia / receitas / limpeza) tiver link Amazon, é o mesmo erro de "Amazon em seção educativa" — flag (ver check de links por seção). Link Amazon segue só em Marca/FAQ/Conclusão.
-- **Anti-duplicação de tópico** (`info`): se um H2 informacional existe E o mesmo tópico é re-explicado a fundo em "Vale a pena"/FAQ, é redundância (ver check `redundancy`) — cada tópico mora em um lugar só.
+- **Anti-duplicação de tópico** (`info`): se um H2 informacional existe E o mesmo tópico é re-explicado a fundo em "Vale a pena"/FAQ, é redundância (ver `tone-clone`/`redundancy` na `artigo-reviews-auditar`) — cada tópico mora em um lugar só.
 - **Sem H1 no guide** — H1 já é o `title` do artigo, duplicar quebra hierarquia SEO.
 - **Sem placeholder** (`[GUIDE TODO`, `Conteúdo do guia aqui`).
 
@@ -794,12 +797,8 @@ Path do `.md` salvo é mencionado no rodapé do output pra referência (painel l
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
-```
-docs/painel/_data/agent-prompts.json:audit_article  (SOURCE OF TRUTH editorial)
-    └── esta SKILL.md (versão local executável, enriquecida com structural+readyToLock)
-```
+**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.audit_article` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
 
-Pré-consolidação (até 2026-05-24), existiam 2 prompts canônicos: `audit_article` (puro) e `final_review` (com structural+readyToLock). Hoje a skill local consome só `audit_article` e implementa structural+readyToLock como código em volta. Compartilha o `regras_auditoria_artigo` shared.
 
 ## Armadilhas recorrentes
 

@@ -57,10 +57,13 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -m "skill-categoria-descricao-escrever-temp" 2>/dev/null
+   git stash push -u -m "skill-categoria-descricao-escrever-temp" 2>&1 | tail -1
    git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   git stash pop 2>&1 | tail -1
+   # CONTROLE: o pull funcionou mesmo?
+   echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
    ```
+   Use `-u` e NÃO engula o erro do pull (`2>/dev/null` fazia o pull morrer em silêncio e a skill ler o disco velho — caso real 13/08 na em-massa; retroportado 15/08).
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
 
 2. **Read `config.ts`**: `Read sites/{site}/src/config.ts`. Se 404, abortar.
@@ -205,9 +208,9 @@ Os exemplos acima são **UM** preenchimento possível do esqueleto, **NÃO um te
 
 **Pool de fechos §3** (rotacione; ou omita — 2 parágrafos bastam):
 - "Navegue pelos artigos e compare os modelos lado a lado..."
-- "Explore os comparativos e decida com base no que mais importa pra você."
+- "Explore os comparativos e decida com base no que mais importa para você."
 - "Veja as análises completas e escolha com segurança."
-- "Compare as opções e encontre [a/o] {X} ideal pra {contexto}."
+- "Compare as opções e encontre [a/o] {X} ideal para {contexto}."
 
 **Teste final:** abra a descrição da categoria irmã / mesmo-nicho lado a lado. Se a abertura OU o fecho são da mesma família → reescreva.
 
@@ -267,6 +270,8 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
 9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta por artigo (página = metade); escreva já dentro do teto.
+
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
 | ❌ Como saiu (casos reais) | ✓ Como uma pessoa escreve |
@@ -301,7 +306,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 | `o fórmula`, `o dose`, `o composição` | `a fórmula`, `a dose`, `a composição` |
 | `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
 | `disponíveis no em 2026` | `disponíveis em 2026` |
-| `Pra a maioria/primeira` | `Pra` ou `Para a` |
+| `Pra a maioria/primeira` | `Para a maioria/primeira` |
 
 ### Linguagem artificial banida (calques de inglês, jargão pseudo-técnico)
 
@@ -338,19 +343,8 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - **Spec de fabricante = fato, afirme direto** (régua v1.21.1): rendimento, economia e velocidade da ficha (ex: "rende até 4.500 páginas") vão SEM "segundo a Epson"/"segundo o fabricante" (atribuir a cada spec vira muleta repetitiva, igual "declarado pelo fabricante"). Atribuição só vale pra recomendação/calibração do fabricante (ex: "a HP recomenda 50 a 100 páginas/mês").
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
-```
-docs/painel/_data/agent-prompts.json:category_description  (SOURCE OF TRUTH editorial)
-    ├── handler do painel (POST /agent/category-desc/:site/:slug/create)
-    └── esta SKILL.md (versão local executável)
-```
+**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.category_description` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
 
-Helpers do painel pra leitura/escrita da entry:
-- `docs/painel/_lib/category-desc.ts:parseCategoryDescriptions(configTs)` — parsa o bloco
-- `docs/painel/_lib/category-desc.ts:writeCategoryDescription(configTs, slug, html)` — substitui/adiciona entry preservando o resto
-
-Skill local não importa esses helpers; a lógica equivalente está documentada no passo 11 do fluxo (Edit tool com caso A/B1/B2).
-
-Quando Marcelo edita régua editorial (via `agent-config.html` no painel), atualiza `agent-prompts.json` canônico. Esta SKILL.md pode ficar atrasada — atualizar manualmente quando notar drift.
 
 ## Quando NÃO usar essa skill
 

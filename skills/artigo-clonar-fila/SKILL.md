@@ -1,6 +1,6 @@
 ---
 name: artigo-clonar-fila
-description: Roda uma FILA de clones de artigo (N artigos, um após o outro), reusando a skill artigo-clonar-em-massa por item — nunca reimplementa o pipeline. Recebe uma lista de comandos /artigo-clonar-em-massa (a que o botão "▶ Copiar fila" do painel gera) OU uma lista de {targetSite, source, title}. Executa em SEQUÊNCIA, 1 artigo isolado por vez, com git-verdade pra pular os que já foram feitos, clone-log como gate por artigo (verify + verify-output), e relatório consolidado no fim. Timer opcional via ScheduleWakeup ("rode daqui a 3h"). NÃO faz deploy. NÃO trava artigos. Para em "todos commitados + buildados + relatório".
+description: Roda uma FILA de clones de artigo (N artigos, um após o outro), reusando a skill artigo-clonar-em-massa por item — nunca reimplementa o pipeline. Recebe uma lista de comandos /artigo-clonar-em-massa (a que o botão "▶ Agendar fila" do painel gera) OU uma lista de {targetSite, source, title}. Executa em SEQUÊNCIA, 1 artigo isolado por vez, com git-verdade pra pular os que já foram feitos, clone-log como gate por artigo (verify + verify-output), e relatório consolidado no fim. Timer opcional via ScheduleWakeup ("rode daqui a 3h"). NÃO faz deploy. NÃO trava artigos. Para em "todos commitados + buildados + relatório".
 ---
 
 ## O que esta skill É (e não é)
@@ -9,7 +9,7 @@ description: Roda uma FILA de clones de artigo (N artigos, um após o outro), re
 
 - **REUSA `artigo-clonar-em-massa` por item — NUNCA reimplementa o pipeline.** Cada artigo passa pelas Etapas 0→6 daquela skill (pré-flight, reviews biblia-only, gate 1.2, HARD GATE 1.4, guide, intro+meta, HARD GATE 4 readyToLock, comparador de frase exata, faq-shuffle, build, commit — a 1.3 foi REMOVIDA em 2026-08-13, corte do anti-dup de prosa). Se a `artigo-clonar-em-massa` evoluir, a fila herda de graça (mesmo princípio anti-drift do resto da rede).
 - **Se o Skill tool estiver disponível**: invoca `Skill(skill="afiliados-skills:artigo-clonar-em-massa", args="... FILA=yes")` por item. **`FILA=yes` é obrigatório** (canon 2026-08-15): diz à clone que o heartbeat desta fila já cobre o item, para ela NÃO armar o dela — há um único despertar pendente por sessão e um `ScheduleWakeup` da clone substituiria o prompt da fila (a fila morreria em silêncio no próximo fim de turno). **Se não** (raro): fallback canônico — `Read .claude/skills/artigo-clonar-em-massa/SKILL.md` e executa o pipeline dela por item (ver CLAUDE.md #4 + regra anti-cache).
-- **NÃO é a IA do painel.** O painel só GERA a fila (botão "▶ Copiar fila" na seção "Artigos recomendados" → um comando por linha). Quem EXECUTA com qualidade é o Claude Code (assinatura, Opus). O `clone-article` por API key do painel é o caminho vestigial/inferior — não é este.
+- **NÃO é a IA do painel.** O painel só GERA a fila (botão "▶ Agendar fila" na seção "Artigos recomendados" → um comando por linha). Quem EXECUTA com qualidade é o Claude Code (assinatura, Opus). O `clone-article` por API key do painel é o caminho vestigial/inferior — não é este.
 - **NÃO faz deploy** (mesma régua da `artigo-clonar-em-massa`). Para em "commitado + buildado".
 
 ## Modelo
@@ -20,11 +20,11 @@ Opus 5 (ou o Opus mais novo disponível). Sub-agents das etapas herdam o modelo 
 
 Aceita 2 formatos:
 
-**A) Bloco de comandos** (o que o botão "▶ Copiar fila" do painel gera — um por linha):
+**A) Bloco de comandos** (o que o botão "▶ Agendar fila" do painel gera — um por linha):
 ```
-/artigo-clonar-em-massa amelhorimpressora SOURCE=escritorioecasa/impressora-para-personalizados TITLE="As 5 Melhores Impressoras para Personalizados (Guia 2026)" HOME=no MODE=biblia-only
-/artigo-clonar-em-massa amelhorimpressora SOURCE=escritorioecasa/impressora-sublimatica TITLE="..." HOME=no MODE=biblia-only
-/artigo-clonar-em-massa amelhorimpressora SOURCE=escritorioecasa/melhor-impressora-epson TITLE="..." HOME=no MODE=biblia-only
+/artigo-clonar-em-massa amelhorimpressora SOURCE=oguiacompra/impressora-para-personalizados TITLE="As 5 Melhores Impressoras para Personalizados (Guia 2026)" HOME=no MODE=biblia-only
+/artigo-clonar-em-massa amelhorimpressora SOURCE=oguiacompra/impressora-sublimatica TITLE="..." HOME=no MODE=biblia-only
+/artigo-clonar-em-massa amelhorimpressora SOURCE=oguiacompra/melhor-impressora-epson TITLE="..." HOME=no MODE=biblia-only
 ```
 Parse: cada linha começando com `/artigo-clonar-em-massa` vira 1 item da fila. Ignora linhas em branco/comentário.
 
@@ -49,7 +49,8 @@ O `TITLE=` de cada linha é HINT: a `artigo-clonar-em-massa` tem HARD GATE que D
 2. `git pull --rebase origin main` (evita estado stale; painel/Bárbara commitam em paralelo).
 3. Para cada item: **git-verdade** (`git log -- .../{slug}.mdx`). Classifica: `FAZER` / `PULAR (já commitado)` / `REGERAR (.mdx órfão)`.
    - **RETOMADA POR ETAPA (não por artigo):** pra todo item que NÃO for `PULAR`, leia também `docs/biblias-v2/.audits/clone-runs/{target}-{slug}-last.md`. Se ele já tem etapas marcadas, **retome da primeira etapa NÃO marcada** em vez de recomeçar do zero. A git-verdade sozinha tem granularidade de ARTIGO: um item que morreu depois de 8 de 10 reviews volta a `FAZER` e joga fora 8 sub-agents Opus. O clone-log já registra etapa por etapa — só precisa ser lido. Marque no plano como `RETOMAR (etapa X)`.
-     - ⚠️ Isso só funciona porque a `artigo-clonar-em-massa` grava os reviews em `<scratchpad>/rev-{slug}.json` na Etapa 2.5 dela, antes de marcar o `check 1.1`. Se o item estiver marcado em 1.1 mas o arquivo não existir (run antigo, anterior a essa régua), **trate como `FAZER`** e recomece o item — não tente retomar em cima de estado que não está no disco.
+     - ⚠️ Isso só funciona porque a `artigo-clonar-em-massa` grava os reviews em `docs/biblias-v2/.audits/clone-runs/rev/{target}-{slug}/{ASIN}.json` (um por ASIN, dir gitignored do repo — canon 15/08; runs anteriores usavam `<scratchpad>/rev-{slug}.json` ou `rev-{slug}/{ASIN}.json`, aceite qualquer um dos três se existir) na Etapa 2.5 dela, antes de marcar o `check 1.1`. Se o item estiver marcado em 1.1 mas nenhum arquivo existir, **trate como `FAZER`** e recomece o item — não tente retomar em cima de estado que não está no disco.
+     - **Precedência:** log com etapa marcada → `RETOMAR (etapa X)` vence `REGERAR` (o `.mdx` órfão é o normal no meio de um run).
    - Isso também é o que torna o despertar do heartbeat seguro: sem ele, um despertar que caia no meio de um item provoca exatamente o restart que ele deveria evitar.
 4. Mostra o plano (tabela item → status + estimativa). Se > 10 itens, confirma custo. **Informe o total em horas** (~1 artigo/hora medido) e que a sessão precisa ficar aberta.
 5. **Se ZERO itens em `FAZER`/`REGERAR`/`RETOMAR`** → `ScheduleWakeup(stop: true)` e vá direto ao F2 (a fila acabou; sem isso o heartbeat reagenda pra sempre). Senão, arme o heartbeat (ver Timer) e siga F1.
@@ -57,8 +58,8 @@ O `TITLE=` de cada linha é HINT: a `artigo-clonar-em-massa` tem HARD GATE que D
 ### Etapa F1 — Loop sequencial (por artigo)
 Para cada item `FAZER`/`REGERAR`/`RETOMAR`, EM ORDEM:
 0. **Arme o heartbeat**: `ScheduleWakeup(1800)` com o bloco da fila como `prompt` (ver Timer). É o passo 0 porque tudo depois dele depende do turno continuar vivo.
-1. `bun scripts/clone-log.ts init {target} {slug} --source={source}` (pule se estiver RETOMANDO — o log já existe e apagá-lo perde o progresso).
-2. Roda a `artigo-clonar-em-massa` para o item (Skill tool OU fallback lendo a SKILL.md), **sempre com `FILA=yes` nos args** e em primeiro plano (sub-agents dela sem `run_in_background`; ver "## Turno vivo" da clone). Marca cada etapa com `clone-log.ts check {target} {slug} {etapa} "{detalhe}"` conforme conclui (**0, 1.0, 1.1, 1.2, 1.4, 2, 2.2, 3, 3.2, 4, 5, 5.4, 6.3.5, 6** — `1.3` saiu do pipeline em 2026-08-13 e virou `soft` no script, não marque). ⚠ A lista ganhou **1.0** (lineup+shuffle), **5.4** (re-gate) e **6.3.5** (FAQ-shuffle) em 2026-08-10 — elas existiam no pipeline e não no checklist. **As três são `soft`: registram, mas NÃO reprovam o `verify`.** É de propósito: o script viaja por `git pull` e as skills por marketplace, então quem puxar o script novo sem atualizar o plugin não pode travar no meio de uma fila. A proteção do badge continua onde sempre esteve (auto-check do assembler + `badge-ausente` como `error` na `artigo-auditar`). `6.3.5` aceita `N/A` quando não há irmão na keyword.
+1. `bun scripts/clone-log.ts init {target} {slug} --source={source}` (o `init` é idempotente desde 15/08: log com `[x]` não é sobrescrito; mesmo assim, se estiver RETOMANDO, pule).
+2. Roda a `artigo-clonar-em-massa` para o item (Skill tool OU fallback lendo a SKILL.md), **sempre com `FILA=yes` nos args, e com `RETOMAR=yes` quando o item foi classificado `RETOMAR (etapa X)`** (sem isso a clone recomeça pelo passo 0b e o gate de invocação perde a janela) e em primeiro plano (sub-agents dela sem `run_in_background`; ver "## Turno vivo" da clone). Marca cada etapa com `clone-log.ts check {target} {slug} {etapa} "{detalhe}"` conforme conclui (**0, 1.0, 1.1, 1.2, 1.4, 2, 2.2, 3, 3.2, 4, 5, 5.4, 6.3.5, 6** — `1.3` saiu do pipeline em 2026-08-13 e virou `soft` no script, não marque). ⚠ A lista ganhou **1.0** (lineup+shuffle), **5.4** (re-gate) e **6.3.5** (FAQ-shuffle) em 2026-08-10 — elas existiam no pipeline e não no checklist. **As três são `soft`: registram, mas NÃO reprovam o `verify`.** É de propósito: o script viaja por `git pull` e as skills por marketplace, então quem puxar o script novo sem atualizar o plugin não pode travar no meio de uma fila. A proteção do badge continua onde sempre esteve (auto-check do assembler + `badge-ausente` como `error` na `artigo-auditar`). `6.3.5` aceita `N/A` quando não há irmão na keyword.
    - Os HARD GATES (1.4 artigo-reviews-auditar, 4 artigo-auditar → readyToLock) são obrigatórios — a `artigo-clonar-em-massa` já os roda; a fila só confirma via clone-log.
 3. ANTES do commit do item (Etapa 6 da clone): `bun scripts/clone-log.ts verify-output {target} {slug} --source={sourceSite}` **PRIMEIRO** (ele grava a verificação mecânica no log) **e depois** `bun scripts/clone-log.ts verify {target} {slug}`, que agora **reprova se essa seção estiver vazia** — sem ela o log seria só autorrelato (artefato ok **e** zero frase exata fora dos H2-slot vs a fonte?). Qualquer um exit 1 → NÃO commita; tenta resolver (auto-fix da etapa faltante) ou marca "⚠ revisar" e segue.
 4. Commit/push/gen/VPS do item (a própria `artigo-clonar-em-massa` faz isso na Etapa 6). VPS git-jam → retry (armadilha conhecida).
@@ -77,7 +78,7 @@ Tabela por artigo: `commit | readyToLock (via clone-log) | verify-output | compa
 1. **Arme `ScheduleWakeup(1800)` no topo de CADA item**, com o bloco da fila como `prompt`.
 2. **Arme de novo como PRIMEIRO ATO de todo turno nascido de um despertar**, antes de qualquer outra coisa. Comportamento observado (3 disparos encadeados, 2026-07-30): há **um único** despertar pendente por vez e cada chamada substitui a anterior — a resposta da ferramenta diz "Next wakeup scheduled", no singular. Ou seja, um despertar consumido no meio de um item deixa a janela aberta até você re-armar. Acordar sem re-armar = voltar ao estado sem rede.
 3. **Encerre explicitamente** em QUALQUER uma destas três saídas, sempre com `ScheduleWakeup(stop: true)`:
-   - **Fila terminou**: a F0 classificou **ZERO** itens como `FAZER`/`REGERAR`/`RETOMAR`. Chame o `stop` **antes** do relatório F2. Sem isso o despertar pendente dispara depois do fim, acha tudo commitado e reagenda pra sempre.
+   - **Fila terminou**: a F0 classificou **ZERO** itens como `FAZER`/`REGERAR`/`RETOMAR` **ou a F1 acabou de fechar o último item**. Chame o `stop` **antes** do relatório F2. Sem isso o despertar pendente dispara depois do fim, acha tudo commitado e reagenda pra sempre.
    - **⚠️ O usuário pediu pra parar, pausar, ou interrompeu a fila.** Com heartbeat armado a fila volta sozinha no próximo fim de turno — inclusive depois de você só responder uma pergunta dele. Se ele mandou parar, `stop: true` **na hora**, e diga que a fila está parada e como retomar (re-colar o bloco). Sem isso você ressuscita um trabalho que ele acabou de interromper.
    - **Aborto do pré-flight** (site inexistente, bíblia incompleta, zero itens válidos): `stop: true` junto com a mensagem de aborto.
 
@@ -121,7 +122,7 @@ Nasce no project repo. Vai pro marketplace (`marcelohaz/afiliados-skills`) junto
 
 ```
 /artigo-clonar-fila
-<cola aqui o bloco de comandos do botão "▶ Copiar fila" do painel>
+<cola aqui o bloco de comandos do botão "▶ Agendar fila" do painel>
 ```
 Ou com timer: "daqui a 3 horas: {bloco}".
 

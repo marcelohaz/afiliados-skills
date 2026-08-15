@@ -7,6 +7,8 @@ description: Audita o guideContent de um artigo E aplica correções CIRÚRGICAS
 
 Aceita 2 formatos no $ARGUMENTS:
 
+**`PIPELINE=yes`** (opcional, canon 2026-08-15): passado pela clone/fila. Efeito: aplica óbvio E julgamento (auto-fix, máx 3 rodadas), não espera aprovação, não encerra o turno para perguntar. Sem a flag, propor→aprovar normal.
+
 **A) URL do painel** (forma preferida):
 - `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=impressora-barata`
 - Extrai `site` e `slug` do query string
@@ -26,7 +28,7 @@ Você é o editor do **guide** no estilo cirúrgico. O usuário passa `{site}/{s
 
 | Skill | O que faz no guide | Tipo |
 |---|---|---|
-| `artigo-auditar` | Diagnostica o guide (7 critérios) | Read-only |
+| `artigo-auditar` | Diagnostica o guide (10 critérios: estrutura, tamanho, allowlist, links hub-and-spoke, peer na conclusão, link quebrado, slug-vs-keyword, linkagem fraca, peer não linkado, âncora) | Read-only |
 | `artigo-guia-escrever` | Gera/reescreve o `guideContent` **inteiro** do zero | Write (rewrite total) |
 | **`artigo-guia-auditar`** (esta) | Audita + **corrige cirúrgico por seção** (preserva o resto) | Write (cirúrgico) |
 
@@ -146,7 +148,7 @@ Cruzar claims numéricos/contagem/exclusividade contra o `products[]` atual + `s
 
 ### 3. `guide-estrutura` (level=`warn`; `error` se 1 H2 obrigatório faltando)
 
-5 H2 obrigatórios na ordem: **Vale a pena → Como escolher → Melhor marca → FAQ → Conclusão** (+ opcional "Por que confiar" no início). Sem H1. Ordem importa.
+5 H2 **base** obrigatórios na ordem: **Vale a pena → Como escolher → Melhor marca → FAQ → Conclusão** (+ opcional "Por que confiar" entre FAQ e Conclusão, igual `artigo-auditar`/`artigo-guia-escrever`). **H2 extras informacionais dirigidos pela SERP são permitidos** (canon 2026-06-29; teto 9 H2 total; sem link Amazon; não são "desordem") — não flagrar. Sem H1. Faltar 1 dos 5 base = error (paridade com a régua comum em `docs/PADROES.md`).
 - 1-2 H2 faltando → propor **inserir** a(s) seção(ões) faltante(s) cirurgicamente (com conteúdo derivado das bíblias/peers), na posição canônica.
 - 3+ faltando OU fora de ordem grave → recomendar `artigo-guia-escrever` (rewrite).
 
@@ -156,8 +158,8 @@ Cruzar claims numéricos/contagem/exclusividade contra o `products[]` atual + `s
 ### 5. `guide-html-allowlist` (level=`error`)
 Permitidas: `<h2> <h3> <p> <ul> <ol> <li> <strong> <em> <a href rel target> <br>`. Proibidas: `<h1> <h4>-<h6> <table>/<tr>/<td> <img> <picture> <video> <iframe> <script> <style> <div> <span>`. Fix cirúrgico: converter `<table>` → `<ul>`/`<p>`, desembrulhar `<div>`/`<span>`, remover mídia.
 
-### 6. `guide-links-hub-and-spoke` (level=`warn` p/ tag errada, `info` p/ posição)
-- Links Amazon (`/dp/`) tag-aware: tag preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`; tag vazia → cru. Severity contextual igual `artigo-auditar` (live=true → error; live=false → warn).
+### 6. `guide-links-hub-and-spoke` (tag errada: `error` se live / `warn` em construção; posição: `info`)
+- Links Amazon (`/dp/`): flag só tag **diferente** da do config (ou `AFFILIATE_TAG_AQUI`); URL crua é OK (o build injeta a tag — canon 2026-08-15). Severity da tag errada igual `artigo-auditar` (live=true → error; live=false → warn).
 - "Vale a pena" e "Como escolher" devem ter **0 links AMAZON** (seções educativas, sem CTA de compra). Link Amazon nelas → warn (paridade com `artigo-auditar`; é violação de régua dura, não polimento). (Link interno peer/home contextual nessas seções É permitido — é navegação, não CTA.)
 - FAQ/Marca/Conclusão: links de produto/Amazon OK; preferir link interno pra peer sobre Amazon (info).
 
@@ -199,8 +201,8 @@ Fix (quando NÃO for a exceção acima): adicionar/enxugar peer(s) em spot **con
 ### 11. `voz-comprador` (level=`error`)
 Voz-comprador explícita ("compradores citam", "avaliações") OU implícita ("divide opiniões", "um comprador relata", "bem recebido", "elogios recorrentes") no guia. Fix: reescrever como observação analítica (régua "destilação categoria D").
 
-### 12. `chavoes-por-nicho` (level=`warn`)
-Carregar `docs/painel/_data/chavoes-por-nicho.json` pelo `niche` do site. `termos_banidos_absoluto` (lineup, SKU, ASIN, etc.) > 0 → flag. Limites de frequência ultrapassados → flag. Fix: encurtar ou omitir a frase repetida, NUNCA trocar a palavra exata por sinônimo figurado (é o defeito do critério 12c).
+### 12. `chavoes-por-nicho` (level=`error` — paridade com as outras 3 auditoras, régua comum 2026-08-15)
+Carregar `docs/painel/_data/chavoes-por-nicho.json`: `_genericos` SEMPRE + bloco do nicho **só se o slug do site está em `_sites_aplicaveis`** (gate canon 2026-08-15). `termos_banidos_absoluto` (lineup, SKU, ASIN, etc.) > 0 → flag. Limites de frequência ultrapassados → flag. Fix: encurtar ou omitir a frase repetida, NUNCA trocar a palavra exata por sinônimo figurado (é o defeito do critério 12c).
 
 ### 12b. `superlativo-sem-evidencia` (level=`warn`, v1.69.0 — 2026-07-02)
 
@@ -218,7 +220,7 @@ Absoluto de VITRINE sem lastro na prosa do guia. **Faltava esta checagem aqui** 
 
 Regra mental: **absoluto de MERCADO/MUNDO sem lastro = flag; keyword, escopo local, ou ancorado em fato = OK.** Fix cirúrgico: escopar ("...deste comparativo"), ancorar no fato, ou trocar por qualificador simples.
 
-### 12c. `naturalidade` (level=`warn`; `error` se ≥5 no guia — canon Marcelo 2026-08-15, JULGAMENTO → propor→aprovar)
+### 12c. `naturalidade` (level=`warn`; `error` se ≥3 na mesma seção H2 ou ≥8 no guia — régua comum 2026-08-15, JULGAMENTO → propor→aprovar)
 
 O guia é 50-60% do texto do artigo e até 2026-08-15 não tinha nenhum critério de tom. A classe a flagrar é **palavra comum fora do sentido do dicionário** (quase sempre colocação inglesa vertida), não gíria nem termo técnico:
 - objeto/preço/peso como agente com verbo humano: "resolve, dá conta, entrega, segura, pede, exige, aguenta, sustenta, encara, cobra, cobre, trabalha, vira, brilha" ("O de tomada não se cansa", "casa grande pede remanejo", "o sem fio se paga", "reorganiza a categoria inteira");
@@ -236,7 +238,7 @@ Bugs de substituição mecânica (composiçãos, "a produto", "no em 20XX", term
 
 **Como:** roda o núcleo determinístico `bun scripts/faq-shuffle.ts {site}/{slug}` (dry-run mostra antes→depois; `--apply` grava). A ordem-alvo é função PURA de (conjunto de perguntas, seed=site+slug) — NÃO da ordem atual: ordena canônico (texto da pergunta) → fixa a "money question" (1ª que casa `qual o melhor|qual a melhor|vale a pena`) no topo → embaralha o resto com Fisher-Yates seedado (FNV-1a/xorshift32, igual ao shuffle de produtos da clone). Cada site irmão recebe ordem diferente; re-rodar dá a MESMA ordem → **idempotente, sem churn** (compatível com a CONVERGÊNCIA desta skill). A resposta viaja junto com a pergunta (move o bloco `<h3>+resposta` inteiro). Precisa de ≥3 itens de FAQ; <3 não faz nada. Respeita `contentLocked` (o script aborta).
 
-**Aplicação:** entra como mudança proposta normal (mostre o antes→depois no relatório). Se aprovado, em vez de Edit à mão, rode `bun scripts/faq-shuffle.ts {site}/{slug} --apply` (preserva block-scalar + indentação sozinho). Determinístico e seguro → pode auto-aplicar junto dos demais fixes aprovados. **level=info** (não bloqueia readyToLock; é polimento anti-footprint, não erro).
+**Aplicação:** é fix DETERMINÍSTICO → **aplica direto** (canon 24/06 e 24/07; não espera aprovação): rode `bun scripts/faq-shuffle.ts {site}/{slug} --apply` (preserva block-scalar + indentação sozinho) e marque ✅ CORRIGIDO no relatório. Determinístico e seguro → pode auto-aplicar junto dos demais fixes aprovados. **level=info** (não bloqueia readyToLock; é polimento anti-footprint, não erro).
 
 ℹ️ A clone (`artigo-clonar-em-massa`) roda o `faq-shuffle.ts` direto na Etapa 6.3.5 dela (obrigatório desde 2026-06-24 quando há irmão na keyword) — artigo novo de clone já sai embaralhado. Esta skill/o script seguem sendo o caminho pra artigos ANTIGOS (pré-shuffle) ou pra reembaralhar um cluster inteiro (determinístico, pode rodar a qualquer momento).
 
@@ -268,7 +270,7 @@ DEPOIS: <p>...</p>
 - **"rejeita 2"** · **"rejeita tudo"** · **"refaz 1"** (repensar uma proposta)
 ```
 
-Imprimir o relatório inline no chat. Não aplicar nada sem aprovação.
+Imprimir o relatório inline no chat. Aplicar direto só o mecânico/determinístico (travessão, `;`, concordância, faq-shuffle, link quebrado, âncora); o de julgamento espera aprovação (ou `PIPELINE=yes`).
 
 ## Apply: como editar o guideContent
 

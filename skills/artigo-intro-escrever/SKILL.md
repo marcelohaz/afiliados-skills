@@ -195,7 +195,7 @@ Tags (encaixe a que couber, **sem dobrar o ano** — título com "em/de 2026" N�
 
 ### Padrão canônico (P1 = default; ver pool de divergência acima)
 
-`{Keyword em Title Case}: {os|as} {N} melhores em {ano}`
+O padrão de cada site é o do **pool P1-P4 acima** (P1 `{Keyword}: as {N} melhores (Atualizado 2026)`; a forma `{Keyword}: {os|as} {N} melhores em {ano}` é o **P4**, não o default). Use o padrão-assinatura do SITE (inferido dos títulos já existentes nele); os exemplos abaixo mostram a forma geral, não o P1.
 
 Exemplos reais da rede:
 - `Melhor Impressora Epson: as 9 melhores em 2026`
@@ -260,9 +260,9 @@ A fórmula é fixa; o RECHEIO de cada slot RODA entre os artigos do site. **Slot
 - `Cansou de procurar a **{keyword}**...`
 
 **Enriquecimento (DEPOIS da keyword — é ele que diferencia artigos vizinhos):**
-- intenção de uso: "...pra imprimir, copiar e digitalizar com um aparelho só?"
+- intenção de uso: "...para imprimir, copiar e digitalizar com um aparelho só?"
 - cenário concreto: "...para imprimir o trabalho da escola, o boleto e uns documentos de vez em quando?"
-- dor da categoria: "...pra imprimir à vontade sem medo da conta de cartucho?"
+- dor da categoria: "...para imprimir à vontade sem medo da conta de cartucho?"
 - objeção/custo: "...sem pagar por função que você nunca vai usar?"
 - intenção de marca (keyword com marca): "...agora que a marca já está decidida e só falta o modelo?"
 
@@ -392,7 +392,7 @@ Por que está OK:
 ### Título (quando reescrito)
 - Padrão `{Keyword Title Case}: {os|as} {N} melhores em {ano}` (N≥3) ou fallback `{Keyword Title Case} em {ano}` (N<3). **Sem ponto final.**
 - **≤60 chars** (corte Google); keyword no lead; número N = `products[]`; não colide com título irmão; sem travessão.
-- **Só reescreve se fora do padrão** (conservador). Já-no-padrão só atualiza N se o lineup mudou.
+- **Reescreve pelos gatilhos de "Quando arrumar"** (stub/fora de qualquer padrão, OU colisão com irmão, OU N envelheceu; sem contagem com N≥3 é sempre stub). Já-no-padrão do site e sem colisão → só atualiza N se o lineup mudou.
 - **Nunca** mexe no título de artigo `contentLocked: true`.
 
 ## Como usar as bíblias (contexto, não citação)
@@ -439,6 +439,8 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
 9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta por artigo (página = metade); escreva já dentro do teto.
+
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
 | ❌ Como saiu (casos reais) | ✓ Como uma pessoa escreve |
@@ -465,7 +467,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 | `o fórmula`, `o dose`, `o composição` | `a fórmula`, `a dose`, `a composição` |
 | `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
 | `disponíveis no em 2026` | `disponíveis em 2026` |
-| `Pra a maioria/primeira` | `Pra` ou `Para a` |
+| `Pra a maioria/primeira` | `Para a maioria/primeira` |
 
 ### Linguagem artificial banida (calques de inglês, jargão pseudo-técnico)
 
@@ -536,20 +538,15 @@ Se a intro velha for muito curta (ex: `[a escrever: ...]`), o `old_string` é ú
 O maior bug histórico desta skill: o "exemplo canônico" único virou texto-fonte e 3 intros do melhorimpressora saíram idênticas (só a keyword trocada). Exemplo é régua de FORMA. Se a intro gerada compartilha qualquer frase de ≥6 palavras com um exemplo desta skill OU com uma intro irmã do site — reescreva antes de gravar.
 
 ### 12. Keyword tarde no §1
-"Cansou de gastar com cartucho e está procurando a **{keyword}**..." enterra a keyword na 8ª palavra. Inverta: abertura curta + keyword + enriquecimento ("Procurando a **{keyword}** pra imprimir sem medo da conta de cartucho?").
+"Cansou de gastar com cartucho e está procurando a **{keyword}**..." enterra a keyword na 8ª palavra. Inverta: abertura curta + keyword + enriquecimento ("Procurando a **{keyword}** para imprimir sem medo da conta de cartucho?").
 
 ### 13. Empilhar coloquialismos e palavras fora do sentido (feedback Marcelo 2026-06-10 e 2026-08-15)
 "Quebra um galho", "pra ontem", "gambiarra", "faz-tudo" na MESMA intro = personagem forçado. E o defeito mais comum não é gíria: é palavra comum em sentido figurado ("dar conta da poeira", "sem transformar a limpeza numa produção", "resolver a casa"). Ver "## Voz natural". Trocas: "quebra um galho"→"funciona" · "pra ontem"→"para amanhã" · "máquina parruda"→"modelo mais avançado" · "sem drama"→"sem complicação" · "dar conta da poeira"→"aspirar a poeira" · "numa produção"→"em muito esforço".
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
-```
-docs/painel/_data/agent-prompts.json:generate_intro  (SOURCE OF TRUTH editorial)
-    ├── handler do painel (POST /agent/article/:site/:slug/generate-intro)
-    └── esta SKILL.md (versão local executável)
-```
+**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.generate_intro` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
 
-Quando Marcelo edita régua editorial (via `agent-config.html` no painel), atualiza `agent-prompts.json` canônico. Esta SKILL.md pode ficar atrasada — atualizar manualmente quando notar drift.
 
 ## Quando NÃO usar essa skill
 

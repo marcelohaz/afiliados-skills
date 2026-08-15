@@ -98,10 +98,15 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -m "skill-pagina-produto-criar-temp" 2>/dev/null
+   git stash push -u -m "skill-pagina-produto-criar-temp" 2>&1 | tail -1
    git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   git stash pop 2>&1 | tail -1
+   # CONTROLE: o pull funcionou mesmo?
+   echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
    ```
+   Use `-u` e NÃO engula o erro do pull (`2>/dev/null` fazia o pull morrer em silêncio e a skill ler o disco velho — caso real 13/08 na em-massa; retroportado 15/08).
+   **Chave-mestra do site (CLAUDE.md):** antes de escrever em `sites/{site}/src/content/**`, `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"` — `True` → PARE e avise (o site está com edição travada; destravar no painel → Proteção). Sem isso o `pre-push` barra no fim, depois de todo o trabalho.
+
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Caso real Bárbara 2026-05-24: ela criou site melhoromega3 + stub vitafor-omegafor-plus pelo painel VPS; sub-agent rodou git fetch (sem novidades), assumiu que site não existia. Pull antes evita esse falso-negativo.
 
 2. **Read .mdx atual**: `Read sites/{site}/src/content/products/{slug}.mdx`. Se 404, abortar com mensagem do pré-requisito.
@@ -447,6 +452,8 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
 9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta por artigo (página = metade); escreva já dentro do teto.
+
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
 | ❌ Como saiu (casos reais) | ✓ Como uma pessoa escreve |
@@ -639,18 +646,8 @@ O endpoint `create-from-bible` deixa esse marker no body do `.mdx`:
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
-```
-docs/painel/_data/agent-prompts.json  (SOURCE OF TRUTH editorial)
-    ├── ops.create_product_page (handler do painel usa)
-    └── ops.audit_product_page  (handler do painel usa)
+**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.create_product_page / rewrite_product` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
 
-.claude/skills/pagina-produto-criar/SKILL.md      → segue
-.claude/skills/pagina-produto-auditar/SKILL.md    → segue
-```
-
-Quando Marcelo edita regras editoriais (via `agent-config.html` no painel):
-- Atualiza `agent-prompts.json` (canônico)
-- Esta SKILL.md pode ficar atrasada — atualizar manualmente quando notar drift
 
 ## Exemplo de invocação
 

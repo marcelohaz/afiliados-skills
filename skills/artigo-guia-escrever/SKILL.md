@@ -83,6 +83,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 3. **Parse frontmatter** mentalmente:
    - `title` (vira o "Como escolher {keyword}" da abertura — extrair só a parte da keyword, sem o ":")
    - `keyword` — se ausente, fallback: `title.split(':')[0].toLowerCase().trim()`
+   - **3.1 (canon 2026-08-15) Checagem BARATA dos concorrentes, aqui e não no passo 8:** com o `keyword` em mãos, `ls docs/painel/_data/competitor-analyses/{slugify(keyword)}.md`. Não existe E o usuário não colou textos → é o **Cenário C**: pare AGORA (mensagem do Cenário C) — antes de carregar bíblias e peers. Se `PIPELINE=yes` (invocada pela clone/fila), a clone já checou no pré-flight dela; se mesmo assim faltar, devolva "sem análise da keyword exata" como erro e não espere.
    - `products: []` — extrair ASINs pra carregar as bíblias + contar quantos pro contexto
    - `guideContent` atual — pode ser:
      - Ausente (campo nunca foi escrito; vou inserir)
@@ -483,7 +484,7 @@ Pra um guide de 18k chars, isso significa ~70-90 tags `<strong>` distribuídas. 
 - Conectivos e palavras de transição ("portanto", "além disso", "também")
 - Palavras isoladas sem contexto editorial ("rápido", "bom", "fácil")
 - Frases inteiras (>10 palavras) — destaque perde efeito
-- Marcas no texto corrido fora da seção "Quais as melhores marcas" (a marca aparece como nome próprio, não como destaque)
+- Marcas no texto corrido fora da seção "Qual a melhor marca" (a marca aparece como nome próprio, não como destaque)
 
 **Pergunta-teste**: *"Se eu escanear o guide só lendo o que está em negrito, capto os pontos-chave?"* Se sim, densidade está OK. Se vejo só números sem contexto, falta negritar conceitos.
 
@@ -502,7 +503,7 @@ Pra um guide de 18k chars, isso significa ~70-90 tags `<strong>` distribuídas. 
 |---|---|---|---|
 | Vale a pena | **0 Amazon** (pode ter peer/home interno) | Peer/home `/slug/` ou `/` | Sem CTA Amazon. Bom spot pra ligar a categoria-mãe/home contextualmente. Citações de modelo como âncora de preço (P2) em texto SIMPLES |
 | Como escolher (H3s) | **0 Amazon** (pode ter peer interno) | Peer `/slug/` | Sem CTA Amazon. Pode cross-linkar critério com artigo-irmão (ex: H3 "tanque vs cartucho" → guia de tanque) |
-| Quais as melhores marcas (H3s) | **1 por marca** + peer | Amazon search `/s?k=...` ou peer `/slug/` da marca | Search Amazon por marca; ou link pro guia-da-marca se existir como peer |
+| Qual a melhor marca (H3s) | **1 por marca** + peer | Amazon search `/s?k=...` ou peer `/slug/` da marca | Search Amazon por marca; ou link pro guia-da-marca se existir como peer |
 | Perguntas Frequentes | **2-4** | Peer `/slug/`, produto `/slug/` ou Amazon `/dp/` | FAQs comparativas/recomendativas — spot natural pra link peer contextual |
 | Conclusão | **PRODUTO: 5-8** · **peer/home: evitar** | Produto `/slug/` ou Amazon `/dp/` (recomendação) | Recomendação de compra por nicho. **Links de navegação peer/home NÃO entram aqui** (decorativo) — eles vão nos spots contextuais acima |
 | **Total alvo** | **~10-15** | majoritariamente internos, com 3-5 search Amazon nas Marcas | peer/home distribuídos contextualmente (NÃO na Conclusão); produto concentrado em FAQ/Conclusão |
@@ -676,6 +677,8 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
 9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta por artigo (página = metade); escreva já dentro do teto.
+
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
 | ❌ Como saiu (casos reais) | ✓ Como uma pessoa escreve |
@@ -726,7 +729,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 | `o fórmula`, `o dose`, `o composição` | `a fórmula`, `a dose`, `a composição` |
 | `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
 | `disponíveis no em 2026` | `disponíveis em 2026` |
-| `Pra a maioria/primeira` | `Pra` ou `Para a` |
+| `Pra a maioria/primeira` | `Para a maioria/primeira` |
 
 ### Linguagem artificial banida
 
@@ -806,7 +809,7 @@ Hábito de modelos LLM começar HTML com `<h1>`. Proibido aqui — o artigo já 
 IA frequentemente inventa `/melhor-impressora-laser-barata/` quando esse artigo NÃO existe. Antes de salvar, eu Grep mentalmente todos os `href` e confiro contra peer list. Se inventar → regenero o trecho.
 
 ### 4. Link Amazon FORA das seções permitidas
-Links Amazon em "Vale a pena" ou "Como escolher" = ERRO (essas 2 seções são educativas, sem CTA). Em "Melhor marca", "FAQ" e "Conclusão" são PERMITIDOS e até esperados (canônico tem ~10-20 links Amazon distribuídos nessas seções).
+Links Amazon em "Vale a pena" ou "Como escolher" = ERRO (essas 2 seções são educativas, sem CTA). Em "Melhor marca", "FAQ" e "Conclusão" são PERMITIDOS: prefira link INTERNO (página de produto do site) quando ela existe; Amazon `/dp/` só quando não há página, e busca de marca `/s?k=` na seção de marca. Não há cota de links Amazon (a frase "canônico tem ~10-20" era de antes do hub-and-spoke; o canônico atual tem 0 `/dp/` no guia e 13 internos).
 
 ### 5. UL/OL com 1-2 itens só
 Lista de 1-2 items é "lista de mentira" — sempre vira prosa melhor. Reserve UL/OL pra 3+ critérios discretos.
@@ -875,7 +878,7 @@ manobras.</p>
 5 strongs em ~50 palavras de conteúdo: 2 specs numéricos (1,43 kg, 5 kg) + 1 frase conceitual destacada (onde o peso se concentra) + 1 spec técnico (rotação 180°/360°). É o ritmo visual que diferencia bom de mediano.
 
 ### 19. Links Amazon nas seções "educativas" (Vale a pena / Como escolher)
-Régua dura: links Amazon SÓ em Quais as melhores marcas + FAQ + Conclusão. Modelo violou várias vezes na prática (2026-05) colocando links de "Modelo Y" como âncora em Vale a pena P2 quando a régua é texto SIMPLES sem link. Fix: em Vale a pena, citar modelos como referência de preço *"Os preços vão de R$ X (Modelo Y) a R$ Z (Modelo W)"* mas com **Modelo Y / Modelo W em texto puro, sem `<a>`**. Em Como escolher, mesmo critério: produto se for citado vira texto simples.
+Régua dura: links Amazon SÓ em "Qual a melhor marca" + FAQ + Conclusão. Modelo violou várias vezes na prática (2026-05) colocando links de "Modelo Y" como âncora em Vale a pena P2 quando a régua é texto SIMPLES sem link. Fix: em Vale a pena, citar modelos como referência de preço *"Os preços vão de R$ X (Modelo Y) a R$ Z (Modelo W)"* mas com **Modelo Y / Modelo W em texto puro, sem `<a>`**. Em Como escolher, mesmo critério: produto se for citado vira texto simples.
 
 Verificação antes de salvar: `grep -c 'amazon\.com\.br' nas seções 1-2 do guide` deve retornar **0**.
 
@@ -888,18 +891,8 @@ Verificação antes de salvar: na seção Conclusão, nenhum `<a href="/{slug}/"
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
-```
-docs/painel/_data/agent-prompts.json:generate_guide  (SOURCE OF TRUTH editorial)
-    ├── handler do painel (POST /agent/article/:site/:slug/generate-guide)
-    └── esta SKILL.md (versão local executável)
-```
+**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.generate_guide` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
 
-Quando Marcelo edita régua editorial (via `agent-config.html` no painel), atualiza `agent-prompts.json` canônico. Esta SKILL.md pode ficar atrasada — atualizar manualmente quando notar drift.
-
-Helpers do painel pra leitura/escrita do `guideContent`:
-- `docs/painel/_lib/article-guide.ts:readGuideContent(mdxPath)` — extrai HTML sem indent
-- `docs/painel/_lib/article-guide.ts:writeGuideContent(mdxPath, html)` — escreve com indent + atomic
-- Skill local não importa esses helpers (não roda no contexto Bun), mas a lógica equivalente está documentada no passo 13 do fluxo.
 
 ## Quando NÃO usar essa skill
 

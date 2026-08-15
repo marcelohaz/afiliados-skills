@@ -7,6 +7,8 @@ description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Ac
 
 Aceita 2 formatos no $ARGUMENTS:
 
+**`PIPELINE=yes`** (opcional, canon 2026-08-15): passado pela `artigo-clonar-em-massa`/`artigo-clonar-fila`. Efeito: modo full-auto — aplica os fixes **óbvios E de julgamento** (auto-fix, re-audita, máx 3 rodadas), não espera aprovação, não encerra o turno para perguntar; o que não convergir vai como "⚠ não convergiu" no relatório. Sem a flag, vale o propor→aprovar normal.
+
 **A) URL do painel** (forma preferida):
 - `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do artigo
@@ -58,7 +60,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 - **Tamanho de pros/cons**: preserve número de itens. Max +1 novo se claro da bíblia. NÃO reordene itens existentes.
 - **Sem travessão (—).**
 - **Sem ponto-e-vírgula (;)** (régua 2026-06-20): tem cara de IA. Auto-fixável (;→"." ou ","). Detecção entity-aware (ignora &amp; e entidades).
-- **Sem superlativo sem evidência.**
+- **Sem superlativo sem evidência** (coberto como critério pela `artigo-auditar`, gate 4; aqui só se saltar aos olhos no cross-produto: "o mais X" contradito por outro produto do lineup = claim-vs-lineup-fato).
 - **Preservar estrutura do `fullReview`**: 4 parágrafos com prefixos exatos (`Para quem é:`, `Por que gostamos:`, `Pontos de atenção:`, `Resumo:`). `Por que gostamos` pode ter 2 parágrafos.
 - **Preservar formato pros/cons**: `<strong>Título</strong>: explicação`.
 - **Nunca inventar dados**: cada claim com origem rastreável na bíblia.
@@ -84,7 +86,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 5. **Read bíblias**: pra cada ASIN, `Read docs/biblias-v2/<ASIN>.json`. Se alguma faltar, abortar listando quais.
 
-6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Vazia → links Amazon devem ser crus. Preenchida → `?tag={tag}&linkCode=ogi&th=1&psc=1`.
+6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Serve pra detectar tag **diferente** (`?tag=X` com X ≠ config, `AFFILIATE_TAG_AQUI`). URL crua `/dp/{ASIN}` é OK sempre: o build injeta a tag (`injectAffiliateTag`, canon 2026-08-15).
 
 6.8. **Rodar o detector mecânico de repetição intra-artigo** (critério 1b, canon Marcelo 2026-08-15):
    ```bash
@@ -144,6 +146,8 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 ## Os 24 critérios da análise
 
+(Numeração: 1, 1b, 2-19, 21-23 — o antigo 20 foi absorvido pelo 21 `naturalidade`; são 24 critérios.)
+
 ### 1. `tone-clone` — abertura/frase idêntica entre produtos
 
 **NÃO flagrar** (são intencionais):
@@ -181,23 +185,9 @@ Se algum requisito falhar, abortar com mensagem clara.
 - ✅ "conforme a L3250 desta lista, o tanque de tinta..."
 - ❌ "EcoTank é um sistema sem cartuchos onde você abre uma tampa e..." (explicação completa em review 3 depois de já ter feito em review 1)
 
-**Sub-check 2b — Palavras-chavão de alta frequência** (régua v1.16.0, canon 2026-05-28):
+**Sub-check 2b — Palavras-chavão de alta frequência** (canon 2026-08-15: a fonte é o JSON, não esta tabela):
 
-Conta ocorrências no `.mdx` inteiro (reviews + intro + guide). Flag se passar dos limites:
-
-| Palavra | Limite | Caso real `melhorpretreino` |
-|---|---|---|
-| `lineup` | **0** (BANIDA) | 50+14 ocorrências em 2 artigos |
-| **TODAS variantes de "seleção"** (régua v1.17.2) | **≤ 4 totais** | 29+42 = 71 ocorrências em 2 artigos |
-| └ `desta seleção` | (incluso no acima) | 85+65 originais |
-| └ `nesta seleção` | (incluso no acima) | 9+17 originais |
-| └ `na seleção` | (incluso no acima) | 3+0 originais |
-| └ `da seleção` | (incluso no acima) | 14+18 originais |
-| `do lineup` / `do nosso lineup` | **0** | 50+11 ocorrências |
-| `fórmula` | ≤ 60 | 109+94 |
-| `ativo` / `ativos` | ≤ 50 | 94+97 |
-| `preço médio` | ≤ 15 | 31+29 |
-| `parestesia` + `formigamento` | ≤ 20 combinados | 43+52 (cada review repete os 2 termos) |
+Conta ocorrências no `.mdx` inteiro (reviews + intro + guide) contra `docs/painel/_data/chavoes-por-nicho.json`: `_genericos.termos_banidos_absoluto` (lineup, do lineup, SKU…) = 0; `_genericos.chavoes_estruturais_max` ("desta/nesta/na/da seleção" = **0**, com a exceção canônica abaixo); `industrial_max` (preço médio 15, fabricante 12, declarado…); e o bloco do nicho **só se o site está em `_sites_aplicaveis`** (ex.: os caps de "fórmula/ativo/parestesia" são do bloco Pré Treino, não valem para tablet). A tabela hardcoded que vivia aqui ("seleção ≤4", "fórmula ≤60") era um snapshot de 1 nicho de 05/2026 e contradizia o critério 13 — foi removida; o 13 é quem aplica o JSON, este 2b só cobre **conceito re-explicado** (2a) e delega chavão ao 13.
 
 **Exceção canônica pra "seleção"** (não contar como chavão — frases LEGADAS permitidas pela `artigo-intro-escrever`; até a v1.30 eram o padrão, a v1.31+ não as empurra mais):
 - Abertura do body: "Preparamos uma **seleção** pra..."
@@ -257,11 +247,9 @@ Cada review deve ter **2-3 links Amazon**, posições preferidas:
 - 1 em `Por que gostamos` (primeira menção)
 - 1 em `Resumo`
 
-Formato esperado (depende de `affiliateTag` do site):
-- **Tag preenchida**: `<a href="https://www.amazon.com.br/dp/{ASIN}?tag={tag}&linkCode=ogi&th=1&psc=1" rel="nofollow" target="_blank">Nome do Produto</a>`
-- **Tag vazia**: `<a href="https://www.amazon.com.br/dp/{ASIN}" rel="nofollow" target="_blank">Nome do Produto</a>` (URL crua)
+Formato esperado: `<a href="https://www.amazon.com.br/dp/{ASIN}?tag={tag}&linkCode=ogi&th=1&psc=1" rel="nofollow" target="_blank">Nome do Produto</a>` **ou a URL crua** `https://www.amazon.com.br/dp/{ASIN}` (o build injeta a tag do config — canon 2026-08-15; cru NÃO é defeito).
 
-Flag se: total fora de 2-3 OU tag/formato errado OU `target="_blank"` ausente OU `rel="nofollow"` ausente.
+Flag se: total fora de 2-3 OU tag **diferente** da do config / `AFFILIATE_TAG_AQUI` OU `target="_blank"` ausente OU `rel="nofollow"` ausente.
 
 ### 7. `claim-vs-lineup-fato` — comparações com lineup factualmente erradas
 
@@ -643,7 +631,7 @@ for produto in products:
 
 **21e — gramática/ambiguidade que trava a leitura** (🔴): casos reais: "só imprime em preto e a laser" (faltou "é"); "que ainda não aquece a tinta" (lê-se "ainda não"); "papel cortado pela metade" (parece papel rasgado); "cabe na escrivaninha sem virar uma estação de trabalho" (sujeito ambíguo); "troca inteligente pela Epson" (direção invertida). Inclui atribuição elíptica "conta da Epson" (= "segundo a Epson", muleta v1.21.1 → número direto).
 
-**21f — tiques com teto por ARTIGO** (🟡): complemento mecânico do 21c, não substituto. Vale em TODO nicho (não só onde `naturalidade_max` existe no `chavoes-por-nicho.json`): "daqui" ≤2 · "pede/pedem" (sujeito-coisa) ≤3 · "resolve/resolvem" (sujeito-coisa) ≤3 · "dá/dão conta" ≤2 · "entrega/entregam" ≤3 · "segura/seguram" ≤2 · "vira/viram" ≤3 · "de verdade" ≤1 · "com folga"/"de sobra" ≤1 · "trunfo"/"fôlego"/"degrau"/"porta de entrada" ≤1 cada · fecho "ele/ela resolve" / "é o que resolve" ≤1 · abertura "No conjunto," ≤1 · "o grande ponto" ≤1. Se o bloco do nicho tiver `naturalidade_max`/`naturalidade_banidos`, some (o mais restritivo vence). Casos reais: "daqui" 13× e "pede" 9× no impressoraideal/melhor-impressora-multifuncional; "resolve" 33×, "pede" 23×, "daqui" 11× no melhoraspirador-com/melhor-aspirador-de-po-vertical (2026-08-15, passou sem flag porque Aspiradores não tinha teto).
+**21f — tiques com teto por ARTIGO** (🟡): complemento mecânico do 21c, não substituto. Os tetos vivem em `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (canon 2026-08-15: daqui 2, pede 3, resolve 3, dá conta 2, entrega 3, segura 2, vira 3, de verdade 1, com folga/de sobra 1, trunfo/fôlego/degrau/porta de entrada 1, "é o que resolve" 1, "o grande ponto" 1…) + `naturalidade_banidos` (0), somados ao bloco do nicho quando houver (o mais restritivo vence). Não copie a lista pra cá: cite a chave. Casos reais: "daqui" 13× e "pede" 9× no impressoraideal/melhor-impressora-multifuncional; "resolve" 33×, "pede" 23×, "daqui" 11× no melhoraspirador-com/melhor-aspirador-de-po-vertical (2026-08-15).
 
 ### 22. `subtitle-keyword-first` (v1.56.0, canon Marcelo 2026-06-24, severidade: 🟡 Médio)
 
@@ -679,7 +667,8 @@ TODO produto do `products[]` precisa do campo `badge` (etiqueta do card). Conven
 
 ## Filtros de severidade
 
-- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag errada), travessão, html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0), **badge-ausente** (23, canon 2026-06-22 — todo produto leva etiqueta, alinha com o gate da `artigo-auditar`)
+- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag DIFERENTE da do config), html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0), **badge-ausente** (23, canon 2026-06-22 — todo produto leva etiqueta, alinha com o gate da `artigo-auditar`)
+- **Mecânico (aplica direto, warn)**: travessão, `;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI` (régua comum das auditoras — `docs/PADROES.md`).
 - **Médio** (propor mudança): tone-clone óbvio, **repeticao-intra-artigo 1b (FIX: ≥4 ocorrências / abertura em ≥4 / fecho de preço >50%; apagar cópia é óbvio, reescrever é julgamento — com as 5 salvaguardas)**, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (palavra fora do sentido/verbo-curinga, jargão financeiro, tiques acima do teto — v1.32.0 + canon 2026-08-15; 21c vira Crítico com ≥3 no mesmo review), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
@@ -831,7 +820,7 @@ Bagunça o block scalar `|` do `fullReview` (vira string single-line quoted). Us
 
 ### 5. Esquecer de validar links
 
-Affiliate tag vazia (sites em construção) → links DEVEM ser crus. Affiliate tag preenchida → DEVEM ter `?tag={tag}&linkCode=ogi&th=1&psc=1`. Validar todos os 2-3 links de cada produto-alvo.
+Validar os 2-3 links de cada produto-alvo: `rel`/`target` presentes e tag **igual** à do config quando houver `?tag=` (URL crua é OK: o build injeta). Tag diferente ou `AFFILIATE_TAG_AQUI` = flag.
 
 ### 6. Propor mudanças contraditórias entre produtos
 
@@ -855,16 +844,8 @@ Sem modal de approval visual com diff lado-a-lado, troca pela experiência de ch
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
-```
-docs/painel/_data/agent-prompts.json  (SOURCE OF TRUTH editorial)
-    └── ops.improve_reviews (handler do painel usa)
+**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.improve_reviews` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
 
-.claude/skills/artigo-reviews-auditar/SKILL.md  → segue
-```
-
-Quando Marcelo edita regras editoriais (via `agent-config.html` no painel):
-- Atualiza `agent-prompts.json` (canônico)
-- Esta SKILL.md pode ficar atrasada — atualizar manualmente quando notar drift
 
 ## Registrar desvio de execução (obrigatório quando houver)
 
