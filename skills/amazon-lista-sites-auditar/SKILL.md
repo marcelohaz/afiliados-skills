@@ -88,7 +88,7 @@ URL → domínio. **Sem ela a skill não roda**: não há de onde inferir o esta
 ```bash
 bun scripts/domains-status-snapshot.ts     # ~23s, 307 domínios
 ```
-Se o snapshot em `_data/domains-status.json` tiver menos de 24h, reusar.
+Se o snapshot em `docs/painel/_data/domains-status.json` tiver menos de 24h, reusar.
 
 ⚠️ **Nunca derive "está no ar" de campo guardado.** O `live` do sites-meta é
 setado no deploy e defasa. E rótulo de painel externo mente nas duas direções:
