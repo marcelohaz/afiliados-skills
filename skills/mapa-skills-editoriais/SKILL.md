@@ -1,6 +1,6 @@
 ---
 name: mapa-skills-editoriais
-description: Índice COMPLETO das 24 skills do marketplace afiliados-skills — qual usar para cada objeto (bíblia, página de produto, artigo e suas partes, categoria, institucionais, linkagem, clone, lineup, migração, leilão), com pré-requisitos de painel e forma de invocação. Invoque quando estiver em dúvida sobre QUAL skill chamar. Não substitui as skills em si — é o índice delas.
+description: Índice COMPLETO das 25 skills do marketplace afiliados-skills — qual usar para cada objeto (bíblia, página de produto, artigo e suas partes, categoria, institucionais, linkagem, clone, lineup, migração, leilão, lista da Amazon), com pré-requisitos de painel e forma de invocação. Invoque quando estiver em dúvida sobre QUAL skill chamar. Não substitui as skills em si — é o índice delas.
 ---
 
 # Mapa das skills editoriais
@@ -79,6 +79,7 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 |---|---|
 | `site-migrar-dominio` | migrar site de domínio com 301 catch-all (5 fases com gate; não registra domínio nem aponta NS) |
 | `leilao-garimpar` | analisar a lista mensal de liberação do Registro.br (read-only; registro é decisão do Marcelo) |
+| `amazon-lista-sites-auditar` | recomendar quem entra/sai da Lista de Sites do Associados (teto de 50 por conta; read-only na Amazon, quem aplica é o humano) |
 
 Skills locais do repo (fora do marketplace): `backup-monorepo`,
 `painel-launchagent`, `site-criar-workflow` — procedimento de máquina, não editorial.
