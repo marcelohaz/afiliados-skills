@@ -43,6 +43,15 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    ```
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
 
+   ⚠ **Rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, PULE
+   este passo e NÃO registre desvio** (mesma ressalva do 6.7 e do 19b). A mãe
+   proíbe git nos sub-agents porque N agentes paralelos dando `stash`/`pull`
+   corrompem a árvore, e ela já puxou antes do pré-flight, então não há estado
+   stale a corrigir. Sem esta linha o sub-agent fica entre duas ordens opostas e
+   registra ambiguidade: aconteceu **4 vezes num único lote de 10** (cozinhaideal,
+   2026-08-21), com um dos quatro usando `--alvo` diferente e escapando do
+   detector de reincidência.
+
 2. **Read .mdx**: `Read sites/{site}/src/content/products/{slug}.mdx`. Se 404, abortar com mensagem clara.
 
 3. **Parsear frontmatter**: extrair os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview). Se algum vazio/ausente, registra como issue `tamanho-fora-de-faixa` (sub-tipo curto).
@@ -96,6 +105,12 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    bash scripts/painel-vps-pull.sh
    ```
    `painel-vps-pull.sh` propaga pro painel da VPS via Basic Auth (creds em `.env.painel-skills`).
+
+   ⚠ **Rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, PULE
+   este passo e NÃO registre desvio.** Escreva o `-last.md` e pare aí: a mãe
+   commita os relatórios num lote próprio (passo 12c dela), separado do commit
+   dos `.mdx` consertados. Commitar aqui é a race condition que a REGRA ZERO da
+   mãe existe pra evitar.
 
 10. **Reportar no chat**: 3-5 linhas com total de findings por severidade + path do relatório. Não cole o relatório inteiro no chat.
 
