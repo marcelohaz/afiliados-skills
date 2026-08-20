@@ -455,6 +455,11 @@ Rode a guarda em vez de conferir a olho — ela é a implementação canônica:
 bun scripts/pagina-produto-guardas.ts {site} {slug}
 ```
 
+⚠ **Como sub-agent da `pagina-produto-criar-em-massa --audit`, PULE a guarda e
+NÃO registre desvio** — mesma razão do passo 6.7: ela já rodou por slug no passo
+9 da mãe. Continue julgando a categoria (o `fullReview` no lugar errado é
+🔴 Crítico e é leitura, não script); o que se pula é só re-executar a guarda.
+
 **Casos reais (2026-08-14, os dois achados na mesma varredura):**
 - **7 páginas em 3 sites** com a resenha inteira no corpo e o campo ausente.
   Ficaram **meses** assim. O conserto certo foi **MOVER** o texto pro campo, não

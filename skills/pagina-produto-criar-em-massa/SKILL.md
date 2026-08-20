@@ -304,7 +304,12 @@ Detecção:
     audit recebe instrução explícita:
     - **A camada mecânica JÁ PASSOU limpa no passo 9** (`audit-editorial.ts`
       rodou por slug e o commit só aconteceu porque não havia `error`).
-      **NÃO re-rode `audit-editorial.ts`** — gaste o contexto no JULGAMENTO:
+      **NÃO re-rode `audit-editorial.ts` NEM `pagina-produto-guardas.ts`** — as
+      duas rodaram por slug no passo 9. Diga isso ao sub-agent com os dois nomes:
+      a régua escrita citava só a primeira, e as notas de desvio mostram o prompt
+      de runtime citando as duas — texto e prática divergindo é o que produziu as
+      22 reincidências em `6.7` no skill-log (canon 2026-08-20).
+      Gaste o contexto no JULGAMENTO:
       claim-vs-bible, voz-comprador implícita, voz-citação, naturalidade,
       duplicata-cross-site, chavões, superlativo. Se desconfiar de um achado
       mecânico específico, confira aquele campo à mão em vez de re-rodar tudo.
