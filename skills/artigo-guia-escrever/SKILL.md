@@ -250,13 +250,39 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     ```
     Falha graciosamente se `.env.painel-skills` não existir.
 
+15.5. **CONFIRMAR QUE A ANÁLISE FOI GRAVADA** (canon 2026-08-20 — gate, não
+    opcional). Nos cenários B/override, depois dos passos 10b e 10c:
+
+    ```bash
+    ls -la docs/painel/_data/competitor-analyses/{keyword-slug}.md
+    ls -la docs/painel/_data/competitor-sources/{keyword-slug}/
+    ```
+
+    **Se algum não existir, GRAVE AGORA** e só então siga. E reporte o resultado
+    no passo 16, em uma linha, dizendo se gravou ou não.
+
+    **Por que virou gate:** os passos 10b e 10c não tinham confirmação nenhuma,
+    então quando a sessão pulava a gravação o material colado sumia **sem
+    ninguém perceber**. Medido em 2026-08-18: o cluster de creatina inteiro, 7
+    keywords, estava sem ficha salva — e os concorrentes tinham sido colados em
+    todas. A recuperação custou reconstruir 6 análises a partir dos guias da
+    rede.
+
+    O custo de não ter gravado aparece semanas depois e em outro lugar: a
+    `artigo-clonar-em-massa` aborta no passo 4b concluindo que "a análise não foi
+    feita". Ela foi — o repo é que perdeu. Perda silenciosa de insumo que o
+    humano colou é a pior classe de falha desta skill, porque o trabalho de
+    recolar é dele, não do agente.
+
 16. **Reportar no chat**:
     - char count do HTML do guide + número de parágrafos + lista de links internos
     - path do `.mdx` salvo
     - **Coverage report** (se análise foi usada):
       - "Cobri N/M tópicos do concorrente"
       - "Adicionei K tópicos extras (das bíblias / gaps): X, Y, Z"
-    - Se análise foi criada/atualizada: path do `_data/competitor-analyses/{kw}.md` salvo
+    - **Se análise foi criada/atualizada: diga explicitamente se a gravação foi
+      CONFIRMADA no passo 15.5** (path + ficha e cru). "Salvei" sem ter olhado é
+      exatamente o que fez 7 keywords sumirem.
     - Se análise foi carregada de existente: lembrete "essa análise reusa em outros sites com mesma keyword"
 
 ## Formato da análise de concorrentes
