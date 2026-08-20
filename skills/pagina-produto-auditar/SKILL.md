@@ -66,6 +66,19 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    ```bash
    bun scripts/audit-editorial.ts {site}/{slug} --json
    ```
+   ⚠ **Rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, PULE
+   este passo e NÃO registre desvio.** Ali o `audit-editorial.ts` já rodou por
+   slug no passo 9 da mãe, e o commit só aconteceu porque saiu sem `error` — a
+   mãe instrui explicitamente "NÃO re-rode". Re-rodar joga fora 1 tool call e
+   uma leitura de arquivo por agente (medido 2026-07-31), e o contexto vale mais
+   no julgamento. Se desconfiar de um achado mecânico específico, confira aquele
+   campo à mão em vez de re-rodar tudo.
+
+   Sem esta ressalva o sub-agent ficava entre duas ordens opostas e registrava
+   desvio por obedecer a mãe: **22 reincidências em `6.7`** no `skill-log`, o
+   ponto mais reincidente do log (canon 2026-08-20). Desvio é pra apontar
+   contradição real — esta virou barulho previsível.
+
    Os findings retornados são **autoritativos** — inclua TODOS no relatório com a severidade que o script deu (`error`/`warn`), NÃO re-julgue tamanho/fence/`;`/travessão de cabeça. Se o script erra por ausência de `bun`/lib (raro), caia no check manual das mesmas categorias. **Escopo do script: só o mecânico.** Ele NÃO cobre `tag-affiliate` (a tag pode ser injetada no build — verificável só no HTML renderizado, não no `.mdx`), nem julgamento (claim-vs-bible, naturalidade, redundância, voz-comprador) — isso continua com você nos passos abaixo.
 
 7. **Rodar as categorias de JULGAMENTO** (abaixo) — as que o script NÃO cobre: claim-vs-bible, tag-affiliate, tone/voz-comprador, superlativo, redundância, naturalidade, chavões-contexto, etc. As categorias puramente mecânicas (tamanho, travessão, `;`, html-invalido, fullReview-prefixo) já vieram do passo 6.7 — não duplicar.
