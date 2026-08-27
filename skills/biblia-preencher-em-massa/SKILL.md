@@ -65,7 +65,8 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
    - **Sem dados brutos** (todos vazios: `sobreEsteItem`/`doFabricante`/`specsAmazon`/`opinioesCompradores`/`descricaoProduto`) → **EXCLUI** + lista "sem matéria-prima, capturar antes".
    - **Contaminada** — roda `bun scripts/check-contamination.ts <ASIN>`; se `hasContamination: true` com hard issue (`cross-brand-mention`) → **EXCLUI** + lista "informações erradas, corrigir à mão (biblia-preencher individual)".
 
-   **Comportamento real hoje:** os três tipos são `hard` e EXCLUEM, com duas saídas condicionais:
+   **Comportamento real hoje:** os três tipos PODEM ser `hard` e excluir, com TRÊS saídas condicionais:
+   - **`cross-brand-mention` vira soft quando a marca alheia NÃO domina o campo** (canon 2026-08-27): menção isolada — fornecedor ("Fornecedor: Britânia" na página da Philco), compatibilidade ("compatível com cápsula Nespresso"), citação bibliográfica — com os sinais do próprio produto aparecendo igual ou mais no mesmo campo. O `check-contamination.ts` FILTRA os soft (`hasContamination: false`), então não exclui do lote e o campo é usado normalmente.
    - **`brand-mismatch` vira soft** se `identidade.confirmadoPelaEditora === true` (canon 2026-07-26). É a saída projetada pra co-branding e submarca. Casos reais: Tapo é linha da TP-Link (o próprio `urlFabricante` é `tp-link.com/br/.../tapo`), Multi Saúde é do grupo Multilaser (`urlFabricante` é `multilaser.com.br`). **Confirme pela evidência dentro da bíblia, não por conhecimento de mundo.** Não há UI pro campo — hoje é edição manual.
    - **`asin-mismatch` vira soft** quando o modelo bate e não há ambiguidade de voltagem (`irmaoBenigno`): é relistagem, não produto trocado. Com voltagens conflitantes ou modelo diferente, continua hard e pede recaptura.
 
