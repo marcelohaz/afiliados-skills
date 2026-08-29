@@ -215,8 +215,15 @@ Detecção:
    no disco, sem marcador de stub, sem auto-check e sem retorno. Na retomada
    (`RETOMAR=yes`) o passo 3 classificou as duas como **"já preenchido → PULA
    (idempotência)"**, *silenciosamente e por régua*. Resultado: página nunca
-   auto-conferida, fora do `sucessos`, portanto **fora das duas guardas do passo
-   9** — e o autocommit do painel na VPS acaba varrendo o arquivo pra dentro.
+   auto-conferida e fora do `sucessos`, portanto **fora das duas guardas**.
+
+   ⚠ **E elas foram commitadas assim mesmo — pelo commit desta skill.** Verificado
+   no `4e8380bbb` ("preenche 6 páginas individuais em batch via skill"): o commit
+   levou **as 6**, `sustagen-kids-morango` e `valda-imune-kids` inclusive. Ou seja,
+   a regra "use SÓ a lista dos paths retornados pelos sub-agents com sucesso" **não
+   foi o que aconteceu na prática** — a mãe commitou o lote planejado. É por isso
+   que a reconciliação tem que rodar **antes do `git add`** e não depois: quem
+   monta a lista do add é justamente quem precisa saber que há órfão nela.
 
    A regra "**sub-agent que morreu → refaz inline no mesmo turno**" (Invariantes →
    Turno vivo, item 5) só cobre a morte que você VÊ. Quando o turno inteiro morre
