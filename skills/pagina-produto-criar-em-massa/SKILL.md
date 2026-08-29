@@ -303,7 +303,12 @@ Detecção:
 
     **CRÍTICO — sub-agents de audit também NÃO fazem git** (mesma regra dos
     sub-agents de criação, pra evitar race condition). Cada sub-agent de
-    audit recebe instrução explícita:
+    audit recebe **`EM_MASSA=yes` no prompt** (canon 2026-08-29) — é a flag que
+    a `pagina-produto-auditar` lê pra pular git/mecânica/guarda/commit e liberar
+    o conserto de fato. Antes as ressalvas dela nomeavam esta skill uma a uma;
+    com a segunda mãe (`pagina-produto-auditar-em-massa`) isso rachou, então a
+    condição virou genérica. **Passe a flag e as instruções abaixo** (que são o
+    detalhe do lote, não substituem a régua dela):
     - **A camada mecânica JÁ PASSOU limpa no passo 9** (`audit-editorial.ts`
       rodou por slug e o commit só aconteceu porque não havia `error`).
       **NÃO re-rode `audit-editorial.ts` NEM `pagina-produto-guardas.ts`** — as

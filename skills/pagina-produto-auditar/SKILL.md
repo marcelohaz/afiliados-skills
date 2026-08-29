@@ -16,6 +16,20 @@ Aceita 2 formatos no $ARGUMENTS:
 
 Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
+**Flag `EM_MASSA=yes`** (passada pela skill-mãe quando esta roda como sub-agent
+de um lote — hoje `pagina-produto-criar-em-massa --audit` e
+`pagina-produto-auditar-em-massa`). Efeito, nos 5 pontos que a citam: pular o
+`git pull` (1.5), pular a camada mecânica (6.7), pular a guarda (19b), pular o
+commit/push (9) — a mãe faz os quatro — e **habilitar** o conserto de fato que
+passa no TESTE DA FRASE NOVA, que fora de lote é read-only.
+
+⚠ **Genérica de propósito, não uma lista de nomes de mãe** (canon 2026-08-29).
+Até então as 5 ressalvas nomeavam só a `criar-em-massa`; quando nasceu a segunda
+mãe, o sub-agent dela ficaria entre duas ordens opostas em todos os 5 pontos —
+que é exatamente o defeito já medido: **4 ambiguidades num lote de 10**
+(cozinhaideal, 21/08) e **22 reincidências em `6.7`** no skill-log. Mãe nova NÃO
+deve acrescentar o próprio nome aqui: basta passar `EM_MASSA=yes` no prompt.
+
 # Auditar página individual de produto
 
 > Versão executável local do prompt `docs/painel/_data/agent-prompts.json:audit_product_page`.
@@ -26,7 +40,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 ## Invariantes
 
 - **Não edite julgamento no `.mdx`.** Seu output é um relatório em `.audits/products/`; o humano decide o que muda texto/sentido/fato.
-  ⚠️ **Duas exceções:** (1) o **mecânico** (travessão, `;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI`) **aplica direto** com backup + Edit + commit, marcado ✅ CORRIGIDO — régua comum das auditoras (`docs/PADROES.md`, canon 2026-08-15); (2) rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, a skill-mãe pode autorizar o conserto de **fato** que passa no **TESTE DA FRASE NOVA** abaixo. Fora disso, e sempre para `warn` de julgamento, esta skill é read-only.
+  ⚠️ **Duas exceções:** (1) o **mecânico** (travessão, `;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI`) **aplica direto** com backup + Edit + commit, marcado ✅ CORRIGIDO — régua comum das auditoras (`docs/PADROES.md`, canon 2026-08-15); (2) rodando como **sub-agent de uma skill em-massa** (`EM_MASSA=yes` no prompt — hoje `pagina-produto-criar-em-massa --audit` e `pagina-produto-auditar-em-massa`), a skill-mãe pode autorizar o conserto de **fato** que passa no **TESTE DA FRASE NOVA** abaixo. Fora disso, e sempre para `warn` de julgamento, esta skill é read-only.
 - **Nunca invente findings.** Se não encontrou problema numa categoria, diga "nenhum". Audit vazio é melhor que audit inventado.
 - **Toda afirmação precisa de evidência.** Cite trecho literal do `.mdx` (blockquote < 15 palavras) ou da bíblia.
 - **Respeite as diretrizes** do site e da bíblia.
@@ -43,9 +57,9 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    ```
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
 
-   ⚠ **Rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, PULE
-   este passo e NÃO registre desvio** (mesma ressalva do 6.7 e do 19b). A mãe
-   proíbe git nos sub-agents porque N agentes paralelos dando `stash`/`pull`
+   ⚠ **Rodando como sub-agent de uma skill em-massa (`EM_MASSA=yes` no prompt),
+   PULE este passo e NÃO registre desvio** (mesma ressalva do 6.7 e do 19b). A
+   mãe proíbe git nos sub-agents porque N agentes paralelos dando `stash`/`pull`
    corrompem a árvore, e ela já puxou antes do pré-flight, então não há estado
    stale a corrigir. Sem esta linha o sub-agent fica entre duas ordens opostas e
    registra ambiguidade: aconteceu **4 vezes num único lote de 10** (cozinhaideal,
@@ -75,10 +89,12 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    ```bash
    bun scripts/audit-editorial.ts {site}/{slug} --json
    ```
-   ⚠ **Rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, PULE
-   este passo e NÃO registre desvio.** Ali o `audit-editorial.ts` já rodou por
-   slug no passo 9 da mãe, e o commit só aconteceu porque saiu sem `error` — a
-   mãe instrui explicitamente "NÃO re-rode". Re-rodar joga fora 1 tool call e
+   ⚠ **Rodando como sub-agent de uma skill em-massa (`EM_MASSA=yes` no prompt),
+   PULE este passo e NÃO registre desvio.** TODA mãe em-massa roda a camada
+   mecânica por slug ANTES de disparar os sub-agents e diz explicitamente "NÃO
+   re-rode": na `criar-em-massa` isso é o passo 9 (e o commit só aconteceu
+   porque saiu sem `error`); na `pagina-produto-auditar-em-massa` é a Etapa 1,
+   que existe justamente porque a página pode nunca ter passado pelo script. Re-rodar joga fora 1 tool call e
    uma leitura de arquivo por agente (medido 2026-07-31), e o contexto vale mais
    no julgamento. Se desconfiar de um achado mecânico específico, confira aquele
    campo à mão em vez de re-rodar tudo.
@@ -106,10 +122,10 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    ```
    `painel-vps-pull.sh` propaga pro painel da VPS via Basic Auth (creds em `.env.painel-skills`).
 
-   ⚠ **Rodando como sub-agent da `pagina-produto-criar-em-massa --audit`, PULE
-   este passo e NÃO registre desvio.** Escreva o `-last.md` e pare aí: a mãe
-   commita os relatórios num lote próprio (passo 12c dela), separado do commit
-   dos `.mdx` consertados. Commitar aqui é a race condition que a REGRA ZERO da
+   ⚠ **Rodando como sub-agent de uma skill em-massa (`EM_MASSA=yes` no prompt),
+   PULE este passo e NÃO registre desvio.** Escreva o `-last.md` e pare aí: a mãe
+   commita os relatórios num lote próprio (passo 12c da `criar-em-massa`, Etapa 4
+   da `auditar-em-massa`), separado do commit dos `.mdx` consertados. Commitar aqui é a race condition que a REGRA ZERO da
    mãe existe pra evitar.
 
 10. **Reportar no chat**: 3-5 linhas com total de findings por severidade + path do relatório. Não cole o relatório inteiro no chat.
@@ -472,9 +488,9 @@ Rode a guarda em vez de conferir a olho — ela é a implementação canônica:
 bun scripts/pagina-produto-guardas.ts {site} {slug}
 ```
 
-⚠ **Como sub-agent da `pagina-produto-criar-em-massa --audit`, PULE a guarda e
-NÃO registre desvio** — mesma razão do passo 6.7: ela já rodou por slug no passo
-9 da mãe. Continue julgando a categoria (o `fullReview` no lugar errado é
+⚠ **Como sub-agent de uma skill em-massa (`EM_MASSA=yes` no prompt), PULE a
+guarda e NÃO registre desvio** — mesma razão do passo 6.7: a mãe já a rodou por
+slug antes de disparar os sub-agents. Continue julgando a categoria (o `fullReview` no lugar errado é
 🔴 Crítico e é leitura, não script); o que se pula é só re-executar a guarda.
 
 **Casos reais (2026-08-14, os dois achados na mesma varredura):**
