@@ -229,6 +229,9 @@ FATO que passa no TESTE DA FRASE NOVA está habilitado.
 
 Contexto deste lote:
 - A camada mecânica passou limpa na mãe (`audit-editorial.ts` + `pagina-produto-guardas.ts`).
+- ⚠ **BACKUP OBRIGATÓRIO ANTES DO PRIMEIRO `Edit`** no `.mdx`, em
+  `docs/painel/.painel-backups/{YYYY-MM-DD}/product-{site}-{slug}-{HHMMSS}.mdx`.
+  Se você não vai consertar nada, não precisa. Se vai, o backup vem ANTES.
 - ⚠ `warn` de julgamento NUNCA aplica.
 - ⚠ Página contradiz `decisaoEditorial` mas obedece outro campo da mesma bíblia
   → NÃO toque; o alvo é a bíblia e o relatório aponta pra lá.
@@ -239,6 +242,17 @@ Contexto deste lote:
 
 Retorne: {ok, slug, severity, corrigidos:[{campo,de,para}], issues:[...]}
 ```
+
+⚠ **A linha do backup não é redundante com a Invariante.** A exigência já morava
+nas Invariantes desta skill e no passo 20 da individual, e mesmo assim **1 de 6
+sub-agents consertou sem gravar backup** (medido 2026-08-29,
+`produtosanalisados/bio2-pasta-de-amendoim-pura`, execução da Bárbara). O motivo é
+estrutural: a Invariante desta SKILL.md fala com a MÃE, e o sub-agent **não lê
+este arquivo** — ele lê a individual, onde o backup é o item 1 de uma lista
+numerada lá pelo fim. O único texto que alcança o sub-agent é o prompt. Regra da
+casa: **exigência que o sub-agent precisa cumprir mora no prompt**, não só na
+invariante. Sem o backup a Etapa 3.5 fica sem de onde reverter, e a reversão é
+metade da fiscalização que justifica aplicar conserto sem aprovação prévia.
 
 ⚠ **Passe os avisos por bíblia quando ela tiver `dadosInconsistentes`/`auditFlags`.**
 Medido nos lotes de 28/08: avisar caso a caso o que a bíblia decidiu (ex.: "a
@@ -260,6 +274,23 @@ git status --short sites/{site}/src/content/products/
   Termine aquela página **inline**, não re-dispare.
 
 Confira também a **trava de slug** (`slug_retornado == slug_pedido`).
+
+**E confira que existe backup de cada página modificada** — é o que a Etapa 3.5
+precisa pra reverter:
+
+```bash
+for S in {slugs-modificados}; do
+  ls docs/painel/.painel-backups/*/product-{site}-$S-*.mdx >/dev/null 2>&1 \
+    && echo "  ✅ backup $S" \
+    || echo "  ⛔ SEM BACKUP: $S — grave um de $(git show HEAD:sites/{site}/src/content/products/$S.mdx | head -1 >/dev/null; echo 'HEAD') antes de seguir"
+done
+```
+
+Faltando: **grave o backup a partir do `HEAD` do git** (`git show
+HEAD:sites/{site}/src/content/products/{slug}.mdx > docs/painel/.painel-backups/$(date +%F)/product-{site}-{slug}-$(date +%H%M%S).mdx`)
+antes de rodar a 3.5. O `HEAD` é o estado pré-conserto porque a mãe ainda não
+commitou — então a reversão continua possível, só não é o sub-agent que a
+garantiu.
 
 ### Etapa 3.5 — Re-rodar as DUAS guardas no que foi corrigido
 
