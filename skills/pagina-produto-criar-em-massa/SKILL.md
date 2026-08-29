@@ -123,6 +123,10 @@ Detecção:
    - **Stub vazio**: body contém `{/* STUB GERADO POR ` E frontmatter NÃO tem `pros`, `cons`, `specs`, `fullReview`, `subtitle`, `shortDescription`
    - **Stub parcial**: tem qq um dos 6 campos preenchidos → **PULA**
    - **Já preenchido**: tem todos os 6 campos → **PULA** (idempotência)
+     ⚠ **Com `RETOMAR=yes`, confira o `git status` antes de pular.** "Preenchido"
+     e **não commitado** pode ser página de sub-agent que morreu depois do write
+     (HTTP 429) e nunca se auto-conferiu. Pular assim a tira das guardas do passo
+     9. Ver a reconciliação nos dois sentidos lá.
 
    Categorias retornadas:
    - `stubsVazios`: candidatos pra processar
@@ -196,7 +200,33 @@ Detecção:
            ... (cada path explícito)
    ```
 
-   Antes do add, confirmar com `git status --short` que os paths esperados estão modificados. Se algum sucesso reportado não está modificado, alertar (sub-agent reportou ok mas não escreveu?).
+   **Reconciliação nos DOIS sentidos** — `git status --short sites/{site}/src/content/products/`:
+
+   - **reportado E não modificado** → sub-agent alucinou a escrita. Investigue.
+   - **modificado E NÃO reportado** → ⛔ **página órfã.** Alguém escreveu os 6
+     campos e não voltou pra reportar. **NÃO commite às cegas**: rode as duas
+     guardas nela e confira contra a bíblia, exatamente como se fosse um sucesso.
+     Só então entra no `git add`.
+
+   ⚠ **Este segundo caso não é hipótese, e a idempotência do passo 3 o esconde**
+   (medido 2026-08-29, `guiabemavaliado`, execução da Bárbara): 4 de 6 sub-agents
+   morreram com **HTTP 429** na mesma leva, e **dois morreram DEPOIS de gravar o
+   `.mdx` completo** — `sustagen-kids-morango` e `valda-imune-kids` ficaram 6/6
+   no disco, sem marcador de stub, sem auto-check e sem retorno. Na retomada
+   (`RETOMAR=yes`) o passo 3 classificou as duas como **"já preenchido → PULA
+   (idempotência)"**, *silenciosamente e por régua*. Resultado: página nunca
+   auto-conferida, fora do `sucessos`, portanto **fora das duas guardas do passo
+   9** — e o autocommit do painel na VPS acaba varrendo o arquivo pra dentro.
+
+   A regra "**sub-agent que morreu → refaz inline no mesmo turno**" (Invariantes →
+   Turno vivo, item 5) só cobre a morte que você VÊ. Quando o turno inteiro morre
+   por cota, quem retoma não sabe que existiu um cadáver — e o pré-flight, sendo
+   idempotente, apaga o rastro. **É esta reconciliação que fecha o buraco**, e é
+   a mesma trava que a `pagina-produto-auditar-em-massa` já tem na Etapa 3.
+
+   ⚠ **Na retomada, "já preenchido" NÃO é sinônimo de "conferido".** Se um slug
+   caiu em `jaPreenchidos` mas está **modificado e não commitado** no `git status`,
+   trate-o como órfão pelo parágrafo acima, não como pulado.
 
    **GUARDAS MECÂNICAS — RODAR OS DOIS SCRIPTS, não redigitar (canon 2026-07-30, corrigido 2026-07-31):**
 
