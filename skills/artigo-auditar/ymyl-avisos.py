@@ -38,17 +38,27 @@ AVISO = re.compile(
 
 
 def secoes(raw: str):
-    """Divide o .mdx em (reviews, guide, intro). O guideContent e o products[]
-    vivem os DOIS no frontmatter, então o corte é por posição da chave."""
+    """Divide o .mdx em (reviews, guide, intro). O `guideContent` e o `products[]`
+    vivem os DOIS no frontmatter, então o corte é por posição de chave — e cada
+    um vai da sua chave até a PRÓXIMA, nunca até o fim.
+
+    ⚠ A ORDEM DOS DOIS NÃO É FIXA (medido 2026-08-30: 322 artigos com guide
+    depois de products, 52 com guide ANTES). A primeira versão deste corte
+    assumia guide-depois e fatiava `fm[gi:]` até o fim: nos 52, o guide engolia
+    o products inteiro e todo aviso de review era contado DUAS vezes. Efeito
+    medido em 6 artigos, um deles com 1 aviso real reportado como 2 — o script
+    acusaria violação num artigo em conformidade e mandaria apagar o único
+    aviso legítimo. Por isso a fatia é entre limites ordenados."""
     m = re.match(r'^---\n([\s\S]*?)\n---\n([\s\S]*)$', raw)
     fm, body = (m.group(1), m.group(2)) if m else (raw, '')
-    gi, pi = fm.find('guideContent:'), fm.find('products:')
-    guide = fm[gi:] if gi >= 0 else ''
-    if pi >= 0:
-        prods = fm[pi:gi] if gi > pi else fm[pi:]
-    else:
-        prods = ''
-    return {'reviews': prods, 'guide': guide, 'intro': body}
+    marcos = sorted((p, nome) for p, nome in
+                    ((fm.find('products:'), 'reviews'), (fm.find('guideContent:'), 'guide'))
+                    if p >= 0)
+    out = {'reviews': '', 'guide': '', 'intro': body}
+    for i, (ini, nome) in enumerate(marcos):
+        fim = marcos[i + 1][0] if i + 1 < len(marcos) else len(fm)
+        out[nome] = fm[ini:fim]
+    return out
 
 
 def trecho(texto: str, m) -> str:
