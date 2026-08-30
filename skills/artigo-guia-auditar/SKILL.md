@@ -120,6 +120,37 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 
 ## Critérios da auditoria do guia
 
+### `ymyl-aviso-repetido` — poda do excedente (🟡, canon 2026-06-25 + 2026-07-30)
+
+A régua limita o aviso "procure um médico/nutricionista" a **1 por ARTIGO**. Quem
+CONTA é a `artigo-auditar` (única com escopo de artigo inteiro); esta skill **poda a fatia do `guideContent`**.
+
+Rode o mesmo script que ela usa, para não inventar regex próprio:
+
+```bash
+python3 .claude/skills/artigo-auditar/ymyl-avisos.py sites/{site}/src/content/reviews/{slug}.mdx --json
+```
+
+Ele já marca cada ocorrência como `KEEP` ou `PODA` e diz em que seção está. **Você aplica só as `PODA` cujo `secao` é `guide`** — as dos reviews são da
+`artigo-reviews-auditar`, e o `KEEP` fica.
+
+⚠ O `KEEP` quase sempre É do guide (a regra elege o guide como sobrevivente), então
+na prática você poda o 2º aviso do guide em diante, não todos.
+
+⚠ **Só APAGA quando o aviso é frase inteira ou oração removível deixando o texto
+válido.** Se tirar exigir reescrever a frase em volta, é prosa nova: vai pro
+relatório, não aplica. Exemplos reais do pior caso da rede:
+- `"Por ser suplemento infantil, o uso pede acompanhamento do pediatra."` → frase
+  inteira, APAGA.
+- `"...praticidade na nutrição infantil, sempre com a orientação de um profissional
+  de saúde."` → a oração final sai e a frase fica de pé, APAGA a oração.
+- `"...a partir dos 4 anos com orientação do pediatra."` dentro de uma
+  `shortDescription` que só tem essa frase → apagar deixaria o campo sem fecho:
+  REPORTA.
+
+**Severidade 🟡 e não 🔴:** aviso a mais não é erro de fato nem risco ao leitor,
+é repetição que cansa. Não bloqueia nada.
+
 ### 1. `produto-no-lineup-fora-do-guide` (level=`warn`) — O CRITÉRIO-CHAVE
 
 O motivo nº1 desta skill existir. Quando o `products[]` do artigo cresce (produto adicionado depois do guia ser escrito), o guia fica **stale**: não menciona nem linka o produto novo.

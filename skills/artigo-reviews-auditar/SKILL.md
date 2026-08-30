@@ -148,6 +148,36 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 (Numeração: 1, 1b, 2-19, 21-23 — o antigo 20 foi absorvido pelo 21 `naturalidade`; são 24 critérios.)
 
+### 25. `ymyl-aviso-repetido` — poda do excedente (🟡, canon 2026-06-25 + 2026-07-30)
+
+A régua limita o aviso "procure um médico/nutricionista" a **1 por ARTIGO**. Quem
+CONTA é a `artigo-auditar` (única com escopo de artigo inteiro); esta skill **poda
+a fatia dos reviews**.
+
+Rode o mesmo script que ela usa, para não inventar regex próprio:
+
+```bash
+python3 .claude/skills/artigo-auditar/ymyl-avisos.py sites/{site}/src/content/reviews/{slug}.mdx --json
+```
+
+Ele já marca cada ocorrência como `KEEP` ou `PODA` e diz em que seção está. **Você
+aplica só as `PODA` cujo `secao` é `reviews`** — as do `guide` são da
+`artigo-guia-auditar`, e o `KEEP` fica.
+
+⚠ **Só APAGA quando o aviso é frase inteira ou oração removível deixando o texto
+válido.** Se tirar exigir reescrever a frase em volta, é prosa nova: vai pro
+relatório, não aplica. Exemplos reais do pior caso da rede:
+- `"Por ser suplemento infantil, o uso pede acompanhamento do pediatra."` → frase
+  inteira, APAGA.
+- `"...praticidade na nutrição infantil, sempre com a orientação de um profissional
+  de saúde."` → a oração final sai e a frase fica de pé, APAGA a oração.
+- `"...a partir dos 4 anos com orientação do pediatra."` dentro de uma
+  `shortDescription` que só tem essa frase → apagar deixaria o campo sem fecho:
+  REPORTA.
+
+**Severidade 🟡 e não 🔴:** aviso a mais não é erro de fato nem risco ao leitor,
+é repetição que cansa. Não bloqueia nada.
+
 ### 1. `tone-clone` — abertura/frase idêntica entre produtos
 
 **NÃO flagrar** (são intencionais):

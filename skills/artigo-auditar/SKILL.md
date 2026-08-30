@@ -649,6 +649,47 @@ for produto in products:
 
 **Caso real**: melhorpretreino emagrecer tem frase com 8 preços. Quebrar em 2 frases ou substituir por categoria ("entre os 3 mais caros").
 
+### `ymyl-aviso-repetido` (level=`warn`, régua v1.117.0 — canon Marcelo 2026-06-25 + 2026-07-30)
+
+**Não confunda com o `health-absolutes-ymyl` abaixo.** Aquele é lista de PROIBIÇÕES
+("100% seguro", "sem efeitos colaterais"). Este conta a REPETIÇÃO do aviso
+"procure um médico/nutricionista", que a régua limita a **1 por artigo**.
+
+**Rode o script — não conte lendo, e não escreva regex na hora:**
+
+```bash
+python3 .claude/skills/artigo-auditar/ymyl-avisos.py sites/{site}/src/content/reviews/{slug}.mdx
+```
+
+Ele devolve o total, a contagem por seção (`reviews` / `guide` / `intro`), qual
+aviso é o **KEEP** e quais são **PODA**, com o trecho de cada um.
+
+**Por que script:** um regex improvisado inflou o número em ~80% (medido
+2026-08-30 — acusou 79 artigos em excesso; a definição estrita dá 44). O que
+contava errado: `"60 comprimidos na orientação de dois ao dia"` (posologia),
+`"a orientação de uso começa nessa idade"` (rótulo), a linha de tabela
+`label: "Orientação de uso"` e `"Complementa, não substitui"` (fala de
+alimentação, não de médico). Aviso exige **profissional de saúde citado**.
+
+**Por que mora AQUI e não nas skills que consertam:** o artigo é montado por
+skills diferentes em momentos diferentes, e nenhuma vê a outra. Medido: dos
+avisos em artigos com excesso, **54% estão nos reviews e 46% no guide**, e só 4
+blocos `fullReview` da rede inteira tinham 2+ avisos DENTRO do mesmo review. A
+repetição é ENTRE as seções — só quem lê o artigo inteiro pode contar. Esta
+skill é a única com esse escopo.
+
+**Regra do sobrevivente (posicional, de propósito):** fica **o primeiro do
+`guideContent`**; se o guide não tiver nenhum, o primeiro dos reviews. "Manter o
+mais ancorado num fato" NÃO opera — no pior caso da rede (11 avisos) os
+ancorados eram justamente os repetidos (a idade mínima do rótulo, citada em 4
+lugares). O guide é a seção educativa, onde um aviso cabe; o review é comparação
+de compra. O auditor pode eleger outro se for claramente mais específico, e aí
+diz por quê.
+
+**Esta skill é read-only: ela REPORTA.** A poda é da `artigo-reviews-auditar`
+(fatia dos reviews) e da `artigo-guia-auditar` (fatia do guide), que já aplicam
+fix e leem o mesmo `.mdx`.
+
 ### `health-absolutes-ymyl` (level=`error`, régua v1.19.0)
 
 **Bug-class** (ChatGPT-Bárbara ponto 7, YMYL): absolutos de segurança/saúde violam Your Money Your Life guidelines do Google.
