@@ -25,6 +25,17 @@ artigos com excesso; a definição estrita dá 44. O que ele contava errado:
   · label: "Orientação de uso" value: "1 a 2 gomas"   → linha da tabela de specs
   · "Complementa, não substitui"                      → sobre alimentação, não médico
 A definição estrita exige um PROFISSIONAL DE SAÚDE citado. Sem isso não é aviso.
+
+⚠ O QUE O SCRIPT NÃO SEPARA (achado da Bárbara, 2026-08-30): aviso que vem do
+RÓTULO ("o fabricante orienta que crianças até 3 anos...", "o próprio rótulo
+avisa que dose acima de 2 comprimidos...") é INFORMAÇÃO DE PRODUTO, da mesma
+classe de dose e alérgeno, e a régua o nomeia como o caso que MERECE ficar
+("só quando o ponto é genuinamente sensível, ex.: contraindicação real de um
+produto específico"). O KEEP/PODA é posicional e não distingue isso — chegou a
+marcar PODA no fato de rótulo e KEEP no disclaimer genérico, invertendo o valor.
+Deliberadamente NÃO foi escrito um classificador: a fronteira não é nítida
+(medir a proporção deu 5% ou 32% conforme a janela da frase) e o custo de errar
+o automático é maior que o de ler 2 ou 3 trechos. Quem decide é quem lê.
 """
 import re, sys, json
 
@@ -115,6 +126,12 @@ def main():
         if eh_keep:
             keep_usado = True
         print(f'{"  KEEP" if eh_keep else "  PODA"} [{a["secao"]}] {a["trecho"]}')
+    print('\n⚠ NÃO PODE PODAR o aviso que vem do RÓTULO: cita fabricante, embalagem ou')
+    print('  bula, ou amarra idade e dose ("crianças até 3 anos só sob orientação de')
+    print('  pediatra", "dose acima de 2 comprimidos só com indicação médica"). Isso é')
+    print('  informação do produto, igual a dose ou alérgeno, e ajuda a decidir a compra.')
+    print('  O KEEP/PODA acima é POSICIONAL e não sabe distinguir — quando ele marcar')
+    print('  PODA num fato de rótulo, ignore: quem decide é quem lê o trecho.')
     print('\n⚠ Só pode APAGAR o excedente quando ele é frase inteira ou oração removível')
     print('  deixando o texto válido. Se a remoção exigir reescrever a frase em volta,')
     print('  é prosa nova: REPORTA, não aplica.')

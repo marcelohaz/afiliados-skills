@@ -686,6 +686,18 @@ lugares). O guide é a seção educativa, onde um aviso cabe; o review é compar
 de compra. O auditor pode eleger outro se for claramente mais específico, e aí
 diz por quê.
 
+⚠ **Fato de rótulo NÃO entra na poda** (achado da Bárbara, 2026-08-30). Aviso que
+  cita fabricante, embalagem ou bula, ou que amarra idade e dose — "o fabricante
+  orienta que crianças até 3 anos só consumam sob orientação de pediatra", "o
+  próprio rótulo avisa que dose acima de 2 comprimidos só com indicação médica" —
+  é **informação de produto**, da mesma classe de dose e alérgeno, e é exatamente
+  o caso que a régua manda MANTER ("só quando o ponto é genuinamente sensível,
+  ex.: contraindicação real de um produto específico"). O `KEEP`/`PODA` do script
+  é POSICIONAL e não distingue: já marcou PODA no fato de rótulo e KEEP no
+  disclaimer genérico, invertendo o valor. **Quando isso acontecer, ignore o
+  script.** Não há classificador de propósito — a fronteira não é nítida e ler
+  2 ou 3 trechos custa menos que errar no automático.
+
 **Esta skill é read-only: ela REPORTA.** A poda é da `artigo-reviews-auditar`
 (fatia dos reviews) e da `artigo-guia-auditar` (fatia do guide), que já aplicam
 fix e leem o mesmo `.mdx`.

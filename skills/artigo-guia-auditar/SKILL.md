@@ -137,6 +137,18 @@ Ele já marca cada ocorrência como `KEEP` ou `PODA` e diz em que seção está.
 ⚠ O `KEEP` quase sempre É do guide (a regra elege o guide como sobrevivente), então
 na prática você poda o 2º aviso do guide em diante, não todos.
 
+⚠ **Fato de rótulo NÃO entra na poda** (achado da Bárbara, 2026-08-30). Aviso que
+  cita fabricante, embalagem ou bula, ou que amarra idade e dose — "o fabricante
+  orienta que crianças até 3 anos só consumam sob orientação de pediatra", "o
+  próprio rótulo avisa que dose acima de 2 comprimidos só com indicação médica" —
+  é **informação de produto**, da mesma classe de dose e alérgeno, e é exatamente
+  o caso que a régua manda MANTER ("só quando o ponto é genuinamente sensível,
+  ex.: contraindicação real de um produto específico"). O `KEEP`/`PODA` do script
+  é POSICIONAL e não distingue: já marcou PODA no fato de rótulo e KEEP no
+  disclaimer genérico, invertendo o valor. **Quando isso acontecer, ignore o
+  script.** Não há classificador de propósito — a fronteira não é nítida e ler
+  2 ou 3 trechos custa menos que errar no automático.
+
 ⚠ **Só APAGA quando o aviso é frase inteira ou oração removível deixando o texto
 válido.** Se tirar exigir reescrever a frase em volta, é prosa nova: vai pro
 relatório, não aplica. Exemplos reais do pior caso da rede:
