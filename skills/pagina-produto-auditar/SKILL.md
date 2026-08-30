@@ -539,10 +539,25 @@ Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já 
   aqui. Máximo 1 coloquialismo leve por página.
 - **20e — tiques com teto por PÁGINA** (🟡, vale em todo nicho): tetos = **metade** dos de
   `_genericos.naturalidade_max` do `chavoes-por-nicho.json` (regra escrita no `_doc` da chave:
-  "página de produto: metade"; ex.: resolve 3→1,5 = arredonda pra 1 acima de 1,5), e
+  "página de produto: metade"), pela fórmula **`teto_pagina = max(1, floor(teto_artigo/2))`**
+  (ex.: resolve 3 → floor(1,5) = 1; daqui 2 → 1; **de verdade 1 → floor(0,5) = 0 → max(1,0) = 1**), e
   `_genericos.naturalidade_banidos` = 0 ("Ideal pra quem", "Destaque para", "preço médio
   acessível"…). Some com o bloco do nicho se o site está em `_sites_aplicaveis`. Não copie a
   lista pra cá: cite a chave (a lista que vivia aqui já divergia do JSON).
+
+  ⚠ **O divisor /2 do 20e vale SÓ para `_genericos.naturalidade_max`.** Os caps dos
+  BLOCOS DE NICHO convertem por **/10**, pela fórmula do critério 13. São escopos
+  diferentes, não réguas concorrentes — e errar isso muda o veredito por ordem de
+  grandeza. Medido em 2026-08-29 na chave `Creatinas.medico_tecnico_max.monohidratada`
+  (teto 30 por artigo): dois auditores varreram a MESMA rede e acharam **1** e **270**
+  páginas acima do teto, porque um aplicou /2 (teto 15) e o outro /10 (teto 3). O certo
+  ali é **/10**, porque a chave mora num bloco de nicho. Antes de converter, veja ONDE
+  a chave vive: `_genericos.naturalidade_max` → /2; qualquer bloco de nicho → /10.
+
+  ⚠ **`max(1, ...)` não chega a zero de propósito.** Teto 0 é função do
+  `_genericos.naturalidade_banidos`, que é lista separada. Deixar um tique de
+  `naturalidade_max` cair a zero por arredondamento seria banir por divisão uma
+  palavra que a régua escolheu apenas limitar.
 - **20d — jargão financeiro/burocrático** (🟡): "desembolso" → "preço" ·
   "reprografia" → "cópia e digitalização" · "aquisição" → "compra".
 
