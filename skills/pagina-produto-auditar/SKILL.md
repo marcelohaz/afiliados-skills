@@ -545,14 +545,20 @@ Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já 
   acessível"…). Some com o bloco do nicho se o site está em `_sites_aplicaveis`. Não copie a
   lista pra cá: cite a chave (a lista que vivia aqui já divergia do JSON).
 
-  ⚠ **O divisor /2 do 20e vale SÓ para `_genericos.naturalidade_max`.** Os caps dos
-  BLOCOS DE NICHO convertem por **/10**, pela fórmula do critério 13. São escopos
-  diferentes, não réguas concorrentes — e errar isso muda o veredito por ordem de
-  grandeza. Medido em 2026-08-29 na chave `Creatinas.medico_tecnico_max.monohidratada`
+  ⚠ **O divisor /2 é EXCEÇÃO DE UMA CHAVE SÓ: `_genericos.naturalidade_max`.**
+  **Todo o resto do JSON converte por /10** pela fórmula do critério 13 — os blocos
+  de nicho **e as demais chaves do próprio `_genericos`** (`industrial_max`,
+  `chavoes_estruturais_max`, `ingles_max`, `corporativo_max`…). Não é "genéricos
+  contra nicho": é uma chave contra todas as outras. O que decide é o `_doc`, e
+  `naturalidade_max` é a **única** do JSON inteiro que declara divisor próprio
+  ("página de produto: metade"); onde o `_doc` não declara, vale o /10 do 13.
+
+  São escopos diferentes, não réguas concorrentes — e errar isso muda o veredito por
+  ordem de grandeza. Medido em 2026-08-29 na chave `Creatinas.medico_tecnico_max.monohidratada`
   (teto 30 por artigo): dois auditores varreram a MESMA rede e acharam **1** e **270**
   páginas acima do teto, porque um aplicou /2 (teto 15) e o outro /10 (teto 3). O certo
-  ali é **/10**, porque a chave mora num bloco de nicho. Antes de converter, veja ONDE
-  a chave vive: `_genericos.naturalidade_max` → /2; qualquer bloco de nicho → /10.
+  ali é **/10**. Antes de converter, olhe o NOME da chave, não o bloco:
+  `_genericos.naturalidade_max` → /2; **qualquer outra chave, em qualquer bloco** → /10.
 
   ⚠ **`max(1, ...)` não chega a zero de propósito.** Teto 0 é função do
   `_genericos.naturalidade_banidos`, que é lista separada. Deixar um tique de
