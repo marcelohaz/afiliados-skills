@@ -208,6 +208,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
      - cada item de `cons` ≤ 180 chars (alvo 80-130)
      - `fullReview` 800-3000 chars de texto puro (descontando markup e URLs)
      - Passou? reescreve **só o item que estourou** (não o review inteiro)
+   - **Subtitle** (2026-09-01): stub sem subtitle → lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, lead distinto dos irmãos do artigo; subtitle humano → sentido preservado (ver "Os 6 campos")
    - **Banidas no output** (v1.16.0): grep por `lineup`, `desta seleção`, `do lineup`, `do nosso lineup`, `do nosso comparativo` — se achar, reescreve
    - **Cota cross-produto**: máximo 2 peers citados por bullet/parágrafo (ver Armadilha 7)
    - HTML allowlist OK no fullReview

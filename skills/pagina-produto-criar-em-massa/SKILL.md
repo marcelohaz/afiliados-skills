@@ -262,8 +262,10 @@ Detecção:
 
    Qualquer achado = **não commite**, conserte e re-rode. Bloqueie nos DOIS níveis
    de `sev`: `error` (fence, html-invalido, tamanho-fora-de-faixa, termo-banido,
-   yaml-invalido) **e** `warn` (travessao, no-ponto-e-virgula) — os dois `warn` são
-   proibições duras da régua com conserto determinístico (`—`→vírgula, `;`→`.`/`,`),
+   yaml-invalido) **e** `warn` (travessao, no-ponto-e-virgula, voltagem-citada, bivolt-sem-confirmacao) — os `warn` são
+   proibições duras da régua: três com conserto determinístico (`—`→vírgula, `;`→`.`/`,`,
+   apagar a menção 110/127/220V ou a row "Voltagem") e `bivolt-sem-confirmacao` exige reescrever
+   o pró/spec sem o claim (o script já leu o `specsAmazon` da bíblia; 2026-09-01),
    então não há motivo pra deixar passar.
 
    **Por que os DOIS, e nesta ordem** (medido 2026-07-31, injetando cada defeito e restaurando): o `audit-editorial.ts` é **superset** da guarda para checagem por página. A guarda sozinha **deixa passar travessão, `;` em prosa e HTML literal em campo texto-puro** — testado, os três passaram limpos por ela e os três foram pegos pelo `audit-editorial`. Como o sub-agent de criação PULA o `audit-editorial` em modo batch (ver `pagina-produto-criar`, passo 11), rodar só a guarda aqui deixava esses três sem checagem alguma no caminho default (sem `--audit`). É buraco de cobertura, não redundância.

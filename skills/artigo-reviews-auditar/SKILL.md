@@ -720,9 +720,9 @@ Claim cuja ÚNICA origem é o `specsAmazon` (classificação automática: "Tipo 
 
 ## Filtros de severidade
 
-- **Crítico** (sempre propor mudança): buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag DIFERENTE da do config), html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0), **badge-ausente** (23, canon 2026-06-22 — todo produto leva etiqueta, alinha com o gate da `artigo-auditar`)
+- **Crítico** (sempre propor mudança): **voltagem-citada** (110/127/220 → apagar a menção/row; bivolt sem lastro no specsAmazon → reescrever o pró/spec), buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag DIFERENTE da do config), html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0), **badge-ausente** (23, canon 2026-06-22 — todo produto leva etiqueta, alinha com o gate da `artigo-auditar`)
 - **Mecânico (aplica direto, warn)**: travessão, `;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI` (régua comum das auditoras — `docs/PADROES.md`).
-- **Médio** (propor mudança): tone-clone óbvio, **repeticao-intra-artigo 1b (FIX: ≥4 ocorrências / abertura em ≥4 / fecho de preço >50%; apagar cópia é óbvio, reescrever é julgamento — com as 5 salvaguardas)**, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (palavra fora do sentido/verbo-curinga, jargão financeiro, tiques acima do teto — v1.32.0 + canon 2026-08-15; 21c vira Crítico com ≥3 no mesmo review), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
+- **Médio** (propor mudança): **peso-por-fonte** (claim só do specsAmazon como pró central/subtitle/shortDescription → mover pra tabela), tone-clone óbvio, **repeticao-intra-artigo 1b (FIX: ≥4 ocorrências / abertura em ≥4 / fecho de preço >50%; apagar cópia é óbvio, reescrever é julgamento — com as 5 salvaguardas)**, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (palavra fora do sentido/verbo-curinga, jargão financeiro, tiques acima do teto — v1.32.0 + canon 2026-08-15; 21c vira Crítico com ≥3 no mesmo review), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório
@@ -735,7 +735,7 @@ Apresentar em chat após análise:
 **Lineup**: {N} produtos analisados, {N-X} com fullReview preenchido (auditados)
 **Resultado**: {X} produtos com mudanças propostas, {Y} passaram limpos
 
-## Checklist de cobertura dos 24 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
+## Checklist de cobertura dos 26 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
 
 | # | Critério | Status | Nota |
 |---|---|---|---|
@@ -764,6 +764,9 @@ Apresentar em chat após análise:
 | 21 | naturalidade | ✓/⚠/n.a. | ... |
 | 22 | **subtitle-keyword-first** (NORMALIZAÇÃO — avaliar CADA subtitle) | ✓/⚠/n.a. | ... |
 | 23 | **badge-ausente** (NORMALIZAÇÃO — conferir badge em TODOS) | ✓/⚠/n.a. | ... |
+| 24 | **voltagem-citada** (110/127/220V, row Voltagem, bivolt sem specsAmazon) | ✓/⚠/n.a. | ... |
+| 25 | ymyl-aviso-repetido (script `ymyl-avisos.py`) | ✓/⚠/n.a. | ... |
+| 26 | peso-por-fonte (claim só do specsAmazon como pró central) | ✓/⚠/n.a. | ... |
 
 > Todo critério marcado. `⚠ flag` vira mudança proposta abaixo. Os de NORMALIZAÇÃO (22, 23) raramente são `✓ pass` num artigo recém-criado — se marcar `✓`, justifique na nota (ex.: "11/11 subtitles já keyword-first").
 
@@ -853,7 +856,7 @@ Depois do Edit, rodar `pnpm --filter {site} build`. Se Zod do Astro falhar (rar�
 
 **Por que acontece:** os critérios de NORMALIZAÇÃO (22, 23) não são "defeito que aparece em grep" — são transformação proativa que quase sempre gera proposta. Quem audita "procurando o que está errado" não os vê, porque o subtitle "lê bem" (é o ângulo da criação) e o badge ausente é uma omissão, não um erro visível no texto.
 
-**A trava:** percorrer os 23 e **preencher a Checklist de cobertura** (passo 7 + Formato do relatório) é OBRIGATÓRIO. Produzir a linha de cada critério força avaliá-lo. Relatório sem a checklist completa = inválido. Marcar `✓ pass` em 22/23 num artigo recém-criado exige justificativa na nota.
+**A trava:** percorrer os 26 e **preencher a Checklist de cobertura** (passo 7 + Formato do relatório) é OBRIGATÓRIO. Produzir a linha de cada critério força avaliá-lo. Relatório sem a checklist completa = inválido. Marcar `✓ pass` em 22/23 num artigo recém-criado exige justificativa na nota.
 
 ### 1. Re-flagrar estrutura padrão como tone-clone
 

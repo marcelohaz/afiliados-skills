@@ -337,7 +337,7 @@ Fix sugerido: editar via painel (editor-artigo.html → campo Título) ou rodar 
 Audit do campo `description` do frontmatter (meta description SEO).
 
 **Checklist**:
-- **50-160 chars** (alvo 120-155). <50 = pobre, >160 = truncado no Google.
+- **120-160 chars** (alvo 125-155; alinhado 2026-09-01 com `artigo-meta-escrever` e `audit-article.ts` `metaDescMin=120`). <120 = 🟡 curta (perde snippet), <50 = 🔴 pobre (nem passa o gate estrutural), >160 = truncado no Google.
 - **Single-line** (sem quebras de linha).
 - **Sem aspas duplas internas** (quebra o YAML do frontmatter).
 - **Sem travessão** (`—` ou `–`).
