@@ -386,8 +386,9 @@ Checklist: copiar a SKILL.md, **registrar em `plugins[].skills` do
 `.claude-plugin/marketplace.json`** (arquivo sem entrada no manifesto NÃO carrega
 — foi assim que a v1.85.0 falhou), bumpar `metadata.version` + changelog na
 `metadata.description`, conferir a contagem de skills na `plugins[].description`,
-confirmar com `git ls-remote origin HEAD` (nunca pelo log local) e avisar que a
-Bárbara precisa rodar `/plugin marketplace update`.
+confirmar com `git ls-remote origin HEAD` (nunca pelo log local), realinhar o
+plugin daqui (`claude plugin update afiliados-skills@afiliados-skills`) e mandar o
+mesmo comando, um só, pra Bárbara (ela reinicia o Claude Code depois).
 
 ## Invocação
 

@@ -40,12 +40,13 @@ Ou, se já tem o repo clonado localmente:
 
 Depois reinicia o Claude Code (Cmd+Q + abrir). As skills viram disponíveis no `/`.
 
-Pra atualizar quando sair release nova:
+Pra atualizar quando sair release nova, um comando no terminal (fora do Claude Code):
 
 ```
-/plugin marketplace update afiliados-skills
-/plugin update afiliados-skills@afiliados-skills
+claude plugin update afiliados-skills@afiliados-skills
 ```
+
+Depois reinicia o Claude Code. Confere com `claude plugin list` (a linha do `afiliados-skills` mostra o hash do commit mais novo do marketplace).
 
 ## Pré-requisitos
 
