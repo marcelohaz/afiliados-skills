@@ -98,6 +98,12 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
    ```
    Use SÓ pra contexto (tag/404 interno). **Não conserte tag aqui** — só reporte que `fill-affiliate-tag.ts` resolve.
 
+4.5. **Links nascidos no TEMPLATE (canon 2026-09-02).** Tabela de specs, "Produtos testados", cards de categoria e o `sitemap-produtos.xml` montam `href` que não estão em campo nenhum do `.mdx`, então os passos 3 e 4 **não os veem** — foi assim que esta skill disse "limpo" com 12 links 404 no ar (creatina, ago/2026). Se `sites/{site}/dist/` existe e é mais novo que o último commit que tocou o site, rode:
+   ```bash
+   bun scripts/check-dist-links.ts {site} --json
+   ```
+   Cada destino 404 vira **conserto proposto** no relatório. A causa quase sempre é **produto citado em artigo sem página individual**: o fix é criar a página (`pagina-produto-criar`), **nunca remover o link** (decisão Marcelo 2026-09-01: o template linka sem condicional; a página é que tem que existir). O `audit-article.ts` (rule `produto`) já acusa isso por artigo. Sem dist fresco: **diga no relatório que essa classe não foi verificada** — a pré-checagem de deploy do painel e o `cf-deploy-r2.ts` rodam o mesmo check antes de subir.
+
 5. **Camada de julgamento LLM** (o valor que script não dá). O JSON do `audit-linkagem.ts` traz `lockedArticles[]` (fontes travadas) e `pillarArticles[]` (hubs isentos do teto) — use os dois. Read os `.mdx` dos artigos com links peer/home + os com FAQ/seções relevantes. Avalie:
    - **Placement genuinamente contextual?** Para cada link peer/home existente, o parágrafo onde ele está fala MESMO do tema do destino? "Fora da Conclusão" é necessário mas não suficiente. Sinalize os fracos com spot melhor. **Régua de spot (canon Marcelo): o link cai na MELHOR posição do artigo pro tema** — ex: link pro "melhor impressora para fotos" entra no parágrafo/H3 que fala de fotografia, não num lugar genérico.
    - **REMOVER link que não faz sentido ali (canon Marcelo 2026-07-31).** Até 2026-07-31 a skill só sabia **consertar** (404/âncora/home) e **adicionar** — não havia NENHUM gatilho que produzisse "esse link não cabe aqui, tira". Consequência real: na 1ª passada do compraguia entreguei "0 erros · 0 avisos" com três links tablet→impressora vivos, porque nenhum check os questionava; só foram removidos quando o Marcelo apontou. Agora: link cujo parágrafo **não trata do tema do destino** é candidato a REMOÇÃO (não só a mover), **preservando a prosa** — tira o `<a>` e reescreve a frase pra ela continuar fazendo sentido sem o link.
