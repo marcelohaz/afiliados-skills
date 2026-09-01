@@ -22,7 +22,7 @@ Detecção: contém `/` seguido de vírgulas ou de um slug → subset. É a stri
 
 # Auditar + corrigir páginas de produto em massa (paralelo, isolado)
 
-> Esta skill é **orquestrador**. A régua editorial (as 22 categorias de check, o
+> Esta skill é **orquestrador**. A régua editorial (as 26 categorias de check, o
 > TESTE DA FRASE NOVA, o que é `warn` e o que é `error`) é a canônica da
 > **`pagina-produto-auditar`** — esta NÃO reimplementa nada disso. Ela faz
 > pré-flight + camada mecânica + fan-out + reconciliação + guardas + commit.
@@ -62,7 +62,7 @@ Agent tool. NUNCA Sonnet/Haiku.
 
 | | Individual (`pagina-produto-auditar`) | Em massa (esta) |
 |---|---|---|
-| Régua dos checks | 22 categorias canônicas | **as mesmas**, lidas do repo pelo sub-agent |
+| Régua dos checks | 26 categorias canônicas | **as mesmas**, lidas do repo pelo sub-agent |
 | Quem julga | sub-agent Opus, conversa fresh | **mesmo** sub-agent, conversa fresh |
 | Camada mecânica | passo 6.7, dentro do sub-agent | **na mãe**, 1× por slug (Etapa 1) |
 | Trava antes de "ficar" | read-only fora de lote | **re-rodar as 2 guardas** no que foi corrigido + reversão do backup |

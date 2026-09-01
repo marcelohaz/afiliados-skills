@@ -274,6 +274,7 @@ Detecção:
    | 4 `<p>` com os 4 rótulos | ✓ | ✓ (`fullReview-prefixo-e-ancoras`) |
    | `fullReview` ausente/duplicado · corpo do `.mdx` não-vazio | ✓ (2026-08-14) | **✗** |
    | travessão · `;` em prosa · HTML em texto-puro · termo banido · YAML inválido | **✗** | ✓ |
+   | voltagem 110/127/220V · row "Voltagem" · bivolt sem lastro no specsAmazon (2026-09-01) | **✗** | ✓ |
 
    ⚠ A linha nova é a única em que a guarda é **superset**, e é por isso que ela
    segue obrigatória mesmo quando você roda `--audit`. Ela cobre a classe que ficou

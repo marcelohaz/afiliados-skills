@@ -165,12 +165,14 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
 
 Não é estrita, mas é o pattern dos exemplos canônicos:
 
+⚠ **Os exemplos abaixo mostram FORMA, não texto-fonte: PROIBIDO reusar frases deles verbatim.** Copiar o exemplo canônico foi o que gerou 3 intros idênticas no melhorimpressora (2026-06-10), e a abertura "Escolher [o/a] {X} certo/a pode parecer simples, mas o mercado brasileiro oferece dezenas…" (exemplo desta skill até 2026-09-01) virou a família mais repetida da rede. Cada descrição nasce do nicho, com família inédita no site e no nicho (ver "Régua ANTI-CLONE").
+
 ### §1 — Introdução: o desafio + critérios em `<strong>`
 
 Apresenta o nicho e o desafio de escolher na categoria. Lista 3-6 critérios técnicos em `<strong>...</strong>`. Tom de "vou te ajudar a entender".
 
-**Exemplo** (categoria "creatinas"):
-> `<p>Escolher a creatina certa pode parecer simples, mas o mercado brasileiro oferece dezenas de opções com propostas muito diferentes entre si. Aqui você encontra comparativos e guias organizados para facilitar sua decisão, considerando critérios como <strong>tipo de creatina</strong>, <strong>pureza</strong>, <strong>quantidade por dose</strong>, <strong>sabor</strong>, <strong>custo-benefício</strong> e <strong>certificações de qualidade</strong>: os fatores que fazem diferença no resultado.</p>`
+**Exemplo** (categoria "creatinas", família "O mercado de {X} no Brasil…"):
+> `<p>O mercado de creatina no Brasil cresceu rápido e hoje tem opção pura, com sabor, em cápsula e em pó, de marca nacional e importada. Os comparativos desta categoria organizam essa escolha por <strong>pureza</strong>, <strong>tipo de creatina</strong>, <strong>quantidade por dose</strong>, <strong>custo por dose</strong> e <strong>certificações de qualidade</strong>, que são os fatores que mudam o resultado no treino.</p>`
 
 ### §2 — Perfis de uso: tipos/nichos cobertos pelos artigos
 
@@ -183,8 +185,8 @@ Lista os perfis de comprador/uso que aparecem nos artigos da categoria. Cada per
 
 Chama pra navegar pelos artigos. Pode ser omitido se a descrição fica grande demais.
 
-**Exemplo**:
-> `<p>Navegue pelos artigos, leia os prós e contras reais de cada produto e escolha sabendo o que esperar do produto antes de comprar.</p>`
+**Exemplo** (família própria; o fecho "…antes de o produto chegar na sua casa" é o mais copiado da rede, não use):
+> `<p>Compare as opções lado a lado e encontre a creatina que combina com a sua rotina de treino.</p>`
 
 ## Régua ANTI-CLONE (CRÍTICO — v1.20.0, canon 2026-06-12)
 
@@ -193,18 +195,18 @@ Os exemplos acima são **UM** preenchimento possível do esqueleto, **NÃO um te
 **Passo OBRIGATÓRIO antes de gerar** — leia as descrições de categoria JÁ existentes de **(a)** outras categorias do mesmo site e **(b)** sites de MESMO nicho (ex: gerando `impressoras` no impressoraideal → leia o `impressoras` do melhorimpressora). Anote a abertura (§1) e o fecho (§3) de cada uma, pra divergir.
 
 **Regras de divergência (hard):**
-1. **Zero sequências de ≥8 palavras** iguais a uma descrição irmã (mesmo site) ou de mesmo nicho (site irmão).
+1. **Zero sequências de ≥6 palavras** iguais a uma descrição irmã (mesmo site) ou de mesmo nicho (site irmão). Mesmo limiar da intro e das institucionais (era 8 até 2026-09-01, sem motivo registrado pra ser mais frouxo).
 2. **NÃO reusar a família de abertura** "Escolher [o/a] {X} certo/a pode parecer simples, mas o mercado brasileiro oferece dezenas..." se já usada numa irmã/mesmo-nicho. Rotacione (pool abaixo).
 3. **NUNCA repetir o §3 verbatim** ("...antes de o produto chegar na sua casa"). Varie o fecho ou omita o §3.
 4. Critérios (§1) e perfis (§2) **específicos do nicho** — não a lista genérica reaproveitável.
 
 **Pool de aberturas §1** (rotacione; não repita no site nem entre sites do mesmo nicho):
-- "Escolher [a/o] {X} certo/a pode parecer simples, mas..."
-- "Procurando [a/o] {X} ideal? ..."
 - "O mercado de {X} no Brasil..."
 - "{X} deixaram de ser [coisa rara] e viraram..."
 - "Se o seu objetivo é {benefício do nicho}, ..."
 - "Reunimos aqui os comparativos de {X}..."
+- "Procurando [a/o] {X} ideal? ..." (⚠ mesma família da abertura padrão das intros de artigo: não use se a intro da home do site já abre com "Procurando")
+- "Escolher [a/o] {X} certo/a pode parecer simples, mas..." (⚠ a mais usada da rede: só se nenhuma irmã nem site de mesmo nicho usa)
 
 **Pool de fechos §3** (rotacione; ou omita — 2 parágrafos bastam):
 - "Navegue pelos artigos e compare os modelos lado a lado..."

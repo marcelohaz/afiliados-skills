@@ -1,6 +1,6 @@
 ---
 name: mapa-skills-editoriais
-description: Índice COMPLETO das 25 skills do marketplace afiliados-skills — qual usar para cada objeto (bíblia, página de produto, artigo e suas partes, categoria, institucionais, linkagem, clone, lineup, migração, leilão, lista da Amazon), com pré-requisitos de painel e forma de invocação. Invoque quando estiver em dúvida sobre QUAL skill chamar. Não substitui as skills em si — é o índice delas.
+description: Índice COMPLETO das 26 skills do marketplace afiliados-skills — qual usar para cada objeto (bíblia, página de produto, artigo e suas partes, categoria, institucionais, linkagem, clone, lineup, migração, leilão, lista da Amazon), com pré-requisitos de painel e forma de invocação. Invoque quando estiver em dúvida sobre QUAL skill chamar. Não substitui as skills em si — é o índice delas.
 ---
 
 # Mapa das skills editoriais
@@ -37,7 +37,8 @@ Pré-requisito: bíblia criada + dados brutos + imagem no editor-v2.
 |---|---|
 | `pagina-produto-criar` | preencher os 6 campos de UM stub |
 | `pagina-produto-criar-em-massa` | todos os stubs vazios de um site (ou subset por ASIN), paralelo; flag `--audit` |
-| `pagina-produto-auditar` | audit read-only de UMA página (21 categorias, cruza com bíblia) |
+| `pagina-produto-auditar` | audit read-only de UMA página (26 categorias, cruza com bíblia) |
+| `pagina-produto-auditar-em-massa` | VÁRIAS páginas, isoladas (≤10 por leva): mecânica na mãe (audit-editorial + guardas), sub-agents no julgamento; auto-aplica só conserto de FATO; descobre as pendentes sem `-last.md` |
 
 Pré-requisito: stub criado via "+ Nova página de produto" no site detail.
 
@@ -58,7 +59,7 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 
 | Skill | Quando |
 |---|---|
-| `artigo-reviews-auditar` | TODOS os reviews como conjunto (24 critérios cross-produto; normaliza subtitle/badge) — a cada 3 produtos ou antes de travar |
+| `artigo-reviews-auditar` | TODOS os reviews como conjunto (26 critérios cross-produto; normaliza subtitle/badge) — a cada 3 produtos ou antes de travar |
 | `artigo-guia-auditar` | só o guideContent, correção cirúrgica por seção + faq-shuffle |
 | `artigo-auditar` | artigo INTEIRO read-only (39 categorias + estruturais + readyToLock) — gate final antes de `contentLocked` |
 

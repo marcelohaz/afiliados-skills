@@ -1,6 +1,6 @@
 ---
 name: artigo-meta-escrever
-description: Escreve a meta description SEO de um artigo (campo `description` no frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. 50-160 chars, single-line, sem travessão, sem aspas internas. Substitui só a linha `description: "..."` do frontmatter — todo o resto fica intacto. Backup + commit + push + sync VPS.
+description: Escreve a meta description SEO de um artigo (campo `description` no frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. 120-160 chars, single-line, sem travessão, sem aspas internas. Substitui só a linha `description: "..."` do frontmatter — todo o resto fica intacto. Backup + commit + push + sync VPS.
 ---
 
 ## Parse de input
@@ -31,7 +31,7 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 ## Invariantes
 
 - **Nunca toque em nenhum outro campo do .mdx.** Só a linha `description: "..."` do frontmatter. Title, listHeading, intro, products, guideContent — tudo intacto.
-- **50 a 160 chars.** Google trunca em ~155 chars, toleramos até 160 antes de cortar. Abaixo de 50 chars é texto preguiçoso. Hard limit.
+- **120 a 160 chars** (alvo 125-155). Google trunca em ~155, toleramos 160. Abaixo de 120 o `scripts/audit-article.ts` (`RULES.metaDescMin`) avisa "muito curta" no relatório e no painel: até 2026-09-01 esta skill dizia 50 e os próprios exemplos tinham 114-116 chars, então toda meta escrita pela régua saía com aviso. O `isArticleComplete` (≥50) é só o gate estrutural, não o alvo. Hard limit.
 - **1 a 2 sentenças completas** (pergunta + resposta é o padrão dos exemplos bons) — sem reticências, sem cortes meio do pensamento.
 - **Keyword principal nos primeiros 60 chars.** Extrai do `title` (H1) ou do campo `keyword` se existir no frontmatter. Ex: title "Melhor Impressora Custo Benefício:" → keyword "melhor impressora custo benefício" → primeiros 60 chars da description devem incluir isso.
 - **Linguagem direta, factual.** Sem superlativos sem evidência ("a melhor opção", "incomparável", "imbatível").
@@ -82,7 +82,7 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 7. **Gerar a nova description** seguindo as regras editoriais (ver seção "Régua de geração" abaixo). Use o contexto coletado: title, description atual (referência do que mudar), lista de produtos, snippet do intro, instrução opcional (se detectada no passo 6).
 
 8. **Validar mentalmente** antes de salvar:
-   - Tamanho dentro de 50-160 chars
+   - Tamanho dentro de 120-160 chars
    - Sem travessão `—` nem `–`
    - Sem aspa dupla interna `"` (escapa pra `\"` ou parafraseia)
    - Sem `\n` ou quebras de linha
@@ -132,7 +132,7 @@ Segue o template canônico (`rewrite_meta_description`):
 Reescreva a META DESCRIPTION (tag SEO que aparece na busca do Google) do artigo abaixo.
 
 ## Convenções
-- 50 a 160 caracteres (Google trunca em ~155, toleramos 160)
+- 120 a 160 caracteres (Google trunca em ~155, toleramos 160; abaixo de 120 o audit-article avisa)
 - 1 a 2 sentenças completas, sem reticências nem cortes (pergunta + resposta funciona bem para CTR)
 - BENEFÍCIO-FIRST, não ficha técnica: vende o ganho do leitor, não uma lista de specs (ver régua abaixo)
 - Mencionar a keyword principal do title nos primeiros 60 chars
@@ -160,8 +160,8 @@ Exemplos bons (benefício-first):
 
 - ✓ `"Qual a melhor impressora tanque de tinta em 2026? Comparamos os modelos para imprimir muito gastando pouco com tinta, sem voltar ao cartucho."` (~146 chars)
 - ✓ `"Cansou do cartucho caro? Veja as melhores impressoras de 2026 que rendem milhares de páginas com tinta barata, da básica à fotográfica."` (~134 chars)
-- ✓ `"Qual a melhor creatina em 2026? Veja quais valem o preço para ganho de força, com pureza Creapure e bom custo por dose."` (~116 chars)
-- ✓ `"Tablet travando ou tela pequena? Os melhores tablets baratos de 2026 para estudo, vídeo e leitura, por um preço baixo."` (~114 chars)
+- ✓ `"Qual a melhor creatina em 2026? Veja quais valem o preço para ganho de força, com pureza Creapure, laudo de pureza e bom custo por dose."` (~136 chars)
+- ✓ `"Tablet travando ou tela pequena? Os melhores tablets baratos de 2026 para estudo, vídeo e leitura, com tela boa por um preço baixo."` (~131 chars)
 
 Exemplos ruins:
 
@@ -179,7 +179,7 @@ Exemplos ruins:
 
 ## Voz natural (canon Marcelo 2026-08-15 — versão curta do bloco das skills de criação)
 
-Mesmo em 50-160 chars: pergunta-teste *"Um amigo entenderia?"*. Sem jargão corporativo (❌ "uma análise das melhores opções da categoria"), sem sacada, sem palavra fora do sentido do dicionário (❌ "pra dar conta da poeira", "pra você acertar no que a sua casa pede" → ✓ "para limpar a casa", "para escolher o certo para a sua casa"). "para", não "pra". Verbo literal: comparamos, mostramos, explicamos.
+Mesmo em 120-160 chars: pergunta-teste *"Um amigo entenderia?"*. Sem jargão corporativo (❌ "uma análise das melhores opções da categoria"), sem sacada, sem palavra fora do sentido do dicionário (❌ "pra dar conta da poeira", "pra você acertar no que a sua casa pede" → ✓ "para limpar a casa", "para escolher o certo para a sua casa"). "para", não "pra". Verbo literal: comparamos, mostramos, explicamos.
 
 ## Régua editorial PT-BR (v1.19.2, 2026-05-28)
 

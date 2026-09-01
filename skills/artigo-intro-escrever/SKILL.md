@@ -390,7 +390,7 @@ Por que está OK:
 - **Nem científico-médico, nem "esperto"**. Escreve como uma pessoa que pesquisou explicando, não como consultor nem como redator tentando ser criativo. A intro não pode soar mais formal que os reviews, nem mais figurada.
 
 ### Título (quando reescrito)
-- Padrão `{Keyword Title Case}: {os|as} {N} melhores em {ano}` (N≥3) ou fallback `{Keyword Title Case} em {ano}` (N<3). **Sem ponto final.**
+- Padrão = o **padrão-assinatura do site** no pool P1-P4 da "Régua do título" (P1 `{Keyword}: as {N} melhores (Atualizado {ano})` é o default; `{Keyword}: {os|as} {N} melhores em {ano}` é o **P4**, não o default; esta linha dizia o contrário até 2026-09-01 e desfazia a divergência entre irmãos). N≥3 obrigatório; com N<3, fallback `{Keyword Title Case} em {ano}`. **Sem ponto final.**
 - **≤60 chars** (corte Google); keyword no lead; número N = `products[]`; não colide com título irmão; sem travessão.
 - **Reescreve pelos gatilhos de "Quando arrumar"** (stub/fora de qualquer padrão, OU colisão com irmão, OU N envelheceu; sem contagem com N≥3 é sempre stub). Já-no-padrão do site e sem colisão → só atualiza N se o lineup mudou.
 - **Nunca** mexe no título de artigo `contentLocked: true`.

@@ -87,7 +87,7 @@ Reprova e manda o sub-agent refazer (máx 3 tentativas):
 - 100-2000 chars · 2-3 `<p>` · zero tag de bloco fora da allowlist
 - **zero backtick** e **zero `${`** — o helper joga exceção, e `${` dentro do template literal é interpolação JS que corrompe o `config.ts`
 - sem travessão, sem `<!--`, sem `[TODO`
-- **zero sequência de ≥8 palavras** igual a qualquer irmã (existente ou gerada no grupo)
+- **zero sequência de ≥6 palavras** igual a qualquer irmã (existente ou gerada no grupo)
 
 Não convergiu em 3 → registra no relatório e segue. Nunca grava item reprovado.
 
@@ -104,7 +104,7 @@ bcaa × pre-treino          8 palavras iguais: "o que realmente muda de um pote 
 
 Então, DEPOIS de gerar e ANTES de escrever, cruzar **todos os itens do mesmo site entre si**:
 
-- zero sequência de ≥8 palavras compartilhada
+- zero sequência de ≥6 palavras compartilhada
 - famílias de abertura §1 distintas entre todas
 
 Colidiu → regerar **um** dos dois, passando as OUTRAS do site como material anti-clone explícito (além das irmãs cross-site). Repetir até zerar. A régua individual já manda divergir de "(a) outras categorias do mesmo site" — o que faltava era a mãe **ter o material**, que só existe depois da geração.

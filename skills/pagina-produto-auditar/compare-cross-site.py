@@ -40,6 +40,14 @@ enumeração porque ela é fato, exatamente como acontece em `specs[].value`.
 
 Saída: JSON. Exit 1 se houver duplicata de PROSA AUTORAL acionável
 (prosa_exatas > 0 OU prosa_near_0.8 > 0), pra a auditoria decidir flaggar 🟡.
+
+⚠ ILEGÍVEL NÃO É LIMPO (corrigido 2026-09-01): frontmatter que o YAML não parseia
+(target ou irmão) antes virava só um WARN no stderr e o JSON saía "0 peers /
+acionavel: false" — a auditoria, que só lê o JSON, tratava como limpo. Agora:
+  - target ilegível → `target_ilegivel: true` + `erro`, exit 2 (a skill flaga
+    🔴 `html-invalido`/yaml, não "sem duplicata");
+  - irmão ilegível → ainda entra em `comparacoes` (asin lido por regex no texto
+    cru) com `peer_ilegivel: true`, e `peers_ilegiveis` conta no topo.
 """
 import sys, re, json, glob, os
 
@@ -72,11 +80,13 @@ def parse(path):
     try:
         fm = yaml.safe_load(fm_text) or {}
     except Exception as e:
-        print(f"[compare-cross-site] WARN: {path} frontmatter YAML inválido ({e}) — pulado", file=sys.stderr)
-        return {}, ""
+        # não some: devolve o asin por regex pra a página seguir contando como irmã/target
+        asin_m = re.search(r'^asin:\s*["\']?([A-Z0-9]{10})', fm_text, re.M)
+        print(f"[compare-cross-site] WARN: {path} frontmatter YAML inválido ({str(e).splitlines()[0]}) — marcado ilegível", file=sys.stderr)
+        return {"asin": asin_m.group(1) if asin_m else "", "_ilegivel": True, "_erro": str(e).splitlines()[0][:160]}, ""
     if not isinstance(fm, dict):
-        print(f"[compare-cross-site] WARN: {path} frontmatter não é um mapa — pulado", file=sys.stderr)
-        return {}, ""
+        print(f"[compare-cross-site] WARN: {path} frontmatter não é um mapa — marcado ilegível", file=sys.stderr)
+        return {"_ilegivel": True, "_erro": "frontmatter não é um mapa"}, ""
     if not str(fm.get("asin") or "").strip():
         print(f"[compare-cross-site] WARN: {path} sem 'asin' no frontmatter — checagem de duplicata cross-site pode passar batido", file=sys.stderr)
     return fm, body
@@ -240,22 +250,31 @@ def main():
 
     results = []
     actionable = False
+    peers_ilegiveis = 0
     for peer_path, peer_fm in peers:
         rep = compare(target_fm, peer_fm)
         rep["peer"] = peer_path
+        if peer_fm.get("_ilegivel"):
+            rep["peer_ilegivel"] = True
+            rep["erro"] = peer_fm.get("_erro", "")
+            peers_ilegiveis += 1
         results.append(rep)
         if rep["acionavel"]:
             actionable = True
 
+    target_ilegivel = bool(target_fm.get("_ilegivel"))
     out = {
         "target": target_path,
         "asin": str(target_fm.get("asin") or ""),
+        "target_ilegivel": target_ilegivel,          # True = NÃO tratar como limpo
+        "erro": target_fm.get("_erro", "") if target_ilegivel else "",
         "peers_encontrados": len(peers),
+        "peers_ilegiveis": peers_ilegiveis,          # irmãos que não deu pra comparar
         "duplicata_acionavel": actionable,   # SÓ por colisão de PROSA
         "comparacoes": results,
     }
     print(json.dumps(out, ensure_ascii=False, indent=2))
-    sys.exit(1 if actionable else 0)
+    sys.exit(2 if target_ilegivel else (1 if actionable else 0))
 
 
 if __name__ == "__main__":

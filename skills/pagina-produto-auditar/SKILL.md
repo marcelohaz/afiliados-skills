@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto (read-only para julgamento; aplica direto só o mecânico — travessão, `;`, concordância —, régua comum das auditoras), cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 22 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (rótulo inventado/teste-da-Amazon, meta-SEO, palavra fora do sentido/verbo-curinga com sujeito-coisa, frase-sacada, jargão financeiro, tiques com teto — elipse de categoria LIBERADA)). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
+description: Audita página individual de produto (read-only para julgamento; aplica direto só o mecânico — travessão, `;`, concordância —, régua comum das auditoras), cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. 26 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (palavra fora do sentido, frase-sacada, tiques com teto), voltagem-citada, peso-por-fonte, descontinuado-sem-banner, avisos-humanos-ignorados). Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
 ---
 
 ## Parse de input
@@ -434,6 +434,8 @@ em Para quem é / Por que gostamos / Resumo, e garantir os 4 prefixos em
 
 ### 19. `duplicata-cross-site` (régua v1.17.0, severidade: 🟡 Aviso)
 
+⚠ **Saída do `compare-cross-site.py` com `target_ilegivel: true` (exit 2) ou `peers_ilegiveis > 0` NÃO é "sem duplicata"** (corrigido 2026-09-01): até então frontmatter que o YAML não parseava virava só um WARN no stderr e o JSON saía "0 peers / acionável: false", e a auditoria tratava como limpo. Target ilegível → 🔴 `html-invalido` (YAML), a comparação fica pendente; irmão ilegível → reporte o `peer` com `peer_ilegivel` como pendência da outra página.
+
 Página individual deste produto com texto quase idêntico ao de OUTRO site nosso
 que vende o mesmo ASIN. Múltiplos sites no mesmo nicho são estratégia deliberada
 (SERP-monopoly); o problema NÃO é existir o mesmo produto em 2 sites, é o **texto
@@ -573,12 +575,35 @@ Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já 
 - "calibrada/calibrado" só é banida se o bloco do NICHO listar (hoje: Pré Treino).
   Não é regra genérica.
 
+### 21. `voltagem-citada` (canon 2026-06-29, critério desde 2026-09-01, severidade: 🔴 Crítico)
+
+Régua dura da criação (`pagina-produto-criar` → Filtros editoriais; JSON `_genericos.voltagem_so_em_specs`): **não citar voltagem** em nenhum dos 6 campos, nem criar a row "Voltagem" na tabela. A voltagem muda por ASIN (o mesmo modelo tem versão 110 e 220) e o comprador escolhe no anúncio. Até 2026-09-01 nenhuma auditora conferia isto; o caso-origem (air fryers afirmadas bivolt sem lastro, 2026-06-28) só foi pego por leitura humana.
+
+- **110V / 127V / 220V** (prosa ou spec) → 🔴, conserto **determinístico**: apagar a menção (ou a row). Passa no teste da frase nova.
+- **"bivolt"** sem confirmação → 🔴. Só vale se o `specsAmazon` **do próprio ASIN** disser bivolt / 100-240V / 110-220V explícito; `doFabricante`, `conteudoBrutoFabricante` e campo curado mandando citar **não bastam**. Aparelho de aquecimento de alta potência (air fryer, ferro, secador, chaleira) é voltagem única por design. Confirmado → OK como ponto positivo + tabela.
+- A camada mecânica já emite `voltagem-citada` e `bivolt-sem-confirmacao` (`audit-editorial.ts` lê o specsAmazon da bíblia). Aqui você confere o que ela não vê: voltagem por extenso ("cento e vinte"), "tomada de 220", "versão 110".
+
+### 22. `peso-por-fonte` (régua da criação desde 2026-05, critério desde 2026-09-01, severidade: 🟡 Aviso)
+
+Claim que existe **só no `specsAmazon`** (classificação automática do marketplace: "Tipo de dieta: Cetogênica", "Material: Plástico", "Característica especial: Portátil") **não pode virar pró central, subtitle nem shortDescription**, só a tabela `specs`. Fabricante + Amazon coincidindo = forte; só fabricante = ok em pros/specs; só Amazon = tabela; só opiniões = inspira, não cita. Caso-origem: Vitafor B07L5W6GVC, "composição cetogênica" elevada a diferencial (óleo de peixe é trivialmente keto).
+
+Como conferir: pra cada pró e pro subtitle/shortDescription, ache a origem na bíblia. Se a ÚNICA fonte é `specsAmazon` → flag, fix = mover pra tabela (ou apagar, se já está lá). Diferente do `claim-vs-bible` (claim sem origem nenhuma): aqui a origem existe, mas é fraca demais pro lugar onde foi posta.
+
+### 23. `descontinuado-sem-banner` (régua da criação, critério desde 2026-09-01, severidade: 🔴 Crítico)
+
+Se `avisosAoAgente`/`observacoesAgente` da bíblia dizem que o produto **saiu de linha / foi descontinuado** com sucessora, a página precisa de `descontinuado: { asin, nome }` no frontmatter (dispara o banner âmbar, o `schema.org/Discontinued` e o link tag-aware da sucessora) e a review não pode vender como compra atual. Flag: (a) bíblia sinaliza e o campo não existe; (b) o campo existe mas o texto ainda vende ("compra certa", Resumo sem ressalva); (c) `asin` da sucessora não resolve em `docs/biblias-v2/` nem em `products/`. Fix de (a) é determinístico quando o aviso traz nome + ASIN; senão reporta.
+
+### 24. `avisos-humanos-ignorados` (critério desde 2026-09-01, severidade: 🔴 Crítico)
+
+`avisosAoAgente` e `observacoesAgente` são o único canal em que o humano manda na página. Leia os dois e confira instrução por instrução ("não citar sabor", "usar o nome X", "não afirmar Y"): cada uma não respeitada é um flag com a instrução literal como `evidence`. Instrução que a bíblia contradiz em outro campo dela mesma → o alvo é a bíblia (reporta, não toca na página). Sem avisos = `n/a`.
+
 ## Filtros editoriais — flag se aparecer nos campos curados
 
 Também sinalizar (severidade `aviso`):
 
 - **Specs ambientais** (% plástico reciclado, certificações eco como Energy Star/EPEAT/RoHS/FSC, programas de devolução tipo "HP Planet Partners", neutralidade de carbono) em qualquer dos 6 campos. Exceto se a bíblia tem `angulosConversao` com tema `sustentabilidade` marcado.
 - **Origem de fabricação** ("fabricado no Brasil", "made in X", "produto nacional") em qualquer dos 6 campos. Exceto se a bíblia tem `angulosConversao` com tema `produto-nacional`.
+- **Voltagem**: é critério próprio (21, 🔴), não aviso — ver acima.
 
 ## Formato do relatório
 

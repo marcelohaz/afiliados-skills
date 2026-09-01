@@ -197,7 +197,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 - **specs** (3-10 pares label/value): strings simples sem HTML. Reuso labels comuns do lineup pra alinhar com `specLabels`.
 
-- **subtitle** (10-150 chars): título descritivo curto, sem redundância com nome.
+- **subtitle** (10-150 chars): híbrido keyword-first (lead com a keyword + gancho, sem dois-pontos, ≤13 palavras); ver "Os 6 campos".
 
 - **shortDescription** (50-250 chars): para quem é / o que faz de melhor em linguagem literal, depois 2-3 dados, fecho de fato. Sem molde ("Ideal pra quem… Você ganha…"). **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
 
@@ -244,8 +244,17 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 ## Os 6 campos do produto-no-artigo
 
-### subtitle (10-150 chars)
-Título descritivo curto, sem redundância com nome. Ex: para "Epson EcoTank L3250": "Multifuncional EcoTank com Wi-Fi, ideal para casa e home office".
+### subtitle (10-150 chars) — HÍBRIDO keyword-first (formato-alvo desde 2026-09-01)
+
+O subtitle é o **heading do card** do produto no artigo (slot de peso SEO). Até 2026-09-01 a criação escrevia um ângulo livre e a `artigo-reviews-auditar` (critério 22) reformatava depois; isso só fechava no pipeline de clone, que roda as duas, e produto adicionado sozinho ficava num formato diferente dos vizinhos. Agora a criação **já escreve no formato-alvo** e a auditora confere o conjunto.
+
+**Stub SEM subtitle** → escreva **LEAD keyword-first + gancho, numa frase que flui, sem dois-pontos**:
+- **LEAD** = a keyword do artigo (ou pedaço dela) + qualificador curto, capitalizado como título: "Impressora Tanque de Tinta em Geral", "Tablet Custo Benefício", "Creatina Monohidratada Barata e Boa". O slot "em Geral" **sempre leva "Melhor"** ("Melhor Air Fryer em Geral…"). Gênero pelo núcleo da keyword (impressora → "Boa e Barata"; tablet → "Bom e Barato").
+- **GANCHO** = o ângulo/spec concreto do produto, em caixa de frase, emendado com `com`/`de`/`que`/`e`/`para`. Spec técnica é permitida aqui (Hz/GB/polegada/ppm).
+- **≤13 palavras** no total, conte. Lead **distinto** dos outros produtos do mesmo artigo: leia os subtitles irmãos no `.mdx` antes (dois "a Laser" se separam por marca).
+- ✅ `Impressora Tanque de Tinta em Geral que equilibra funções, custo e tamanho` · `Tablet Custo Benefício com S Pen inclusa, tela de 10,9 polegadas a 90Hz` · ❌ `Tablet para Desenho: topo do Android com AMOLED` (dois-pontos) · ❌ `Multifuncional EcoTank com Wi-Fi, ideal para casa e home office` (sem lead de keyword: era o exemplo desta skill até 2026-09-01).
+
+**Stub COM subtitle humano** → ver "Subtitle humano = ângulo do review" (v1.34): o sentido é vinculante; polir é permitido, inclusive pôr o lead keyword-first na frente do ângulo, desde que o ângulo fique inteiro no gancho.
 
 ### shortDescription (50-250 chars) — o que o produto é e para quem, em linguagem literal
 
