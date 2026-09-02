@@ -67,7 +67,8 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
 5. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
    ```bash
    git add docs/biblias-v2/.audits/<ASIN>-last.md
-   git commit -m "audit(biblia): <ASIN> <identidade.nome curta>"
+   git commit --only -m "audit(biblia): <ASIN> <identidade.nome curta>" \
+     -- docs/biblias-v2/.audits/<ASIN>-last.md
    git push origin main
    bash scripts/painel-vps-pull.sh
    ```

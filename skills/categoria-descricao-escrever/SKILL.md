@@ -57,13 +57,13 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -u -m "skill-categoria-descricao-escrever-temp" 2>&1 | tail -1
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>&1 | tail -1
-   # CONTROLE: o pull funcionou mesmo?
-   echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
+   bash scripts/git-pull-seguro.sh "skill-categoria-descricao-escrever-temp"
    ```
-   Use `-u` e NÃO engula o erro do pull (`2>/dev/null` fazia o pull morrer em silêncio e a skill ler o disco velho — caso real 13/08 na em-massa; retroportado 15/08).
+   O script escolhe a estratégia: árvore de conteúdo **limpa** → stash + rebase + pop;
+   **suja** → `fetch` + `merge --ff-only`, sem stash (outra janela do Claude Code pode
+   estar gravando, e stash é global — canon 2026-09-02). Ele imprime a linha de controle
+   `local · remote` e avisa com ⛔ se o remote tiver commit que você não tem: aí o disco
+   está velho, decida se para ou segue sabendo disso. Nunca engula a saída dele.
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
 
 2. **Read `config.ts`**: `Read sites/{site}/src/config.ts`. Se 404, abortar.
@@ -147,8 +147,9 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
 12. **Git add + commit + push**:
     ```bash
     git add sites/{site}/src/config.ts
-    git commit -m "chore({site}): atualiza descrição categoria {categorySlug} via skill" \
-      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
+    git commit --only -m "chore({site}): atualiza descrição categoria {categorySlug} via skill" \
+      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>" \
+      -- sites/{site}/src/config.ts
     git push origin main
     ```
     Mensagem é `chore` (não `feat`) — paridade com o handler do painel (`category-desc.ts:288`).

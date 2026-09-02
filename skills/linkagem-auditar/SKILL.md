@@ -81,9 +81,7 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
 
 2. **Git pull antes de ler** (evita estado stale — o painel VPS commita writes):
    ```bash
-   git stash push -m "skill-linkagem-auditar-temp" 2>/dev/null
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   bash scripts/git-pull-seguro.sh "skill-linkagem-auditar-temp"
    ```
 
 3. **Rodar a régua SEO determinística**:
@@ -158,7 +156,8 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
     ```bash
     git add sites/{site}/src/content/reviews/{slugs-tocados}.mdx
     git add docs/biblias-v2/.audits/linkagem/{site}-last.md
-    git commit --no-verify -m "fix({site}): linkagem interna via skill (N consertos + M links novos)"
+    git commit --only --no-verify -m "fix({site}): linkagem interna via skill (N consertos + M links novos)" \
+      -- sites/{site}/src/content/reviews/{slugs-tocados}.mdx docs/biblias-v2/.audits/linkagem/{site}-last.md
     git push origin main
     bash scripts/painel-vps-pull.sh
     ```

@@ -48,7 +48,7 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 ## Fluxo
 
 1. Parse → slug.
-2. **Git pull** (`git stash push -u`/pull --rebase/pop, sem engolir erro). **Chave-mestra do site:** `sites-meta.json[site].contentLocked === true` → PARE e avise (páginas institucionais são `src/content/pages`, cobertas pelo lock e pelo `pre-push`).
+2. **Git pull**: `bash scripts/git-pull-seguro.sh "skill-preencher-institucionais-temp"` (nunca stash inline — ele é global e varre o que outra janela está gravando; o script decide entre stash e `merge --ff-only` e imprime a linha de controle). **Chave-mestra do site:** `sites-meta.json[site].contentLocked === true` → PARE e avise (páginas institucionais são `src/content/pages`, cobertas pelo lock e pelo `pre-push`).
 3. **Coleta**: config (name, domain, contactEmail, author{name,role,href→slug,bio}); niche; **subtipos do NICHO** (campo `subtipos` em chavoes-por-nicho.json[niche], OU conhecimento do nicho — **NÃO derivar dos artigos atuais**: sites do mesmo nicho convergem pra cobertura COMPLETA, então o /sobre/ descreve o escopo do nicho, não a lista de artigos de hoje; ex Impressoras: tanque, laser, multifuncional, fotográfica, sublimática, plotter de recorte, impressora para personalizados, barata); chavões do nicho; authors.json (persona). **Sites-irmãs da persona**: listar outros sites cujo `config.author.name` == este autor; ler as /sobre/ + /author/ deles (anti-clone).
 4. **Stub/overwrite**: se sobre.html ou autor.html já têm conteúdo real, PERGUNTAR antes de sobrescrever.
 5. **Detecta saúde/YMYL**: niche casa `/creatina|whey|pré.?treino|pre.?treino|ô?mega|omega|vitamina|suplemento|colágeno|proteína/i`.

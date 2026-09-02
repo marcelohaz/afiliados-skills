@@ -98,13 +98,14 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -u -m "skill-pagina-produto-criar-temp" 2>&1 | tail -1
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>&1 | tail -1
-   # CONTROLE: o pull funcionou mesmo?
-   echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
+   bash scripts/git-pull-seguro.sh "skill-pagina-produto-criar-temp"
    ```
-   Use `-u` e NÃO engula o erro do pull (`2>/dev/null` fazia o pull morrer em silêncio e a skill ler o disco velho — caso real 13/08 na em-massa; retroportado 15/08).
+   O script escolhe a estratégia: árvore de conteúdo **limpa** → stash + rebase + pop;
+   **suja** → `fetch` + `merge --ff-only`, sem stash (outra janela do Claude Code pode
+   estar gravando, e stash é global — canon 2026-09-02). Ele imprime a linha de controle
+   `local · remote` e avisa com ⛔ se o remote tiver commit que você não tem: aí o disco
+   está velho, decida se para ou segue sabendo disso. Nunca engula a saída dele.
+
    **Chave-mestra do site (CLAUDE.md):** antes de escrever em `sites/{site}/src/content/**`, `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"` — `True` → PARE e avise (o site está com edição travada; destravar no painel → Proteção). Sem isso o `pre-push` barra no fim, depois de todo o trabalho.
 
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Caso real Bárbara 2026-05-24: ela criou site melhoromega3 + stub vitafor-omegafor-plus pelo painel VPS; sub-agent rodou git fetch (sem novidades), assumiu que site não existia. Pull antes evita esse falso-negativo.
@@ -175,8 +176,9 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 12. **Git add + commit + push** (auto, do diretório raiz do projeto):
     ```bash
     git add sites/{site}/src/content/products/{slug}.mdx
-    git commit -m "feat({site}): preenche página individual {slug} via skill" \
-      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
+    git commit --only -m "feat({site}): preenche página individual {slug} via skill" \
+      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>" \
+      -- sites/{site}/src/content/products/{slug}.mdx
     git push origin main
     ```
 

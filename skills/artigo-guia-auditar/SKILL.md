@@ -68,9 +68,7 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 
 1.5. **Git pull antes de ler** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -m "skill-artigo-guia-auditar-temp" 2>/dev/null
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   bash scripts/git-pull-seguro.sh "skill-artigo-guia-auditar-temp"
    ```
    Se pull falhar, seguir mesmo assim (documentar no relatório).
 
@@ -95,7 +93,8 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
    - Commit + push + VPS pull:
      ```bash
      git add docs/biblias-v2/.audits/guide/{site}-{slug}-last.md
-     git commit --no-verify -m "audit-guia({site}): {slug} ({M} achados)"
+     git commit --only --no-verify -m "audit-guia({site}): {slug} ({M} achados)" \
+       -- docs/biblias-v2/.audits/guide/{site}-{slug}-last.md
      git push origin main
      bash scripts/painel-vps-pull.sh
      ```
@@ -110,7 +109,8 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 13. **Git add + commit (`--no-verify`) + push + VPS pull**:
    ```bash
    git add sites/{site}/src/content/reviews/{slug}.mdx
-   git commit --no-verify -m "fix({site}): auditoria cirúrgica do guia de {slug} via skill"
+   git commit --only --no-verify -m "fix({site}): auditoria cirúrgica do guia de {slug} via skill" \
+     -- sites/{site}/src/content/reviews/{slug}.mdx
    git push origin main
    bash scripts/painel-vps-pull.sh
    ```

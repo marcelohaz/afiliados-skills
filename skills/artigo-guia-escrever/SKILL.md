@@ -72,9 +72,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -m "skill-artigo-guia-escrever-temp" 2>/dev/null
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   bash scripts/git-pull-seguro.sh "skill-artigo-guia-escrever-temp"
    ```
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
 
@@ -238,8 +236,10 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     else
       git add docs/painel/_data/competitor-analyses/{keyword-slug}.md 2>/dev/null || true
     fi
-    git commit --no-verify -m "feat({site}): guia 'Como escolher' de {slug} escrito via skill (+ análise de concorrentes pra keyword '{keyword}')" \
-      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
+    git commit --only --no-verify -m "feat({site}): guia 'Como escolher' de {slug} escrito via skill (+ análise de concorrentes pra keyword '{keyword}')" \
+      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>" \
+      -- sites/{site}/src/content/reviews/{slug}.mdx \
+         docs/painel/_data/competitor-analyses/{keyword-slug}.md
     git push origin main
     ```
     `--no-verify` é OBRIGATÓRIO: o pre-commit hook roda `audit-article.ts` no artigo staged e bloqueia se houver erros — artigo ainda em construção sempre tem.

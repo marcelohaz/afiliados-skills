@@ -70,9 +70,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -m "skill-artigo-intro-escrever-temp" 2>/dev/null
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   bash scripts/git-pull-seguro.sh "skill-artigo-intro-escrever-temp"
    ```
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
 
@@ -155,8 +153,9 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 12. **Git add + commit + push**:
     ```bash
     git add sites/{site}/src/content/reviews/{slug}.mdx
-    git commit --no-verify -m "feat({site}): intro de {slug} escrita via skill" \
-      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
+    git commit --only --no-verify -m "feat({site}): intro de {slug} escrita via skill" \
+      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>" \
+      -- sites/{site}/src/content/reviews/{slug}.mdx
     git push origin main
     ```
     `--no-verify` é OBRIGATÓRIO: o pre-commit hook roda `audit-article.ts` no artigo staged e bloqueia se houver erros — artigo ainda em construção sempre tem.

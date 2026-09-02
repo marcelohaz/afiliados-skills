@@ -49,9 +49,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 1.5. **Git pull antes de ler o `.mdx`** (CRÍTICO — evita falso-negativo "produto stale"):
    ```bash
-   git stash push -m "skill-artigo-auditar-temp" 2>/dev/null
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   bash scripts/git-pull-seguro.sh "skill-artigo-auditar-temp"
    ```
    Se pull falhar (offline/conflito), seguir mesmo assim — documentar no relatório se for o caso.
 
@@ -149,7 +147,8 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 12. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
     ```bash
     git add docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md
-    git commit -m "audit({site}): artigo {slug} (readyToLock={true|false})"
+    git commit --only -m "audit({site}): artigo {slug} (readyToLock={true|false})" \
+      -- docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md
     git push origin main
     bash scripts/painel-vps-pull.sh
     ```

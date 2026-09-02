@@ -51,9 +51,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -m "skill-pagina-produto-auditar-temp" 2>/dev/null
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   bash scripts/git-pull-seguro.sh "skill-pagina-produto-auditar-temp"
    ```
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
 
@@ -117,7 +115,8 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
 9. **Commit + push + dispatch VPS pull** (auditorias são tracked no git, igual `.audits/` de bíblia; só commitar o `-last.md` — o timestampado é gitignored):
    ```bash
    git add docs/biblias-v2/.audits/products/{site}-{slug}-last.md
-   git commit -m "audit({site}): página individual {slug}"
+   git commit --only -m "audit({site}): página individual {slug}" \
+     -- docs/biblias-v2/.audits/products/{site}-{slug}-last.md
    git push origin main
    bash scripts/painel-vps-pull.sh
    ```

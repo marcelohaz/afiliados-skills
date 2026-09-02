@@ -72,9 +72,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -m "skill-artigo-reviews-auditar-temp" 2>/dev/null
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   bash scripts/git-pull-seguro.sh "skill-artigo-reviews-auditar-temp"
    ```
    Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
 
@@ -109,7 +107,8 @@ Se algum requisito falhar, abortar com mensagem clara.
    - Commit + push + VPS pull:
      ```bash
      git add docs/biblias-v2/.audits/reviews/{site}-{slug}-last.md
-     git commit --no-verify -m "audit-reviews({site}): {slug} ({M} achados)"
+     git commit --only --no-verify -m "audit-reviews({site}): {slug} ({M} achados)" \
+       -- docs/biblias-v2/.audits/reviews/{site}-{slug}-last.md
      git push origin main
      bash scripts/painel-vps-pull.sh
      ```
@@ -138,7 +137,8 @@ Se algum requisito falhar, abortar com mensagem clara.
 13. **Git add + commit + push + dispatch VPS pull**:
     ```bash
     git add sites/{site}/src/content/reviews/{slug}.mdx
-    git commit --no-verify -m "fix({site}): auditoria cross-produto de {slug} via skill"
+    git commit --only --no-verify -m "fix({site}): auditoria cross-produto de {slug} via skill" \
+      -- sites/{site}/src/content/reviews/{slug}.mdx
     git push origin main
     bash scripts/painel-vps-pull.sh
     ```

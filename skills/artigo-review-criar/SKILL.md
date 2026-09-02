@@ -104,9 +104,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 1.5. **Git pull antes de ler o .mdx** (CRÍTICO — evita falso "produto não está no lineup"):
    ```bash
-   git stash push -m "skill-artigo-review-criar-temp" 2>/dev/null
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>/dev/null
+   bash scripts/git-pull-seguro.sh "skill-artigo-review-criar-temp"
    ```
    Pattern de falha resolvida em 2026-05-24: user adiciona produto no painel da VPS (botão "+ Adicionar produto"), painel commita + push pro GitHub. Mac local fica desatualizado (sem auto-pull). Skill lê o .mdx local STALE, não encontra o ASIN, aborta dizendo "produto não está no lineup" — mas o user JÁ ADICIONOU. Pull antes elimina esse falso-negativo.
 
@@ -228,8 +226,9 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 12. **Git add + commit + push**:
     ```bash
     git add sites/{site}/src/content/reviews/{slug}.mdx
-    git commit --no-verify -m "feat({site}): preenche review de {ASIN} em {slug} via skill" \
-      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
+    git commit --only --no-verify -m "feat({site}): preenche review de {ASIN} em {slug} via skill" \
+      -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>" \
+      -- sites/{site}/src/content/reviews/{slug}.mdx
     git push origin main
     ```
     `--no-verify` é OBRIGATÓRIO: o pre-commit hook roda `audit-article.ts` no artigo staged e bloqueia se houver QUALQUER erro — artigo no meio do pipeline (sem meta/intro/guide, reviews faltando) sempre tem. A skill é o caminho oficial de escrita.
