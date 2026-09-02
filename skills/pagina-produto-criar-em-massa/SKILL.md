@@ -59,33 +59,34 @@ Detecção:
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   # ⚠ ANTES de stashar: há OUTRA sessão escrevendo neste repo agora?
-   #   Duas janelas do Claude Code compartilham disco, .git e ÍNDICE.
-   FOREIGN=$(git status --porcelain -- 'sites/*/src/content' | wc -l | tr -d ' ')
-   if [ "$FOREIGN" = "0" ]; then
-     git stash push -u -m "skill-pagina-produto-criar-em-massa-temp" 2>&1 | tail -1
-     git pull --rebase origin main 2>&1 | tail -3
-     git stash pop 2>&1 | tail -1
-   else
-     # ⛔ NÃO stashe: o stash é GLOBAL e varre do disco o que a outra janela está
-     #    gravando NESTE segundo; o `pop` depois volta por cima. Puxe sem tocar
-     #    na árvore suja — ff-only recusa em vez de inventar merge.
-     echo "⚠ $FOREIGN arquivo(s) de conteúdo sujo(s): outra sessão pode estar escrevendo. Puxando SEM stash."
-     git fetch origin 2>&1 | tail -1
-     git merge --ff-only origin/main 2>&1 | tail -2
-   fi
-   # CONTROLE: o pull funcionou mesmo?
-   echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
+   bash scripts/git-pull-seguro.sh "skill-pagina-produto-criar-em-massa-temp" || exit 1
    ```
-   O user cria os stubs pela UI do painel (VPS) e invoca a skill aqui em seguida. O
-   estado só chega no Mac por git, e **há duas formas de ele não chegar**.
 
-   ⚠️ **Use `-u` e NÃO engula o erro do pull.** `git stash push` com pathspec (ou sem
-   `-u`) deixa modificação de fora, e aí o pull morre com *"cannot pull with rebase: You
-   have unstaged changes"*. Com `2>/dev/null` isso passa despercebido e a skill segue
-   lendo o disco velho. Caso real 2026-08-13: 10 stubs existiam no remote, o pull falhou
-   em silêncio e o passo 2 reportou "SEM STUB 10". A linha de controle acima é o que
-   distingue "puxei e não tem" de "não puxei".
+   O user cria os stubs pela UI do painel (VPS) e invoca a skill aqui em seguida. O
+   estado só chega no Mac por git, e **há duas formas de ele não chegar** — por isso
+   este passo tem script próprio em vez de um `git pull` solto.
+
+   ⛔ **NÃO redigite esse bloco inline** (canon 2026-09-02). O script escolhe a
+   estratégia pelo estado da árvore: **limpa** → stash + rebase + pop (comportamento
+   histórico); **suja em conteúdo** → `fetch` + `merge --ff-only`, sem stash. Motivo:
+   o stash é GLOBAL e tira do disco o que OUTRA janela do Claude Code está gravando
+   naquele segundo (as duas compartilham disco, `.git` e índice), e `--autostash` tem
+   o mesmo defeito.
+
+   **O contrato do script, que substitui os dois avisos antigos:**
+   - imprime a linha de controle `local · remote` (é ela que distingue "puxei e não
+     tem" de "não puxei" — caso 2026-08-13: 10 stubs no remote, pull falhou em
+     silêncio com *"cannot pull with rebase: You have unstaged changes"*, e o passo 2
+     reportou "SEM STUB 10");
+   - **sai 1 quando o remote tem commit que você não tem.** Daí o `|| exit 1` acima:
+     PARE, não leia o disco como fresco. É a trava que o `2>/dev/null` engolia.
+
+   ⚠ **A primeira versão deste guard, escrita em 02/09, estava MORTA** e só foi pega
+   por teste: `git status --porcelain -- 'sites/*/src/content'` devolve **0 sempre**,
+   porque o `*` do fnmatch do git não atravessa `/`. O guard nunca disparava e a skill
+   stashava do mesmo jeito. A forma que funciona é `:(glob)sites/*/src/content/**`, e
+   está no script. Se for mexer nele, **teste os dois caminhos** (árvore limpa e
+   árvore suja) antes de confiar.
 
    **Chave-mestra do site (CLAUDE.md):** antes de escrever em `sites/{site}/src/content/**`, `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"` — `True` → PARE e avise (o site está com edição travada; destravar no painel → Proteção). Sem isso o `pre-push` barra no fim, depois de todo o trabalho.
 
@@ -97,12 +98,12 @@ Detecção:
 
      ```bash
      bash scripts/painel-vps-pull.sh 2>&1 | tail -2   # POST /admin/update: pull + push + gen na VPS
-     # ⚠ o stash é obrigatório AQUI TAMBÉM: o pop do passo 1.5 já sujou a árvore de volta,
-     #   e sem ele este pull morre com "Please commit or stash them" (medido 2026-08-13).
-     git stash push -u -m "skill-preflight-retry" 2>&1 | tail -1
-     git pull --rebase origin main 2>&1 | tail -2
-     git stash pop 2>&1 | tail -1
-     echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
+     # ⚠ o pop do passo 1.5 já sujou a árvore de volta, então este pull PRECISA de
+     #   estratégia — sem ela morre com "Please commit or stash them" (2026-08-13).
+     #   O script decide entre stash e merge; NÃO stashe direto aqui (2026-09-02):
+     #   este retry roda justamente quando não achou stub, que é quando a OUTRA
+     #   janela pode estar no meio do scaffold.
+     bash scripts/git-pull-seguro.sh "skill-preflight-retry"
      ```
 
      ⚠️ **Confira a saída, não presuma.** Se o `git pull` reclamar de árvore suja, o
@@ -241,7 +242,7 @@ Detecção:
      julgamento (conteúdo que não batia com o nicho, mtime, backup), não por
      régua. Este teste é a régua que faltava.
 
-   ⚠ **Este segundo caso não é hipótese, e a idempotência do passo 3 o esconde**
+   ⚠ **A órfã de verdade (slug NA lista) não é hipótese, e a idempotência do passo 3 a esconde**
    (medido 2026-08-29, `guiabemavaliado`, execução da Bárbara): 4 de 6 sub-agents
    morreram com **HTTP 429** na mesma leva, e **dois morreram DEPOIS de gravar o
    `.mdx` completo** — `sustagen-kids-morango` e `valda-imune-kids` ficaram 6/6
@@ -266,7 +267,8 @@ Detecção:
 
    ⚠ **Na retomada, "já preenchido" NÃO é sinônimo de "conferido".** Se um slug
    caiu em `jaPreenchidos` mas está **modificado e não commitado** no `git status`,
-   trate-o como órfão pelo parágrafo acima, não como pulado.
+   **aplique o teste da lista acima** em vez de pular: na lista → órfã sua, confira
+   e commite; fora da lista → é de outra mão, não toque.
 
    ⚠⚠ **MESMO ASIN nos dois lotes → o teste da lista fica MUDO.** Se a outra
    sessão processa um ASIN que TAMBÉM está na sua lista, o arquivo é dos dois e

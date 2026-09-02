@@ -127,11 +127,13 @@ paridade literal usa `--report-only`.
 
 1. **Git pull com linha de controle** (o estado vem do painel VPS por git):
    ```bash
-   git stash push -u -m "skill-pagina-produto-auditar-em-massa-temp" 2>&1 | tail -1
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>&1 | tail -1
-   echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
+   bash scripts/git-pull-seguro.sh "skill-pagina-produto-auditar-em-massa-temp" || exit 1
    ```
+
+   ⛔ **Não redigite inline** (canon 2026-09-02): o script stasha só com a árvore de
+   conteúdo LIMPA e usa `fetch` + `merge --ff-only` quando há outra sessão escrevendo
+   (stash é global e varre trabalho em voo alheio). Já imprime a linha de controle e
+   sai 1 se faltar commit do remote.
    ⚠ Use `-u` e **não engula o erro do pull**. Sem a linha de controle não dá pra
    distinguir "puxei e não tem" de "não puxei" (caso real 2026-08-13).
 
