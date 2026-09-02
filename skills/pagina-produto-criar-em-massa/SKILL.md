@@ -59,9 +59,21 @@ Detecção:
 
 1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
    ```bash
-   git stash push -u -m "skill-pagina-produto-criar-em-massa-temp" 2>&1 | tail -1
-   git pull --rebase origin main 2>&1 | tail -3
-   git stash pop 2>&1 | tail -1
+   # ⚠ ANTES de stashar: há OUTRA sessão escrevendo neste repo agora?
+   #   Duas janelas do Claude Code compartilham disco, .git e ÍNDICE.
+   FOREIGN=$(git status --porcelain -- 'sites/*/src/content' | wc -l | tr -d ' ')
+   if [ "$FOREIGN" = "0" ]; then
+     git stash push -u -m "skill-pagina-produto-criar-em-massa-temp" 2>&1 | tail -1
+     git pull --rebase origin main 2>&1 | tail -3
+     git stash pop 2>&1 | tail -1
+   else
+     # ⛔ NÃO stashe: o stash é GLOBAL e varre do disco o que a outra janela está
+     #    gravando NESTE segundo; o `pop` depois volta por cima. Puxe sem tocar
+     #    na árvore suja — ff-only recusa em vez de inventar merge.
+     echo "⚠ $FOREIGN arquivo(s) de conteúdo sujo(s): outra sessão pode estar escrevendo. Puxando SEM stash."
+     git fetch origin 2>&1 | tail -1
+     git merge --ff-only origin/main 2>&1 | tail -2
+   fi
    # CONTROLE: o pull funcionou mesmo?
    echo "local: $(git rev-parse --short=12 HEAD) · remote: $(git ls-remote origin main | cut -c1-12)"
    ```
@@ -203,10 +215,31 @@ Detecção:
    **Reconciliação nos DOIS sentidos** — `git status --short sites/{site}/src/content/products/`:
 
    - **reportado E não modificado** → sub-agent alucinou a escrita. Investigue.
-   - **modificado E NÃO reportado** → ⛔ **página órfã.** Alguém escreveu os 6
-     campos e não voltou pra reportar. **NÃO commite às cegas**: rode as duas
-     guardas nela e confira contra a bíblia, exatamente como se fosse um sucesso.
-     Só então entra no `git add`.
+   - **modificado E NÃO reportado** → **duas causas possíveis, e elas pedem
+     ações OPOSTAS.** O teste que separa é a **lista do próprio lote** (os ASINs
+     do argumento no modo B; os `stubsVazios` do passo 3 no modo A):
+
+     - **slug ESTÁ na lista do lote** → ⛔ **página órfã.** Um sub-agent SEU
+       escreveu os 6 campos e morreu antes de reportar. **NÃO commite às cegas**:
+       rode as duas guardas nela e confira contra a bíblia, exatamente como se
+       fosse um sucesso. Só então entra no `git add`.
+     - **slug NÃO está na lista do lote** → ⛔ **não é seu. NÃO TOQUE.** É outra
+       sessão escrevendo no mesmo repo agora (ou o painel da VPS). Fica fora do
+       `git add`, fora das guardas e fora do relatório.
+
+     **Por que a lista e não o mtime:** órfã de verdade está SEMPRE na lista do
+     lote (o sub-agent foi despachado pra ela) e arquivo de terceiro nunca está.
+     É determinístico, custa zero I/O e não depende de relógio — mtime mente
+     depois de `stash pop`, `checkout` ou `touch`.
+
+     ⚠ **Caso real 2026-09-02** (`ferramentasuteis-com`): dois lotes em paralelo,
+     em duas janelas, no MESMO site. A reconciliação devolveu 20 arquivos onde o
+     lote tinha 10, e os 10 alheios encaixavam na descrição de órfã ao pé da
+     letra — modificados, 6/6 campos, não reportados, e **passariam nas guardas**,
+     porque eram páginas bem-feitas. Seguir a régua antiga significava commitar o
+     trabalho da outra janela no meio da escrita. As DUAS sessões pararam por
+     julgamento (conteúdo que não batia com o nicho, mtime, backup), não por
+     régua. Este teste é a régua que faltava.
 
    ⚠ **Este segundo caso não é hipótese, e a idempotência do passo 3 o esconde**
    (medido 2026-08-29, `guiabemavaliado`, execução da Bárbara): 4 de 6 sub-agents
@@ -234,6 +267,37 @@ Detecção:
    ⚠ **Na retomada, "já preenchido" NÃO é sinônimo de "conferido".** Se um slug
    caiu em `jaPreenchidos` mas está **modificado e não commitado** no `git status`,
    trate-o como órfão pelo parágrafo acima, não como pulado.
+
+   ⚠⚠ **MESMO ASIN nos dois lotes → o teste da lista fica MUDO.** Se a outra
+   sessão processa um ASIN que TAMBÉM está na sua lista, o arquivo é dos dois e
+   nenhum dos testes acima acusa: os dois sub-agents gravam, o último apaga o
+   outro, as duas mães reportam `ok:true` e as guardas passam, porque o arquivo
+   fica **válido**. O estrago não é arquivo corrompido — é o **relatório de
+   auditoria descrevendo um texto que não está mais no disco**. Fica mentira no
+   registro e nada acusa.
+
+   Detecção barata (a única que pega este caso): guarde o hash quando o
+   sub-agent reporta e reconfira antes do `git add`.
+
+   ```bash
+   # 1) ao receber cada {ok:true} do sub-agent:
+   md5 -q "sites/$SITE/src/content/products/$S.mdx" > "$SCRATCH/$S.md5"
+
+   # 2) imediatamente antes do git add:
+   for S in "${SLUGS[@]}"; do
+     P="sites/$SITE/src/content/products/$S.mdx"
+     [ "$(md5 -q "$P")" = "$(cat "$SCRATCH/$S.md5")" ] \
+       || echo "  ⛔ $S mudou DEPOIS do reporte — outra mão escreveu por cima"
+   done
+   ```
+
+   Qualquer `⛔` aqui: **não commite esse slug**. Re-leia o arquivo, decida de
+   quem é o texto que ficou, e alinhe com a outra janela antes de seguir.
+
+   **A régua operacional que fecha isso na origem: não repita ASIN entre janelas.**
+   Sites diferentes é o cenário tranquilo; mesmo site com listas disjuntas é
+   seguro pros arquivos (mas o passo 9 vai gritar "órfã" a cada lote); mesmo ASIN
+   é o único caso de perda silenciosa.
 
    **GUARDAS MECÂNICAS — RODAR OS DOIS SCRIPTS, não redigitar (canon 2026-07-30, corrigido 2026-07-31):**
 
@@ -308,9 +372,19 @@ Detecção:
    ```
 
    ```bash
-   git commit -m "feat({site}): preenche {N} páginas individuais em batch via skill" \
-     -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
+   git commit --only -m "feat({site}): preenche {N} páginas individuais em batch via skill" \
+     -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>" \
+     -- sites/{site}/src/content/products/{slug-1}.mdx \
+        sites/{site}/src/content/products/{slug-2}.mdx \
+        ... (os MESMOS paths explícitos do add)
    ```
+
+   ⚠ **`--only` + pathspec, nunca `git commit` nu (canon 2026-09-02).** Commit sem
+   pathspec leva **o índice inteiro**, e o índice é do REPOSITÓRIO, não do seu
+   site: se outra janela deu `git add` no instante anterior, os arquivos dela
+   entram no seu commit. Isso atravessa sites — não basta estar em site diferente.
+   Com `--only -- <paths>` o commit leva só o que você nomeou, seja lá o que
+   estiver staged. Foi o que manteve os dois lotes de 02/09 separados.
 
    Sem `--no-verify` (corrigido v1.33.0): o hook pre-commit só bloqueia `.mdx` de `reviews/` (e `.html` de guides/pages) — páginas individuais vivem em `products/` e passam limpo, igual na skill individual `pagina-produto-criar`.
 
@@ -319,6 +393,18 @@ Detecção:
     git pull --rebase origin main 2>&1 | tail -2
     git push origin main 2>&1 | tail -3
     ```
+
+    ⚠ **Push rejeitado com outra sessão escrevendo: NÃO resolva por stash.**
+    O reflexo é `git stash -u` + rebase + push, e ele varre do disco o trabalho
+    em voo da outra janela. Integre sem tocar na árvore suja:
+    ```bash
+    git fetch origin && git merge origin/main --no-edit 2>&1 | tail -3
+    git push origin main 2>&1 | tail -3
+    ```
+    `git pull --rebase` recusa árvore suja por design, e `--autostash` tem o
+    mesmo defeito do stash manual (janela em que os arquivos alheios somem).
+    O merge só toca o que veio do remote. Custo: um commit de merge, que é
+    barato perto de reescrever o trabalho de outra sessão.
 
 11. **Disparar git pull no painel VPS**:
     ```bash

@@ -130,13 +130,26 @@ Item reprovado não derruba os outros: sai no relatório e o resto grava. Exit 1
 
 ```bash
 pnpm --filter {site} build     # por site tocado; Zod + template literal do config
-git add sites/*/src/config.ts
-git commit --no-verify -m "feat(categorias): descrição de N categorias em M sites via skill"
+# ⚠ lista EXPLÍCITA dos sites que ESTE lote tocou — nunca o glob sites/*/
+git add sites/{site-1}/src/config.ts sites/{site-2}/src/config.ts ...
+git commit --only --no-verify -m "feat(categorias): descrição de N categorias em M sites via skill" \
+  -- sites/{site-1}/src/config.ts sites/{site-2}/src/config.ts ...
 git push origin main
 bash scripts/painel-vps-pull.sh
 ```
 
 Build falhou → reverte aquele site do backup e reporta. `--no-verify` porque o pre-commit bloqueia edição direta de conteúdo.
+
+⚠ **O glob `sites/*/src/config.ts` era defeito duplo (corrigido 2026-09-02).**
+Ele estagia o `config.ts` de **todo** site que estiver sujo, inclusive de site que
+este lote nunca tocou — e o `git commit` nu ainda levava o índice inteiro por
+cima disso. Duas janelas do Claude Code compartilham disco, `.git` e índice, e o
+painel da VPS também escreve `config.ts`: qualquer um dos dois entrava no commit
+sem aparecer. Lista explícita + `--only -- <paths>` fecha os dois buracos.
+
+⚠ **Push rejeitado com outra sessão escrevendo: não resolva por stash** (o stash
+é global e varre o trabalho em voo alheio). `git fetch origin && git merge
+origin/main --no-edit`, depois empurre.
 
 ### Etapa 6 — relatório
 

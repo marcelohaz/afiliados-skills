@@ -267,11 +267,21 @@ git status --short sites/{site}/src/content/products/
 
 - **modificado E reportado** → normal, segue pro 3.5.
 - **reportado E não modificado** → sub-agent alucinou o conserto. Investigue.
-- **modificado E NÃO reportado** → ⛔ **edição órfã**. O agente editou e não
-  chegou a validar (caso real 2026-08-06, `somprofissional/lg-xboom-grab`: morreu
-  por erro de API depois do `Edit` e antes de re-auditar; a edição estava certa,
-  mas por **sorte**). Rode as guardas nela E confira contra a bíblia à mão.
-  Termine aquela página **inline**, não re-dispare.
+- **modificado E NÃO reportado** → **duas causas OPOSTAS.** Separe pela **lista
+  do próprio lote** (os slugs que você despachou nesta execução) antes de agir:
+
+  - **slug ESTÁ na lista** → ⛔ **edição órfã**. O agente editou e não chegou a
+    validar (caso real 2026-08-06, `somprofissional/lg-xboom-grab`: morreu por
+    erro de API depois do `Edit` e antes de re-auditar; a edição estava certa,
+    mas por **sorte**). Rode as guardas nela E confira contra a bíblia à mão.
+    Termine aquela página **inline**, não re-dispare.
+  - **slug NÃO está na lista** → ⛔ **não é seu. NÃO TOQUE.** É outra sessão
+    escrevendo no mesmo repo agora (ou o painel da VPS). Fora do `git add`, fora
+    das guardas, fora do relatório. Duas janelas do Claude Code compartilham
+    disco, `.git` e índice — ver o caso de 2026-09-02 na `pagina-produto-criar-em-massa`.
+
+  Órfã de verdade está SEMPRE na lista (você despachou), arquivo de terceiro
+  nunca está. Não use mtime: ele mente depois de `stash pop`, `checkout` ou `touch`.
 
 Confira também a **trava de slug** (`slug_retornado == slug_pedido`).
 
@@ -316,13 +326,25 @@ Nesta ordem, com lista explícita em cada `git add` (nunca glob):
 
 ```bash
 git add sites/{site}/src/content/products/{slug}.mdx ...
-git commit -m "fix({site}): auditoria em massa corrige N páginas individuais"
+git commit --only -m "fix({site}): auditoria em massa corrige N páginas individuais" \
+  -- sites/{site}/src/content/products/{slug}.mdx ...
 git add docs/biblias-v2/.audits/products/{site}-{slug}-last.md ...
-git commit --no-verify -m "audit-produto({site}): N páginas auditadas em massa"
+git commit --only --no-verify -m "audit-produto({site}): N páginas auditadas em massa" \
+  -- docs/biblias-v2/.audits/products/{site}-{slug}-last.md ...
 git pull --rebase origin main && git push origin main
 echo "local=$(git rev-parse --short=9 HEAD) remote=$(git ls-remote origin main | cut -c1-9)"
 bash scripts/painel-vps-pull.sh
 ```
+
+⚠ **`--only` + pathspec nos DOIS, nunca `git commit` nu (canon 2026-09-02).**
+Commit sem pathspec leva **o índice inteiro**, e o índice é do REPOSITÓRIO: se
+outra janela deu `git add` no instante anterior, os arquivos dela entram no seu
+commit — e isso atravessa sites, não basta estar em site diferente.
+
+⚠ **Push rejeitado com outra sessão escrevendo: não resolva por stash.** `git
+stash -u` varre do disco o trabalho em voo da outra janela, e `--autostash` tem
+o mesmo defeito. Integre sem tocar na árvore suja:
+`git fetch origin && git merge origin/main --no-edit` e empurre de novo.
 
 Separar importa: o commit de conteúdo tem que ser legível sozinho no histórico e
 revertível sem levar os relatórios junto.
