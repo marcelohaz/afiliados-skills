@@ -870,7 +870,11 @@ Override determinístico (passo 9) cobre isso. Se IA disse `true` mas falta intr
 "Compradores reclamam de X" → quebra a voz analítica. Sempre reescreva: "Bíblia registra a contrapartida X (campo Y)".
 
 ### 5. Não criar diretório `.audits/articles/`
-Primeiro run do skill no projeto, o diretório não existe. Sempre fazer `mkdir -p docs/biblias-v2/.audits/articles/` antes de escrever.
+Primeiro run do skill no projeto, o diretório não existe. Crie-o **a partir da raiz do repo** — o cwd do Bash reseta em sessão continuada e um `mkdir -p` relativo cria a árvore em `~/Documents/Claude/docs/` (medido 03/09/26):
+```bash
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
+mkdir -p docs/biblias-v2/.audits/articles
+```
 
 ### 6. Achar tone-clone onde é template intencional
 A estrutura dos 4 parágrafos com prefixos exatos (`Para quem é:` / `Por que gostamos:` / `Pontos de atenção:` / `Resumo:`) é o template canônico — **não é tone-clone**.

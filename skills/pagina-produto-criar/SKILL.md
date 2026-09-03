@@ -137,6 +137,8 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 10. **Backup**: copiar `.mdx` atual pra `docs/painel/.painel-backups/{YYYY-MM-DD}/product-{site}-{slug}-{HHMMSS}.mdx`. **Pattern idêntico ao painel** (ver `server.ts:5008`) — sem isso, backups da skill não aparecem no card "Histórico de versões" do editor-produto (que filtra por `product-{site}-{slug}-*`).
 
     ```bash
+    # raiz do repo — o cwd do Bash reseta pra ~/Documents/Claude em sessão continuada; sem isto o mkdir cria a árvore LÁ (medido 03/09/26)
+    cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
     DAY=$(date +%Y-%m-%d); TIME=$(date +%H%M%S); SITE={site}; SLUG={slug}
     mkdir -p "docs/painel/.painel-backups/$DAY"
     cp "sites/$SITE/src/content/products/$SLUG.mdx" "docs/painel/.painel-backups/$DAY/product-${SITE}-${SLUG}-${TIME}.mdx"

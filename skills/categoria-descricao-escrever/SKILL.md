@@ -112,6 +112,8 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
 
 10. **Backup** ANTES de sobrescrever (paridade com handler `category-desc.ts:139-147`):
     ```bash
+    # raiz do repo — o cwd do Bash reseta pra ~/Documents/Claude em sessão continuada; sem isto o mkdir cria a árvore LÁ (medido 03/09/26)
+    cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
     DAY=$(date +%Y-%m-%d); TIME=$(date +%H%M%S); SITE={site}; SLUG={categorySlug}
     PROJ=$(pwd)
     mkdir -p "$PROJ/docs/painel/.painel-backups/$DAY"

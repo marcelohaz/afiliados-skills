@@ -47,7 +47,7 @@ Os grupos **sem semente** (glutamina, termogênico, bicicletas) são os mais arr
 ### Etapa 0 — pré-flight (aborta cedo)
 
 ```bash
-git pull --rebase origin main
+bash scripts/git-pull-seguro.sh "skill-categoria-descricao-criar-em-massa" || exit 1
 bun scripts/categoria-desc-alvos.ts --json
 ```
 

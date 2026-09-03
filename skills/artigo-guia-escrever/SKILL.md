@@ -186,8 +186,10 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 
 12. **Backup** ANTES de sobrescrever (paridade exata com pattern do painel, server.ts:4994):
     ```bash
+    # raiz do repo — o cwd do Bash reseta pra ~/Documents/Claude em sessão continuada; sem isto o mkdir cria a árvore LÁ (medido 03/09/26)
+    cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
     DAY=$(date +%Y-%m-%d); TIME=$(date +%H%M%S); SITE={site}; SLUG={slug}
-    PROJ=$(pwd)  # raiz do projeto — sempre cwd inicial do Claude Code nesta sessão
+    PROJ=$(pwd)  # raiz do repo — garantida pela guarda acima, não pelo cwd inicial da sessão
     mkdir -p "$PROJ/docs/painel/.painel-backups/$DAY"
     # Extrai HTML atual do guideContent (se existir) pra salvar como .html.
     # Reusa o helper canônico do painel pra extrair sem indent — mesmo formato

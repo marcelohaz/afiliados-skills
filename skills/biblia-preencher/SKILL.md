@@ -93,6 +93,8 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
 3.5. **Limpar `conteudoBrutoFabricante`** (ver seção abaixo). Só se o campo tiver conteúdo e houver ruído visível.
 4. **Criar backup antes de salvar**: se o arquivo existir, copiá-lo para `docs/painel/.painel-backups/` antes de sobrescrever. Este é o diretório que o servidor do painel usa — backups aqui aparecem no card "Histórico de versões" do editor.
    ```bash
+   # raiz do repo — o cwd do Bash reseta pra ~/Documents/Claude em sessão continuada; sem isto o mkdir cria a árvore LÁ (medido 03/09/26)
+   cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
    DAY=$(date +%Y-%m-%d); TIME=$(date +%H%M%S); ASIN=<ASIN>
    mkdir -p "docs/painel/.painel-backups/$DAY"
    cp "docs/biblias-v2/$ASIN.json" "docs/painel/.painel-backups/$DAY/${ASIN}-v2-${TIME}.json" 2>/dev/null || true
