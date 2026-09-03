@@ -110,6 +110,46 @@ Detecção:
      re-check vale nada e você vai abortar por engano de novo. A linha de controle
      `local × remote` é o que prova que o pull valeu.
 
+   ⛔⛔ **ANTES DE ABORTAR, OLHE O REMOTE CANÔNICO — ele nem sempre se chama `origin`.**
+   Esta é a causa nº 1 de abort falso desta skill: **15 notas no skill-log entre 16/08 e
+   03/09/2026, todas no passo 2**, incluindo *cinco reincidências no mesmo dia* (31/08) e
+   três lotes seguidos no `melhoreletro`. A palavra `upstream` não aparecia nesta SKILL.md.
+
+   **O mecanismo:** o painel da VPS empurra o scaffold pro repositório **canônico**
+   (`marcelohaz/afiliados`). Quem trabalha em fork tem o canônico com OUTRO nome —
+   na Bárbara é `upstream`, e `origin` é o fork dela (`BDAS17/ProjetoAfiliados`).
+   `painel-vps-pull.sh` + pull do `origin` **nunca** enxerga esse scaffold: o
+   `/admin/update` responde "já estava atualizado" (e está — a VPS já empurrou) e o
+   `origin` continua sem os stubs. Do lado do Marcelo o canônico É o `origin`, então o
+   defeito é invisível pra ele.
+
+   ```bash
+   # Descobre o canônico pela URL, não pelo nome (funciona nas duas máquinas).
+   CANON=$(git remote -v | awk '/marcelohaz\/afiliados(\.git)? \(fetch\)/{print $1; exit}')
+   CANON=${CANON:-origin}
+   git fetch -q "$CANON" main
+   echo "stubs no $CANON: $(git ls-tree -r --name-only $CANON/main sites/{site}/src/content/products/ | grep -c '\.mdx$')"
+   echo "commits que o $CANON tem e você não: $(git rev-list --count HEAD..$CANON/main)"
+   ```
+
+   Se os stubs estiverem lá, **traga antes de classificar** — e prefira o merge ao
+   cherry-pick, porque o scaffold vem com os `.webp` junto e cherry-pick de path solto
+   deixa a imagem pra trás (ela já perdeu tempo com isso: *"cherry-pick de 18 paths antes
+   de começar"*):
+
+   ```bash
+   git merge "$CANON/main" --no-edit
+   ```
+
+   ⚠ Se o merge der conflito, **não force**: registre e trate como abort normal. Um caso
+   de 25/08 mostrou o outro extremo — `git pull --rebase origin main` no passo 10 tentou
+   relinearizar 87 commits depois de um merge do canônico no passo 2 e morreu em conflito.
+
+   ⚠ **O inverso também morde e é do MESMO defeito:** empurrar só pro `origin` quando o
+   canônico é outro deixa o painel da VPS (que lê do canônico) mostrando stub vazio, e o
+   humano do outro lado reenvia o comando achando que nada rodou (nota de 25/08). Os
+   passos 10 e 12c valem para o **canônico**, não para um remote chamado `origin`.
+
      Só aborte se continuar zero DEPOIS disso, com a mensagem "Site {site} não tem stubs
      (verifica painel)". Se a resposta trouxer *"N commit local enviado pro origin/main"*,
      era exatamente isto: havia trabalho preso lá.
