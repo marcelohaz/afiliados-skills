@@ -126,7 +126,9 @@ Detecção:
    ```bash
    # Descobre o canônico pela URL, não pelo nome (funciona nas duas máquinas).
    CANON=$(git remote -v | awk '/marcelohaz\/afiliados(\.git)? \(fetch\)/{print $1; exit}')
-   CANON=${CANON:-origin}
+   # ⚠ Vazio = a detecção FALHOU (repo mudou de URL, remote com outro endereço).
+   # NÃO caia calado no `origin`: é exatamente isso que produzia o abort falso.
+   [ -z "$CANON" ] && { echo "⚠ não achei remote pra marcelohaz/afiliados; confira à mão:"; git remote -v; CANON=origin; }
    git fetch -q "$CANON" main
    echo "stubs no $CANON: $(git ls-tree -r --name-only $CANON/main sites/{site}/src/content/products/ | grep -c '\.mdx$')"
    echo "commits que o $CANON tem e você não: $(git rev-list --count HEAD..$CANON/main)"
