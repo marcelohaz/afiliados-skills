@@ -248,6 +248,24 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
     ```
     `--no-verify` é OBRIGATÓRIO: o pre-commit hook roda `audit-article.ts` no artigo staged e bloqueia se houver QUALQUER erro — artigo no meio do pipeline (sem meta/intro/guide, reviews faltando) sempre tem. A skill é o caminho oficial de escrita.
 
+    ⚠️ **MAS RODE O SCRIPT ANTES, FILTRADO NO SEU PRODUTO (canon Marcelo 2026-09-04).** Bypassar o gate
+    é certo (o artigo incompleto sempre falha), pular a checagem não é — e a skill dizia só a primeira
+    metade até hoje. O script pega defeito de PRODUTO que nenhum auto-check daqui cobre:
+
+    ```bash
+    bun scripts/audit-article.ts {site} {slug} 2>&1 | grep -i '{nome-do-produto}'
+    ```
+
+    ⚠ A assinatura é `{site} {slug}` **separados por espaço**, não `site/slug` — com barra ele responde
+    *"Site não encontrado em sites/"* e parece que o artigo sumiu.
+
+    Ignore o que é do pipeline (falta description/intro/guide, "Falta shortDescription" dos OUTROS
+    produtos) e o `Primeiro produto sem badge`, que é etapa posterior. O que importa é o que tem o nome do
+    seu produto na linha. Medido em 2026-09-04, num review que passou em 13 auto-checks meus e mesmo assim
+    tinha dois defeitos reais: **`preco-aproximado`** (preço em texto editorial exige prefixo "cerca de" /
+    "em torno de" / "por volta de" — "preço médio na casa dos R$ 600" NÃO passa) e **`spec-order`**
+    (rótulo de spec fora do `specLabels` do próprio artigo, que é a lista que ordena a tabela comparativa).
+
 13. **Disparar git pull no painel da VPS**:
     ```bash
     bash scripts/painel-vps-pull.sh
