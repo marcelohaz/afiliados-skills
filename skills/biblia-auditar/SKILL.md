@@ -127,7 +127,14 @@ externa (Categoria 2), e aí o registro tem que carregar a URL: sem ela, "fonte:
 que o fabricante não declara é claim sem lastro com carimbo de lastro, que é pior que claim solto.
 
 Medido em 2026-09-04: 7885 itens na rede, só **24 sem `fonte`**, e os quatro tokens acima cobrem 5188.
-O campo é confiável o bastante pra virar teste. ⚠️ **`angulosConversao` não tem `fonte` em item nenhum
+O campo é confiável o bastante pra virar teste.
+
+⚠️ **NÃO é claim sem lastro: valor DERIVADO do bruto** por conversão de unidade ou arredondamento
+("2,7 polegadas (6,9 cm)", "1 g (1000 mg)", "2,92 kg" virando "cerca de 3 kg"). O que a checagem procura é
+**métrica diferente** ou número que não sai de nada do campo. No caso que originou a régua, a curadoria dizia
+"129,3% de sRGB" e o fabricante declarava "NTSC 85%" — não é conversão de coisa nenhuma. **Calibração:** um
+matcher cru marca **214 de 1954** itens conferíveis da rede (10%), e a amostra é dominada por conversão
+legítima. Se a sua taxa de achado passar muito disso, você está flagrando derivação, não defeito. ⚠️ **`angulosConversao` não tem `fonte` em item nenhum
 (0 de todos)** — lá o cruzamento é manual, e foi justamente onde metade do claim da B0FGDJNXPP morava.
 
 **(b) Registro de inconsistência que descreve conflito EXTINTO.** Um `dadosInconsistentes` afirma "o

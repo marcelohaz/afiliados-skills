@@ -211,6 +211,11 @@ O que fazer:
 - Listar os **diferenciais reais e verificáveis** do produto com base nos dados
 - Cada ponto = um diferencial concreto, não vago ("impressão rápida" é vago; "velocidade de 10 ppm em preto declarada pela Epson" é concreto)
 - `fonte` = de onde vem o dado: `"specs"`, `"bullets"`, `"fabricante"`, `"opiniões"`, ou texto descritivo como `"opiniões, recorrente em 3+ reviews"`
+  ⚠️ **A `fonte` tem que ser o campo que REALMENTE contém o valor** (régua 2026-09-04). `fonte: "fabricante"`
+  num dado que só existe no `specsAmazon`, ou em lugar nenhum, é carimbo de lastro sem lastro, e a
+  `biblia-auditar` agora flagra como 🔴 (Categoria 1, direção curado × bruto). Dado vindo de verificação
+  externa: diga isso na `fonte` e registre a URL em `observacoesAgente`. Conversão e arredondamento do
+  valor bruto seguem válidos, é o mesmo dado.
 - Incluir apenas pontos com evidência nos dados. Não incluir claims não verificáveis
 - Mínimo 3; máximo ~8
 
