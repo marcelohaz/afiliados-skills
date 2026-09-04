@@ -265,6 +265,16 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
    - **Subtitle** (2026-09-01): stub sem subtitle → lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, lead distinto dos irmãos do artigo; subtitle humano → sentido preservado (ver "Os 6 campos")
    - **Banidas no output** (v1.16.0): grep por `lineup`, `desta seleção`, `do lineup`, `do nosso lineup`, `do nosso comparativo` — se achar, reescreve
    - **Cota cross-produto**: máximo 2 peers citados por bullet/parágrafo (ver Armadilha 7)
+   - **SUPERLATIVO CONTRA OS IRMÃOS (v1.128.2, canon Marcelo 2026-09-04)**: todo "o mais X", "a maior", "o menor",
+     "o único" deste comparativo/desta lista → confira contra `specs` e `schemaPrice` dos irmãos que chegaram no
+     despacho do 7.5, **stubs inclusive** (a tabela deles já está preenchida quando o review ainda está vazio).
+     Empate → escreva o VALOR ("400 cd/m², o valor mais alto daqui"), nunca a posição ("o mais brilhante").
+     Silêncio nos specs de um irmão NÃO prova ausência: "o único sem X" só entra se todos os outros declaram X.
+     Vale para o subtitle vinculante: "Melhor X" que empata com irmão vira texto sobre o valor de X, e o
+     empate vai no relatório para o editor decidir o badge. Caso real (04/09, um artigo só): "200 Hz, a taxa
+     mais alta desta lista" com 320 e 310 Hz em stubs vazios; "Melhor Brilho" com 400 cd/m² empatado em três;
+     "Melhor Nitidez" com 109 ppp contra 110 do ultrawide; "o único sem conector de fone" sem ter conferido.
+     Quem pegou o 1º foi o `audit-article`, por acaso — os outros três só porque eu fui olhar.
    - HTML allowlist OK no fullReview
    - Sem travessão
    - Tag correta nos links (ou cruas se config vazia)
@@ -639,7 +649,7 @@ Ao decidir QUAL claim vira pro central no artigo vs. spec:
 ## Restrições finais
 
 - Sem travessão (—)
-- Sem superlativos ABSOLUTOS sem evidência ("o melhor", "o mais X", "incomparável", "único", "imbatível")
+- Sem superlativos ABSOLUTOS sem evidência ("o melhor", "o mais X", "incomparável", "único", "imbatível") — e evidência da PRÓPRIA bíblia não basta para "o mais X deste comparativo": confira contra os irmãos (passo 9, "Superlativo contra os irmãos")
 - ✓ Qualificadores positivos simples ("excelente", "ótimo", "muito bom") são OK — reviews são levemente inclinados ao positivo por design (diretriz #2 da bíblia)
 - ✓ Superlativas qualificadas com dado: "entre as mais econômicas da categoria" (se houver concorrentes na bíblia)
 - Dados quantitativos no fullReview: **3 a 7, com auto-check** — a régua completa e a calibração medida vivem na seção `fullReview` acima, junto de onde você escreve. Esta linha ficou aqui solta até 2026-09-04, longe do ponto de uso e com a palavra "tipicamente", e foi por ela que um review saiu com 12
