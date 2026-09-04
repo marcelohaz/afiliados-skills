@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar
-description: Audita E CORRIGE bíblia v2 no estilo propor→aprovar (igual artigo-guia-auditar/linkagem-auditar). Procura inconsistências factuais, contradições internas, claims não verificáveis, frescor de dados e problemas editoriais; gera o relatório; propõe fixes cirúrgicos NOS CAMPOS CURADOS (nunca nos brutos) e aplica os que você aprovar. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Usa as diretrizes editoriais embutidas na bíblia como régua. Gera relatório em docs/biblias-v2/.audits/<ASIN>-last.md (o que o painel lê). TODA auditoria carimba lastAuditedAt (+ bumpa lastModified via toISOString) na bíblia e faz push R2, mesmo read-only — é o que zera o "auditar de novo" no painel (que marca stale quando lastFilledAt > lastAuditedAt).
+description: Audita E CORRIGE bíblia v2 no estilo propor→aprovar (igual artigo-guia-auditar/linkagem-auditar). Procura inconsistências factuais, contradições internas nas DUAS direções (bruto x bruto e CURADO x BRUTO, conferindo o campo `fonte` de cada claim contra o campo bruto que ele nomeia), registro de inconsistencia que descreve conflito ja extinto, claims não verificáveis, frescor de dados e problemas editoriais; lê `avisosAoAgente` antes de tudo e nunca o edita; gera o relatório; propõe fixes cirúrgicos NOS CAMPOS CURADOS (nunca nos brutos) e aplica os que você aprovar. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Usa as diretrizes editoriais embutidas na bíblia como régua. Gera relatório em docs/biblias-v2/.audits/<ASIN>-last.md (o que o painel lê). TODA auditoria carimba lastAuditedAt (+ bumpa lastModified via toISOString) na bíblia e faz push R2, mesmo read-only — é o que zera o "auditar de novo" no painel (que marca stale quando lastFilledAt > lastAuditedAt).
 ---
 
 ## Parse de input
@@ -27,7 +27,8 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
 ## Invariantes
 
 - **PROPOR → APROVAR — exceto o ÓBVIO, que aplica direto (régua Marcelo 2026-06-27).** O relatório sai SEMPRE (read-only é o default). **Fix óbvio e inequívoco → APLICA SEM PEDIR** (e registra ✅ CORRIGIDO no relatório): naming derivável dos próprios dados da bíblia (`marca` vazia quando o nome/`specsAmazon` dizem a marca; marca duplicada no nome; espaço duplo; caractere invisível/BOM), HTML/tag vazado em campo curado, e qualquer conserto determinístico de direção única. **Só fica PROPOR→APROVAR** o que envolve julgamento/ambiguidade (reescrita de voz-comprador→análise, `decisaoEditorial`, adicionar fato de fonte externa, contradição com mais de uma leitura possível): aí lista com diff e espera aprovação granular ("aplica tudo" / "aplica 1,3" / "rejeita 2"). Na dúvida entre óbvio e ambíguo, trate como ambíguo (proponha).
-- **Toca nos CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`) **+ naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (derivável dos dados da própria bíblia). **NUNCA edita os campos BRUTOS** (`sobreEsteItem`, `doFabricante`, `descricaoProduto`, `specsAmazon`, `conteudoBrutoFabricante`) — eles são a fonte factual; achado neles é report-only (o humano corrige no editor). **NUNCA toca em `lastAuthor`.**
+- **Toca nos CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`) **+ naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (derivável dos dados da própria bíblia). **NUNCA edita os campos BRUTOS** (`sobreEsteItem`, `doFabricante`, `descricaoProduto`, `specsAmazon`, `conteudoBrutoFabricante`) **nem `avisosAoAgente`** — os brutos são a fonte factual e o `avisosAoAgente` é o canal do HUMANO; achado neles é report-only (o humano corrige no editor). **NUNCA toca em `lastAuthor`.**
+  ⚠️ `avisosAoAgente` não estava em lista nenhuma até 2026-09-04 (nem curados, nem brutos), o que deixava ambíguo se a auditoria podia reescrevê-lo. Não pode.
 - **`lastAuditedAt`: TODA auditoria grava `lastAuditedAt = new Date().toISOString()` na bíblia (mesmo read-only, sem nenhum fix de curadoria).** É o carimbo que faz o painel saber que a bíblia foi auditada e parar de marcar "auditar de novo" (o painel compara `lastFilledAt > lastAuditedAt`; regra Marcelo 2026-06-15). Ver Etapa 4.5.
 - **`lastModified`: bumpe via `new Date().toISOString()` (UTC correto) SEMPRE que gravar a bíblia** (e como a Etapa 4.5 sempre grava `lastAuditedAt`, isso vale pra toda auditoria, não só quando aplica fix). Sem isso, o push do R2 NÃO vence: o sync compara `lastModified` embutido (local) vs `uploadedAt` do objeto R2 (remoto), e um objeto R2 enviado depois do timestamp embutido faz o pull CLOBBERAR o seu edit (incidente real 2026-06-09 na B0D21JPCF9). **NUNCA hand-rolle o timestamp via getHours/pad** (bug de timezone: vira 2-3h no futuro e quebra o audit-stale). `toISOString()` é UTC real, sem esse bug. **NUNCA toque em `lastAuthor`.**
 - **Escopo: FATO + DADO LIMPO + NAMING, não voz editorial** (ver categoria 5). NÃO flague/conserte travessão, muleta "declarado pelo fabricante", superlativo, concordância PT-BR na bíblia — é da criação do review/página (reescreve e tem auto-check próprio).
@@ -46,6 +47,12 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
    Bíblias vivem no R2 canônico. Painel VPS auto-uploada saves do user e auto-pulls a cada 60s. Mac local pode estar atrás. `--apply` sem `--push` é pull-only (seguro). Se sync falhar (rede offline, creds erradas), seguir mesmo assim — risco de stale aceito vs travar.
 
 1. **Carregar**: `Read docs/biblias-v2/<ASIN>.json`. Se não existir, abortar com mensagem clara.
+   ⚠️ **Leia `avisosAoAgente` ANTES de qualquer checagem.** É o único canal em que o humano manda na
+   bíblia, e costuma explicar o que você está prestes a interpretar como defeito. Confira instrução por
+   instrução se a bíblia obedece; cada uma não respeitada é achado com a instrução literal como evidência.
+   Sem avisos, siga. Caso real: o aviso *"Atualizei a pagina do fornecedor"* na B0FGDJNXPP era a chave dos
+   7 achados daquela auditoria, e sem ele o relatório teria descrito sintoma em vez de causa. Medido em
+   2026-09-04: 17 bíblias da rede têm aviso, e 9 delas nunca foram auditadas.
 2. **Rodar as 5 categorias de checagem** (abaixo). Anote achados em memória.
 3. **Verificação externa opcional**: Se houver claims numéricos específicos (wattagem, dpi, capacidade) e dúvida, use `WebFetch` em `identidade.urlFabricante` pra cruzar. Não navegue em sites aleatórios; priorize fabricante oficial > Amazon ao vivo > nada.
 3.5. **Auto-baixar imagem pendente** (régua 2026-06-03 — a auditoria FECHA o gap, não só sugere): se `identidade.imagemAmazon` está preenchido **e** `docs/biblias-v2/<ASIN>.webp` NÃO existe, baixe agora antes de escrever o relatório:
@@ -93,9 +100,54 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
 ## As 5 categorias
 
 ### 1. Consistência interna
-Mesmo fato afirmado em blocos diferentes da bíblia com valores contraditórios. Campos a cruzar:
+
+**Duas direções. A primeira sempre esteve aqui; a segunda é a que escapa.**
+
+**BRUTO × BRUTO** — mesmo fato afirmado em blocos diferentes com valores contraditórios:
 - `sobreEsteItem` × `doFabricante` × `descricaoProduto` × `specsAmazon` × `conteudoBrutoFornecedor`
 - Exemplos: "120Hz" num bloco e "60Hz" noutro; "4.500 páginas" vs "3.000 páginas"; `identidade.modelo` diferente do nome que aparece dentro de `doFabricante`.
+
+**CURADO × BRUTO** — ⚠️ **esta cópia tinha PERDIDO a cláusula.** O `regras-biblia.md` §4 sempre disse
+*"claim num campo curado que contradiz o bruto"*, e aqui só havia bruto × bruto. Restaurada em
+2026-09-04, depois de a B0FGDJNXPP passar por auditoria com um claim que a própria fonte declarada
+contradizia. Três checagens:
+
+**(a) `fonte` é uma AFIRMAÇÃO DE PROCEDÊNCIA — confira-a.** Cada item de `pontosFortes`/`pontosFracos`
+declara de onde veio, e o vocabulário mapeia direto nos brutos:
+
+```
+fabricante  →  doFabricante + conteudoBrutoFabricante
+specs       →  specsAmazon
+bullets     →  sobreEsteItem
+opiniões    →  opinioesCompradores
+```
+
+**Valor que não está no campo que a `fonte` nomeia é 🔴.** A exceção é o item vindo de verificação
+externa (Categoria 2), e aí o registro tem que carregar a URL: sem ela, "fonte: fabricante" num dado
+que o fabricante não declara é claim sem lastro com carimbo de lastro, que é pior que claim solto.
+
+Medido em 2026-09-04: 7885 itens na rede, só **24 sem `fonte`**, e os quatro tokens acima cobrem 5188.
+O campo é confiável o bastante pra virar teste. ⚠️ **`angulosConversao` não tem `fonte` em item nenhum
+(0 de todos)** — lá o cruzamento é manual, e foi justamente onde metade do claim da B0FGDJNXPP morava.
+
+**(b) Registro de inconsistência que descreve conflito EXTINTO.** Um `dadosInconsistentes` afirma "o
+campo X informa V" e V não está mais em X. Acontece quando o bruto é **re-capturado depois da
+curadoria**: o conserto some do bruto e o registro morto continua lá, fazendo o review a jusante
+hedgear contra um fantasma. **Confira cada registro contra o campo que ele nomeia.** Na B0FGDJNXPP
+eram 5 de 6.
+
+**(c) Curadoria órfã em geral.** O mesmo evento (bruto trocado) deixa claims curados sem âncora mesmo
+onde não há `fonte` pra conferir. Sinal barato de que vale olhar: `avisosAoAgente` mencionando
+re-captura, troca de página do fabricante ou variante errada.
+
+⚠️ **Não invente detector mecânico pra (b) e (c) — foi tentado e não fecha.** `lastModified >
+lastAuditedAt` dispara em **158 de 589** bíblias auditadas, com 30 numa janela de 4 minutos (assinatura
+de lote, não de edição). `capturedAt` não se move em edição manual do painel: na B0FGDJNXPP ele
+continuou 28/07 com o bruto trocado em 04/09. E um heurístico de "valor citado ausente do bruto"
+devolveu 165 candidatas das quais as 3 amostradas eram falso positivo de unidade ("2000 W" contra
+`2000 (220V)`). **Quem pega é a leitura**, que você já está fazendo de qualquer jeito. O painel também
+não avisa: por decisão de 2026-06-15 o chip "auditar de novo" é keyado em `lastFilledAt`, e a tooltip
+dele diz literalmente *"Edição manual simples não dispara isso"*.
 
 ### 2. Verificação externa
 Claims numéricos ou categóricos específicos que podem ser checados:
