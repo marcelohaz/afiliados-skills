@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar-em-massa
-description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, sem passada comparativa). Escopo = FATO + DADO LIMPO + NAMING (bíblia é fonte de fato, nunca renderizada; voz editorial é do review). AUTO-APLICA conserto de direção conhecida (lixo de dado, voz-comprador→analítica, contradição com a própria decisaoEditorial, fonte atribuída errada), cada um com re-auditoria automática e reversão do backup se não convergir em ≤3. REPORT-ONLY pro indeterminável (frescor, verificação externa, naming ambíguo). NÃO mexe em voz editorial. Roda como 2ª etapa do preencher-em-massa --audit OU sozinha. Sub-agents paralelos (≤10). Sync R2 nas 2 pontas. Botão '🔍 Auditar bíblias' do produtos.html copia o comando.
+description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, sem passada comparativa). Escopo = FATO + DADO LIMPO + NAMING (bíblia é fonte de fato, nunca renderizada; voz editorial é do review). AUTO-APLICA conserto de direção conhecida (lixo de dado, voz-comprador→analítica, contradição com a própria decisaoEditorial, fonte atribuída errada, dadosInconsistentes que descreve conflito já extinto porque o bruto foi re-capturado), cada um com re-auditoria automática e reversão do backup se não convergir em ≤3. REPORT-ONLY pro indeterminável (frescor, verificação externa, naming ambíguo). NÃO mexe em voz editorial. Roda como 2ª etapa do preencher-em-massa --audit OU sozinha. Sub-agents paralelos (≤10). Sync R2 nas 2 pontas. Botão '🔍 Auditar bíblias' do produtos.html copia o comando.
 ---
 
 ## Parse de input
@@ -57,7 +57,7 @@ Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` n
 - **AUTO-APLICA (A) e (B)**; **(C) é report-only** (não há o que aplicar sem dado novo). `--report-only` desliga todo auto-apply.
 - **Todo conserto passa por re-auditoria** (Etapa 3.5). Não convergiu em ≤3 tentativas → **reverte do backup** + vira (C) no relatório. Nada fica aplicado sem ter sido re-conferido.
 - **Backup ANTES de qualquer escrita** (`.painel-backups/<dia>/`). Tudo reversível.
-- **Toca CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`) **+ naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (derivável dos dados da própria bíblia, ex.: `marca` vazia e o `nome`/`specsAmazon` dizem "Philco"). **NUNCA edita BRUTOS** (`sobreEsteItem`/`doFabricante`/`descricaoProduto`/`specsAmazon`/`conteudoBrutoFabricante`) nem `lastAuthor`.
+- **Toca CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`) **+ naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (derivável dos dados da própria bíblia, ex.: `marca` vazia e o `nome`/`specsAmazon` dizem "Philco"). **NUNCA edita BRUTOS** (`sobreEsteItem`/`doFabricante`/`descricaoProduto`/`specsAmazon`/`conteudoBrutoFabricante`), **nem `avisosAoAgente`** (canal do HUMANO, intocável como bruto: leia antes de julgar, achado nele é report-only), nem `lastAuthor`.
 - **`lastAuditedAt` carimbado via `new Date().toISOString()` em TODAS as bíblias auditadas** (com ou sem fix) — é o que faz o painel parar de marcar "auditar de novo" (compara `lastFilledAt > lastAuditedAt`; regra Marcelo 2026-06-15). Ver Etapa 3.6.
 - **`lastModified` bumpado via `new Date().toISOString()`** sempre que gravar a bíblia (todo conserto E todo carimbo de auditoria → toda bíblia do lote). NUNCA hand-roll (timezone). NUNCA toca `lastAuthor`.
 - **`auditFlags` gravado junto do `lastAuditedAt`** (Etapa 3.6): avisos semânticos `{type,label}` pro chip do painel (`'wrong-info'`/`'off-niche'`/`'review'`) — vêm dos `report_C` que sobraram. ⚠ **Desde 2026-08-25 o chip acende SÓ para `'wrong-info'`/`'off-niche'`** — `'review'` é nota de auditoria: fica legível no relatório `-last.md` e no editor ("ver relatório de auditoria"), não pinta a coluna Observações e não tira a bíblia de "Prontos para clonar". **Grave `'review'` exatamente como antes** (o tipo continua válido e é o registro do achado); só não o dose achando que polui o painel. **Esvaziar (`[]`) quando limpo** é obrigatório (chip preso = bug). É o que surfaça contaminação cross-produto que o detector mecânico não pega.
@@ -87,7 +87,7 @@ Scan determinístico nos campos curados. **Só LIXO DE DADO + NAMING** (não voz
 - **Marca duplicada no nome** ("Epson Epson L3250") → **remover a 2ª**.
 - **`marca` vazia mas DERIVÁVEL** (campo `identidade.marca` em branco e o `nome`/`specsAmazon` dizem a marca de forma inequívoca, ex.: nome "Philco PAF40A" + specsAmazon "Nome da marca PHILCO") → **preencher `identidade.marca`** com a marca canônica (régua Marcelo 2026-06-27). Marca real INCERTA (vários candidatos, placeholder `—` sem fonte clara) NÃO entra aqui → fica (C) report-only.
 - **Duplicação contígua** `([a-zA-ZÀ-ÿ\s]{8,40})\1` em campo curado → remover a 2ª cópia.
-- **Jargão interno em campo curado** (`bíblia`, `snapshot`, `captura`) → reescrever sem o jargão ("preço registrado na bíblia" → "preço médio em torno de R$ X"). ⚠ O campo `.fonte` dos pontos NOMEIA campos brutos por função — varra `.fonte` SÓ pela palavra `bíblia`, não por nome de campo (senão 6 falsos positivos por lote, medido 27/08).
+- **Jargão interno em campo curado** (`bíblia`, `snapshot`, `captura`) → reescrever sem o jargão ("preço registrado na bíblia" → "preço médio em torno de R$ X"). ⚠ O campo `.fonte` dos pontos NOMEIA campos brutos por função — varra `.fonte` SÓ pela palavra `bíblia`, não por nome de campo (senão 6 falsos positivos por lote, medido 27/08). ⚠⚠ **Não confunda com o teste de procedência da Categoria 1** (`regras-biblia.md` §4, régua 2026-09-04), que usa exatamente o nome do campo na `.fonte` pra ir conferir o valor no bruto. São duas operações opostas sobre o mesmo campo: aqui é caça a jargão vazado, lá é conferência de lastro.
 
 ⛔ **FORA do escopo da bíblia (NÃO scaneia, NÃO conserta — é do review/página):** travessão, muleta "declarado pelo fabricante", superlativo/claim absoluto, concordância PT-BR. Essas regras de VOZ são aplicadas pelas skills de criação sobre o texto reescrito (régua + auto-check próprios). Enforçar aqui é trabalho dobrado.
 
@@ -181,7 +181,7 @@ Pra **cada** bíblia auditada (consertada ou não), no MESMO write: backup (se a
 - Deploy.
 - Aplicar (C) (indeterminável) — sempre flag.
 - Manter (B) aplicado sem re-auditoria (3.5).
-- Tocar campos brutos ou `lastAuthor`.
+- Tocar campos brutos, `avisosAoAgente` ou `lastAuthor`.
 - Comparar/compartilhar contexto entre bíblias.
 - Auditar bíblia pendente (pula) ou contaminada-hard (exclui).
 
