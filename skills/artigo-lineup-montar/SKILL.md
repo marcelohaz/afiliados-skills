@@ -1,6 +1,6 @@
 ---
 name: artigo-lineup-montar
-description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL — e com --aplicar cria o artigo no painel (make-reviews-stub + add-products-stub) e devolve a URL do editor. NÃO escreve conteúdo nem badge. Só entram produtos que já têm página no site. Antes de abrir qualquer produto, consulta CEGA a um sub-agent isolado ('como escolher {keyword}') vira rubrica pré-registrada; depois lê a página INTEIRA de cada candidato pra julgar aderência à keyword e só abre a bíblia dos sobreviventes (comprasMesPassado, marca, disponibilidade, pontosFracos). Ordena por venda, resolve gêmeo/sucessão/rebadge cross-marca. AUDITA o próprio lineup num sub-agent isolado: toda exclusão exige prova citável no degrau certo.
+description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL — e com --aplicar cria o artigo no painel (make-reviews-stub + add-products-stub) e devolve a URL do editor. NÃO escreve conteúdo nem badge. Bíblia relevante SEM página entra marcada e o gate fica na Etapa 8 (que não cria artigo com produto sem página). Antes de abrir qualquer produto, consulta CEGA a um sub-agent isolado ('como escolher {keyword}') vira rubrica pré-registrada; depois lê a página INTEIRA de cada candidato pra julgar aderência à keyword e só abre a bíblia dos sobreviventes (comprasMesPassado, marca, disponibilidade, pontosFracos). Ordena por venda, resolve gêmeo/sucessão/rebadge cross-marca. AUDITA o próprio lineup num sub-agent isolado: toda exclusão exige prova citável no degrau certo.
 ---
 
 ## Parse de input
@@ -109,7 +109,7 @@ páginas na categoria: N
 
 ⚠️ **Aqui você julga com evidência mais fraca, e precisa saber disso.** Todo o desenho manda julgar pelo conteúdo da página, e estes produtos **não têm página** — sobra a bíblia. Eles são avaliados por material mais pobre que os concorrentes deles.
 
-Aqui a única fonte é a bíblia, então você está no **2º degrau da escada da Etapa 3 sem ter passado pelo 1º**. Isso não impede eliminar — o bruto do fabricante é prova boa — mas cobra prudência, porque a decisão de 2b é **bloquear o fluxo**, não montar lineup. Some o custo assimétrico: listar demais é uma linha no relatório, listar de menos é um produto que nunca entra em artigo nenhum. Conduta: **erre pro lado de listar** — incerto vira `✅ RELEVANTE` e quem decide é o usuário. Só fica de fora o que é obviamente outra coisa (o microfone avulso, o cabo, a capa).
+Aqui a única fonte é a bíblia, então você está no **2º degrau da escada da Etapa 3 sem ter passado pelo 1º**. Isso não impede eliminar — o bruto do fabricante é prova boa — mas cobra prudência, e a prudência agora é OUTRA: desde 04/09/2026 a 2b não bloqueia, ela MARCA — então o produto segue com evidência mais fraca até a Etapa 8, e é o marcador que carrega essa ressalva. Some o custo assimétrico: listar demais é uma linha no relatório, listar de menos é um produto que nunca entra em artigo nenhum. Conduta: **erre pro lado de listar** — incerto vira `✅ RELEVANTE` e quem decide é o usuário. Só fica de fora o que é obviamente outra coisa (o microfone avulso, o cabo, a capa).
 
 **Havendo relevante, MARQUE E SIGA** (canon Marcelo 2026-09-04). O produto entra no
 universo com `⛔ SEM PÁGINA`, é julgado na Etapa 3 pela bíblia, disputa posição normalmente,
@@ -141,7 +141,11 @@ Detalhe e consequência editorial ficam na Etapa 7. **Aqui é só o número, ced
 
 ⚠️ **Cuidado com o medidor.** Ao varrer bíblia em massa, confira o TIPO do campo antes de concluir. `specsAmazon` é **string** em todas as bíblias medidas, não dicionário — um scan que assume `dict` devolve zero e parece um achado. Em 2026-08-01 isso quase virou uma acusação falsa contra esta própria régua.
 
-**2c. Ler INTEIRO (caro), só depois de 2b passar** (canon Marcelo 2026-08-01): `subtitle` · `shortDescription` · `pros` · `cons` · `specs` · `fullReview`.
+**2c. Ler INTEIRO (caro), depois da 2b** (canon Marcelo 2026-08-01): `subtitle` · `shortDescription` · `pros` · `cons` · `specs` · `fullReview`.
+
+⚠️ **O marcado `⛔ SEM PÁGINA` não tem o que ler aqui — pule-o nesta etapa.** O dossiê
+dele é a bíblia (campos brutos), e é assim que ele chega na Etapa 3. Não invente leitura
+de página inexistente e não o deixe de fora do universo por causa disso.
 
 **Isso cabe, e o teto foi medido** — a maior categoria da rede em 2026-08-01:
 
@@ -172,6 +176,12 @@ qual spec prova     o campo lido que sustenta o julgamento
 
 ⚠️ **LEIA A RUBRICA INTEIRA, não só a lista de eliminatórios.** No mesmo caso, a rubrica dizia que cartucho é o eliminatório nº 1 da keyword **e**, três parágrafos abaixo, que cartucho *"faz sentido: volume muito baixo e esporádico, orçamento inicial travado, ou onde a cabeça integrada protege contra entupimento"*. Eu li a primeira metade. A seção "quando faz sentido" de cada tecnologia é **régua de admissão tanto quanto a lista de cortes** — ela diz para QUAL PERFIL aquele produto é a resposta certa, e perfil é papel no lineup.
 
+⚠️ **PRO MARCADO `⛔ SEM PÁGINA`, QUEM ELIMINA É O BRUTO DA BÍBLIA** (`specsAmazon` ·
+`sobreEsteItem` · `doFabricante` · `conteudoBrutoFabricante`), com a mesma exigência de
+citação. Sem essa exceção a regra abaixo o tornaria **inelegível pra corte** — nenhuma
+página existe pra desqualificar, então ele entraria sempre, que é o oposto de prudente.
+A evidência dele é mais fraca, e é isso que o marcador comunica até a Etapa 8.
+
 ⚠️ **A RUBRICA APONTA O QUE PROCURAR. QUEM ELIMINA É A PÁGINA.** Sem trecho da página que desqualifique, o produto **entra** — mesmo que a rubrica ache que ele é de outro segmento. A consulta cega é opinião de memória: ela sabe reconhecer o que existe na categoria, mas o recorte editorial de "isso não deveria estar na mesma lista" é juízo dela, não fato do produto.
 
 ⚠️ **MAS ELIMINATÓRIO TEM DUAS FORMAS, e a regra acima só cobre uma.** Descoberto em 2026-08-02 rodando `melhor tablet para desenho`: eu cortei 5 produtos por **silêncio** da página, que é justamente o que a linha acima proíbe — e cortar estava certo, porque tablet sem caneta ativa não pertence a um artigo de desenho. O defeito era da régua.
@@ -190,6 +200,7 @@ REQUISITO         "precisa ter caneta ativa com pressão"
 
 ```
 1º  PÁGINA        tem o requisito? → entra.  Diz que NÃO tem? → sai, com a citação.
+                  ⛔ SEM PÁGINA: este degrau NÃO EXISTE pra ele. Comece no 2º.
 2º  BÍBLIA BRUTA  specsAmazon · sobreEsteItem · doFabricante · conteudoBrutoFabricante
                   resolveu 5 de 6 casos com evidência de FONTE
 3º  LLM ISOLADA   só o que sobrou ambíguo E tem tração alta o bastante pra o corte doer
@@ -645,6 +656,9 @@ Colunas obrigatórias, nesta ordem:
 #  ASIN         Produto              R$      Compras/mês   Pág.   Subtítulo sugerido
 ```
 
+- **`Pág.` é ✅ ou `⛔ SEM PÁGINA`.** O segundo é o que a Etapa 8 barra, e o motivo de ele
+  estar visível aqui é que a decisão (criar a página ou tirar o produto) só é informada com
+  a posição e a venda dele na mesma linha.
 - **ASIN é a chave.** Nome é ambíguo (abreviação, variante com uma palavra de diferença), preço muda, posição muda.
 - **Nome e preço LIDOS do `.mdx`**, nunca digitados de memória — inclusive ao montar a tabela.
 - ⚠️ **A célula "Subtítulo sugerido" leva SUBTÍTULO, nunca rótulo de diagnóstico.** `sem eixo próprio`, `a definir`, `eixo fraco` não são subtítulos — são anotação sua, e quem lê a tabela não tem o que fazer com elas. Se o produto não tem diferencial, as saídas legítimas são duas: **tirá-lo do lineup** dizendo por quê, ou **mantê-lo com o melhor subtítulo possível** e sinalizar o eixo fraco **em nota à parte**. Caso real 2026-08-11: entreguei 5 de 11 células com "sem eixo próprio" e o Marcelo respondeu *"cadê o subtítulo, não entendi nada"* — com razão, porque a entrega não era utilizável.
