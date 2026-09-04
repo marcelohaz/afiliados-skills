@@ -653,7 +653,12 @@ Carrego TODAS as bíblias dos produtos do artigo pra ENTENDER:
 - Categoria editorial (tipo de produto, nicho)
 - Critérios técnicos que diferenciam os produtos do lineup
 - Specs e features comuns vs raras
-- Perfis de uso que aparecem em `angulosConversao`
+- Perfis de uso que aparecem em `angulosConversao` — **filtrados pela keyword DESTE artigo** (canon Marcelo
+  2026-09-04). A bíblia ordena os ângulos pelo produto, não pelo artigo, e perfil fora do recorte arrisca o
+  guia ranquear pra outra busca. Esta skill já tem essa disciplina pra escolher a análise de concorrente
+  ("keywords diferentes têm intenção, SERP e concorrentes diferentes"); ela vale igual aqui. Caso real: a
+  bíblia de um monitor abre com `gamer-competitivo` como tema 1 de 5, e o artigo era de monitor **pra
+  trabalho**. Régua irmã na `artigo-review-criar`, invariante do ângulo.
 - Filtros editoriais (ver bíblia → `diretrizesEditoriais`)
 
 **Citação de produto específico varia por seção:**

@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 26 critérios — tone-clone, repetição intra-artigo (mecânica: frase igual em 4+ ocorrências, abertura igual, fecho de preço), redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, número sem lastro na bíblia, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso, health-absolutes-YMYL, voz-eximir-responsabilidade, naturalidade (palavra fora do sentido, frase-sacada, tiques com teto), subtitle-keyword-first, badge-ausente, voltagem-citada, ymyl-aviso-repetido, peso-por-fonte. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 27 critérios — tone-clone, repetição intra-artigo (mecânica: frase igual em 4+ ocorrências, abertura igual, fecho de preço), redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, número sem lastro na bíblia, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso (por frase E total do review), health-absolutes-YMYL, voz-eximir-responsabilidade, naturalidade (palavra fora do sentido, frase-sacada, tiques com teto), angulo-fora-da-keyword, subtitle-keyword-first, badge-ausente, voltagem-citada, ymyl-aviso-repetido, peso-por-fonte. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -612,6 +612,27 @@ for produto in products:
 
 **Exceção canônica**: 1 frase comparativa de doses entre 3 produtos vale por review SE houver gancho narrativo claro. Repetir = chavão.
 
+⚠️ **SEGUNDO EIXO — o TOTAL por review, não só a frase (canon Marcelo 2026-09-04).** O check acima é
+por-frase e a regex só cobre `mg|g|R$`, que é formato de suplemento. Review de eletrônico espalha os números
+em frases diferentes e passa limpo. Caso real: um review com **12** valores (Hz, ms, cd/m², :1, kg, graus,
+polegadas) não tinha **nenhuma** frase com 3, e ainda assim ficou em 4,2 números por 100 palavras contra a
+mediana de 1,5 do nicho Eletrônicos — percentil 100 de 3399 reviews da rede.
+
+```python
+NUM = r'\d+[.,]?\d*\s*(?:Hz|ms|cd/m²|nits|:1|W|kg|mm|cm|GB|MB|ppm|páginas|polegadas|°|graus|%|bits|mg|g|R\$)'
+puro = re.sub(r'<[^>]+>', '', produto.get('fullReview',''))
+n, pal = len(re.findall(NUM, puro)), len(puro.split())
+if n > 7:  print(f"⚠ {n} valores no review (teto 3-7) · {round(100*n/pal,1)}/100 palavras")
+```
+
+Calibração medida em 2026-09-04: mediana **5** valores em Eletrônicos, p90 **8**, só **12%** passam de 7. A
+mediana de densidade é 1,5/100 palavras no nicho e 0,6 na rede.
+
+**Fix**: nunca cortar número seco. Escolher os 5 que o leitor usa pra decidir e **explicar cada um** com a
+consequência prática. Review curto E denso é o mesmo defeito visto de dois ângulos: quem lista não tem o que
+escrever depois do número, então o texto encolhe e o que sobra é ficha técnica. Régua irmã na
+`artigo-review-criar`, seção `fullReview`.
+
 ### 18. `health-absolutes-ymyl` (régua v1.19.0, severidade: 🔴 Crítico)
 
 **Bug-class** (ChatGPT-Bárbara ponto 7): absolutos de segurança/saúde violam diretrizes YMYL do Google ("Your Money Your Life") — Google penaliza páginas afiliadas que afirmam segurança absoluta sem fonte.
@@ -713,6 +734,25 @@ TODO produto do `products[]` precisa do campo `badge` (etiqueta do card). Conven
 ### 24. `voltagem-citada` (canon 2026-06-29, critério desde 2026-09-01, severidade: 🔴 Crítico)
 
 Mesma régua dura da `artigo-review-criar` (Filtros editoriais) e da `pagina-produto-auditar` critério 21, conferida aqui porque até 2026-09-01 nenhuma auditora olhava: **nenhum produto do artigo cita 110V/127V/220V** (prosa ou spec) nem tem row "Voltagem"; **"bivolt" só com o `specsAmazon` do próprio ASIN** dizendo bivolt / 100-240V / 110-220V (fabricante, bruto e campo curado não bastam; aquecimento de alta potência é voltagem única por design). 110/127/220 → conserto determinístico (apagar a menção/row); bivolt sem lastro → reescrever o pró/spec. Confira produto a produto: é o mesmo erro que se repete em lote (caso-origem: air fryers, 2026-06-28).
+
+### 27. `angulo-fora-da-keyword` (critério desde 2026-09-04, severidade: 🔴 Crítico)
+
+Review que **desenvolve um uso fora da intenção da keyword do artigo**. A bíblia lista `angulosConversao` na
+ordem do PRODUTO, não do artigo, e a criação pode pegar o primeiro da lista sem conferir o recorte. O dano é
+invisível: o texto fica bom, o artigo indexa, e a busca que se queria não vem.
+
+Leia o `keyword` do frontmatter e depois cada review. **Uso desenvolvido** que não serve àquela busca é
+achado, com o trecho literal como `evidence`. **Menção de passagem não é achado** — conta parágrafo, pró ou
+`shortDescription` construídos em cima do uso errado.
+
+⚠️ **O teto mecânico do `chavoes-por-nicho.json` NÃO cobre isto, e não deve.** `gamer: 12` por artigo no
+bloco Eletrônicos está certo, porque artigo de monitor gamer existe. Este critério é por artigo, não por
+palavra.
+
+Caso-origem (`compraguia/melhor-monitor-para-trabalho`, 2026-09-04): review com "as partidas depois dele",
+"trabalha e joga na mesma tela" e um pró inteiro de Shadow Control e Modo Mira, num artigo de monitor **pra
+trabalho**. O mesmo produto é legitimamente de jogo na página individual, que é autônoma e não tem keyword
+de artigo.
 
 ### 26. `peso-por-fonte` (critério desde 2026-09-01, severidade: 🟡 Médio)
 

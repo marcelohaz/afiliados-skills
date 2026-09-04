@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal), "Para quem é" varia abertura. Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: ANGULO PELA KEYWORD DO ARTIGO (nao pela ordem dos angulosConversao da biblia, que reflete o produto e nao o artigo), todo dado quantitativo com a consequencia pratica (3-7 valores no fullReview, com auto-check), concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal), "Para quem é" varia abertura. Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -57,6 +57,21 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 - **Nunca invente.** Cada claim numérico tem origem rastreável na bíblia (`specsAmazon`, `doFabricante`, `pontosFortes`, etc).
 - **Conteúdo COMPARATIVO** (diferente da página individual): pode comparar com outros produtos do artigo, citar por nome, dizer "vs HP X" se houver dado na bíblia. Pode falar "neste comparativo", "entre os modelos analisados", "aqui". **Banido no output**: "lineup", "desta seleção", "do lineup". Ver ângulo comparativo no campo `fullReview` abaixo.
+- **O ÂNGULO SAI DA KEYWORD DO ARTIGO, NÃO DA ORDEM DOS `angulosConversao` (canon Marcelo 2026-09-04).**
+  A bíblia lista ângulos de venda numa ordem que reflete o PRODUTO, não o artigo. Ângulo que não serve à
+  keyword é matéria-prima descartada, não conteúdo. Escrever sobre ele arrisca o artigo ranquear pra outra
+  busca, e esse dano é invisível: o texto fica bom, o artigo indexa, e a keyword que você queria não vem.
+  **Antes de escrever, leia o `keyword` do frontmatter, escolha entre os `angulosConversao` os que servem
+  àquela busca, e trate o resto como se não existisse.** Nenhum ângulo serve? O fato vem dos `pontosFortes`,
+  sem inventar recorte.
+  ⚠️ **Caso real que originou a régua** (`compraguia/melhor-monitor-para-trabalho`, 2026-09-04): a bíblia do
+  AOC AGON G50 abre com `gamer-competitivo` como tema 1 de 5, e o review saiu com "as partidas depois dele",
+  "trabalha e joga na mesma tela" e um pró inteiro de Shadow Control e Modo Mira, num artigo de monitor **pra
+  trabalho**. O MESMO produto é legitimamente de jogo na página individual, que é autônoma e não tem keyword
+  de artigo. O erro não foi usar a bíblia: foi usar a ordem dela como prioridade.
+  ⚠️ **O teto mecânico não te salva disso.** O `chavoes-por-nicho.json` permite `gamer: 12` por artigo no
+  bloco Eletrônicos, e está certo permitir (artigo de monitor gamer existe). Quem governa é esta régua, que é
+  por artigo.
 - **Ângulo comparativo por natureza, SEM ler a página individual (canon Marcelo 2026-08-13)**: o produto-no-artigo é comparativo (posição, badge, vizinhos) e a página é autônoma — essa diferença de NATUREZA já diverge os textos. A obrigação antiga de ler a página pra "não repetir" foi cortada por medição: o overlap intra-site já rodava a ~10% de mediana COM a regra ativa, e o custo era ~3-4k tokens por produto sem rendimento. Sobreposição residual factual é aceita (`afiliados.regras.pagina-produto-sobreposicao-crosssite-ok`, mesma régua).
 - **Sem travessão (—)** em nenhum campo.
 - **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
@@ -314,6 +329,26 @@ assinatura em 18% das páginas da rede; "entrega" e "ganha" fora do sentido lite
 <p><strong>Resumo:</strong> ... <a href="{amazonUrl}">{nome}</a> ...</p>
 ```
 
+**TODO DADO QUANTITATIVO VEM COM A CONSEQUÊNCIA PRÁTICA** (canon Marcelo 2026-09-04). Número sozinho não
+entra. "300 cd/m² de brilho" é ficha técnica. "300 cd/m², suficiente para sala com luz de janela, mas
+apertado se a mesa fica de frente para a claridade" é review.
+
+Isso conserta DOIS defeitos que na verdade são um só, medido de dois jeitos:
+
+      ​                         chars   palavras   números   palavras por número
+      mediana do nicho (Eletrônicos)  1764       ~330         5                   ~66
+      o review que falhou             1494        284        12                    24
+
+Listar dado sem explicar deixa o texto **curto** (não sobra o que escrever depois do número) e **denso** (o
+que sobrou é número). Explicar conserta os dois de uma vez: o texto cresce e a densidade cai. Por isso NÃO
+existe piso de tamanho nesta skill — tamanho é consequência, e piso só convidaria a encher linguiça.
+
+⚠️ **AUTO-CHECK antes de gravar — o único teto da skill que não tinha o seu até 2026-09-04.** Conte os
+valores com unidade no `fullReview`: **3 a 7**. Medido na rede em 2026-09-04 (3399 reviews): mediana **5** em
+Eletrônicos, p90 **8**, e só **12%** passam de 7. O teto é a prática da rede, não um aperto. Passou de 7?
+**Não corte número seco**: escolha os 5 que o leitor usa pra decidir e **explique cada um**. Ficou abaixo de
+~1500 chars puros num nicho de eletrônico? Você listou em vez de explicar, e o conserto é o mesmo.
+
 **Ângulo COMPARATIVO** (diferente da página individual que é autônoma):
 - Pode mencionar "neste comparativo", "entre os modelos analisados", "aqui"
 - Pode comparar com outros produtos pelo nome (sem prefixo "do lineup")
@@ -512,7 +547,7 @@ Ao decidir QUAL claim vira pro central no artigo vs. spec:
 - Sem superlativos ABSOLUTOS sem evidência ("o melhor", "o mais X", "incomparável", "único", "imbatível")
 - ✓ Qualificadores positivos simples ("excelente", "ótimo", "muito bom") são OK — reviews são levemente inclinados ao positivo por design (diretriz #2 da bíblia)
 - ✓ Superlativas qualificadas com dado: "entre as mais econômicas da categoria" (se houver concorrentes na bíblia)
-- Dados quantitativos no fullReview: os que a bíblia sustenta e o leitor usa (tipicamente 3-7). Não encha para chegar a um número; não corte fato útil para caber
+- Dados quantitativos no fullReview: **3 a 7, com auto-check** — a régua completa e a calibração medida vivem na seção `fullReview` acima, junto de onde você escreve. Esta linha ficou aqui solta até 2026-09-04, longe do ponto de uso e com a palavra "tipicamente", e foi por ela que um review saiu com 12
 
 ## Ângulo comparativo vs autônomo (a página individual NÃO é lida — canon 2026-08-13)
 
