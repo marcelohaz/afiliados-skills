@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: COBERTURA (percorre pontosFortes/pontosFracos da biblia um a um, o que serve a keyword tem que chegar ao texto, o que fica de fora sai com motivo dito, e o tamanho e consequencia disso; medido: sem essa regra a skill escrevia ~1750 chars tendo 6 ou 16 itens de material, r=-0,12), ANGULO PELA KEYWORD DO ARTIGO (nao pela ordem dos angulosConversao da biblia, que reflete o produto e nao o artigo), todo dado quantitativo com a consequencia pratica (3-7 valores no fullReview, com auto-check), concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal), "Para quem é" varia abertura. Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: COBERTURA (percorre pontosFortes/pontosFracos da biblia um a um, o que serve a keyword tem que chegar ao texto, o que fica de fora sai com motivo dito, e o tamanho e consequencia disso; medido: sem essa regra a skill escrevia ~1750 chars tendo 6 ou 16 itens de material, r=-0,12), ANGULO PELA KEYWORD DO ARTIGO (nao pela ordem dos angulosConversao da biblia, que reflete o produto e nao o artigo), todo dado quantitativo com a consequencia pratica (3-7 valores no fullReview, com auto-check), concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal), "Para quem é" varia abertura, claim de keyword em no máximo 2 de cada 3 produtos, Resumo abre pelo veredito e não pelo preço. A ESCRITA É DELEGADA A UM SUB-AGENT ISOLADO que recebe a régua, a bíblia e o bloco do próprio produto, e NÃO vê os reviews dos irmãos (medido: um agente escrevendo 11 em sequência converge na própria forma — 9/11 Resumos abrindo com preço contra mediana 0 na rede). O agente principal faz pull, leituras, backup, write, audit-article, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -137,7 +137,41 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 7. **Detectar se o artigo é stub** (`title` e/ou `excerpt` vazios — **NÃO** usar `description` no critério, porque ela fica vazia de propósito até o fim): se sim, gerar também os campos top-level (passo 8a). Se não, só os campos do produto (passo 8b).
 
-8a. **Gerar campos top-level do artigo** (só se stub):
+7.5. **DESPACHAR A ESCRITA PARA UM SUB-AGENT ISOLADO (v1.128.0, canon Marcelo 2026-09-04).** Os passos 8a, 8b e 9
+   são executados por um sub-agent Opus em conversa nova, `run_in_background: false`, que devolve os campos como
+   JSON. O agente principal continua dono dos passos 0.5-7 e 10-14.
+
+   **O que o sub-agent recebe** (e só isso):
+   - o caminho desta `SKILL.md`, com a ordem de LER inteira antes de escrever (régua = fonte única, mesmo
+     mecanismo da `artigo-clonar-em-massa` v1.54.0);
+   - o caminho da bíblia `docs/biblias-v2/{ASIN}.json`;
+   - `keyword`, `keywordPlural`, `specLabels`, `affiliateTag`, e se o artigo é stub;
+   - o bloco do PRÓPRIO produto: `name`, `asin`, `subtitle`, `badge`, `schemaPrice`, `image`;
+   - os `specs` (label/value) dos irmãos, quando existirem, para o claim comparativo do critério 7 — só a
+     tabela, nunca o `fullReview`/`pros`/`cons` deles.
+
+   **O que o sub-agent NÃO recebe:** os reviews dos outros produtos. É o ponto da régua. Medido em
+   2026-09-04 (`compraguia/melhor-monitor-para-trabalho`): um agente escrevendo os 11 em sequência, na mesma
+   conversa, evitou toda sequência de 6 palavras e convergiu **na própria forma** — 9 de 11 Resumos abrindo com
+   "Por cerca de R$ X, o [produto] é..." (a rede tem mediana 0 em 341 artigos), 6 de 11 fechando com "quem
+   precisa de Y encontra em outros", 4 títulos de pró repetidos em ≥4 produtos. O 1b da auditoria nasceu de 11
+   sub-agents cegos convergindo na bíblia; o modo sequencial produz o defeito oposto e nenhum check lexical o
+   vê. Sub-agent que não vê os irmãos não copia a forma deles. O que ainda passar, o critério 29 da
+   `artigo-reviews-auditar` pega.
+
+   **REGRA ZERO no sub-agent: nenhum git** (add/commit/push/pull). Ele lê, escreve os campos, valida (passo 9)
+   e devolve `{subtitle, shortDescription, specs, fullReview, pros, cons, [title, excerpt, keywordPlural,
+   listHeading, specLabels se stub], cobertura: {pontosFortes: 'N → x no texto · y fora do recorte · z
+   repetido', pontosFracos: '...'}}`. O agente principal grava (11), roda o `audit-article` filtrado (12),
+   commita e reporta a conta de cobertura.
+
+   ⚠ **Se VOCÊ está lendo isto de dentro de um sub-agent** (a `artigo-clonar-em-massa` manda os dela lerem esta
+   SKILL.md inteira), **o 7.5 já aconteceu: escreva inline.** Sub-agent do Agent tool não tem a ferramenta Agent
+   nem a Skill tool — não há como despachar outro, e não há por quê: um nível de isolamento basta.
+
+   Sub-agent que morrer (HTTP 429, timeout) → refaz inline no mesmo turno, como nas em-massa.
+
+8a. **Gerar campos top-level do artigo** (sub-agent do 7.5; só se stub):
    - `title`: 30-100 chars. Formato: keyword capitalizado + ":" (o resto user completa). Ex: keyword "melhor impressora custo benefício" → title "Melhor Impressora Custo Benefício:"
    - `description` (meta description): **NÃO gerar aqui — deixar vazia (`""`).** A meta description é uma das ÚLTIMAS coisas do artigo: é escrita por `artigo-meta-escrever` só no fim, quando o conteúdo está completo. Gerá-la agora (artigo só com 1 produto, sem intro/guide) produziria uma meta baseada em conteúdo incompleto.
    - `keywordPlural`: forma plural do keyword pro H2 "Comparativo técnico dos {keywordPlural}". Ex: "melhores impressoras custo benefício"
@@ -145,7 +179,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    - `excerpt`: 50-300 chars. Teaser do topo
    - `specLabels`: array de 3-10 labels (intersecção dos specs.label dos produtos no lineup). Pra primeiro produto, deriva direto. Pra produtos adicionados depois, deixa como está e atualiza só se o novo produto tiver labels diferentes.
 
-8b. **Gerar os 6 campos editoriais do produto** seguindo a régua do `formato_full_review` (4 parágrafos marcados):
+8b. **Gerar os 6 campos editoriais do produto** (sub-agent do 7.5) seguindo a régua do `formato_full_review` (4 parágrafos marcados):
 
 ```html
 <p><strong>Para quem é:</strong> perfil de uso. Inclua 1 link Amazon no nome do produto.</p>
@@ -153,6 +187,11 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 <p><strong>Pontos de atenção:</strong> contrapartidas, limitações. SEM link de afiliado neste parágrafo.</p>
 <p><strong>Resumo:</strong> fechamento conciso. Inclua 1 link Amazon na última menção.</p>
 ```
+
+**O Resumo abre pelo veredito, não pelo preço** (v1.128.0). O preço já está na tabela e no card. "Por cerca de
+R$ X, o [produto] é..." saiu em 9 de 11 Resumos de um artigo escrito em sequência, e a rede inteira tem mediana
+zero disso. Se o preço entrar no Resumo, entra depois do veredito, e a auditoria (critério 29b) limita a metade
+dos produtos.
 
 **🚨 RÉGUA "Para quem é" — VARIAR ABERTURA (v1.19.0, canon 2026-05-28)**
 
@@ -197,7 +236,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 Ângulos que não encaixam em "para X" usam "de X" / "com X" / adjetivo: "o melhor pré-treino premium", "o melhor pré-treino de fórmula natural", "o melhor pré-treino clean label".
 
-**Não force nos 100%**: 1-2 produtos com abertura narrativa própria ("o X sobe um degrau", "o X ocupa espaço único") são variação saudável — não precisam do claim-keyword se a abertura já é forte e distinta.
+**Não force nos 100% — e o número é no máximo 2 em cada 3 produtos (v1.128.0).** Você vê um produto por vez e não sabe quantos irmãos já levam o claim, então a regra que dá para cumprir daqui é: **se a abertura mais forte deste produto é um diferencial-âncora ou um cenário concreto, abra por ela e dispense o claim.** Quem confere o conjunto é a `artigo-reviews-auditar` (critério 29c): mais de 2 em 3 com o claim = FIX. Sem o número, a rede chegou a 3 em cada 4 produtos em um quarto dos artigos.
 
 - **3 links de afiliado** total (Para quem é + Por que gostamos + Resumo). SEM link em "Pontos de atenção".
 - Formato dos links: `<a href="{amazonUrl}" rel="nofollow" target="_blank">Nome do Produto</a>` onde `amazonUrl` é crua quando tag vazia, com tag quando preenchida.
@@ -214,7 +253,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 - **shortDescription** (50-250 chars): para quem é / o que faz de melhor em linguagem literal, depois 2-3 dados, fecho de fato. Sem molde ("Ideal pra quem… Você ganha…"). **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
 
-9. **Validar mentalmente** antes de salvar:
+9. **Validar mentalmente** antes de devolver (é o sub-agent do 7.5 quem faz este passo):
    - **Tamanhos** (hard caps — v1.16.0):
      - `shortDescription` ≤ 250 chars (1ª frase diz para quem é / o que faz, literal; não é ficha técnica nem molde)
      - cada item de `pros` ≤ 180 chars (alvo 80-130)
@@ -233,7 +272,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-prod-{ASIN}.mdx`. Pattern paralelo ao do painel pra aparecer no card "Histórico de versões".
 
-11. **Write `.mdx`**: usa parseYaml + stringifyYaml lib pra reconstruir, OU editar cirurgicamente o trecho do produto-alvo. Cuidado pra:
+11. **Write `.mdx`** (agente principal, com os campos que o sub-agent devolveu): usa parseYaml + stringifyYaml lib pra reconstruir, OU editar cirurgicamente o trecho do produto-alvo. Cuidado pra:
     - Preservar produtos não-alvo intactos (não tocar)
     - Preservar `fullReview` block scalar (`|`) — re-parsear+stringificar pode bagunçar HTML multi-linha. Recomendo edição cirúrgica via Edit tool quando possível.
     - Atualizar campos top-level só se foram detectados como stub

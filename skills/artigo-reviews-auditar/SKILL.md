@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 30 critérios — tone-clone, repetição intra-artigo (mecânica: frase igual em 4+ ocorrências, abertura igual, fecho de preço), redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, número sem lastro na bíblia, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso (por frase E total do review), health-absolutes-YMYL, voz-eximir-responsabilidade, naturalidade (palavra fora do sentido, frase-sacada, tiques com teto), cobertura-da-biblia, angulo-fora-da-keyword, subtitle-keyword-first, badge-ausente, voltagem-citada, ymyl-aviso-repetido, peso-por-fonte. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 31 critérios — tone-clone, repetição intra-artigo (mecânica: frase igual em 4+ ocorrências, abertura igual com número normalizado, fecho de preço), molde-de-forma (título de pró/contra igual em 4+ produtos, Resumo abrindo com preço em mais da metade, claim de keyword em mais de 2 a cada 3 — o que se repete um andar acima da frase quando um agente escreve os N em sequência), redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, número sem lastro na bíblia, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso (por frase E total do review), health-absolutes-YMYL, voz-eximir-responsabilidade, naturalidade (palavra fora do sentido, frase-sacada, tiques com teto), cobertura-da-biblia, angulo-fora-da-keyword, subtitle-keyword-first, badge-ausente, voltagem-citada, ymyl-aviso-repetido, peso-por-fonte. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -64,7 +64,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 - **Preservar estrutura do `fullReview`**: 4 parágrafos com prefixos exatos (`Para quem é:`, `Por que gostamos:`, `Pontos de atenção:`, `Resumo:`). `Por que gostamos` pode ter 2 parágrafos.
 - **Preservar formato pros/cons**: `<strong>Título</strong>: explicação`.
 - **Nunca inventar dados**: cada claim com origem rastreável na bíblia.
-- **🚨 AUDITORIA POR AMOSTRAGEM É PROIBIDA (gate de cobertura, canon Marcelo 2026-06-27).** Percorra os **30 critérios um a um** e produza a **Checklist de cobertura** no relatório (passo 7 + seção no "Formato do relatório"): cada critério marcado `✓ pass` / `⚠ flag` / `n/a`, com nota de 1 linha. **Varredura seletiva por grep NÃO basta** — vários critérios (esp. os de NORMALIZAÇÃO: **22 subtitle-keyword-first** e **23 badge-ausente**) NÃO aparecem em grep de defeito porque não são "defeito", são transformação proativa que quase SEMPRE gera proposta. Pular qualquer critério sem marcar na checklist = bug da auditoria. Incidente-origem: melhorairfryer-com/melhor-air-fryer 2026-06-27, subtitles e badges passaram batido porque a auditoria foi por amostragem (só os 3 achados que saltaram no grep) — Marcelo pegou os dois no olho. Ver Armadilha "auditoria por amostragem".
+- **🚨 AUDITORIA POR AMOSTRAGEM É PROIBIDA (gate de cobertura, canon Marcelo 2026-06-27).** Percorra os **31 critérios um a um** e produza a **Checklist de cobertura** no relatório (passo 7 + seção no "Formato do relatório"): cada critério marcado `✓ pass` / `⚠ flag` / `n/a`, com nota de 1 linha. **Varredura seletiva por grep NÃO basta** — vários critérios (esp. os de NORMALIZAÇÃO: **22 subtitle-keyword-first** e **23 badge-ausente**) NÃO aparecem em grep de defeito porque não são "defeito", são transformação proativa que quase SEMPRE gera proposta. Pular qualquer critério sem marcar na checklist = bug da auditoria. Incidente-origem: melhorairfryer-com/melhor-air-fryer 2026-06-27, subtitles e badges passaram batido porque a auditoria foi por amostragem (só os 3 achados que saltaram no grep) — Marcelo pegou os dois no olho. Ver Armadilha "auditoria por amostragem".
 
 ## Fluxo
 
@@ -90,9 +90,11 @@ Se algum requisito falhar, abortar com mensagem clara.
    ```bash
    python3 .claude/skills/artigo-reviews-auditar/repeticao-intra-artigo.py sites/{site}/src/content/reviews/{slug}.mdx
    ```
-   Guarde a saída (lista FIX/INFO, aberturas iguais, fecho de preço, **verbos-curinga total**). O número de verbos-curinga é a linha de base: depois de aplicar qualquer conserto, rode de novo e ele **não pode subir**.
+   Guarde a saída (lista FIX/INFO, aberturas iguais, fecho de preço, **verbos-curinga total**, e a seção
+   **Forma cross-produto**: títulos de pró/contra repetidos, Resumo abrindo com preço, claim de keyword — é o
+   critério 29, e é o script quem conta). O número de verbos-curinga é a linha de base: depois de aplicar qualquer conserto, rode de novo e ele **não pode subir**.
 
-7. **Analisar cross-produto percorrendo os 30 critérios UM A UM** (seção abaixo). **OBRIGATÓRIO (gate de cobertura):** pra CADA um dos 26, decida `✓ pass` / `⚠ flag` / `n/a` e anote 1 linha — isso vira a **Checklist de cobertura** do relatório. **Proibido pular ou "achar que está ok" sem avaliar.** Atenção redobrada aos critérios de NORMALIZAÇÃO, que não saltam em grep de defeito e quase sempre geram proposta:
+7. **Analisar cross-produto percorrendo os 31 critérios UM A UM** (seção abaixo). **OBRIGATÓRIO (gate de cobertura):** pra CADA um dos 31, decida `✓ pass` / `⚠ flag` / `n/a` e anote 1 linha — isso vira a **Checklist de cobertura** do relatório. **Proibido pular ou "achar que está ok" sem avaliar.** Atenção redobrada aos critérios de NORMALIZAÇÃO, que não saltam em grep de defeito e quase sempre geram proposta:
    - **22 `subtitle-keyword-first`**: leia os N subtitles e avalie CADA um (lead keyword-first? gancho? ≤13 palavras? sem dois-pontos? lead distinto dos outros?). Desde 2026-09-01 a `artigo-review-criar` já escreve no formato híbrido (lead keyword-first + gancho); aqui você confere o conjunto (leads distintos, ≤13 palavras, sem dois-pontos) e normaliza o que veio fora do formato (produto antigo, edição manual, clone pré-2026-09-01).
    - **23 `badge-ausente`**: confira se TODO produto tem `badge`. Faltando → propor `newBadge`.
    - **24 `voltagem-citada`**: nenhum produto cita 110V/127V/220V nem tem row "Voltagem"; "bivolt" só com o `specsAmazon` do ASIN confirmando.
@@ -100,7 +102,7 @@ Se algum requisito falhar, abortar com mensagem clara.
    - **26 `peso-por-fonte`**: pró central/subtitle/shortDescription cuja única origem é o `specsAmazon` → mover pra tabela.
    Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
-8. **Reportar em chat** no formato canônico (seção "Formato do relatório") — **incluindo a Checklist de cobertura dos 30 critérios** (sem ela o relatório é inválido).
+8. **Reportar em chat** no formato canônico (seção "Formato do relatório") — **incluindo a Checklist de cobertura dos 31 critérios** (sem ela o relatório é inválido).
 
 8.5. **Gravar marcador de auditoria** (registra QUANDO os reviews foram auditados — alimenta a barra "Reviews auditados" + o log de atividade do editor-artigo). Roda **SEMPRE**, logo após o relatório, mesmo que o user depois rejeite todas as mudanças (auditar é o evento; aplicar é outro):
    - `Write` em `docs/biblias-v2/.audits/reviews/{site}-{slug}-last.md` com: título (`# Auditoria de reviews: {site}/{slug}`), `- Produtos auditados: {N}`, `- Achados: {M}` (+ lista curta das rules disparadas, ou "nenhum"). A data é só pra leitura humana — **NÃO** invente timestamp pra sort (a fonte de tempo é o commit do git; e gerar `Date().toISOString()` cai no bug de timezone). Crie o diretório se não existir.
@@ -147,13 +149,13 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 30 critérios da análise
+## Os 31 critérios da análise
 
-(Numeração: 1, **1b**, 2-19 com **7b** e **10b** no meio, 21-28 — o antigo 20 foi absorvido pelo 21
-`naturalidade`; o 25 fica no topo por ser poda mecânica. **São 30 entradas, e os sufixos `b` contam.**
+(Numeração: 1, **1b**, 2-19 com **7b** e **10b** no meio, 21-29 — o antigo 20 foi absorvido pelo 21
+`naturalidade`; o 25 fica no topo por ser poda mecânica. **São 31 entradas, e os sufixos `b` contam.**
 ⚠ Até 2026-09-04 o arquivo dizia 24, 26 e 27 em lugares diferentes e a nota omitia o 7b e o 10b: auditor
 mandado percorrer "os 26" pulava quatro. Se acrescentar critério, conte as entradas `### N.` de verdade e
-corrija TODAS as ocorrências de "N critérios", que são seis.)
+corrija TODAS as ocorrências de "N critérios", que são sete — e a linha da `mapa-skills-editoriais` que resume esta skill.)
 
 ### 25. `ymyl-aviso-repetido` — poda do excedente (🟡, canon 2026-06-25 + 2026-07-30)
 
@@ -214,7 +216,7 @@ relatório, não aplica. Exemplos reais do pior caso da rede:
 
 **Limiar (frequência, não presença — o Marcelo aceita repetição baixa):**
 - Sequência de **6+ palavras** igual: **≤3 ocorrências = INFO** (fica; entra no relatório só como registro). **≥4 = FIX**: reduzir a 3.
-- **Abertura igual** (4 primeiras palavras da shortDescription ou do "Para quem é") em **≥4 produtos = FIX**: variar as excedentes; 3 = INFO.
+- **Abertura igual** (4 primeiras palavras da shortDescription ou do "Para quem é") em **≥4 produtos = FIX**: variar as excedentes; 3 = INFO. **Número conta como molde, não como palavra** (v1.128.0): "Monitor de 24 polegadas" e "Monitor de 23,8 polegadas" são a MESMA abertura — o script normaliza o número antes de comparar. Caso real: 6 de 11 shortDescriptions abrindo assim passaram como 3+2+1.
 - **Fecho de preço** ("…preço médio de R$ X" como última frase da shortDescription ou do Resumo) em **>50% dos produtos = FIX**: deixar em no máximo metade (o preço já está na tabela).
 - Fora do cálculo (o script já exclui): os 4 rótulos, nomes de produto, keyword/keywordPlural, URLs. Repetir **palavra** ("aspira", "sem saco", "cabo") nunca é achado. **Spec pura repetida** ("Wi-Fi dual band 2,4 e 5 GHz", "1450 W de potência") é fato, não frase-molde: o script marca como INFO mesmo acima de 4; só vira FIX se a frase inteira em volta da spec for a mesma.
 
@@ -781,11 +783,41 @@ de artigo.
 
 Claim cuja ÚNICA origem é o `specsAmazon` (classificação automática: "Tipo de dieta", "Material", "Característica especial") **não pode ser pró central, subtitle nem shortDescription**, só tabela. Diferente do 7b (`numero-sem-lastro`: sem origem nenhuma); aqui a origem existe mas é fraca pro lugar. Fix = mover pra `specs` ou apagar. Caso-origem: Vitafor B07L5W6GVC, "composição cetogênica" como diferencial.
 
+### 29. `molde-de-forma` — o que se repete um andar acima da frase (mecânico, v1.128.0, canon Marcelo 2026-09-04, severidade: 🟡 Médio)
+
+O 1b pega a mesma **frase**; este pega a mesma **forma**: título de pró/contra, abertura do Resumo, claim de
+keyword. Nenhum n-grama de 6 palavras alcança um título de 3 ou a primeira frase de um parágrafo.
+
+**Por que existe (medido em 2026-09-04, `compraguia/melhor-monitor-para-trabalho`):** os 11 reviews foram
+escritos por UM agente, um por vez, na mesma conversa, cada um com os anteriores no contexto. Ele evitou toda
+sequência de 6 palavras (o 1b pegava, ele consertava) e convergiu no andar de cima: **9 de 11 Resumos abrindo
+com "Por cerca de R$ X, o [produto] é..."** (a rede tem mediana 0 em 341 artigos), 6 de 11 fechando com "quem
+precisa de Y encontra em outros modelos", "Sem alto-falante" como título em 6 produtos, "Conforto para jornada
+longa" em 5, "Só ajusta a inclinação" em 5. Cada review sozinho estava certo; em sequência viraram formulário.
+É o modo de execução que o 1b não previu: o 1b nasceu de 11 sub-agents cegos convergindo na **bíblia**; aqui um
+agente com os irmãos à vista convergiu em **si mesmo**. A `artigo-review-criar` v1.128.0 passou a escrever por
+sub-agent isolado justamente por isso — este critério é a rede de segurança para o que ainda passar.
+
+**O script do passo 6.8 conta os três** (seção "Forma cross-produto"). Limiares:
+- **29a título de pró/contra** igual (o `<strong>` antes dos dois-pontos) em **≥4 produtos = FIX**; 3 = INFO.
+  Fato repetido é legítimo ("Sem alto-falante" pode ser verdade em 8 de 11), mas o título é escolha do redator:
+  o conserto é mover o fato para a tabela de specs onde já cabe, ou dar ao título o que é específico daquele
+  produto ("Sem alto-falante nem saída de fone" ≠ "Sem alto-falante").
+- **29b Resumo abrindo com preço** ("Por cerca de R$ X...", "Com preço médio...") em **mais da metade dos
+  produtos = FIX**. O preço já está na tabela; o Resumo abre pelo veredito. Mesmo teto que o fecho de preço do 1b.
+- **29c claim de keyword** ("é o melhor {keyword} para X" no Para quem é) em **mais de 2 a cada 3 produtos =
+  FIX**. A v1.20.1 da criação diz "não force nos 100%" sem número, e na rede isso dá 3 em cada 4 produtos em um
+  quarto dos artigos. O conserto é abrir 1 em cada 3 pelo diferencial ou pelo cenário, sem o claim.
+
+**Conserto segue as 5 salvaguardas do 1b** (apagar antes de reescrever; a 1ª ocorrência fica; só os 3
+movimentos literais; verificar que os verbos-curinga não subiram; nunca "varie a redação"). Reescrever
+abertura ou título é julgamento: propor→aprovar.
+
 ## Filtros de severidade
 
 - **Crítico** (sempre propor mudança): **voltagem-citada** (110/127/220 → apagar a menção/row; bivolt sem lastro no specsAmazon → reescrever o pró/spec), buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag DIFERENTE da do config), html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **capitalizacao-duplicacao** (14a-c), **concordancia-quebrada-pt-br** (15a-g, v1.19.0), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0), **badge-ausente** (23, canon 2026-06-22 — todo produto leva etiqueta, alinha com o gate da `artigo-auditar`)
 - **Mecânico (aplica direto, warn)**: travessão, `;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI` (régua comum das auditoras — `docs/PADROES.md`).
-- **Médio** (propor mudança): **peso-por-fonte** (claim só do specsAmazon como pró central/subtitle/shortDescription → mover pra tabela), tone-clone óbvio, **repeticao-intra-artigo 1b (FIX: ≥4 ocorrências / abertura em ≥4 / fecho de preço >50%; apagar cópia é óbvio, reescrever é julgamento — com as 5 salvaguardas)**, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (palavra fora do sentido/verbo-curinga, jargão financeiro, tiques acima do teto — v1.32.0 + canon 2026-08-15; 21c vira Crítico com ≥3 no mesmo review), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
+- **Médio** (propor mudança): **peso-por-fonte** (claim só do specsAmazon como pró central/subtitle/shortDescription → mover pra tabela), tone-clone óbvio, **repeticao-intra-artigo 1b (FIX: ≥4 ocorrências / abertura em ≥4 / fecho de preço >50%; apagar cópia é óbvio, reescrever é julgamento — com as 5 salvaguardas)**, **molde-de-forma 29 (título em ≥4 / Resumo abrindo com preço >50% / claim de keyword >2/3; o script conta, o conserto é julgamento)**, redundancy 2a de conceito, redundancy 2b palavras-chavão (>limite), quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d/21f** (palavra fora do sentido/verbo-curinga, jargão financeiro, tiques acima do teto — v1.32.0 + canon 2026-08-15; 21c vira Crítico com ≥3 no mesmo review), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima
 
 ## Formato do relatório
@@ -798,7 +830,7 @@ Apresentar em chat após análise:
 **Lineup**: {N} produtos analisados, {N-X} com fullReview preenchido (auditados)
 **Resultado**: {X} produtos com mudanças propostas, {Y} passaram limpos
 
-## Checklist de cobertura dos 30 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
+## Checklist de cobertura dos 31 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
 
 | # | Critério | Status | Nota |
 |---|---|---|---|
@@ -830,6 +862,9 @@ Apresentar em chat após análise:
 | 24 | **voltagem-citada** (110/127/220V, row Voltagem, bivolt sem specsAmazon) | ✓/⚠/n.a. | ... |
 | 25 | ymyl-aviso-repetido (script `ymyl-avisos.py`) | ✓/⚠/n.a. | ... |
 | 26 | peso-por-fonte (claim só do specsAmazon como pró central) | ✓/⚠/n.a. | ... |
+| 27 | **angulo-fora-da-keyword** (uso DESENVOLVIDO fora da intenção da keyword) | ✓/⚠/n.a. | ... |
+| 28 | cobertura-da-biblia (pontosFortes/Fracos que servem à keyword e faltam) | ✓/⚠/n.a. | ... |
+| 29 | **molde-de-forma** (script: título ≥4 · Resumo abre com preço >½ · claim keyword >⅔) | ✓/⚠/n.a. | ... |
 
 > Todo critério marcado. `⚠ flag` vira mudança proposta abaixo. Os de NORMALIZAÇÃO (22, 23) raramente são `✓ pass` num artigo recém-criado — se marcar `✓`, justifique na nota (ex.: "11/11 subtitles já keyword-first").
 

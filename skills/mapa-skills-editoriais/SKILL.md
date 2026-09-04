@@ -59,7 +59,7 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 
 | Skill | Quando |
 |---|---|
-| `artigo-reviews-auditar` | TODOS os reviews como conjunto (26 critérios cross-produto; normaliza subtitle/badge) — a cada 3 produtos ou antes de travar |
+| `artigo-reviews-auditar` | TODOS os reviews como conjunto (31 critérios cross-produto; normaliza subtitle/badge) — a cada 3 produtos ou antes de travar |
 | `artigo-guia-auditar` | só o guideContent, correção cirúrgica por seção + faq-shuffle |
 | `artigo-auditar` | artigo INTEIRO read-only (39 categorias + estruturais + readyToLock) — gate final antes de `contentLocked` |
 
