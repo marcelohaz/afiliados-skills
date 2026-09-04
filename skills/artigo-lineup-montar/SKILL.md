@@ -27,7 +27,7 @@ Detecção: se tem `/` seguido de kebab-case → artigo existente. Senão → ke
 
 ## Invariantes
 
-- **Só produto com página de produto no site.** É o universo de entrada, não uma preferência. Produto sem página não recebe link interno hub-and-spoke e o guia cai pro `/dp/` da Amazon.
+- **Produto sem página ENTRA marcado, e o gate é na Etapa 8** (canon Marcelo 2026-09-04). O universo natural é a lista de páginas do site, mas bíblia relevante sem página **atravessa o pipeline** com `⛔ SEM PÁGINA` visível, em vez de barrar na 2b. Motivo: a ausência de página só tem consequência na CRIAÇÃO — sem página o produto não recebe link interno hub-and-spoke e o guia cai pro `/dp/` da Amazon —, então bloquear antes de montar cobra uma rodada inteira sem saber se aquele produto sequer entra no lineup. Medido em 04/09/2026 (`compraguia`, `melhor monitor para trabalho`): a bíblia sem página entrou em 5º por venda e **não era ela que decidia o artigo** — os achados reais foram a posição 1 e dois buracos de cobertura, que só apareceram com o lineup montado.
 - **Classificar tipo pela tabela `specs` da PÁGINA, nunca por regex no nome.** O campo `Tipo` responde direto. Ver Armadilha 1 — errei duas vezes no mesmo dia e a página tinha a resposta nas duas.
 - **Página é fonte principal, bíblia é apoio.** Fato e classificação saem da página; vendas, marca, disponibilidade e `pontosFracos` saem da bíblia, porque a página não tem os três primeiros e **pode perder o quarto**.
 - **`comprasMesPassado = 0` ORDENA, não elimina** (corrigido 2026-08-02). Não é "vendeu zero": é "a Amazon não exibe o widget", threshold estimado em **>50/mês** ([[afiliados.semantica.compras-mes-passado-0]]). É **ausência de sinal**, não sinal negativo — e a régua tratava como corte duro na linha seguinte à que citava essa memória. Agora o `0` manda o produto pro **fim da fila**, e quem corta é o teto de tamanho.
@@ -94,7 +94,7 @@ universo real                     30
 
 Filtrar só pelo slug devolveria **17 de 30**, e dois produtos do lineup final (`L4360`, `Smart Tank 581`) vêm justamente do grupo sem categoria. **Depois de listar pelo slug, liste também as páginas com categoria vazia e inspecione cada uma** — é uma varredura barata e é a diferença entre ver o catálogo e ver metade dele.
 
-**2b. Pré-flight (BLOQUEANTE).** Uma pergunta só: **existe bíblia que a rubrica admitiria e que não tem página no site?**
+**2b. Pré-flight (MARCADOR, não bloqueia — ver Etapa 8).** Uma pergunta só: **existe bíblia que a rubrica admitiria e que não tem página no site?**
 
 ```
 PRÉ-FLIGHT — artigo: {keyword} · site: {site}
@@ -111,7 +111,21 @@ páginas na categoria: N
 
 Aqui a única fonte é a bíblia, então você está no **2º degrau da escada da Etapa 3 sem ter passado pelo 1º**. Isso não impede eliminar — o bruto do fabricante é prova boa — mas cobra prudência, porque a decisão de 2b é **bloquear o fluxo**, não montar lineup. Some o custo assimétrico: listar demais é uma linha no relatório, listar de menos é um produto que nunca entra em artigo nenhum. Conduta: **erre pro lado de listar** — incerto vira `✅ RELEVANTE` e quem decide é o usuário. Só fica de fora o que é obviamente outra coisa (o microfone avulso, o cabo, a capa).
 
-**Havendo relevante, PARA.** O usuário cria a página no painel e a skill roda de novo. Montar antes e reportar depois obriga a refazer — foi o que aconteceu na 1ª execução real (2026-08-01): montei 9, o Marcelo criou 2 páginas e o lineup teve que ser refeito com 13.
+**Havendo relevante, MARQUE E SIGA** (canon Marcelo 2026-09-04). O produto entra no
+universo com `⛔ SEM PÁGINA`, é julgado na Etapa 3 pela bíblia, disputa posição normalmente,
+e carrega o marcador até a tabela final. **Quem decide é a Etapa 8**, que não cria artigo
+com produto sem página.
+
+⚠️ **A régua anterior mandava PARAR aqui**, e o motivo era real: em 01/08/2026 montei 9,
+o Marcelo criou 2 páginas e o lineup teve que ser refeito com 13. O que mudou é a leitura
+do custo — refazer o lineup é barato perto de **bloquear sem saber se o produto entra**.
+Em 04/09 o bloqueio teria custado uma rodada por um produto que ficou em 5º e não mudou
+nenhuma conclusão do relatório.
+
+⚠️ **O marcador não é decoração — ele muda o que o usuário decide.** Ao ver a posição, o
+preço e a venda do produto sem página, ele sabe se vale criar a página ou se é mais barato
+tirar o produto. Sem a posição, essa decisão é no escuro. E o julgamento dele saiu de
+evidência mais fraca (só bíblia, sem página), então **o marcador carrega essa ressalva**.
 
 **Aproveite que é barato e rode aqui também a SOBREPOSIÇÃO com artigo existente**, lendo o `products[]` dos `reviews/*.mdx` do site. Não bloqueia, mas informa antes do gasto:
 
@@ -628,7 +642,7 @@ SEM PÁGINA        o que a 2b listou, se algo foi criado no meio do caminho
 Colunas obrigatórias, nesta ordem:
 
 ```
-#  ASIN         Produto              R$      Compras/mês   Subtítulo sugerido
+#  ASIN         Produto              R$      Compras/mês   Pág.   Subtítulo sugerido
 ```
 
 - **ASIN é a chave.** Nome é ambíguo (abreviação, variante com uma palavra de diferença), preço muda, posição muda.
@@ -680,7 +694,23 @@ Este bloco é o que **alimenta a regra de tamanho do passo 6**. Sem ele, "sem ei
 
 ### Etapa 8 — criação (só com `--aplicar`)
 
-⚠️ **Pré-condição: o CHECKPOINT DE EXCLUSÕES do passo 2 foi aprovado.** Com `--aplicar` ele **para e espera** — criar artigo é escrita, e escrever sobre uma exclusão que o usuário ainda não viu é o erro caro desta skill. Sem aprovação do checkpoint, não chame endpoint nenhum.
+⚠️ **Pré-condição 1: o CHECKPOINT DE EXCLUSÕES do passo 2 foi aprovado.** Com `--aplicar` ele **para e espera** — criar artigo é escrita, e escrever sobre uma exclusão que o usuário ainda não viu é o erro caro desta skill. Sem aprovação do checkpoint, não chame endpoint nenhum.
+
+⚠️ **Pré-condição 2 — ESTE É O GATE DE PÁGINA (canon Marcelo 2026-09-04).** A 2b marca e
+segue; é **aqui** que a falta de página impede. Antes de chamar qualquer endpoint, confira
+o lineup final: **nenhum item pode estar com `⛔ SEM PÁGINA`.** Havendo, PARE e apresente
+as duas saídas, com a posição e a venda do produto na mão:
+
+```
+1. criar a página no painel (+ Nova página de produto) e preencher com pagina-produto-criar,
+   depois rodar esta skill de novo  →  o produto entra
+2. tirar o produto do lineup        →  o artigo sai sem ele, e o relatório registra por quê
+```
+
+Por que aqui e não antes: sem página o produto **não recebe link interno hub-and-spoke** e
+o guia cai pro `/dp/` da Amazon — dano que só existe depois do artigo criado. Criar o
+artigo com o produto dentro e a página faltando é o pior dos três estados, porque o defeito
+nasce publicado.
 
 Mesmos endpoints dos botões do painel — `site-detail.js:3239` e `editor-artigo.html:4167`. O resultado é indistinguível de ter feito na mão.
 
