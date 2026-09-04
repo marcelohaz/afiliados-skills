@@ -147,8 +147,10 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    - o caminho da bíblia `docs/biblias-v2/{ASIN}.json`;
    - `keyword`, `keywordPlural`, `specLabels`, `affiliateTag`, e se o artigo é stub;
    - o bloco do PRÓPRIO produto: `name`, `asin`, `subtitle`, `badge`, `schemaPrice`, `image`;
-   - os `specs` (label/value) dos irmãos, quando existirem, para o claim comparativo do critério 7 — só a
-     tabela, nunca o `fullReview`/`pros`/`cons` deles.
+   - dos irmãos, só os ESCALARES do frontmatter: `name`, `schemaPrice`, `subtitle`, `badge` e a tabela
+     `specs` (label/value). É o que a régua de subtitle (lead distinto dos irmãos), a comparação por nome e a
+     conferência de "o mais X deste comparativo" precisam — e cabe em ~11 linhas por produto. **Nunca o
+     `fullReview`, `pros` ou `cons` deles.**
 
    **O que o sub-agent NÃO recebe:** os reviews dos outros produtos. É o ponto da régua. Medido em
    2026-09-04 (`compraguia/melhor-monitor-para-trabalho`): um agente escrevendo os 11 em sequência, na mesma
@@ -211,7 +213,7 @@ dos produtos.
 
 **Limite duro**: máximo **2 produtos por artigo** podem usar "ocupa o papel de [badge]" (já está no JSON como `chavoes_estruturais_max.ocupa o papel: 2`). Os demais variam.
 
-**Auto-check antes de gravar**: grep `ocupa o papel` no review gerado. Se aparecer + outros 2 produtos do artigo já usam — reescreve abertura.
+**Auto-check antes de gravar**: grep `ocupa o papel` no review gerado. Se aparecer, reescreva a abertura: o sub-agent não vê os irmãos, então não sabe se os 2 do teto já foram usados — quem conta o conjunto é o critério 16 da `artigo-reviews-auditar`.
 
 **Adendo PT-BR — title case mid-sentence (v1.20.0)**: posicionadores como "é o melhor para X", "ganha o título de X", "entra como X" são ok — mas X deve ir em **minúsculo** em PT-BR, pois a frase continua no meio de um parágrafo. O campo `subtitle` do produto usa title case (exibido no card), mas ao adaptá-lo para prosa, converta para lowercase.
 
@@ -323,7 +325,7 @@ O subtitle é o **heading do card** do produto no artigo (slot de peso SEO). At�
 **Stub SEM subtitle** → escreva **LEAD keyword-first + gancho, numa frase que flui, sem dois-pontos**:
 - **LEAD** = a keyword do artigo (ou pedaço dela) + qualificador curto, capitalizado como título: "Impressora Tanque de Tinta em Geral", "Tablet Custo Benefício", "Creatina Monohidratada Barata e Boa". O slot "em Geral" **sempre leva "Melhor"** ("Melhor Air Fryer em Geral…"). Gênero pelo núcleo da keyword (impressora → "Boa e Barata"; tablet → "Bom e Barato").
 - **GANCHO** = o ângulo/spec concreto do produto, em caixa de frase, emendado com `com`/`de`/`que`/`e`/`para`. Spec técnica é permitida aqui (Hz/GB/polegada/ppm).
-- **≤13 palavras** no total, conte. Lead **distinto** dos outros produtos do mesmo artigo: leia os subtitles irmãos no `.mdx` antes (dois "a Laser" se separam por marca).
+- **≤13 palavras** no total, conte. Lead **distinto** dos outros produtos do mesmo artigo: os `subtitle` irmãos chegam no despacho do 7.5 (dois "a Laser" se separam por marca).
 - ✅ `Impressora Tanque de Tinta em Geral que equilibra funções, custo e tamanho` · `Tablet Custo Benefício com S Pen inclusa, tela de 10,9 polegadas a 90Hz` · ❌ `Tablet para Desenho: topo do Android com AMOLED` (dois-pontos) · ❌ `Multifuncional EcoTank com Wi-Fi, ideal para casa e home office` (sem lead de keyword: era o exemplo desta skill até 2026-09-01).
 
 **Stub COM subtitle humano** → ver "Subtitle humano = ângulo do review" (v1.34): o sentido é vinculante; polir é permitido, inclusive pôr o lead keyword-first na frente do ângulo, desde que o ângulo fique inteiro no gancho.
@@ -732,7 +734,7 @@ Frases idênticas literais (ou quase) repetidas em N reviews viram chavão e per
 | "ativo que dá suporte à recuperação muscular" (sobre creatina ausente, em 5 cons) | Encurta pra "ativo importante para recuperação". Repetir a palavra exata ("creatina", "recuperação") é normal; o chavão é a FRASE repetida, e o conserto é encurtar ou omitir, nunca sinônimo figurado |
 | "declarados pelo fabricante" colado a cada lista de mg | Drop quase sempre (info do rótulo já é por definição do fabricante) |
 
-**Régua**: se uma frase específica aparece **literal em 3+ reviews do mesmo artigo**, é chavão. Encurta a partir da 2ª aparição.
+**Régua**: se uma frase específica aparece **literal em 3+ reviews do mesmo artigo**, é chavão. Encurta a partir da 2ª aparição. ⚠ Desde a v1.128.0 o escritor não vê os outros reviews, então esta régua é aplicada pela `artigo-reviews-auditar` (1b e 29), não aqui — o que você controla é não copiar a bíblia verbatim (categoria E).
 
 ### 9. Auto-check de tamanho final (régua v1.16.0)
 

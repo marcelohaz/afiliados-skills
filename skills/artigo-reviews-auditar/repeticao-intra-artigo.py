@@ -133,7 +133,7 @@ def main():
     titulos = sorted(((k, len(v)) for k, v in tit_prod.items() if len(v) >= 3), key=lambda kv: -kv[1])
     res_preco = 0; claim = 0
     kwcore = re.sub(r'^(melhor(es)?|o melhor|a melhor)\s+', '', kw[0]).split()  # melhor(es)?, não melhores? (que nunca casa 'melhor')
-    claim_rx = re.compile(r'é [oa] melhor ' + re.escape(' '.join(kwcore[:2])), re.I) if kwcore else None
+    claim_rx = re.compile(r'é [oa] melhor ' + re.escape(kwcore[0]), re.I) if kwcore else None  # só o núcleo: 'é a melhor impressora' pega 'impressora custo benefício' e 'impressora para X'
     for p in prods:
         fr = strip(p.get('fullReview') or '')
         m = re.search(r'Resumo:\s*(.*)$', fr, re.S)

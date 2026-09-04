@@ -47,7 +47,7 @@ Pré-requisito: stub criado via "+ Nova página de produto" no site detail.
 | Skill | Quando |
 |---|---|
 | `artigo-lineup-montar` | escolher QUAIS produtos entram, ordem e papel (`--aplicar` cria o artigo no painel) |
-| `artigo-review-criar` | review de UM produto no artigo (6 campos) |
+| `artigo-review-criar` | review de UM produto no artigo (6 campos; a escrita vai a um sub-agent isolado que não vê os reviews dos irmãos — v1.128.0) |
 | `artigo-intro-escrever` | intro (body markdown) + conserta title fora do padrão |
 | `artigo-guia-escrever` | guideContent (5 H2 + extras SERP) — EXIGE concorrentes da keyword EXATA |
 | `artigo-meta-escrever` | meta description (última coisa do artigo) |
