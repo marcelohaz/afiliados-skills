@@ -1,6 +1,6 @@
 ---
 name: linkagem-auditar
-description: Audita E MELHORA a linkagem interna do SITE INTEIRO (cross-artigo), propor→aprovar. Roda os núcleos determinísticos (scripts/audit-linkagem.ts + audit-links.ts) + camada de julgamento LLM (placement contextual, links novos pra órfãos/sublinkados). Quantidade: 2 mín / ~3 ideal / 4 máx peers distintos por artigo; HUB (homeReviewSlug ou pillar:true) isento do teto. Conserta: link quebrado 404, /{homeReviewSlug}/→/, âncora≠keyword, âncora de produto sem marca, peer/home na Conclusão, excesso >4. contentLocked-aware (rerroteia a fonte). Aceita site OU URL do painel. Fecha com commit + push + painel-vps-pull + marcador .audits/linkagem/{site}-last.md.
+description: Audita E MELHORA a linkagem interna do SITE INTEIRO (cross-artigo), propor→aprovar. Roda os núcleos determinísticos (scripts/audit-linkagem.ts + audit-links.ts) + camada de julgamento LLM (placement contextual, links novos pra órfãos/sublinkados). Quantidade: 2 mín / ~3 ideal / 4 máx peers distintos por artigo; HUB (homeReviewSlug ou pillar:true) isento do teto. Conserta: link quebrado 404, /{homeReviewSlug}/→/, âncora≠keyword, âncora de produto sem marca, peer/home na Conclusão, excesso >4. Confere também SLUG × HISTÓRICO DO GSC (`scripts/audit-slugs.ts`): o artigo está na URL que o Google conhece, medindo os DOIS lados nos domínios da linhagem — renomear slug quebra link interno, então mora aqui. contentLocked-aware (rerroteia a fonte). Aceita site OU URL do painel. Fecha com commit + push + painel-vps-pull + marcador .audits/linkagem/{site}-last.md.
 ---
 
 ## Parse de input
@@ -26,6 +26,7 @@ Você é o auditor-editor da **linkagem interna do site todo**. Diferente das sk
 |---|---|---|
 | Régua SEO determinística (grafo, âncora, slug, Conclusão, home-errado, hub-and-spoke) | `scripts/audit-linkagem.ts --json` | **roda e lê** |
 | Validade (tag Amazon, linkCode, 404 interno, redirect externo) | `scripts/audit-links.ts --json` | **roda e lê** |
+| Slug × histórico do GSC (a URL do artigo é a que tem o histórico?) | `scripts/audit-slugs.ts --json` | **roda e lê** |
 | Julgamento: placement *genuinamente* contextual? links NOVOS naturais? | **só LLM** | **agrega valor + propõe** |
 | Aplicar os fixes aprovados (Edit cirúrgico no guideContent) | **a skill** | **aplica on-approval** |
 
@@ -34,7 +35,8 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 ## Pré-requisitos
 
 - Site existe em `sites/{site}/` com `src/content/reviews/*.mdx`.
-- `scripts/audit-linkagem.ts` e `scripts/audit-links.ts` existem (núcleo determinístico).
+- `scripts/audit-linkagem.ts`, `scripts/audit-links.ts` e `scripts/audit-slugs.ts` existem (núcleo determinístico).
+- Pro `audit-slugs.ts`: `~/.gsc-token.json` + `.env.gsc` no `shared-scripts`. Sem credencial ele sai com `ok:false` e o motivo — **nunca com lista vazia**, que pareceria "está tudo certo".
 - `bun` no PATH.
 - Artigos a editar NÃO travados (`contentLocked: true` → pular esse artigo e avisar; nunca editar travado sem destrave explícito).
 
@@ -43,7 +45,7 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 - **APLICA O ÓBVIO, PROPÕE O JULGAMENTO (canon Marcelo 2026-07-24, alinha com `biblia-auditar`).** Fix **determinístico de direção única** → **APLICA DIRETO** (sem esperar) e marca ✅ CORRIGIDO no relatório: `link-quebrado` (404 → slug REAL ou remover `<a>` mantendo texto), `link-home-errado` (`/{homeReviewSlug}/`→`/`), `anchor-nao-keyword` e `anchor-produto-sem-nome` (+ a reconciliação OBRIGATÓRIA de concordância artigo↔âncora, canon 2026-06-23), `anchor-frase-quebrada` **de level=error** (indefinido/qualificador + superlativo → artigo definido com contração: direção única, ver passo 10). **Julgamento** → **propor→aprovar** (imprime diffs e espera aprovação granular: "aplica tudo" / "aplica 1,3" / "aplica canon" / "rejeita 2"): **link NOVO** (adicionar), `peer-link-na-conclusao` (mover placement), `linkagem-excesso` (qual link cortar), `anchor-frase-quebrada` **de level=warn** (o "na/no" e o "qualquer" pedem escolha editorial: nomear o destino, usar plural ou reescrever), **REMOVER link fora de contexto**. Na dúvida, trate como julgamento (proponha). O relatório com TODOS os fixes (óbvios já aplicados + julgamento proposto) sai sempre.
 - **EDIÇÃO CIRÚRGICA, nunca rewrite.** Só toca no trecho do `guideContent` com o fix aprovado (um `<a>`/`<p>` por vez). Resto do `.mdx` byte-a-byte intacto. Preserva o block scalar `|` (NUNCA parseYaml/stringify do frontmatter — sempre `Edit` no trecho-alvo).
 - **NÃO inventa.** Findings determinísticos vêm dos scripts (verbatim). Os de julgamento (placement/oportunidade) citam o trecho real do guideContent. Link novo só com âncora = keyword real do destino + href = slug REAL (nunca derivado do keyword).
-- **Escopo fechado.** CONSERTAR (404/home-errado/âncora/Conclusão/excesso>4) + ADICIONAR links novos contextuais (incl. reforçar órfão/sublinkado). `slug-vs-keyword` é só INFO (convenção, não se conserta — ver Critérios). **NÃO faz hub-and-spoke** (linkar produto órfão é decisão editorial à parte). **NÃO mexe em tag Amazon** (isso é `scripts/fill-affiliate-tag.ts`).
+- **Escopo fechado.** CONSERTAR (404/home-errado/âncora/Conclusão/excesso>4) + ADICIONAR links novos contextuais (incl. reforçar órfão/sublinkado). `slug-vs-keyword` é só INFO (convenção, não se conserta — ver Critérios), mas `slug-sem-historico` do `audit-slugs.ts` é acionável e vai por propor→aprovar. **NÃO faz hub-and-spoke** (linkar produto órfão é decisão editorial à parte). **NÃO mexe em tag Amazon** (isso é `scripts/fill-affiliate-tag.ts`).
 - **Régua de linkagem canônica** (igual artigo-guia-escrever/auditar): âncora de peer = keyword do destino (singular preferido); âncora de produto = nome completo COM marca; href = slug REAL; peer/home links contextuais e NUNCA na Conclusão (produto/Amazon na Conclusão = OK); home linkada via `href="/"` (nunca `/{homeReviewSlug}/`).
 - **A FRASE em volta da âncora TEM que fechar (canon Marcelo 2026-07-31).** A keyword nomeia um **GUIA** ("melhor whey protein"), não um produto do mundo. Encaixá-la como se fosse coisa concreta produz frase que ninguém fala: *"combinar com **um melhor pré-treino**"*. Medição na rede: **64 ocorrências publicadas em 19 sites**, todas passando verde nos checks antigos — o defeito nasce de OBEDECER a régua de âncora=keyword sem olhar as palavras anteriores. O `audit-linkagem.ts` emite `anchor-frase-quebrada`.
   - **Por que o singular é o alvo (razão de SEO, não estética):** é a forma que as pessoas **buscam**, e a âncora do link interno reforça essa keyword. Trocar pro plural por conveniência gramatical joga fora esse sinal. Então, quando o singular não couber na frase, resolva **nesta ordem**:
@@ -101,6 +103,50 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
    bun scripts/check-dist-links.ts {site} --json
    ```
    Cada destino 404 vira **conserto proposto** no relatório. A causa quase sempre é **produto citado em artigo sem página individual**: o fix é criar a página (`pagina-produto-criar`), **nunca remover o link** (decisão Marcelo 2026-09-01: o template linka sem condicional; a página é que tem que existir). O `audit-article.ts` (rule `produto`) já acusa isso por artigo. Sem dist fresco: **diga no relatório que essa classe não foi verificada** — a pré-checagem de deploy do painel e o `cf-deploy-r2.ts` rodam o mesmo check antes de subir.
+
+4.6. **Slug × histórico do GSC (canon Marcelo 2026-09-04)**:
+   ```bash
+   bun scripts/audit-slugs.ts {site} --json
+   ```
+   Parse: `{ ok, linhagem, propriedadesSemAcesso, achados:[{nivel,regra,artigo,sugerida,atual,candidata,pareceCategoria,msg}], orfasSemArtigo }`.
+
+   **A pergunta é outra que a do `slug-vs-keyword`.** Aquela é convenção e dispara em
+   32% da rede (127 de 390 artigos), por isso é INFO. Esta é histórico e dispara em 7
+   casos na rede inteira: o artigo está na URL que o Google conhece?
+
+   **`ok:false` NÃO é "limpo"** — é medição que não aconteceu. Reporte o motivo e siga
+   com o resto da auditoria, sem afirmar nada sobre slug. Mesma régua pra
+   `propriedadesSemAcesso`: propriedade sem permissão soma zero, então o achado daquele
+   site pode estar incompleto e o relatório diz isso.
+
+   **Todo achado vai por PROPOR→APROVAR, nunca auto-fix.** Renomear muda a URL pública:
+   se estiver errado, o custo é o tráfego do artigo. E a decisão tem dois julgamentos
+   que o script não faz sozinho (ver as 5 guardas no cabeçalho dele):
+   - **`pareceCategoria: true` → quase sempre NÃO é rename.** A slug candidata coincide
+     com um `categorySlug` do site, então provavelmente era a LISTAGEM antiga, não um
+     artigo. Aí o certo é 301 pra `/categoria/`, e mover o artigo pra lá é erro.
+   - **Mover o artigo ou inverter o 301?** Quando a candidata tem histórico pequeno mas
+     real (dezenas/centenas de impressões) e a slug atual tem o histórico grande, não se
+     move nada: cria-se 301 da candidata PRA o artigo, capturando o resíduo sem largar o
+     principal.
+
+   **Se o rename for aprovado, são 4 passos e a ordem importa:** renomear o `.mdx`,
+   corrigir os links internos que apontam pra slug antiga (é o trabalho desta skill, e o
+   motivo de a regra morar aqui), criar 301 da slug antiga pra nova no domínio do site, e
+   **remover qualquer 301 cuja origem seja a slug NOVA** — o worker responde redirect
+   antes de servir a página, então uma regra sobrando deixa o artigo inalcançável.
+
+   ⚠ **`orfasSemArtigo` não é trabalho desta skill.** São URLs com histórico sem artigo
+   nenhum do mesmo tópico no site: 199 das 209 órfãs da rede. Isso é artigo a escrever
+   (seção "Artigos a recuperar" do painel), não slug a corrigir. Reporte a contagem e as
+   maiores, e siga.
+
+   ⚠ **Incidente que gerou este passo (2026-09-04):** movi 8 artigos pra "slug histórica"
+   lendo só o `mapa-artigos-orfaos.json`. Quatro estavam invertidos — num deles o artigo
+   saiu de uma URL com 275.770 impressões (51.085 nos últimos 28 dias) pra outra com 6. O
+   mapa lista só URLs que NÃO existem em disco, então a slug forte nunca aparece nele,
+   justamente por já ser o artigo. Ler ausência na lista como ausência de histórico é o
+   erro que o `audit-slugs.ts` existe pra tornar impossível: ele mede os dois lados.
 
 5. **Camada de julgamento LLM** (o valor que script não dá). O JSON do `audit-linkagem.ts` traz `lockedArticles[]` (fontes travadas) e `pillarArticles[]` (hubs isentos do teto) — use os dois. Read os `.mdx` dos artigos com links peer/home + os com FAQ/seções relevantes. Avalie:
    - **Placement genuinamente contextual?** Para cada link peer/home existente, o parágrafo onde ele está fala MESMO do tema do destino? "Fora da Conclusão" é necessário mas não suficiente. Sinalize os fracos com spot melhor. **Régua de spot (canon Marcelo): o link cai na MELHOR posição do artigo pro tema** — ex: link pro "melhor impressora para fotos" entra no parágrafo/H3 que fala de fotografia, não num lugar genérico.
@@ -206,7 +252,7 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
 
 ## Critérios (referência — vêm dos scripts)
 
-- `link-quebrado` (error), `link-home-errado` (error), `linkagem-fraca` (warn, <2 peers distintos de saída), `linkagem-excesso` (warn, >4 peers distintos num artigo NÃO-hub — enxugar pros 3-4 contextuais ou marcar `pillar:true`), `peer-repetido` (warn), `anchor-nao-keyword` (warn), `anchor-frase-quebrada` (**error** = indefinido/qualificador antes de âncora com superlativo, ex. "um melhor pré-treino" — fix: artigo definido contraindo a preposição, ver Invariantes; **warn** = "na/no" que não retoma guia/artigo, ou "qualquer" + superlativo, que pedem reescrita), `anchor-produto-sem-nome` (warn), `slug-vs-keyword` (**info** — convenção comum na rede, ~23% dos artigos; o 404 real já é coberto por link-quebrado/link-home-errado; NÃO é defeito a consertar), `peer-link-na-conclusao` (info), `hub-and-spoke-incompleto` (info, **1 linha-resumo colapsada** — **fora de escopo desta skill**), `orfao` (warn)/`sublinkado` (info, mas **acionável** — ver régua E no passo 5).
+- `link-quebrado` (error), `link-home-errado` (error), `linkagem-fraca` (warn, <2 peers distintos de saída), `linkagem-excesso` (warn, >4 peers distintos num artigo NÃO-hub — enxugar pros 3-4 contextuais ou marcar `pillar:true`), `peer-repetido` (warn), `anchor-nao-keyword` (warn), `anchor-frase-quebrada` (**error** = indefinido/qualificador antes de âncora com superlativo, ex. "um melhor pré-treino" — fix: artigo definido contraindo a preposição, ver Invariantes; **warn** = "na/no" que não retoma guia/artigo, ou "qualquer" + superlativo, que pedem reescrita), `anchor-produto-sem-nome` (warn), `slug-vs-keyword` (**info** — convenção comum na rede, 32% dos artigos medidos em 2026-09-04; o 404 real já é coberto por link-quebrado/link-home-errado; NÃO é defeito a consertar), `slug-sem-historico` (**warn**, do `audit-slugs.ts` — pergunta DIFERENTE da anterior: não é "segue a convenção?" e sim "é a URL que o Google conhece?", medindo os dois lados nos domínios da linhagem; dispara em 7 casos na rede contra os 127 da `slug-vs-keyword`; **sempre propor→aprovar**, e `pareceCategoria:true` quase sempre significa 301 pra `/categoria/`, não rename), `peer-link-na-conclusao` (info), `hub-and-spoke-incompleto` (info, **1 linha-resumo colapsada** — **fora de escopo desta skill**), `orfao` (warn)/`sublinkado` (info, mas **acionável** — ver régua E no passo 5).
 
 ## Armadilhas
 
@@ -217,7 +263,10 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
 5. **Aplicar JULGAMENTO sem aprovar.** O mecânico (âncora=keyword, link quebrado, `/{homeReviewSlug}/`→`/`) aplica direto (canon 24/07); links novos e placement (julgamento) imprimem os diffs e esperam.
 6. **Esquecer `--no-verify`.** O hook Fase J bloqueia `reviews/*.mdx`.
 7. **Editar artigo travado.** `contentLocked: true` → pular + avisar.
-8. **Achar que o painel não atualiza.** Atualiza: `/admin/update` roda `gen.ts` full → `linkagem-{site}.html` regenera. Não precisa de passo extra.
+8. **Ler `ok:false` do `audit-slugs.ts` como "limpo".** Sem credencial do GSC o script não mede, e não medir não é aprovar. Mesma coisa pra `propriedadesSemAcesso`: propriedade sem permissão soma zero e o achado do site fica incompleto — diga isso no relatório.
+9. **Renomear slug olhando um lado só.** O `mapa-artigos-orfaos.json` lista apenas URLs que NÃO existem em disco, então a slug forte nunca aparece nele. Em 2026-09-04 isso me fez tirar um artigo de uma URL com 275.770 impressões e pôr numa com 6. O `audit-slugs.ts` mede as duas pontas — use o número dele, não a presença na lista de órfãs.
+10. **Renomear e esquecer o 301 da slug NOVA.** O worker responde redirect antes de servir a página: se sobrar uma regra com origem na slug nova, o artigo fica inalcançável. Aconteceu com os monitores do compraguia no mesmo dia.
+11. **Achar que o painel não atualiza.** Atualiza: `/admin/update` roda `gen.ts` full → `linkagem-{site}.html` regenera. Não precisa de passo extra.
 
 ## Invocação
 

@@ -69,7 +69,7 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 |---|---|
 | `artigo-clonar-em-massa` | clonar um artigo pra site irmão, conteúdo 100% novo das bíblias (full-auto, não deploya, não trava) |
 | `artigo-clonar-fila` | N clones em sequência (lista do botão "▶ Agendar fila" do painel) |
-| `linkagem-auditar` | linkagem interna do SITE inteiro (propor→aprovar; 2-4 peers/artigo, hub isento) |
+| `linkagem-auditar` | linkagem interna do SITE inteiro (propor→aprovar; 2-4 peers/artigo, hub isento) + slug × histórico do GSC (`audit-slugs.ts`) |
 | `categoria-descricao-escrever` | descrição de UMA categoria (`/categoria/{slug}/`) |
 | `categoria-descricao-criar-em-massa` | várias categorias, agrupadas por categorySlug cross-site (anti-duplicata entre irmãs) |
 | `preencher-institucionais` | /sobre/ + /author/ de um site, distintas, E-E-A-T (não cobre contato/termos/privacidade) |
