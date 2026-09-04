@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: ANGULO PELA KEYWORD DO ARTIGO (nao pela ordem dos angulosConversao da biblia, que reflete o produto e nao o artigo), todo dado quantitativo com a consequencia pratica (3-7 valores no fullReview, com auto-check), concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal), "Para quem é" varia abertura. Cria backup, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: COBERTURA (percorre pontosFortes/pontosFracos da biblia um a um, o que serve a keyword tem que chegar ao texto, o que fica de fora sai com motivo dito, e o tamanho e consequencia disso; medido: sem essa regra a skill escrevia ~1750 chars tendo 6 ou 16 itens de material, r=-0,12), ANGULO PELA KEYWORD DO ARTIGO (nao pela ordem dos angulosConversao da biblia, que reflete o produto e nao o artigo), todo dado quantitativo com a consequencia pratica (3-7 valores no fullReview, com auto-check), concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal), "Para quem é" varia abertura. Cria backup, commit, push, dispatch VPS pull.
 ---
 
 ## Parse de input
@@ -219,7 +219,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
      - `shortDescription` ≤ 250 chars (1ª frase diz para quem é / o que faz, literal; não é ficha técnica nem molde)
      - cada item de `pros` ≤ 180 chars (alvo 80-130)
      - cada item de `cons` ≤ 180 chars (alvo 80-130)
-     - `fullReview` 800-3000 chars de texto puro (descontando markup e URLs)
+     - `fullReview`: **não valide por tamanho** — valide pela COBERTURA (seção `fullReview`). Os 800-3000 chars são o limite físico do campo, não guia: a faixa é larga demais e um review pode estar "dentro" dela e ainda assim cobrir metade da bíblia. Faça a conta de `pontosFortes`/`pontosFracos` e reporte-a.
      - Passou? reescreve **só o item que estourou** (não o review inteiro)
    - **Subtitle** (2026-09-01): stub sem subtitle → lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, lead distinto dos irmãos do artigo; subtitle humano → sentido preservado (ver "Os 6 campos")
    - **Banidas no output** (v1.16.0): grep por `lineup`, `desta seleção`, `do lineup`, `do nosso lineup`, `do nosso comparativo` — se achar, reescreve
@@ -335,7 +335,9 @@ assinatura em 18% das páginas da rede; "entrega" e "ganha" fora do sentido lite
 
 **Régua de corte mental** — releia a 1ª frase: ela diz para quem é ou o que faz, com verbo no sentido literal? Se começa com marca ou lista de mg → inverta. Se começa com "Ideal pra quem… entrega…" → reescreva literal.
 
-### fullReview (HTML, ~800-3000 chars de **texto puro**)
+### fullReview (HTML) — o tamanho sai da COBERTURA, não de uma meta
+
+⚠️ Os **800-3000 chars de texto puro** são o limite físico do campo, não a régua. A régua é a cobertura, logo abaixo.
 
 ⚠️ **A faixa é de TEXTO PURO, descontando o markup** (`<p>`, `<strong>`, `<a>`), que é ~24% do campo (medido em 2.667 reviews, 2026-08-06). A faixa não força ninguém a encher: produto simples termina onde o conteúdo acaba. O teto é proteção contra prolixidade, nunca meta a atingir.
 **Estrutura obrigatória — 4 rótulos marcados** (idêntico ao `formato_full_review` shared; "Por que gostamos" pode ocupar 2 `<p>` quando passa de 5-6 frases — os auditores aceitam):
@@ -360,6 +362,40 @@ Isso conserta DOIS defeitos que na verdade são um só, medido de dois jeitos:
 Listar dado sem explicar deixa o texto **curto** (não sobra o que escrever depois do número) e **denso** (o
 que sobrou é número). Explicar conserta os dois de uma vez: o texto cresce e a densidade cai. Por isso NÃO
 existe piso de tamanho nesta skill — tamanho é consequência, e piso só convidaria a encher linguiça.
+
+⚠️ **COBERTURA: O TAMANHO SAI DO MATERIAL, NÃO DE UMA META (canon Marcelo 2026-09-04).** Antes de fechar,
+percorra os `pontosFortes` e os `pontosFracos` da bíblia **um por um** e responda: este item serve à keyword
+do artigo? Se serve, ele tem que chegar ao texto — no `fullReview` se decide a compra, num `pros`/`cons` se
+é fato de apoio. O que fica de fora fica **por um motivo que você diz**: está fora do recorte da keyword
+(ver o invariante do ângulo), ou repete outro item que já entrou.
+
+**Reporte a conta ao usuário**, nesta forma:
+
+      pontosFortes  8  →  6 no texto · 1 fora do recorte (jogo) · 1 repetido
+      pontosFracos  5  →  4 no texto · 1 fora do recorte
+
+⚠️ **Por que esta regra existe, medido em 2026-09-04 sobre 689 reviews de Eletrônicos com bíblia no disco:**
+
+      material da bíblia      n     tamanho mediano do review
+      9 a 11 itens          390             1794
+      12 a 14               274             1737
+      15 ou mais             25             1701
+      correlação r = -0,12
+
+A skill escrevia **o mesmo tamanho tendo 6 ou 16 itens de material**, e bíblia mais rica produzia review
+ligeiramente MENOR. Causa: existia faixa de tamanho (800-3000, larga demais pra guiar) e **nenhuma regra de
+cobertura**, então todo review convergia pra ~1750 chars independente do produto. Caso-origem: um review
+aprovado na voz cobria 5 de 8 `pontosFortes`, e dois dos que faltavam eram material legítimo de trabalho
+(contraste de 1500:1 e moldura sem bordas em três lados).
+
+**NÃO existe piso de tamanho nesta skill, de propósito.** Piso vira meta e meta convida a encher linguiça.
+Cubra o material e o tamanho sai certo. Se quiser um sinal de sanidade depois de escrever, a distribuição
+real do nicho Eletrônicos é p50 1766, p75 1963, p95 2235, p99 2403, máximo 2608 — texto muito abaixo do p50
+com bíblia farta é sintoma de cobertura curta, não de concisão.
+
+⚠️ **Um `<p>` nunca passa de 800 chars** — o `audit-article.ts` avisa (`legibilidade`) acima disso. Cobrir
+mais material significa **mais parágrafos**, não parágrafo maior. O "Por que gostamos" já pode ocupar 2 `<p>`
+por régua, e nada impede 3 quando o material pede.
 
 ⚠️ **AUTO-CHECK antes de gravar — o único teto da skill que não tinha o seu até 2026-09-04.** Conte os
 valores com unidade no `fullReview`: **3 a 7**. Medido na rede em 2026-09-04 (3399 reviews): mediana **5** em

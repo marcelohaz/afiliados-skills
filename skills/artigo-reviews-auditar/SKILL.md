@@ -1,6 +1,6 @@
 ---
 name: artigo-reviews-auditar
-description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 27 critérios — tone-clone, repetição intra-artigo (mecânica: frase igual em 4+ ocorrências, abertura igual, fecho de preço), redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, número sem lastro na bíblia, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso (por frase E total do review), health-absolutes-YMYL, voz-eximir-responsabilidade, naturalidade (palavra fora do sentido, frase-sacada, tiques com teto), angulo-fora-da-keyword, subtitle-keyword-first, badge-ausente, voltagem-citada, ymyl-aviso-repetido, peso-por-fonte. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
+description: Audita TODOS os reviews do artigo como CONJUNTO (cross-produto). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos `site/slug-artigo`. 30 critérios — tone-clone, repetição intra-artigo (mecânica: frase igual em 4+ ocorrências, abertura igual, fecho de preço), redundância, incoerência, qualidade vaga, buyer-reference explícita, links incorretos, claim-vs-lineup-fato, número sem lastro na bíblia, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, html-texto-puro, tamanho-escannavel, chavões-por-nicho, concordância PT-BR, template "Para quem é", números-em-excesso (por frase E total do review), health-absolutes-YMYL, voz-eximir-responsabilidade, naturalidade (palavra fora do sentido, frase-sacada, tiques com teto), cobertura-da-biblia, angulo-fora-da-keyword, subtitle-keyword-first, badge-ausente, voltagem-citada, ymyl-aviso-repetido, peso-por-fonte. Output: relatório em chat com diffs por produto, user aplica granular ("aplica produto 2") ou em lote.
 ---
 
 ## Parse de input
@@ -64,7 +64,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 - **Preservar estrutura do `fullReview`**: 4 parágrafos com prefixos exatos (`Para quem é:`, `Por que gostamos:`, `Pontos de atenção:`, `Resumo:`). `Por que gostamos` pode ter 2 parágrafos.
 - **Preservar formato pros/cons**: `<strong>Título</strong>: explicação`.
 - **Nunca inventar dados**: cada claim com origem rastreável na bíblia.
-- **🚨 AUDITORIA POR AMOSTRAGEM É PROIBIDA (gate de cobertura, canon Marcelo 2026-06-27).** Percorra os **26 critérios um a um** e produza a **Checklist de cobertura** no relatório (passo 7 + seção no "Formato do relatório"): cada critério marcado `✓ pass` / `⚠ flag` / `n/a`, com nota de 1 linha. **Varredura seletiva por grep NÃO basta** — vários critérios (esp. os de NORMALIZAÇÃO: **22 subtitle-keyword-first** e **23 badge-ausente**) NÃO aparecem em grep de defeito porque não são "defeito", são transformação proativa que quase SEMPRE gera proposta. Pular qualquer critério sem marcar na checklist = bug da auditoria. Incidente-origem: melhorairfryer-com/melhor-air-fryer 2026-06-27, subtitles e badges passaram batido porque a auditoria foi por amostragem (só os 3 achados que saltaram no grep) — Marcelo pegou os dois no olho. Ver Armadilha "auditoria por amostragem".
+- **🚨 AUDITORIA POR AMOSTRAGEM É PROIBIDA (gate de cobertura, canon Marcelo 2026-06-27).** Percorra os **30 critérios um a um** e produza a **Checklist de cobertura** no relatório (passo 7 + seção no "Formato do relatório"): cada critério marcado `✓ pass` / `⚠ flag` / `n/a`, com nota de 1 linha. **Varredura seletiva por grep NÃO basta** — vários critérios (esp. os de NORMALIZAÇÃO: **22 subtitle-keyword-first** e **23 badge-ausente**) NÃO aparecem em grep de defeito porque não são "defeito", são transformação proativa que quase SEMPRE gera proposta. Pular qualquer critério sem marcar na checklist = bug da auditoria. Incidente-origem: melhorairfryer-com/melhor-air-fryer 2026-06-27, subtitles e badges passaram batido porque a auditoria foi por amostragem (só os 3 achados que saltaram no grep) — Marcelo pegou os dois no olho. Ver Armadilha "auditoria por amostragem".
 
 ## Fluxo
 
@@ -92,7 +92,7 @@ Se algum requisito falhar, abortar com mensagem clara.
    ```
    Guarde a saída (lista FIX/INFO, aberturas iguais, fecho de preço, **verbos-curinga total**). O número de verbos-curinga é a linha de base: depois de aplicar qualquer conserto, rode de novo e ele **não pode subir**.
 
-7. **Analisar cross-produto percorrendo os 26 critérios UM A UM** (seção abaixo). **OBRIGATÓRIO (gate de cobertura):** pra CADA um dos 26, decida `✓ pass` / `⚠ flag` / `n/a` e anote 1 linha — isso vira a **Checklist de cobertura** do relatório. **Proibido pular ou "achar que está ok" sem avaliar.** Atenção redobrada aos critérios de NORMALIZAÇÃO, que não saltam em grep de defeito e quase sempre geram proposta:
+7. **Analisar cross-produto percorrendo os 30 critérios UM A UM** (seção abaixo). **OBRIGATÓRIO (gate de cobertura):** pra CADA um dos 26, decida `✓ pass` / `⚠ flag` / `n/a` e anote 1 linha — isso vira a **Checklist de cobertura** do relatório. **Proibido pular ou "achar que está ok" sem avaliar.** Atenção redobrada aos critérios de NORMALIZAÇÃO, que não saltam em grep de defeito e quase sempre geram proposta:
    - **22 `subtitle-keyword-first`**: leia os N subtitles e avalie CADA um (lead keyword-first? gancho? ≤13 palavras? sem dois-pontos? lead distinto dos outros?). Desde 2026-09-01 a `artigo-review-criar` já escreve no formato híbrido (lead keyword-first + gancho); aqui você confere o conjunto (leads distintos, ≤13 palavras, sem dois-pontos) e normaliza o que veio fora do formato (produto antigo, edição manual, clone pré-2026-09-01).
    - **23 `badge-ausente`**: confira se TODO produto tem `badge`. Faltando → propor `newBadge`.
    - **24 `voltagem-citada`**: nenhum produto cita 110V/127V/220V nem tem row "Voltagem"; "bivolt" só com o `specsAmazon` do ASIN confirmando.
@@ -100,7 +100,7 @@ Se algum requisito falhar, abortar com mensagem clara.
    - **26 `peso-por-fonte`**: pró central/subtitle/shortDescription cuja única origem é o `specsAmazon` → mover pra tabela.
    Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
-8. **Reportar em chat** no formato canônico (seção "Formato do relatório") — **incluindo a Checklist de cobertura dos 26 critérios** (sem ela o relatório é inválido).
+8. **Reportar em chat** no formato canônico (seção "Formato do relatório") — **incluindo a Checklist de cobertura dos 30 critérios** (sem ela o relatório é inválido).
 
 8.5. **Gravar marcador de auditoria** (registra QUANDO os reviews foram auditados — alimenta a barra "Reviews auditados" + o log de atividade do editor-artigo). Roda **SEMPRE**, logo após o relatório, mesmo que o user depois rejeite todas as mudanças (auditar é o evento; aplicar é outro):
    - `Write` em `docs/biblias-v2/.audits/reviews/{site}-{slug}-last.md` com: título (`# Auditoria de reviews: {site}/{slug}`), `- Produtos auditados: {N}`, `- Achados: {M}` (+ lista curta das rules disparadas, ou "nenhum"). A data é só pra leitura humana — **NÃO** invente timestamp pra sort (a fonte de tempo é o commit do git; e gerar `Date().toISOString()` cai no bug de timezone). Crie o diretório se não existir.
@@ -147,9 +147,13 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 26 critérios da análise
+## Os 30 critérios da análise
 
-(Numeração: 1, 1b, 2-19, 21-26 — o antigo 20 foi absorvido pelo 21 `naturalidade`; o 25 fica no topo por ser poda mecânica; são 26 critérios.)
+(Numeração: 1, **1b**, 2-19 com **7b** e **10b** no meio, 21-28 — o antigo 20 foi absorvido pelo 21
+`naturalidade`; o 25 fica no topo por ser poda mecânica. **São 30 entradas, e os sufixos `b` contam.**
+⚠ Até 2026-09-04 o arquivo dizia 24, 26 e 27 em lugares diferentes e a nota omitia o 7b e o 10b: auditor
+mandado percorrer "os 26" pulava quatro. Se acrescentar critério, conte as entradas `### N.` de verdade e
+corrija TODAS as ocorrências de "N critérios", que são seis.)
 
 ### 25. `ymyl-aviso-repetido` — poda do excedente (🟡, canon 2026-06-25 + 2026-07-30)
 
@@ -735,6 +739,25 @@ TODO produto do `products[]` precisa do campo `badge` (etiqueta do card). Conven
 
 Mesma régua dura da `artigo-review-criar` (Filtros editoriais) e da `pagina-produto-auditar` critério 21, conferida aqui porque até 2026-09-01 nenhuma auditora olhava: **nenhum produto do artigo cita 110V/127V/220V** (prosa ou spec) nem tem row "Voltagem"; **"bivolt" só com o `specsAmazon` do próprio ASIN** dizendo bivolt / 100-240V / 110-220V (fabricante, bruto e campo curado não bastam; aquecimento de alta potência é voltagem única por design). 110/127/220 → conserto determinístico (apagar a menção/row); bivolt sem lastro → reescrever o pró/spec. Confira produto a produto: é o mesmo erro que se repete em lote (caso-origem: air fryers, 2026-06-28).
 
+### 28. `cobertura-da-biblia` (critério desde 2026-09-04, severidade: 🟡 Médio)
+
+Review que **deixou de fora material da bíblia que serve à keyword**. A auditoria já checa o que ESTÁ no
+texto contra a bíblia (critério 7, e número sem lastro); ninguém checava o que **falta**.
+
+Por produto: abra `docs/biblias-v2/{ASIN}.json`, percorra `pontosFortes` e `pontosFracos` um a um e marque
+quais chegaram ao `fullReview`, aos `pros` ou aos `cons`. Item ausente é achado **se serve à keyword do
+artigo**. Item fora do recorte (critério 27) ou que repete outro que já entrou **não é achado** — mas diga
+qual é qual, senão vira ruído.
+
+⚠️ **Medido em 2026-09-04 sobre 689 reviews de Eletrônicos com bíblia no disco:** a correlação entre
+material disponível e tamanho do review é **r = -0,12**. Bíblia com 15+ itens produzia review de 1701 chars
+medianos; bíblia com 9 a 11 produzia 1794. A criação escrevia o mesmo tamanho independente do material, e
+bíblia mais rica saía com review MENOR. A régua de cobertura na `artigo-review-criar` é a contraparte disto.
+
+**Fix**: não é "aumentar o texto". É trazer o item que falta com a consequência prática dele, no lugar certo
+(`fullReview` se decide a compra, `pros`/`cons` se é fato de apoio), e dividir em mais `<p>` se algum passar
+de 800 chars.
+
 ### 27. `angulo-fora-da-keyword` (critério desde 2026-09-04, severidade: 🔴 Crítico)
 
 Review que **desenvolve um uso fora da intenção da keyword do artigo**. A bíblia lista `angulosConversao` na
@@ -775,7 +798,7 @@ Apresentar em chat após análise:
 **Lineup**: {N} produtos analisados, {N-X} com fullReview preenchido (auditados)
 **Resultado**: {X} produtos com mudanças propostas, {Y} passaram limpos
 
-## Checklist de cobertura dos 26 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
+## Checklist de cobertura dos 30 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
 
 | # | Critério | Status | Nota |
 |---|---|---|---|
@@ -892,7 +915,7 @@ Depois do Edit, rodar `pnpm --filter {site} build`. Se Zod do Astro falhar (rar�
 
 ### 0. Auditoria por amostragem (a pior — gate de cobertura existe pra matar isso)
 
-**Incidente-origem (melhorairfryer-com/melhor-air-fryer, 2026-06-27):** rodei a auditoria caçando defeito por grep (claims, voz-comprador, `;`, travessão, chavões), achei 3 issues, declarei "8 passaram" e fechei — **sem avaliar os 24 critérios um a um**. Resultado: o critério **22 (subtitle-keyword-first)** e o **23 (badge-ausente)** passaram inteiros (11 subtitles sem keyword no lead, 6 produtos sem badge). Marcelo pegou os dois no olho: "só não passou pq eu tô cobrando você". 
+**Incidente-origem (melhorairfryer-com/melhor-air-fryer, 2026-06-27):** rodei a auditoria caçando defeito por grep (claims, voz-comprador, `;`, travessão, chavões), achei 3 issues, declarei "8 passaram" e fechei — **sem avaliar os 30 critérios um a um**. Resultado: o critério **22 (subtitle-keyword-first)** e o **23 (badge-ausente)** passaram inteiros (11 subtitles sem keyword no lead, 6 produtos sem badge). Marcelo pegou os dois no olho: "só não passou pq eu tô cobrando você". 
 
 **Por que acontece:** os critérios de NORMALIZAÇÃO (22, 23) não são "defeito que aparece em grep" — são transformação proativa que quase sempre gera proposta. Quem audita "procurando o que está errado" não os vê, porque o subtitle "lê bem" (é o ângulo da criação) e o badge ausente é uma omissão, não um erro visível no texto.
 
