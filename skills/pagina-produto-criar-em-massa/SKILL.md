@@ -127,12 +127,28 @@ Detecção:
    defeito é invisível pra ele.
 
    ```bash
-   # Descobre o canônico pela URL, não pelo nome (funciona nas duas máquinas).
-   CANON=$(git remote -v | awk '/marcelohaz\/afiliados(\.git)? \(fetch\)/{print $1; exit}')
-   # ⚠ Vazio = a detecção FALHOU (repo mudou de URL, remote com outro endereço).
-   # NÃO caia calado no `origin`: é exatamente isso que produzia o abort falso.
-   [ -z "$CANON" ] && { echo "⚠ não achei remote pra marcelohaz/afiliados; confira à mão:"; git remote -v; CANON=origin; }
-   git fetch -q "$CANON" main
+   # Canônico pela URL, com PREFERÊNCIA explícita e o ref VERIFICADO.
+   #
+   # ⚠ A v1 disto era `git remote -v | awk '.../{print $1; exit}'` e tinha DOIS
+   # defeitos, achados pelo Claude da Bárbara em 05/09/2026 testando na máquina dela:
+   #  (a) `git remote -v` sai em ordem ALFABÉTICA, então o `exit` pegava o primeiro
+   #      por acaso. Ela tem `marcelo-afiliados` E `upstream` apontando pra mesma
+   #      URL, e caía no primeiro. Hoje inofensivo (mesmo SHA), mas é sorte.
+   #  (b) Se o remote escolhido não tiver refspec de fetch, `$CANON/main` não
+   #      resolve, o `ls-tree` falha e o `grep -c` devolve **0** — que é EXATAMENTE
+   #      o "0 stubs" que este bloco existe pra matar. Medido: falha vira zero em
+   #      silêncio. E a linha de fallback dizia "NÃO caia calado no origin" e caía.
+   CANON=""
+   for R in $(git remote); do
+     git remote get-url "$R" 2>/dev/null | grep -qE 'marcelohaz/afiliados(\.git)?$' || continue
+     if [ "$R" = "upstream" ]; then CANON="$R"; break; fi   # preferência explícita
+     [ -z "$CANON" ] && CANON="$R"
+   done
+   [ -z "$CANON" ] && { echo "⛔ nenhum remote aponta pra marcelohaz/afiliados:"; git remote -v; exit 1; }
+   git fetch -q "$CANON" main || { echo "⛔ fetch de $CANON falhou"; exit 1; }
+   # Verifica DEPOIS do fetch: exigir o ref antes rejeitaria remote recém-adicionado.
+   git rev-parse --verify -q "$CANON/main" >/dev/null \
+     || { echo "⛔ $CANON/main não resolve (remote sem refspec de fetch?) — NÃO leia 0 como 'sem stub'"; exit 1; }
    echo "stubs no $CANON: $(git ls-tree -r --name-only $CANON/main sites/{site}/src/content/products/ | grep -c '\.mdx$')"
    echo "commits que o $CANON tem e você não: $(git rev-list --count HEAD..$CANON/main)"
    ```
