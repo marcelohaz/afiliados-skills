@@ -669,6 +669,7 @@ Template exato — use blocos idênticos pro painel parsear visualmente:
 - **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4), **tamanho-fora-de-faixa LONGO demais** (régua v1.16.0 — shortDescription >250, pros/cons >180 texto puro; cards viram parágrafos), **fullReview-prefixo-e-ancoras** (régua v1.20.3 — 18a prefixo sem negrito, 18b âncora-CTA em vez do nome, 18c nome do produto não linkado).
 - **🟡 Aviso**: superlativo sem evidência, conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content, voz-citação ficha-técnica burocrática.
 - **🔵 Info**: nota que vale registrar mas não exige ação (ex: "subtitle no limite mínimo de 10 chars, considere expandir").
+- **Chavões (critério 13), explícito porque foi a dúvida mais registrada do skill-log:** `termos_banidos_absoluto` e teto **0** → 🔴 Crítico. **Teto NUMÉRICO ultrapassado → 🔵 Info**, nunca 🔴 nem 🟡 (canon 2026-09-05). O cabeçalho do 13 e esta tabela dizem a MESMA coisa desde v1.21.0 — antes o cabeçalho dizia 🔴 e esta lista não citava chavões, e 10 notas do skill-log nasceram desse silêncio.
 
 ## TESTE DA FRASE NOVA — o que pode ser consertado sem aprovação
 
