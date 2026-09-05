@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar-em-massa
-description: Cria os 6 campos editoriais de TODAS as páginas individuais vazias de um site em PARALELO via sub-agents (até 10 simultâneos). Qualidade IDÊNTICA à skill individual `pagina-produto-criar` — cada sub-agent é conversa fresh do Opus, sem cross-contamination. Skill mãe orquestra: pre-flight bíblias (única barreira, aborta se incompleto) → imprime plano e dispara direto (SEM confirmação S/N) → N Agents paralelos → 1 commit lote → push + VPS pull → report. Aceita `site` (todos stubs vazios) OU `site/ASIN1,ASIN2` (subset). Flag opcional `--audit` dispara audit pós-batch em paralelo. NÃO toca em stubs parciais. NÃO cria stubs (pré-requisito: stubs no painel). Sub-agents herdam toda a régua editorial da `pagina-produto-criar` (chavões por nicho, concordância PT-BR, ban "declarado pelo fabricante" muleta, health YMYL, hard caps, voz consultiva).
+description: Cria os 6 campos editoriais de TODAS as páginas individuais vazias de um site em PARALELO via sub-agents (até 10 simultâneos). Qualidade IDÊNTICA à skill individual `pagina-produto-criar` — cada sub-agent é conversa fresh do Opus, sem cross-contamination. Skill mãe orquestra: pre-flight bíblias (única barreira, aborta se incompleto) → imprime plano e dispara direto (SEM confirmação S/N) → N Agents paralelos → 1 commit lote → push + VPS pull → report. Aceita `site` (todos stubs vazios) OU `site/ASIN1,ASIN2` (subset). Flag opcional `--audit` dispara audit pós-batch em paralelo. NÃO toca em stubs parciais. CRIA o stub que faltar quando a bíblia passa no gate do painel (scripts/painel-criar-stubs.ts, canon 2026-09-05) — antes disso abortava e duas execuções registraram desvio por criar mesmo assim. Sub-agents herdam toda a régua editorial da `pagina-produto-criar` (chavões por nicho, concordância PT-BR, ban "declarado pelo fabricante" muleta, health YMYL, hard caps, voz consultiva).
 ---
 
 ## Parse de input
@@ -38,7 +38,7 @@ Detecção:
 
 ## Pré-requisitos
 
-1. **Stubs já criados** em `sites/{site}/src/content/products/*.mdx` (via painel: site detail → "+ Nova página de produto"). A skill NÃO cria stubs — só preenche conteúdo editorial.
+1. **Stubs** em `sites/{site}/src/content/products/*.mdx` (via painel: site detail → "+ Nova página de produto"). Faltando, a skill **cria** no passo 2 via `scripts/painel-criar-stubs.ts`, desde que a bíblia passe no gate do painel. Sem bíblia utilizável, aí sim aborta.
 2. **Bíblias completas** dos produtos correspondentes em `docs/biblias-v2/{ASIN}.json` com `pontosFortes`, `pontosFracos`, `angulosConversao` populados. Pre-flight aborta se alguma bíblia estiver incompleta.
 3. **Site existe** em `sites/{site}/src/config.ts`. Se 404, abortar.
 
@@ -152,9 +152,47 @@ Detecção:
    humano do outro lado reenvia o comando achando que nada rodou (nota de 25/08). Os
    passos 10 e 12c valem para o **canônico**, não para um remote chamado `origin`.
 
-     Só aborte se continuar zero DEPOIS disso, com a mensagem "Site {site} não tem stubs
-     (verifica painel)". Se a resposta trouxer *"N commit local enviado pro origin/main"*,
-     era exatamente isto: havia trabalho preso lá.
+   ⛔ **AINDA ZERO? NÃO ABORTE — CRIE O STUB (canon Marcelo 2026-09-05).**
+
+   Esta skill dizia em três lugares que "NÃO cria stubs" e mandava abortar, e ao
+   mesmo tempo sancionava o endpoint no rodapé ("Quando NÃO usar"). **As duas
+   linhas se contradiziam**, e o skill-log tem DUAS execuções que escolheram a
+   segunda pra não travar o lote — 25/08 (`guiabelezasaudavel`, 10 ASINs de BCAA) e
+   26/08 (`melhoresporte`, 5 ASINs). A segunda nota propôs exatamente esta régua:
+   *"distinguir 'sem stub E sem bíblia' (abortar) de 'sem stub MAS com bíblia
+   completa' (criar via create-from-bible), como a clone já faz no passo 5"*.
+
+   ```bash
+   bun scripts/painel-criar-stubs.ts {site} {ASIN} [{ASIN}...]
+   bash scripts/git-pull-seguro.sh "trazer-stubs-criados"   # .mdx E .webp nascem na VPS
+   ```
+
+   ⛔ **NÃO redigite o curl inline.** O script existe porque o padrão já drifou uma
+   vez: o `painel-vps-pull.sh` monta o `Authorization: Basic` em base64 à mão e
+   DOCUMENTA que `curl -u` parte a credencial no primeiro `:`; a
+   `artigo-lineup-montar` redigitou com `-u` e herdou o bug (latente só porque a
+   senha de hoje não tem `:`).
+
+   **O que o script faz e o que NÃO faz:**
+   - Usa `create-from-bible-batch` (não o singular): 1 commit + 1 push pros N, e
+     ASIN problemático vira `skipped` em vez de derrubar a chamada.
+   - **Não replica o gate de bíblia** — quem decide é o servidor
+     (`gateRequiresOkBibles`: aceita `ok` e `stale`, recusa não-cadastrada, JSON
+     inválido, por preencher e nunca-auditada). O gate é **tudo-ou-nada**: um ASIN
+     reprovado devolve 423 e nenhum stub é criado. O script imprime o motivo por
+     ASIN; resolva o que ele apontar e chame de novo.
+   - Sai 1 quando não criou nada. Aí sim vale abortar, agora com o motivo REAL
+     ("bíblia X por preencher") em vez de "site não tem stubs".
+
+   Depois de criar: **volte ao passo 2** e reclassifique. O stub novo entra como
+   `stub_vazio` e o lote segue normal. Não pule pro passo 3 sem o pull — o `.mdx`
+   nasce na VPS, não no seu disco.
+
+   ⚠ Criar página é escrever no site: o `isSiteContentLocked` do endpoint recusa
+   site travado com 423, e é a mesma trava do resto do fluxo.
+
+     Se a resposta do `/admin/update` trouxer *"N commit local enviado pro
+     origin/main"*, era outra coisa: havia trabalho preso lá, e o pull resolveu.
 
    ⚠️ **A VPS commita mas NEM SEMPRE pusha na hora** — a linha antiga desta skill dizia
    "commita+pusha automaticamente" e isso é falso. Caso real 2026-08-13 (monitores no
@@ -799,7 +837,7 @@ Skill mãe resolve `affiliateTag` UMA vez (passo 6). Passa pros sub-agents no pr
 
 ## Quando NÃO usar esta skill
 
-- **Site sem stubs criados ainda**: crie stubs no painel primeiro ("+ Nova página de produto" no site detail) ou crie via `POST /product/:site/_actions/create-from-bible` por ASIN. Skill batch só PREENCHE stubs vazios — não cria.
+- ~~**Site sem stubs criados ainda**~~ — **não é mais motivo pra não usar** (2026-09-05): o passo 2 cria via `scripts/painel-criar-stubs.ts` quando a bíblia passa no gate. Continua valendo não usar quando a BÍBLIA não está pronta: aí o gate do painel recusa e o certo é rodar `biblia-preencher` / `biblia-auditar` antes.
 - **Bíblias incompletas** (pre-flight aborta): rode `biblia-preencher` nas ASINs reportadas antes do batch.
 - **Quer sobrescrever páginas com conteúdo**: use `pagina-produto-criar` no modo individual (ação explícita) ou delete o .mdx + recrie stub no painel + rode batch.
 - **Re-rodar é seguro (idempotente)**: pula automaticamente os já preenchidos. Skip ≠ erro.

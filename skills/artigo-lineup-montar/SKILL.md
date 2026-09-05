@@ -732,11 +732,15 @@ Mesmos endpoints dos botões do painel — `site-detail.js:3239` e `editor-artig
 # host + auth: os mesmos do scripts/painel-vps-pull.sh — PAINEL_URL (default https://painel.melhorserum.com.br)
 # e Basic Auth com PAINEL_USER/PAINEL_PASS lidos de .env.painel-skills (gitignored, cada pessoa tem o seu)
 source .env.painel-skills; PAINEL_URL="${PAINEL_URL:-https://painel.melhorserum.com.br}"
-curl -sS -u "$PAINEL_USER:$PAINEL_PASS" -H 'content-type: application/json' \
+# ⚠ base64 à mão, NUNCA `curl -u` (canon 2026-09-05): o `-u` parte a credencial no
+# PRIMEIRO `:`, então senha com `:` autentica errado. O painel-vps-pull.sh já
+# documentava isso; este bloco tinha herdado o `-u` e era bug latente.
+AUTH_B64=$(printf '%s:%s' "$PAINEL_USER" "$PAINEL_PASS" | base64 | tr -d '\n')
+curl -sS -H "Authorization: Basic $AUTH_B64" -H 'content-type: application/json' \
   -X POST "$PAINEL_URL/agent/site/{site}/make-reviews-stub" \
   -d '{"keyword":"...","slug":"...","products":[{"asin":"...","subtitle":"..."}]}'      # 1-3 produtos
 
-curl -sS -u "$PAINEL_USER:$PAINEL_PASS" -H 'content-type: application/json' \
+curl -sS -H "Authorization: Basic $AUTH_B64" -H 'content-type: application/json' \
   -X POST "$PAINEL_URL/agent/article/{site}/{slug}/add-products-stub" \
   -d '{"products":[{"asin":"...","subtitle":"..."}]}'                                     # 1-3 por chamada, 5 s entre chamadas
 ```
