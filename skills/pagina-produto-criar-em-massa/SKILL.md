@@ -110,6 +110,9 @@ Detecção:
      re-check vale nada e você vai abortar por engano de novo. A linha de controle
      `local × remote` é o que prova que o pull valeu.
 
+     Se a resposta do `/admin/update` trouxer *"N commit local enviado pro
+     origin/main"*, era isto: havia trabalho preso lá. Reclassifique antes de seguir.
+
    ⛔⛔ **ANTES DE ABORTAR, OLHE O REMOTE CANÔNICO — ele nem sempre se chama `origin`.**
    Esta é a causa nº 1 de abort falso desta skill: **15 notas no skill-log entre 16/08 e
    03/09/2026, todas no passo 2**, incluindo *cinco reincidências no mesmo dia* (31/08) e
@@ -162,9 +165,19 @@ Detecção:
    *"distinguir 'sem stub E sem bíblia' (abortar) de 'sem stub MAS com bíblia
    completa' (criar via create-from-bible), como a clone já faz no passo 5"*.
 
+   ⚠⚠ **SÓ VALE NO MODO B (você recebeu os ASINs).** Criar stub exige saber QUAIS
+   produtos, e no **modo A** (site sozinho) você não tem essa lista: zero candidatos
+   ali significa que o site não tem página de produto NENHUMA, e decidir quais
+   produtos entram é trabalho da `artigo-lineup-montar`, não desta skill. **Modo A com
+   zero → aborta como antes**, apontando pra ela. Não invente ASIN a partir das
+   bíblias da rede: bíblia existir não prova que o produto pertence a ESTE site.
+
+   No modo B os ASINs são os do próprio argumento — os mesmos que o passo 2 usou pra
+   filtrar e não achou:
+
    ```bash
-   bun scripts/painel-criar-stubs.ts {site} {ASIN} [{ASIN}...]
-   bash scripts/git-pull-seguro.sh "trazer-stubs-criados"   # .mdx E .webp nascem na VPS
+   bun scripts/painel-criar-stubs.ts {site} {ASIN} [{ASIN}...]   # os ASINs DO ARGUMENTO
+   bash scripts/git-pull-seguro.sh "trazer-stubs-criados"        # .mdx E .webp nascem na VPS
    ```
 
    ⛔ **NÃO redigite o curl inline.** O script existe porque o padrão já drifou uma
@@ -190,9 +203,6 @@ Detecção:
 
    ⚠ Criar página é escrever no site: o `isSiteContentLocked` do endpoint recusa
    site travado com 423, e é a mesma trava do resto do fluxo.
-
-     Se a resposta do `/admin/update` trouxer *"N commit local enviado pro
-     origin/main"*, era outra coisa: havia trabalho preso lá, e o pull resolveu.
 
    ⚠️ **A VPS commita mas NEM SEMPRE pusha na hora** — a linha antiga desta skill dizia
    "commita+pusha automaticamente" e isso é falso. Caso real 2026-08-13 (monitores no
