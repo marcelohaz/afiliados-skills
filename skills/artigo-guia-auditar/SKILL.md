@@ -244,8 +244,8 @@ Fix (quando NÃO for a exceção acima): adicionar/enxugar peer(s) em spot **con
 ### 11. `voz-comprador` (level=`error`)
 Voz-comprador explícita ("compradores citam", "avaliações") OU implícita ("divide opiniões", "um comprador relata", "bem recebido", "elogios recorrentes") no guia. Fix: reescrever como observação analítica (régua "destilação categoria D").
 
-### 12. `chavoes-por-nicho` (level=`error` — paridade com as outras 3 auditoras, régua comum 2026-08-15)
-Carregar `docs/painel/_data/chavoes-por-nicho.json`: `_genericos` SEMPRE + bloco do nicho **só se o slug do site está em `_sites_aplicaveis`** (gate canon 2026-08-15). `termos_banidos_absoluto` (lineup, SKU, ASIN, etc.) > 0 → flag. Limites de frequência ultrapassados → flag. Fix: encurtar ou omitir a frase repetida, NUNCA trocar a palavra exata por sinônimo figurado (é o defeito do critério 12c).
+### 12. `chavoes-por-nicho` (banido absoluto level=`error` · teto numérico level=`info` — paridade com as outras 3 auditoras, régua v1.21.0)
+Carregar `docs/painel/_data/chavoes-por-nicho.json`: `_genericos` SEMPRE + bloco do nicho **só se o slug do site está em `_sites_aplicaveis`** (gate canon 2026-08-15). `termos_banidos_absoluto` (lineup, SKU, ASIN, etc.) e tetos **0** > 0 → flag `error`. **Teto NUMÉRICO ultrapassado → `info`, não reprova** (canon 2026-09-05: o teto cai sobre a palavra que É o produto e não há script que o compute igual; ver `_meta.por_que_informativo` do JSON). NUNCA proponha trocar a palavra certa pra baixar contagem. Fix: encurtar ou omitir a frase repetida, NUNCA trocar a palavra exata por sinônimo figurado (é o defeito do critério 12c).
 
 ### 12b. `superlativo-sem-evidencia` (level=`warn`, v1.69.0 — 2026-07-02)
 

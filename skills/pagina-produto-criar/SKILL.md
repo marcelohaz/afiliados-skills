@@ -81,13 +81,20 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
    - Read `docs/painel/_data/chavoes-por-nicho.json`
    - Use `_genericos` + bloco do nicho (ex: `Pré Treino`, `Creatinas`, `Tablets`)
    - **⚠ `_sites_aplicaveis` é o gate (canon 2026-08-15):** site fora da lista do bloco de nicho → **só o `_genericos` vale**. Não force pelo `niche`. E conte o `_genericos` SEMPRE: `chavoes_estruturais_max` tem as 4 variantes de "seleção" em cap **0**, e `industrial_max` tem `declarado` em 3.
-   - Limites aplicam como guard rail editorial:
+   - Durante a geração:
+     - `termos_banidos_absoluto` e tetos **0** → regra DURA, 0 ocorrências.
+     - **Todo teto NUMÉRICO é referência, não limite (canon Marcelo 2026-09-05).** Serve pra você notar
+       que está martelando a mesma palavra. **NUNCA troque a palavra certa, apague um fato ou reescreva
+       uma spec pra fazer um número baixar** — isso contradiz a régua de voz natural desta mesma skill
+       ("repetir a palavra certa é normal") e já produziu dano medido (ver `_meta.por_que_informativo`
+       no JSON). Passou do teto e não há como reduzir sem piorar o texto? Deixa como está.
+   - Detalhe das chaves:
      - `termos_banidos_absoluto` → 0 ocorrências (peers/claim/stack/SKU/ASIN/lineup)
      - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0) → aplicar quando o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada pra rotina" → "feita pra")
      - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
      - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura" = 0 (YMYL, v1.19.0)
      - `concordancia_quebrada_regex` → composiçãos/combinaçãos/"a produto"/"a formigamento" = 0 (v1.19.0)
-     - `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max` — não passar do número
+     - `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max` — referência, não limite (não troque a palavra certa pra baixar contagem)
 
 1. **Parse args**: aceita formatos `{site}/{slug}` (canônico) ou nomes humanos. Exemplos válidos:
    - `melhorimpressora/epson-ecotank-l3250` ✓
@@ -456,7 +463,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
 9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta por artigo (página = metade); escreva já dentro do teto.
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria CONTA e reporta, mas desde 2026-09-05 teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 

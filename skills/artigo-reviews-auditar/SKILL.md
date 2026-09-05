@@ -502,7 +502,7 @@ Bullets e shortDescriptions inchados quebram a leitura escannável que o card e 
 
 **Caso real**: bullet do FTW Diabo Verde listou 8 preços de peers num único item (310 chars). Reescrita corta pra "o mais barato deste comparativo" (~85 chars).
 
-### 13. `chavoes-por-nicho` (régua v1.18.0, severidade: 🔴 Crítico)
+### 13. `chavoes-por-nicho` (régua v1.21.0 — banido absoluto 🔴 Crítico · teto numérico 🔵 info)
 
 **⚠ `_sites_aplicaveis` é o GATE do bloco de nicho, e o `_genericos` é obrigatório (canon 2026-08-15).**
 
@@ -511,7 +511,31 @@ Bullets e shortDescriptions inchados quebram a leitura escannável que o card e 
 
 **Incidente-origem (2026-08-15, `melhoraspirador-com/melhor-aspirador-de-po-vertical`):** três auditorias seguidas contaram só o bloco de nicho. Erro duplo — reprovaram o artigo por 4 termos de um bloco que nem se aplicava, e deixaram passar o achado real: 8 ocorrências de "nesta/desta/da seleção" (cap 0 no `_genericos`) no `guideContent`.
 
-Lê `docs/painel/_data/chavoes-por-nicho.json` baseado no `niche` do site. Para cada termo definido em `_genericos` + bloco do nicho, conta ocorrências NO TEXTO PÚBLICO (excluindo nomes de produto + frontmatter YAML técnico). Flag Crítico se passar do limite.
+Lê `docs/painel/_data/chavoes-por-nicho.json` baseado no `niche` do site. Para cada termo definido em `_genericos` + bloco do nicho, conta ocorrências NO TEXTO PÚBLICO (excluindo nomes de produto + frontmatter YAML técnico). Banido absoluto e teto 0 → Crítico. Teto numérico → info.
+
+**⚠ AS DUAS METADES TÊM FORÇA DIFERENTE (canon Marcelo 2026-09-05).**
+
+| metade | força |
+|---|---|
+| `termos_banidos_absoluto` e qualquer teto **0** | **DURA** — estourar é achado |
+| **todo teto NUMÉRICO** (`industrial_max`, `ingles_max`, `corporativo_max`, `medico_tecnico_max`, `naturalidade_max`…) | **INFORMATIVO** — reporta, não reprova |
+
+Teto numérico vira linha de relatório ("filtro apareceu 73 vezes"), útil quando o texto ficou mesmo
+repetitivo. **Não bloqueia, não reprova, e NUNCA justifica trocar a palavra certa por outra.**
+
+**Por quê, medido no skill-log em 05/09/2026:** 43 das 448 notas de desvio da rede (10%) são deste
+arquivo — 36 sobre teto numérico e **zero** sobre banido absoluto. Dois defeitos. (a) O teto cai sobre
+a palavra que É o produto: `cápsula` numa cápsula, `litros` numa geladeira, `proteína` num artigo de
+proteína, `filtro` num aspirador. (b) É a única régua desta família **sem script** que conte, então
+palavra-vs-substring, nome do produto, superfície e divisor por página nunca tiveram resposta — dois
+auditores do MESMO lote deram vereditos opostos sobre a mesma palavra. Dano consumado: um agente trocou
+"impede calcular" por "não permite calcular" porque o teto de `pede` casava dentro de `impede`; outro
+reescreveu 27 valores de spec pra baixar `porção` de 69 pra 39. E o teto não mostrou efeito: o único
+site de aspirador sob o bloco tem 11,4 ocorrências por mil palavras contra 12,5 do irmão fora dele.
+
+**Regra de ouro:** repetir a palavra certa é normal. Se o único jeito de baixar a contagem é usar uma
+palavra pior, apagar um fato ou reescrever uma spec, **não baixe** — registre e siga.
+
 
 Filtros:
 - Excluir matches em campos YAML (`asin:`, `image:`, `name:` quando contém o termo só por ser nome de produto)

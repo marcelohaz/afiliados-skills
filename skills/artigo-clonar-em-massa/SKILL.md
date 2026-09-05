@@ -218,7 +218,7 @@ PASSO 1 — LEIA a régua canônica (NÃO improvise, NÃO use resumo de memória
   pros/cons formato, fullReview 4 parágrafos com rótulos LITERAIS, voz analítica categoria D,
   sem travessão, sem ";", texto-puro, links tag-aware, health YMYL, hard caps, jargão dev banido).
 - Read `docs/painel/_data/chavoes-por-nicho.json` → use `_genericos` + bloco do nicho deste site
-  como guard rail (limites ingles/medico/industrial; banidos absolutos: lineup/SKU/ASIN/datasheet).
+  — banidos absolutos (lineup/SKU/ASIN/datasheet) são regra DURA; os limites ingles/medico/industrial são referência, não limite (não troque a palavra certa pra baixar contagem).
 Aplique ESSA régua na íntegra. Onde este prompt e a SKILL.md divergirem, a SKILL.md ganha
 (exceto os DELTAS DO CLONE abaixo, que são adições, não conflitos).
 

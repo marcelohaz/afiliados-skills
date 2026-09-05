@@ -321,14 +321,38 @@ Termos de dev/estoque/regulatório que NUNCA devem aparecer no texto público. G
 
 **Fix**: substitua por linguagem editorial — "SKU avaliado" → "versão avaliada"; "ASIN aqui" → "produto avaliado"; "alimento notificado sob N°..." → "produto registrado na ANVISA".
 
-### 13. `chavoes-por-nicho` (régua v1.18.0, severidade: 🔴 Crítico)
+### 13. `chavoes-por-nicho` (régua v1.21.0 — banido absoluto 🔴 Crítico · teto numérico 🔵 info)
 
 Lê `docs/painel/_data/chavoes-por-nicho.json` baseado em `niche` do site (`docs/painel/sites-meta.json`). Conta termos em texto público (subtitle, shortDescription, fullReview, pros, cons, specs.value), excluindo frontmatter YAML técnico (campos `asin:`, `image:`, etc).
 
-Aplica limites de `_genericos` + bloco do nicho específico (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam imediatamente; demais flagam quando passam do `_max` definido.
+Aplica limites de `_genericos` + bloco do nicho específico (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam imediatamente. Teto numérico só INFORMA.
+
+**⚠ AS DUAS METADES TÊM FORÇA DIFERENTE (canon Marcelo 2026-09-05).**
+
+| metade | força |
+|---|---|
+| `termos_banidos_absoluto` e qualquer teto **0** | **DURA** — estourar é achado |
+| **todo teto NUMÉRICO** (`industrial_max`, `ingles_max`, `corporativo_max`, `medico_tecnico_max`, `naturalidade_max`…) | **INFORMATIVO** — reporta, não reprova |
+
+Teto numérico vira linha de relatório ("filtro apareceu 73 vezes"), útil quando o texto ficou mesmo
+repetitivo. **Não bloqueia, não reprova, e NUNCA justifica trocar a palavra certa por outra.**
+
+**Por quê, medido no skill-log em 05/09/2026:** 43 das 448 notas de desvio da rede (10%) são deste
+arquivo — 36 sobre teto numérico e **zero** sobre banido absoluto. Dois defeitos. (a) O teto cai sobre
+a palavra que É o produto: `cápsula` numa cápsula, `litros` numa geladeira, `proteína` num artigo de
+proteína, `filtro` num aspirador. (b) É a única régua desta família **sem script** que conte, então
+palavra-vs-substring, nome do produto, superfície e divisor por página nunca tiveram resposta — dois
+auditores do MESMO lote deram vereditos opostos sobre a mesma palavra. Dano consumado: um agente trocou
+"impede calcular" por "não permite calcular" porque o teto de `pede` casava dentro de `impede`; outro
+reescreveu 27 valores de spec pra baixar `porção` de 69 pra 39. E o teto não mostrou efeito: o único
+site de aspirador sob o bloco tem 11,4 ocorrências por mil palavras contra 12,5 do irmão fora dele.
+
+**Regra de ouro:** repetir a palavra certa é normal. Se o único jeito de baixar a contagem é usar uma
+palavra pior, apagar um fato ou reescrever uma spec, **não baixe** — registre e siga.
+
 
 Fix: encurtar/omitir a frase repetida + destilação cirúrgica. NÃO "variação léxica" por sinônimo figurado (é o defeito do 20c).
-**⚠ TETO POR PÁGINA = ~1/10 do teto por ARTIGO (canonizado 2026-08-28).** Os tetos do JSON são POR ARTIGO (medidos no p90 de artigos comparativos); esta skill audita UMA página individual. A conversão está nos próprios `_doc` do JSON (Eletrônicos e Suplementos): "numa página individual o equivalente é ~1/10 do valor". Regra: `teto_pagina = max(1, round(teto_artigo/10))` — exceto os **banidos absolutos**, que continuam **0** em qualquer superfície. Era a ambiguidade mais registrada do skill-log neste critério (3 notas em 17-20/08: sem o divisor, cada auditor inventava um).
+**Teto por página ≈ 1/10 do teto por artigo (2026-08-28).** Continua valendo como ordem de grandeza do número que você reporta. ⚠ Desde 05/09 **essa conta não decide mais nada**: o teto é informativo, então divisor, palavra-vs-substring e superfície deixaram de inverter veredito. Era a ambiguidade mais registrada do skill-log neste critério, e some por desenho, não por definição melhor. Os **banidos absolutos** seguem **0** em qualquer superfície. Detalhe original: Os tetos do JSON são POR ARTIGO (medidos no p90 de artigos comparativos); esta skill audita UMA página individual. A conversão está nos próprios `_doc` do JSON (Eletrônicos e Suplementos): "numa página individual o equivalente é ~1/10 do valor". Regra: `teto_pagina = max(1, round(teto_artigo/10))` — exceto os **banidos absolutos**, que continuam **0** em qualquer superfície. Era a ambiguidade mais registrada do skill-log neste critério (3 notas em 17-20/08: sem o divisor, cada auditor inventava um).
 
 **⚠ `_sites_aplicaveis` é o GATE do bloco de nicho, e o `_genericos` é obrigatório (canon 2026-08-15).**
 

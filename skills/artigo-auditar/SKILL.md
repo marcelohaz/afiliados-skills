@@ -557,7 +557,7 @@ Audit dos limites editoriais de tamanho nos campos do produto-no-artigo. Bullets
 - `bullet-longo`: pros[i] ou cons[i] texto puro > 180 chars
 - `listagem-peers-exaustiva`: bullet/parágrafo cita 4+ peers (lista virou tabela em texto)
 - `palavra-chavao-banida`: ocorrência de "lineup", "do lineup", "do nosso lineup", "desta seleção", "do nosso comparativo" em qualquer campo do produto
-- `palavra-chavao-alta-freq` (level=`warn`): "fórmula" > 60, "ativo"/"ativos" > 50, "preço médio" > 15, "parestesia"+"formigamento" > 20 combinados — chavões que precisam variação léxica. ⚠️ Subset cru mantido por conveniência; a checagem AUTORITATIVA por nicho é a rule `chavoes-por-nicho` abaixo (lê o `_max` do JSON)
+- `palavra-chavao-alta-freq` (level=`info` desde v1.21.0 — era `warn`; teto numérico não reprova): "fórmula" > 60, "ativo"/"ativos" > 50, "preço médio" > 15, "parestesia"+"formigamento" > 20 combinados — chavões que precisam variação léxica. ⚠️ Subset cru mantido por conveniência; a checagem AUTORITATIVA por nicho é a rule `chavoes-por-nicho` abaixo (lê o `_max` do JSON)
 
 **Caso real `melhorpretreino`** (regressão pré-v1.16.0): shortDescription média 329-414 chars (canon vivo: 225); bullets média 175-182 chars (canon: 65); 50 ocorrências de "lineup" + 114 de "seleção" num único artigo.
 
@@ -585,11 +585,35 @@ Fix sugerido: rodar skill `artigo-review-criar` (v1.16.0+) com hard caps embutid
 
 Fix sugerido: regex find-and-replace direto, sem ambiguidade semântica.
 
-### `chavoes-por-nicho` (level=`error`, régua v1.18.0)
+### `chavoes-por-nicho` (banido absoluto level=`error` · teto numérico level=`info`, régua v1.21.0)
+
+**⚠ AS DUAS METADES TÊM FORÇA DIFERENTE (canon Marcelo 2026-09-05).**
+
+| metade | força |
+|---|---|
+| `termos_banidos_absoluto` e qualquer teto **0** | **DURA** — estourar é achado |
+| **todo teto NUMÉRICO** (`industrial_max`, `ingles_max`, `corporativo_max`, `medico_tecnico_max`, `naturalidade_max`…) | **INFORMATIVO** — reporta, não reprova |
+
+Teto numérico vira linha de relatório ("filtro apareceu 73 vezes"), útil quando o texto ficou mesmo
+repetitivo. **Não bloqueia, não reprova, e NUNCA justifica trocar a palavra certa por outra.**
+
+**Por quê, medido no skill-log em 05/09/2026:** 43 das 448 notas de desvio da rede (10%) são deste
+arquivo — 36 sobre teto numérico e **zero** sobre banido absoluto. Dois defeitos. (a) O teto cai sobre
+a palavra que É o produto: `cápsula` numa cápsula, `litros` numa geladeira, `proteína` num artigo de
+proteína, `filtro` num aspirador. (b) É a única régua desta família **sem script** que conte, então
+palavra-vs-substring, nome do produto, superfície e divisor por página nunca tiveram resposta — dois
+auditores do MESMO lote deram vereditos opostos sobre a mesma palavra. Dano consumado: um agente trocou
+"impede calcular" por "não permite calcular" porque o teto de `pede` casava dentro de `impede`; outro
+reescreveu 27 valores de spec pra baixar `porção` de 69 pra 39. E o teto não mostrou efeito: o único
+site de aspirador sob o bloco tem 11,4 ocorrências por mil palavras contra 12,5 do irmão fora dele.
+
+**Regra de ouro:** repetir a palavra certa é normal. Se o único jeito de baixar a contagem é usar uma
+palavra pior, apagar um fato ou reescrever uma spec, **não baixe** — registre e siga.
+
 
 Lê `docs/painel/_data/chavoes-por-nicho.json` pelo `niche` do site (`docs/painel/sites-meta.json`) e conta termos em TODO o texto público do artigo (intro, `guideContent`, e os campos de cada review: subtitle/shortDescription/pros/cons/specs.value/fullReview), excluindo frontmatter YAML técnico.
 
-Aplica `_genericos` + bloco do nicho (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam imediatamente; os demais quando passam do `_max`. **Autoritativo — absorve o fragmento `palavra-chavao-alta-freq`** de `tamanho-escannavel-produto` (thresholds hardcoded eram um subconjunto cru; aqui o limite vem do JSON por nicho, igual ao gate intermediário `artigo-reviews-auditar` e à `pagina-produto-auditar`).
+Aplica `_genericos` + bloco do nicho (`Pré Treino`, `Creatinas`, `Tablets`, etc.). Banidos absolutos (`lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`) flagam `error` imediatamente. **Teto numérico ultrapassado → `info`**, nunca `error` (canon 2026-09-05). **Autoritativo — absorve o fragmento `palavra-chavao-alta-freq`** de `tamanho-escannavel-produto` (thresholds hardcoded eram um subconjunto cru; aqui o limite vem do JSON por nicho, igual ao gate intermediário `artigo-reviews-auditar` e à `pagina-produto-auditar`).
 
 Fix: encurtar/omitir a frase repetida + destilação cirúrgica. NUNCA "variação léxica" por sinônimo figurado (é o defeito do critério `naturalidade`). **Bloqueia readyToLock** (error).
 **⚠ `_sites_aplicaveis` é o GATE do bloco de nicho, e o `_genericos` é obrigatório (canon 2026-08-15).**

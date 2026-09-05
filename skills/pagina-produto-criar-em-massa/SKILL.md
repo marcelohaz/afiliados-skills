@@ -698,7 +698,7 @@ PASSO 1 — LEIA a régua canônica e EXECUTE À RISCA (não improvise, não use
   atribuição-elíptica/voz-citação = muleta (spec factual vai direto), tom natural (rótulo real),
   sem travessão, sem `;`, campos texto-puro, health-YMYL, âncora = NOME do produto (nunca CTA).
 - Read `docs/painel/_data/chavoes-por-nicho.json` → use `_genericos` + bloco do `{{site}}.niche`
-  (de `docs/painel/sites-meta.json`) como guard rail.
+  (de `docs/painel/sites-meta.json`): banidos absolutos são regra DURA, teto numérico é referência (canon 2026-09-05).
 
 Inputs deste produto (já resolvidos pela skill-mãe — NÃO faça parse de args nem git pull):
 - Site: {{site}} · Slug: {{slug}} · ASIN: {{asin}} · AffiliateTag: {{tag}} (pode ser '')

@@ -63,7 +63,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 0.5. **Carregar chavões do nicho** (régua v1.18.0):
    - Identifique `niche` em `docs/painel/sites-meta.json` (ex: Pré Treino, Creatinas, Tablets)
    - Read `docs/painel/_data/chavoes-por-nicho.json` — use `_genericos` + bloco do nicho
-   - Aplique limites como guard rail: não passar de `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`
+   - `termos_banidos_absoluto` e tetos **0**: regra DURA. `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`: referência, não limite (não troque a palavra certa pra baixar contagem)
    - Banidos absolutos sempre: lineup, SKU, ASIN, datasheet, notificado, trade-off, hardcore
    - **⚠ `_sites_aplicaveis` é o gate do bloco de nicho (canon 2026-08-15):** se o slug do site não está na lista do bloco, **o bloco não vale** e sobra só o `_genericos`. Não force pelo `niche`. Reporte como sugestão de incluir o site no JSON, nunca como defeito do texto.
    - **O `_genericos` vale SEMPRE e é o que mais dispara:** `termos_banidos_absoluto`, `chavoes_estruturais_max` (as 4 variantes de "seleção" têm cap **0**) e `industrial_max` (`declarado` 3, `fabricante` 12). Conte ele antes de qualquer bloco de nicho.
@@ -710,7 +710,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
 9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta por artigo (página = metade); escreva já dentro do teto.
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria CONTA e reporta, mas desde 2026-09-05 teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
