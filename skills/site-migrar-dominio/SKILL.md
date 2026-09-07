@@ -133,6 +133,12 @@ positivos** — todos em *"a impressora ideal para você"*, que é a frase, não
 as mesmas 8 migrações dão **0**. Se a marca antiga for genérica demais pra separar por caixa
 (ex.: "Melhor Guia"), grepe e classifique os hits à mão em vez de confiar na contagem.
 
+**Variante medida em 07/09/2026 — o `git add` que aborta inteiro:** `git add sites/{novo} sites/{antigo}`
+com o caminho ANTIGO (já renomeado, logo inexistente) falha com *"pathspec did not match"* e **não
+adiciona NADA** — nem o caminho válido. Com `2>/dev/null` o erro some e o commit sai com
+`0 insertions(+)` parecendo normal. **Nunca silencie o stderr do `git add`** nesta fase, e nunca
+inclua o caminho antigo no pathspec depois do `git mv`.
+
 **A assinatura do defeito é `0 insertions(+), 0 deletions(-)` num commit que deveria carregar rename
 E edição.** `git mv` já deixa o rename staged; o `sed`/`Edit` que vem depois NÃO entra sozinho, e um
 `git commit` sem `add` novo leva só a metade. Nada quebra na hora — o que está no ar continua certo,
@@ -145,8 +151,22 @@ armadilhas 10-12 e [[afiliados.projeto.transferir-guiamelhorcompra-para-escritor
 ## Fase 2 — zona e DNS do domínio novo
 
 1. Confirmar no **Registro.br** que o domínio está ativo (não confie no `domains.json`).
-2. **Apontar o NS pra Cloudflare** — passo HUMANO, no painel do registrador. A skill não faz.
-3. Criar a zona na conta do owner + CNAME `@` e `www` proxied.
+2. **Criar a zona ANTES de pedir o NS.** A Cloudflare atribui o par de nameservers **por zona**, então
+   ele só existe depois que a zona existe: `bun scripts/cf-create-zone.ts {slug}` cria e imprime o par
+   (+ CNAME `@`/`www` proxied, Always HTTPS, SSL full, MX/SPF/DKIM). A ordem inversa não é executável.
+3. **Apontar o NS** — passo HUMANO no Registro.br. **Entregue o script de nameserver pronto, colado
+   inteiro no chat** (skill `registro-br-ns`), nunca só o par: o Marcelo não roda terminal e não muda
+   NS domínio a domínio na mão.
+4. **Esperar a publicação da delegação: ~1-2h** (medido 07/09/2026). Antes disso o RDAP do Registro.br
+   mostra `nicbr waiting activation` e o pai `.br` ainda devolve os NS antigos — **não é falha da
+   troca**, é a fila deles. Não re-peça a troca nesse intervalo.
+5. **Force a reconferência da Cloudflare** assim que `dig +short NS {dominio} @8.8.8.8` devolver o par
+   da CF: `PUT /zones/{id}/activation_check`. Sem isso a zona pode ficar `pending` por horas depois de
+   a delegação já estar no ar (no caso real a zona ativou 50 min após a troca, com o nudge).
+6. **Re-rode o `cf-create-zone` depois de a zona ficar `active`.** Com a zona `pending` ele fecha tudo
+   menos o **Email Routing** (`Active zone required`) — e o `contactEmail` do site aparece em TODAS as
+   páginas, então sem esse re-run o e-mail da marca nova quica a partir do 301. **É pré-requisito da
+   Fase 4**, não um "arrumar depois".
 
 Sem o NS propagado a Fase 3 falha em silêncio parcial: o `cf-deploy-r2` avisa
 `⚠️ Zone não encontrada` e sobe o R2 mesmo assim, deixando KV e Worker Route pela metade.
@@ -168,6 +188,22 @@ o domínio velho ainda responde, porque o KV segue mapeando `dominio-antigo → 
 que o catch-all sobe e o domínio antigo para de servir conteúdo. Ordem: Fase 4 → conferir o 301 →
 só então podar. Registre no relatório, senão em silêncio ninguém acha depois.
 
+**Ao podar (dias depois, quando o 301 estiver consolidado): REPONTE O KV ANTES DE APAGAR.** O KV
+continua mapeando `host-antigo → slug-antigo` mesmo depois do catch-all (o worker nem consulta o KV,
+porque o catch-all dispara antes). Se você apagar o prefixo sem repontar, a **reversão** passa a
+resolver num prefixo vazio e o domínio antigo serve erro em tudo. Ordem certa:
+```bash
+# 1) KV do host antigo (apex E www) → slug NOVO
+PUT /accounts/{acc}/storage/kv/namespaces/{kvId}/values/{host-antigo}     body: {slug-novo}
+# 2) guardas antes do primeiro DELETE (abortar se qualquer uma falhar):
+#    - todo caminho do prefixo antigo existe no novo (compare os CAMINHOS, não só a contagem)
+#    - o prefixo novo não tem menos objetos que o antigo
+#    - nenhuma chave listada fora do prefixo alvo
+# 3) salvar o manifesto das chaves em disco; só então DELETE objeto a objeto
+```
+Depois disso a reversão muda de forma — o domínio antigo volta servindo **o conteúdo novo**, não o
+site antigo (que deixou de existir). Diga isso no relatório.
+
 ⚠️ **Compare a contagem dos dois prefixos.** Se o novo tem MAIS páginas que o antigo, existe conteúdo
 no repo que nunca foi publicado — o deploy da migração vai publicá-lo de uma vez. Não é defeito, mas
 mude o relatório: são páginas estreando, sem histórico de indexação. Caso real (guiamelhor, 2026-08-08):
@@ -179,6 +215,11 @@ tinham sido deployadas.
 curl -sS -o /dev/null -w "%{http_code}\n" https://{novo}/            # 200
 curl -sS -o /dev/null -w "%{http_code}\n" https://{novo}/{um-artigo}/ # 200
 ```
+
+⚠️ **Logo depois de a zona ativar o gate falha com `curl: (35) ... handshake failure`, e isso NÃO é
+defeito**: o Universal SSL fica `pending_validation` por alguns minutos. Confirme em
+`GET /zones/{id}/ssl/certificate_packs?status=all` e espere virar `active` — não saia debugando
+worker, KV ou rota.
 
 ## Fase 4 — 301 no domínio antigo
 
@@ -236,8 +277,32 @@ um artigo, uma página de produto, uma das regras path-específicas, e uma URL i
 
 ## Fase 5 — Search Console
 
-1. Adicionar e **verificar** a property do domínio novo.
-2. Submeter os sitemaps do domínio novo.
+**1. Property + verificação + sitemap índice = UM comando, sem passo no navegador:**
+```bash
+bun scripts/gsc-registrar-dominio.ts {dominio-novo}          # --dry-run mostra o TXT sem gravar
+```
+Cria a property `sc-domain:` (cobre apex, www, http e https), escreve o TXT de verificação **na
+própria zona Cloudflare**, verifica e submete o `sitemap.xml`. Exige token com os DOIS escopos
+(`webmasters` + `siteverification`) e a zona numa conta CF cujo token você tenha. Domínio novo nasce
+na **conta 3** (a 1 bateu o teto de 1.000 properties).
+
+**2. Submeter TAMBÉM os 3 sitemaps filhos — o script só manda o índice.** A convenção da rede é
+**4 sitemaps** (`sitemap.xml` + `sitemap-artigos/paginas/produtos.xml`), conferida em
+melhorimpressora, creatinasaprovadas, melhorcozinha e no próprio site migrado. O Google chega nos
+filhos pelo índice, mas sem eles submetidos **você perde o relatório de erro POR sitemap** — que é
+exatamente o que a auditoria de sitemaps lê. Some as URLs dos filhos e confira contra o índice.
+```bash
+PUT https://www.googleapis.com/webmasters/v3/sites/{sc-domain%3Adominio}/sitemaps/{url-absoluta-encodada}
+```
+
+**3. NÃO apagar os sitemaps da property ANTIGA.** Quando o Google for buscá-los recebe o 301 e
+descobre a mudança mais rápido. A property antiga fica de pé.
+
+**4. Conferir com URL Inspection, não com suposição** (`POST /v1/urlInspection/index:inspect`,
+`indexStatusResult`). No caso real, 1h após o 301: home do domínio novo já `PASS` / "Enviada e
+indexada"; artigo "Detectada, mas não indexada" (normal, descoberto por sitemap há minutos); e a URL
+ANTIGA ainda com o crawl de meses atrás — **o Google não viu o 301 no mesmo dia**, e isso não é
+defeito da migração. Não prometa recuperação imediata no relatório.
 
 **NÃO usar a Mudança de Endereço do GSC.** Canon Marcelo 2026-08-09, aplicado nas duas migrações da
 rede: *"não vou avisar o GSC a mudança de endereço. No oguiacompra também não foi feito isso."*
@@ -326,7 +391,8 @@ pós-commit — "testei com `curl` e deu 200" prova o que está no ar, não o qu
 ## Relatório final
 
 Sempre incluir: commit(s), o que ficou **pendente** (tag, NS, VPS, poda do R2), a data de expiração dos
-dois domínios, e o comando exato de reversão. **Pré-condição: o gate pós-commit da Fase 1 passou** (o
+dois domínios, e o comando exato de reversão. Depois da poda, a reversão devolve o CONTEÚDO NOVO no
+domínio antigo — descreva assim, não como "o site antigo volta". **Pré-condição: o gate pós-commit da Fase 1 passou** (o
 HEAD, não a árvore) — sem isso o relatório afirma o que não foi medido.
 
 ## Exemplo de invocação
