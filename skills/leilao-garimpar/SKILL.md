@@ -38,7 +38,31 @@ Faz, sobre a lista crua: **exact-match-cru** (produto=domínio sem prefixo, ex: 
 ## Fase 4 — Merge + cruzamentos
 - Unir candidatos do processador (Fase 2) + do helper (Fase 3), dedup por domínio.
 - Flags do helper: `já-kw` (já é keyword nossa — relevância alta), `↩ recorrente` (apareceu em período anterior do histórico curado), categoria.
-- Já-meus (domains.json) e blocklist (deletados) já foram ocultados/pulados.
+- Blocklist (deletados) já foi pulada.
+
+### 🚨 4.1 — Domínio NOSSO na lista é ALERTA, não ruído (canon 2026-09-07)
+O helper conta os "já-meus" como pulados e **some com eles**. Mas a lista é de **processo de
+liberação**: domínio nosso ali dentro significa que ele **vai ser liberado nesta janela** — ou seja,
+expirou e não foi renovado. Isso é mais urgente que a shortlist inteira (a shortlist é oportunidade,
+isso tem prazo). **Sempre extrair e reportar no TOPO:**
+```bash
+python3 -c "
+import json;lista={l.strip().lower() for l in open('<CAMINHO>','rb').read().decode('latin1').split(chr(10)) if l.strip() and not l.startswith('#')}
+d=json.load(open('docs/painel/domains.json'));rows=d['domains'] if isinstance(d,dict) else d
+for r in rows:
+    if r['domain'].lower() in lista: print(r['domain'], r.get('expiresAt'), r.get('conta'), r.get('site'))"
+```
+Confirme por **sinal vivo** antes de afirmar (o `expiresAt` do `domains.json` vem de CSV e envelhece —
+ver [[feedback_dominio_expirado_csv_e_foto_nao_estado_atual]]): no RDAP do Registro.br, domínio em
+liberação volta **sem campo `status`**, enquanto domínio ativo volta `status=['active']`. Use um
+controle positivo conhecido na mesma rodada — o `remarks: truncated` aparece nos DOIS e não separa nada.
+Medido em 07/09/2026: **8 domínios nossos** (conta Ozéia, todos expirados em abril, sem site) estavam
+na lista e teriam passado batido. Dá pra renovar no Registro.br até a liberação.
+
+### 4.2 — Recorrência: cruzar também com run NÃO curada
+O flag `↩ recorrente` lê só o `historico-curado.json`. Run processada e **não curada** (havia uma de
+agosto/2026) fica invisível, e repetição vira "novo" no relatório. Antes de comparar, cruze também os
+`candidatos-{periodo}.json` de períodos anteriores — recorrência é sinal (ninguém pegou o domínio).
 
 ## Fase 5 — Curadoria (o julgamento — é seu, não do script)
 O helper dá recall; aqui entra a precisão. Para cada candidato:
@@ -86,6 +110,33 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 - **Cross-ref de blocklist pegou um erro MEU**: recomendei à mão `melhorperfumefeminino`/`masculino`, mas estão na blocklist (faxina beleza-saúde de 2026-05-08). O helper corretamente pulou. **A curadoria manual não tem a memória que o cross-ref tem — sempre confiar na blocklist.** Removidos do histórico.
 - **RESOLVIDO — política beleza-saúde (Marcelo 2026-07-23)**: beleza-saúde **CONSUMÍVEL/cosmético** (perfume, perfumefeminino, perfumemasculino, maquiagem, batom, rímel, sérum, protetor solar) é **OUT do garimpo** — nicho de ROI baixo pra ADQUIRIR domínio novo. Removidos do `PRODUTOS_EXTRA` (o dicionário que faz o garimpo surfaçar candidatos), então não aparecem mais na shortlist. **Devices de grooming high-ticket ficam** (chapinha/secador/modelador/babyliss/depilador/barbeador/aparador — Fase 5 já mandava MANTER). ⚠️ **A regra é escopada só ao GARIMPO**: não afeta domínios/sites de beleza que o Marcelo já tem — esses se trabalham normal (conteúdo/páginas/etc.).
 - **Amostragem ampla** (controle de recall humano): gerar TSV com `alta` (recomendados) + `revisar` (melhor/melhores/os-as-melhores X fora do dict, com flag `[blocklist]`) e o Marcelo filtra. Net amplo demais (`qual`/`guia`/`comprar`/`top`/sufixo) = 95% ruído (colisão "qualidade", "guia de cidade", nome de empresa) — ficar no **melhor-family**. Restam baixo-valor não-pegos: make/amaciante (consumível), applewatchstore (sufixo "store" no JUNK).
+
+**v2 — 2026-09-07 (lista 09-16/09, 125.453 dom → 16 oficiais + 23 do helper = 29 únicos)**
+- **O achado da run não foi a shortlist: 8 domínios NOSSOS estavam sendo liberados** e o helper os
+  escondia como "já-meus". Virou a Fase 4.1 acima. Repetir SEMPRE.
+- **O exact-cru convergiu — o buraco mudou de lugar.** Montei um vocabulário independente de 208
+  produtos de alto ticket e varri a lista crua: achou 3, os 3 **já pegos** pelo funil. Poço seco nessa
+  camada. O que escapa hoje é (a) **família melhor/top com produto fora do dicionário** e (b)
+  **composto produto+qualificador que é termo de busca real**. Nas próximas runs, gastar o esforço aí.
+- **Como varrer (a) e (b) sem afogar em ruído:** para (a), extrair TODA a família
+  `^(o|a|os|as)?(melhor|melhores|top)` e filtrar serviço/cidade por regex — deu 307 → 254 legíveis a
+  olho. Para (b), casar `^produto+qualificador$` com uma lista FECHADA de qualificadores que formam
+  termo real (eletrica, digital, inteligente, gamer, portatil, wifi, inox, vertical, embutir, externa,
+  ip, kamado, passagem, ultrassonico…). O `contains produto` cru dá 750 e é quase todo substring
+  falsa (`serralheria`, `himalaia`, `ripado`, `perfume` em nome de loja) — não usar sozinho.
+- **Escaparam e eram bons:** `cameraip` (o melhor da run), `geladeirabrastemp`, `aquecedordepassagem`,
+  `churrasqueirakamado`, `melhorespatinetes`, `melhorsuplemento`/`omelhorsuplemento`.
+- Adicionados ao `PRODUTOS_EXTRA`: patinete, suplemento, churrasqueira, churrasqueirakamado, cameraip,
+  aquecedordepassagem, lavadoraderoupas, estante.
+- **A família de falso-positivo tem forma fixa: `{produto}{qualificador-vazio}`.** Confirmados nesta
+  run: celularcerto, geladeiracerta, mesaspremium, celularturbo, dronedigital, serradigital,
+  smartproteina, alarmesmart, estanteinteligente — mais os já conhecidos celularprofissional e
+  fonteoficial. Se o par produto+adjetivo não é como alguém digita no Google, corta.
+- Cortes por regra que se repetiram: conteúdo (`receitasairfryer`), usados (`notebookusados`,
+  `cadeiraderodasusada`), B2B (`tabletindustrial`), prefixo não-brasileiro (`reviewcadeiras`).
+- **Termo que não existe passa pelo casamento morfológico:** `climatizadorultrasonico` casa produto +
+  qualificador válido, mas climatizador é evaporativo — ultrassônico é umidificador. Conferir se o par
+  existe no mundo, não só na regex.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 
