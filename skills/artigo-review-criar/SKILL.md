@@ -526,11 +526,18 @@ artigo declara mas cuja bíblia veta o dado **não vira row**, e o que a decisã
 valor evasivo** ("não informado", aproximação inventada) só para a coluna não ficar vazia: o
 `spec-data` que o `audit-article` dispara é `warn` informativo, e é o preço certo a pagar.
 
-Medido 5 vezes, em 2 datas e 4 colunas diferentes: Peso e Ruído no `melhoraspirador` (14/08, flag
-`peso-divergente`), Ruído no Mondial CL-03 ("1 decibel" na ficha, impossível) e no Ventisol CLIN35
-PRO (relatos divergem e não há dB), Timer no Ponente CLIP20 (lacuna de ficha, que não é o mesmo que
-ausência) e Peso no EOS ECL300M (18,5 kg na Amazon contra 10 kg no fabricante, medidas idênticas).
-Nas 5 a inferência certa foi a mesma e custou deliberação nova cada vez, porque esta seção mandava
+**Dois casos caem aqui. A saída é a mesma (sem row), a armadilha é oposta:**
+
+- **VETO — o dado existe e a bíblia proíbe citá-lo.** Medido 4×: Peso no `melhoraspirador` (14/08,
+  flag `peso-divergente`, 8,86 × 1,75 × 1,62 kg) e no EOS ECL300M (18,5 kg na ficha da Amazon contra
+  10 kg no fabricante, com medidas idênticas nas duas), Ruído no Mondial CL-03 ("1 decibel" na ficha,
+  impossível) e no Ventisol CLIN35 PRO (a decisão veta afirmar silêncio e não há dB para ancorar).
+- **LACUNA — não há dado em campo nenhum.** Medido 2×: Ruído no `melhoraspirador` e Timer no Ponente
+  CLIP20. A row também não existe, mas o erro a evitar é o inverso do veto: **lacuna não é ausência**.
+  Não escreva "não tem timer" nem "sem controle remoto" — silêncio de ficha não prova que o produto
+  não tem, e várias bíblias dizem isso com todas as letras ("não afirmar nem que tem nem que não tem").
+
+Nas 6 a inferência certa foi a mesma e custou deliberação nova cada vez, porque esta seção mandava
 "alinhar com `specLabels`" e a Armadilha 4 mandava seguir a bíblia, sem dizer quem vence.
 
 ## Voz editorial
