@@ -531,8 +531,8 @@ custo-benefício geral** (canon Marcelo 2026-09-11). Normalmente **não é o mai
 **7 de 21 (33%)**. E quem tem o dado é explicado pela MARCA, não pelo produto:
 
 ```
-declara vazão    Ventisol 3/3 · EOS 1/1 · Midea 3/4
-não declara      Philco 0/4 · WAP 0/3 · Mondial 0/3 · Britânia 0/1 · Ponente 0/1 · Zellox 0/1
+declara vazão    Ventisol 3/3 · EOS 1/1 · Midea 3/4 · Ponente 1/1
+não declara      Philco 0/4 · WAP 0/3 · Mondial 0/3 · Britânia 0/1 · Zellox 0/1
 ```
 
 O pódio saiu **3/3 Ventisol** — a única marca que publica em 100% do próprio catálogo. O mecanismo
@@ -540,6 +540,25 @@ O pódio saiu **3/3 Ventisol** — a única marca que publica em 100% do própri
 não corta) e **não define na ordenação**, então o produto sem dado vai pro fim da fila, que é o
 mesmo efeito de eliminá-lo. **A régua recusa o eliminatório pela porta da frente e o aplica pela
 porta dos fundos.**
+
+⚠️ **ANTES DE CONTAR COBERTURA, LEIA `dadosInconsistentes` DE CADA CANDIDATO.** É ali que mora a
+`decisaoEditorial` que diz se aquele número pode ou não ser usado, e ignorá-la corrompe a medição
+nos DOIS sentidos. Medido em 11/09/2026, na mesma execução, os dois erros opostos:
+
+```
+Ponente CLIP20   campo bruto "2000 Microlitros por minuto" → eu contei como NÃO DECLARA
+                 decisão: "Pode citar 2.000 m³/h atribuindo ao fabricante (verificado em
+                 ponente.com.br em 10/09)". O campo da Amazon é que está com unidade errada.
+                 → contei de MENOS, e ainda acusei a página de fabricar o número
+
+Midea AKAF1      bloco do fabricante diz 370 m³/h → eu contei como DECLARA e pus em #1
+                 decisão: "Usar o dado do anúncio deste ASIN (211,89 pés cúbicos por minuto).
+                 NÃO citar 370 m³/h" — a página do fabricante cobre AKAF1.AKAF2, dois códigos
+                 → contei de MAIS, e elegi o #1 com um número vetado
+```
+
+**Campo bruto não é dado disponível; dado disponível é o que a `decisaoEditorial` libera.** Sem
+essa leitura a cobertura vira ficção e o gate abaixo mede a coisa errada.
 
 **Regra:** critério mestre computável em **menos de 50%** do conjunto **QUALIFICA mas não ordena
 sozinho**. Nomeie um segundo critério com cobertura ~100%, ordene pelos dois e diga qual fez o quê.
