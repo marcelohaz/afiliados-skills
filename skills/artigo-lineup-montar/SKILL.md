@@ -1,6 +1,6 @@
 ---
 name: artigo-lineup-montar
-description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL; com --aplicar cria o artigo no painel e devolve a URL do editor. Aceita `site "keyword"` (artigo que ainda NÃO existe) ou `site/slug-do-artigo` (completar um existente). NÃO escreve conteúdo nem badge, e recriar artigo JÁ PUBLICADO é da artigo-clonar-em-massa, não desta. Método: antes de abrir produto nenhum, DUAS consultas cegas a sub-agents isolados (a pergunta é só a keyword pelada, singular e plural) viram rubrica pré-registrada; depois lê a página INTEIRA de cada um e só abre a bíblia dos sobreviventes. Ordena o top-3 por PAPEL (#1 melhor geral pelo critério mestre da rubrica, #2 custo-benefício, #3 bom e barato), segmenta por CLASSE e se audita.
+description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL; com --aplicar cria o artigo no painel e devolve a URL do editor. Aceita `site "keyword"` (artigo que ainda NÃO existe) ou `site/slug-do-artigo` (completar um existente). NÃO escreve conteúdo nem badge, e recriar artigo JÁ PUBLICADO é da artigo-clonar-em-massa, não desta. Antes de abrir produto nenhum, DUAS consultas cegas a sub-agents isolados (a pergunta é só a keyword pelada, no singular e no plural) viram rubrica pré-registrada; depois lê a página INTEIRA de cada um e só abre a bíblia dos sobreviventes. Ordena o top-3 por PAPEL (1º melhor geral pelo critério mestre da rubrica, 2º custo-benefício, 3º bom e barato), segmenta por CLASSE e se audita.
 ---
 
 ## Parse de input
