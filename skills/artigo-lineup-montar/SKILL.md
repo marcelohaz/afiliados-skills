@@ -1,6 +1,6 @@
 ---
 name: artigo-lineup-montar
-description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL — e com --aplicar cria o artigo no painel (make-reviews-stub + add-products-stub) e devolve a URL do editor. NÃO escreve conteúdo nem badge. Bíblia relevante SEM página entra marcada e o gate fica na Etapa 8 (que não cria artigo com produto sem página). Antes de abrir qualquer produto, consulta CEGA a um sub-agent isolado ('como escolher {keyword}') vira rubrica pré-registrada; depois lê a página INTEIRA de cada candidato pra julgar aderência à keyword e só abre a bíblia dos sobreviventes (comprasMesPassado, marca, disponibilidade, pontosFracos). Ordena o top-3 por PAPEL (#1 melhor geral pelo critério mestre da rubrica, #2 custo-benefício, #3 bom e barato — venda confirma, não escolhe), resolve gêmeo/sucessão/rebadge cross-marca. AUDITA o próprio lineup num sub-agent isolado: toda exclusão exige prova citável no degrau certo.
+description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL — e com --aplicar cria o artigo no painel (make-reviews-stub + add-products-stub) e devolve a URL do editor. NÃO escreve conteúdo nem badge. Bíblia relevante SEM página entra marcada e o gate fica na Etapa 8 (que não cria artigo com produto sem página). Antes de abrir qualquer produto, DUAS consultas CEGAS a sub-agents isolados, a pergunta sendo só a keyword pelada no singular e no plural, viram rubrica pré-registrada; depois lê a página INTEIRA de cada candidato pra julgar aderência à keyword e só abre a bíblia dos sobreviventes (comprasMesPassado, marca, disponibilidade, pontosFracos). Ordena o top-3 por PAPEL (#1 melhor geral pelo critério mestre da rubrica, #2 custo-benefício, #3 bom e barato — venda confirma, não escolhe), resolve gêmeo/sucessão/rebadge cross-marca. AUDITA o próprio lineup num sub-agent isolado: toda exclusão exige prova citável no degrau certo.
 ---
 
 ## Parse de input
@@ -37,22 +37,70 @@ Detecção: se tem `/` seguido de kebab-case → artigo existente. Senão → ke
 
 ## Pipeline
 
-### Etapa 1 — consulta cega "como escolher {keyword}" (PRIMEIRA COISA)
+### Etapa 1 — consulta cega, a KEYWORD PELADA (PRIMEIRA COISA)
 
 **Antes de abrir produto nenhum.** Não é ordem de conveniência: se você lê o catálogo primeiro e recebe os critérios depois, os critérios deixam de ser régua e viram racionalização do que você já viu. O valor inteiro desta etapa está em ela ser **pré-registrada**.
 
 A restrição vale pro contexto principal também, não só pro sub-agent. Chegou aqui, ainda não leu `.mdx` de produto nenhum.
 
-**Sub-agent Opus ISOLADO**, sem acesso ao catálogo nem a arquivo nenhum, **em primeiro plano (`run_in_background: false`)** — o turno espera a resposta e segue; nunca "aguardo a consulta, te aviso" (foi assim que o lineup de 02/08 pulou a Etapa 3 e parou: a consulta "não voltou" porque o turno tinha acabado). Se a chamada falhar, refaça inline no mesmo turno. Pergunta única: **como escolher {keyword}**, pedindo quatro coisas.
+**DUAS consultas, e a pergunta é a KEYWORD PELADA** (canon Marcelo 2026-09-11). Sub-agent Opus **em primeiro plano (`run_in_background: false`)** — o turno espera a resposta e segue; nunca "aguardo a consulta, te aviso" (foi assim que o lineup de 02/08 pulou a Etapa 3 e parou: a consulta "não voltou" porque o turno tinha acabado). Se a chamada falhar, refaça inline no mesmo turno.
 
-1. **Critérios ELIMINATÓRIOS e de QUALIDADE, separados.** Eliminatório tira o produto da conversa (não atende o recorte da keyword). Qualidade é o que faz um ser melhor que outro **entre os que passaram**.
-2. **Quais formatos/linhas convivem sob esse rótulo** e como diferenciar na prática. É a pergunta que mais rende quando a keyword tem número (litros, polegadas, ppm), porque o número costuma cobrir coisas fisicamente diferentes.
+```
+consulta A   "{keyword no singular}"    →  "melhor climatizador de ar"
+consulta B   "{keyword no plural}"      →  "melhores climatizadores de ar"
+```
+
+Mais nada. Nenhuma lista de perguntas, nenhum formato de resposta, nenhuma exigência. A única
+instrução que acompanha é a que preserva o isolamento: *"Responda de memória. Não use ferramentas,
+não leia arquivos, não busque na internet."*
+
+⚠️ **NÃO ENGENHEIRE O PROMPT — foi o defeito da 5ª execução, e ele contamina tudo que vem depois.**
+Em 11/09/2026, rodando `melhor climatizador de ar`, o executor escreveu ~40 linhas de instrução
+estruturada e **exigiu** que a resposta elegesse *"o critério MESTRE, o número que sozinho mais
+separa um produto bom de um ruim"*. A LLM obedeceu. Medido, a MESMA keyword pelas duas formas de
+perguntar:
+
+```
+prompt engenheirado   "sala 20-30 m² pede 1.800 a 3.200 m³/h"
+keyword pelada (A)    "portátil doméstico fica na faixa de 400 a 1.200 m³/h"
+keyword pelada (B)    "doméstico costuma ficar em 400 a 1.500 m³/h"
+```
+
+**A faixa doméstica saiu 2 a 3 vezes inflada**, e foi só isso que pôs em #1 um aparelho de
+4.000 m³/h que pela rubrica pelada é de uso comercial. Prompt longo não consulta a LLM: ele
+**escreve a rubrica e manda ela preencher as lacunas**. Quem responde deixa de ser a memória do
+modelo e passa a ser você com passos extras — e aí a Etapa 1 perde a propriedade inteira.
+
+**Por que DUAS, e não uma.** Singular e plural são intenções de busca diferentes e devolvem coisas
+diferentes. Medido na mesma execução: a singular fechou **pedindo cidade e tamanho do cômodo** pra
+dar UMA recomendação; a plural entregou mapa de litro→ambiente (*"4-8 L servem quarto/escritório
+até 15-20 m²"*, *"sala grande e salão pedem 45-70 L"*) e nomeou linhas. **A plural é a intenção de
+artigo comparativo**, que é o que esta skill monta — mas rode as duas e use a UNIÃO, porque a
+singular pega o que a plural cala.
+
+**Aproveitamento triplo:** as duas respostas são também o retrato do que um AI Overview ou o
+ChatGPT devolvem pra essa keyword, ou seja, quem a rede enfrenta na SERP de IA. Guarde as duas
+**literais** no relatório.
+
+⚠️ **O sub-agent NÃO é isolado do `CLAUDE.md`.** Ele não vê o catálogo, mas herda o contexto do
+projeto e sabe que está ajudando a montar artigo de afiliado. Medido em 11/09/2026: a consulta B
+abriu com *"sem consultar bíblias, painel ou SERP"* e fechou oferecendo *"transformar isso num
+lineup de artigo comparativo com ASINs reais"* — vocabulário que só existe neste repo. O
+isolamento que a Etapa 1 garante é **do catálogo**, não do projeto, e isso vale retroativamente
+pras execuções anteriores. Se a resposta parecer moldada pro formato que a gente já usa,
+desconfie: pode ser eco.
+
+**O que a resposta costuma trazer, e onde cada parte é consumida.** Isto é DESCRIÇÃO do que chega,
+nunca pauta a ser exigida:
+
+1. **Critérios ELIMINATÓRIOS e de QUALIDADE.** Eliminatório tira o produto da conversa (não atende o recorte da keyword). Qualidade é o que faz um ser melhor que outro **entre os que passaram**.
+2. **Quais formatos/linhas convivem sob esse rótulo.** É o que mais rende quando a keyword tem número (litros, polegadas, ppm), porque o número costuma cobrir coisas fisicamente diferentes. **O passo 4 CONSOME isto** — ver a régua de classes lá.
 3. **Perfis de uso** que a lista precisa cobrir pra não ficar incompleta.
 4. **Armadilhas do comprador** — o que a categoria esconde e as listas não contam.
 
 A resposta vira **RUBRICA**, registrada no relatório final. É contra ela que a Etapa 3 julga cada página.
 
-⚠️ **Não peça "critérios em ordem de peso".** A pergunta 1 pedia isso até 2026-08-01 e **nenhuma etapa consumia o ranking**: a Etapa 3 usa a rubrica como binário, e na Etapa 5 quem ordena é venda, preço e papel. Pedir peso e ignorá-lo é gastar a consulta com o que não tem destino. O corte eliminatório/qualidade é o que a Etapa 3 sabe usar.
+⚠️ **Não peça "critérios em ordem de peso".** A pergunta 1 pedia isso até 2026-08-01 e **nenhuma etapa consumia o ranking**: a Etapa 3 usa a rubrica como binário, e na Etapa 5 quem ordena é venda, preço e papel. Pedir peso e ignorá-lo é gastar a consulta com o que não tem destino. (Hoje isto é histórico: a pergunta não pede nada.)
 
 **Onde cada metade é consumida:**
 
@@ -83,13 +131,34 @@ A rubrica **nunca** nomeia qual produto é o melhor — ela não viu o catálogo
 vencedor, é ruído, igual a nome de modelo. E ordenar erra mais barato que eliminar: produto em
 posição errada continua no artigo, produto cortado some dele.
 
+⚠️ **O CRITÉRIO MESTRE tem que EMERGIR, nunca ser exigido.** As duas consultas peladas apontaram
+um número dominante sozinhas, sem ninguém pedir — *"vazão de ar (m³/h) é o número que define o
+ambiente atendido, mais do que os litros do tanque"* (A) e *"é o número que manda, mais que a
+potência em watts"* (B). **Quando as duas convergem no mesmo número, esse é o critério mestre.**
+Quando divergem, ou quando nenhuma elege um, **a categoria não tem critério mestre** — e o passo 3
+tem ramo pra isso. Exigir que exista **fabrica** um: a única execução que pediu explicitamente
+recebeu um critério que só 33% do catálogo publicava.
+
 ⚠️ **A rubrica é insumo, nunca autoridade.** Ela é memória de um modelo, sem acesso ao catálogo — acerta o que a categoria tem e erra o recorte do que "deveria" estar na mesma lista. Em 2026-08-02 ela me convenceu a cortar a `PartyBox Ultimate` de um artigo de caixa de som JBL porque "misturar caixa de festa com portátil é o erro mais comum". É juízo editorial sobre estrutura de artigo, e virou critério de admissão nas minhas mãos.
 
-**Não pergunte QUAIS MODELOS.** Medido em 2 execuções: zero decisões aproveitadas e um erro ativo (marcou `JBL Go 4` com confiança ALTA sem saber que a Go 5 existia, e a regra de sucessão teve que desfazer). A LLM envelhece **nome de modelo** e não envelhece **critério de compra** — pergunte só a metade que não envelhece. Se um nome aparecer solto na resposta, trate como ruído, nunca como candidato.
+**Nome de modelo que vier na resposta NÃO é candidato.** Medido em 2 execuções: zero decisões aproveitadas e um erro ativo (marcou `JBL Go 4` com confiança ALTA sem saber que a Go 5 existia, e a regra de sucessão teve que desfazer). A LLM envelhece **nome de modelo** e não envelhece **critério de compra**.
+
+⚠️ **Com a keyword pelada os nomes VÊM, e isso mudou o que fazer com eles** (2026-09-11). A régua antiga era "não pergunte quais modelos" — hoje não se pergunta nada, e eles aparecem de qualquer jeito. Eles seguem **proibidos como candidatos** e ganham um uso novo, em duas leituras:
+
+```
+marca que as DUAS consultas citam    sinal de categoria: se o catálogo não tem, é buraco
+   pra o mesmo perfil                de cobertura (ex.: Electrolux e Cadence na faixa de
+                                     entrada, ausentes do site)
+marca que VENDE muito no catálogo    a memória da LLM discorda do marketplace. Não é erro
+   e NENHUMA consulta cita           de nenhum dos dois: é sinal de que o produto vende por
+                                     preço/disponibilidade, não por reputação de categoria
+```
+
+Caso real: as duas citaram Britânia, Mondial e Philco pra faixa doméstica, e **nenhuma citou WAP**, que vende 500/mês no catálogo. Isso é achado pro relatório, nunca corte nem promoção.
 
 **Voltar limpo é resultado válido.** Check que sempre acha algo é check mal calibrado.
 
-**Aproveitamento duplo:** "Como escolher {keyword}" é o H2 obrigatório que a `artigo-guia-escrever` vai ter que produzir depois. Guarde a rubrica no relatório — ela serve as duas skills.
+**Aproveitamento duplo:** a rubrica alimenta o H2 obrigatório "Como escolher {keyword}" que a `artigo-guia-escrever` vai ter que produzir depois. ⚠ Isso NÃO quer dizer que a pergunta daqui seja "como escolher" — ela é a keyword pelada (ver o topo da etapa); o H2 é o DESTINO da resposta, não a forma da pergunta. Confundir os dois foi o que produziu o prompt engenheirado de 11/09.
 
 ### Etapa 2 — universo e pré-flight, nesta ordem interna
 
@@ -255,6 +324,8 @@ PartyBox Ultimate   página, cons: porte grande · funciona na tomada · Dolby s
 ```
 
 Eu tinha cortado a Ultimate por "caixa de festa é outro segmento", frase que veio da rubrica e não da página, e o Marcelo repôs: **ter cabo de energia não exclui ser caixa de som**. Diferença de formato dentro da categoria é **estrutura editorial do artigo**, e o artigo resolve isso segmentando o texto — não é critério de admissão do lineup.
+
+⚠️ **Este canon e a régua de CLASSES do passo 4 são a MESMA ideia em dois momentos — não os confunda.** Aqui, na admissão: formato diferente **não corta**. Lá, na ordenação: formato diferente **não é ranqueado no mesmo eixo**, é segmentado. As duas linhas dizem "segmente o artigo", e nenhuma delas autoriza excluir. O erro de 02/08 foi cortar por classe; o de 11/09 foi ranquear entre classes. São os dois lados do mesmo engano.
 
 ⚠️ Note que "só elimina por fato, não por opinião" **não** resolveria isto: "caixa de festa é uma categoria diferente" se apresenta como fato. O que resolve é exigir o **trecho da página**.
 
@@ -448,10 +519,49 @@ custo-benefício geral** (canon Marcelo 2026-09-11). Normalmente **não é o mai
 **pode não ser o mais vendido**.
 
 ```
+0º  MEÇA A COBERTURA do critério mestre no catálogo ANTES de aplicá-lo
 1º  aplique o CRITÉRIO MESTRE que a rubrica elegeu, com o valor lido da página/bíblia
 2º  desempate pelo 2º critério de qualidade da rubrica
 3º  só então use venda e preço — como CONFIRMAÇÃO, nunca como escolha
 ```
+
+⚠️ **O 0º não é burocracia: sem ele o critério mestre mede DIVULGAÇÃO, não desempenho.** Medido em
+11/09/2026 (`melhorclimatizador`, 21 candidatos): a rubrica elegeu vazão em m³/h, computável em
+**7 de 21 (33%)**. E quem tem o dado é explicado pela MARCA, não pelo produto:
+
+```
+declara vazão    Ventisol 3/3 · EOS 1/1 · Midea 3/4
+não declara      Philco 0/4 · WAP 0/3 · Mondial 0/3 · Britânia 0/1 · Ponente 0/1 · Zellox 0/1
+```
+
+O pódio saiu **3/3 Ventisol** — a única marca que publica em 100% do próprio catálogo. O mecanismo
+é um buraco da escada: ela define o tratamento do silêncio **na eliminação** (silêncio é ambíguo,
+não corta) e **não define na ordenação**, então o produto sem dado vai pro fim da fila, que é o
+mesmo efeito de eliminá-lo. **A régua recusa o eliminatório pela porta da frente e o aplica pela
+porta dos fundos.**
+
+**Regra:** critério mestre computável em **menos de 50%** do conjunto **QUALIFICA mas não ordena
+sozinho**. Nomeie um segundo critério com cobertura ~100%, ordene pelos dois e diga qual fez o quê.
+E se o pódio sair monomarca sendo essa a marca que mais declara o dado, o achado é de
+**divulgação**: reordene ou declare a ressalva no relatório.
+
+⚠️ **EMPATE DENTRO DA INCERTEZA DECLARADA É EMPATE.** Se a própria rubrica atribui faixa de erro ao
+número (*"a vazão declarada é medida com a colmeia SECA; molhada cai 20 a 40%"*), diferença MENOR
+que essa faixa não separa nada. Caso real: 4.500 × 4.000 m³/h são 12,5% de diferença dentro de um
+erro de 20-40%, e lido ao pé da letra o 1º "vence sem empate" e escolhe o de R$ 660 contra um de
+R$ 375. **Cai na régua de empate: registre e desça pro 2º, não arbitre.**
+
+⚠️ **2º CRITÉRIO MUDO tem ramo próprio.** Ele pode simplesmente não existir no catálogo: no mesmo
+caso, o 2º critério eleito (eficiência de saturação e espessura da colmeia) era declarado por
+**0 de 21**. Quando isso acontecer, **não pule direto pra venda e preço** — desça pro critério
+SEGUINTE da rubrica que tenha cobertura, e registre qual foi e por quê. Ali o seguinte era
+coerência entre vazão e área anunciada, e desempatou limpo: um dos dois anunciava cobertura que a
+própria vazão não sustenta.
+
+⚠️ **CONFIRMAÇÃO QUE CONTRADIZ é sinal, não veto.** Se venda e preço apontarem o contrário do que o
+critério mestre escolheu, isso **não** troca o #1 — mas obriga a reabrir o 1º e o 2º antes de
+fechar. Confirmação que bate é silenciosa; confirmação que contradiz está dizendo que a conta de
+cima pode ter ficado apertada demais pra sustentar sozinha.
 
 ⚠️ **CRITÉRIO MESTRE ≠ EIXO. Não confunda, os dois existem nesta skill:**
 
@@ -510,6 +620,43 @@ Benefício · pos 2 Boa e Barata`), e chegava **tarde demais**: quando o executo
 tinha sido ordenado por venda e preço. A sequência é a lógica de SELEÇÃO; o passo 5 fica só com o
 formato do texto. **Tem nuance, não é regra dura** — um catálogo pode não ter os três papéis
 distintos, e aí você reporta em vez de forçar.
+
+⚠️ **NÃO RANQUEIE ENTRE CLASSES — a Etapa 1 já te disse quais são.** A pergunta 2 da rubrica
+("quais formatos convivem sob esse rótulo") existe pra ser CONSUMIDA aqui, e em 11/09/2026 ela foi
+lida e ignorada: a rubrica separava `pessoal/mesa 100-400 m³/h` de `gabinete médio 1.500-5.000`, e
+o executor ordenou os dois grupos num eixo só. Aparelho de mesa perde sempre nessa conta, e perder
+**não é ser pior, é ser outra máquina**. A prova mecânica estava na eficiência:
+
+```
+de piso/torre    30,0 · 30,8 · 30,8 · 35,0 m³/h por watt
+de mesa                              6,2 m³/h por watt
+```
+
+Número que deixa de ser comparável entre dois grupos é a **assinatura** de que são classes
+diferentes. Quando enxergar isso, pare de ordenar e segmente.
+
+**Conduta:** o critério mestre ordena **DENTRO** da classe. Qual classe ocupa o #1 é decisão de
+recorte do artigo — e aí a venda **é** evidência legítima, não de qual produto é melhor (isso o
+canon rejeita), mas de qual classe a keyword busca. São coisas diferentes, e a régua só proibia a
+primeira:
+
+```
+"o mais vendido é o melhor"                    ⛔ continua proibido
+"a venda revela QUAL CLASSE a keyword busca"   ✅ legítimo, e entra aqui
+```
+
+Caso real da mesma execução: os três campeões de venda do catálogo (500, 500 e 400/mês) eram todos
+compactos de 3 a 5 L, e a rubrica pelada dizia que a faixa doméstica **é** 4-8 L. O #1 montado era
+de 16 L. Não era o mercado comprando errado, era o lineup ranqueando a categoria inteira por uma
+régua de ambiente comercial.
+
+⚠️ **O #3 pode não ter ocupante legítimo.** Se o melhor pelo critério mestre for também quase o
+mais barato, todo candidato a "bom e barato" abaixo dele é **dominado**. Caso real: o #3 proposto
+custava R$ 340 contra R$ 375 do #1 — 10% menos — e entregava metade da vazão, metade do tanque e um
+terço da venda. Chamar isso de "bom e barato" manda o leitor pro pior negócio. A régua já trata
+dominação entre #1 e #2; trate a do #3 igual. Saídas: (a) o #3 vai pro mais barato de verdade mesmo
+sem o dado do critério mestre, porque neste papel **o preço É o critério**; ou (b) declare que o
+catálogo não tem #3 legítimo e use o slot pra um perfil de uso.
 
 **A escada de preço decrescente é CONSEQUÊNCIA disso, não preferência avulsa.** Se #1 é o melhor
 geral (costuma ficar no meio da faixa), #2 é custo-benefício e #3 é o bom e barato, o preço cai
@@ -671,8 +818,10 @@ O número continua válido como referência **relativa** dentro do mesmo catálo
 Roda com `run_in_background: false`: o relatório só sai depois que ele voltar, no mesmo turno. Sub-agent que não voltou = refazer inline, não "Etapa 6 não rodou, quer que eu dispare depois?" (02/08).
 
 **O sub-agent RECEBE:** site · keyword · o lineup final (ASIN, ordem, subtítulo) · a lista de
-**excluídos com motivo e prova alegada** · a rubrica · **a régua de posicionamento (os papéis do
-passo 4 e o critério do passo 3)** · acesso aos arquivos.
+**excluídos com motivo e prova alegada** · **as DUAS rubricas (singular e plural), literais** ·
+**a régua de posicionamento (os papéis do passo 4 e o critério do passo 3)** · **a medição de
+cobertura do 0º passo — em quantos dos N candidatos o critério mestre é computável, e a quebra
+por marca** · acesso aos arquivos.
 **NÃO recebe:** o seu raciocínio, a sua narrativa, nem o relatório escrito. Lendo como você chegou ali, ele concorda com você.
 
 ⚠️ **A régua de posicionamento entrou no briefing em 2026-09-11, e a falta dela custou caro.** Um
@@ -682,7 +831,7 @@ aconteceu no `melhorclimatizador`: o audit apontou (corretamente) que o #1 era d
 o executor inverteu, e a inversão pôs o produto **mais barato do catálogo** em #1, contra o
 passo 3. Auditor sem régua audita por gosto.
 
-**As sete checagens:**
+**As oito checagens:**
 
 ```
 1  toda exclusão tem trecho CITÁVEL — e no degrau CERTO da escada?
@@ -713,6 +862,19 @@ passo 3. Auditor sem régua audita por gosto.
    ⚠ julgue contra a RÉGUA que veio no briefing, não contra a sua opinião sobre
      qual produto é melhor. Dominação entre #1 e #2 é achado REAL — mas a correção
      é reordenar pelos papéis, nunca "promover o que domina".
+   ⚠ dominação do #3 pelo #1 conta igual: "bom e barato" 10% mais barato e metade
+     do produto não é papel, é enchimento de pódio.
+
+8  o CRITÉRIO MESTRE tinha cobertura pra ordenar, e o lineup respeita as CLASSES?
+   cobertura  em quantos candidatos ele é computável? < 50% → ele qualifica mas não
+              ordena sozinho, e o briefing tem que dizer qual foi o 2º critério de
+              cobertura ~100% que ordenou junto.
+   monomarca  o pódio é de uma marca só? Se sim, essa marca é a que mais declara o
+              dado do critério mestre? Os dois juntos = está medindo DIVULGAÇÃO.
+   classes    a rubrica listou formatos que convivem sob o rótulo (mesa × piso,
+              portátil × industrial). O lineup ordenou ENTRE eles num eixo só?
+              Sinal mecânico: um número que é apertado dentro de um grupo e
+              descolado no outro (30,8 × 6,2 m³/h por watt) = são classes.
 ```
 
 ⚠️ **A checagem 6 é a razão de o audit existir**, e o método é mecânico: **pegue cada problema que o lineup declara e teste re-inserindo os excluídos.**
