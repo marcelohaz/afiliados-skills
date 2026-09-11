@@ -107,7 +107,8 @@ A resposta vira **RUBRICA**, registrada no relatório final. É contra ela que a
 | metade | quem usa | com que autoridade |
 |---|---|---|
 | eliminatórios | Etapa 2b e Etapa 3 | **apontam o que procurar, não eliminam sozinhos** — quem elimina é a página (ver Etapa 3) |
-| **qualidade** | **passo 3 e passo 4 — ORDENAM o top-3** | **apontam POR QUAL NÚMERO medir, não quem ganha** (ver salvaguarda abaixo) |
+| **qualidade** | **passo 3 e passo 4 — ORDENAM o top-3** | **apontam POR QUAL NÚMERO medir, não quem ganha** (ver salvaguarda abaixo). ⚠ E só ordenam **se passarem no 0º do passo 3**: critério com cobertura <50% do catálogo qualifica, não ordena sozinho |
+| **formatos que convivem** | **passo 4 — a régua de CLASSES** | **define o que NÃO pode ser ranqueado no mesmo eixo.** Não corta ninguém (ver o canon do PartyBox na Etapa 3) — manda segmentar |
 | perfis · armadilhas | relatório da Etapa 7, e insumo pra `artigo-guia-escrever` | informativo |
 
 ⚠️ **Os de qualidade ORDENAM o top-3 (canon Marcelo 2026-09-11).** Até aqui esta linha dizia
@@ -544,6 +545,23 @@ porta dos fundos.**
 sozinho**. Nomeie um segundo critério com cobertura ~100%, ordene pelos dois e diga qual fez o quê.
 E se o pódio sair monomarca sendo essa a marca que mais declara o dado, o achado é de
 **divulgação**: reordene ou declare a ressalva no relatório.
+
+⚠️ **Meça ONDE está o buraco, não só o tamanho dele.** O número de cobertura esconde o pior caso,
+que é a lacuna **concentrada numa faixa só**. No mesmo catálogo, distribuindo os 7 declarantes pelas
+faixas que a própria rubrica nomeou:
+
+```
+pessoal/mesa   100-400 m³/h     3 declarantes
+DOMÉSTICO      400-1.500        0            ⛔  a faixa que a rubrica chama de mainstream
+comercial      acima de 1.500   4
+```
+
+Com zero declarantes na faixa doméstica, ordenar por vazão **não perde precisão: exclui
+estruturalmente o segmento de que o artigo trata**, porque só sobra número grande pra coroar. E os
+mudos não eram irrelevantes — os dois campeões de venda do catálogo (500/mês cada) estavam lá.
+**Conduta:** depois de medir a cobertura, distribua quem declara pelas faixas da rubrica. Faixa com
+zero declarante e com venda relevante nos mudos = o critério mestre está cego justamente onde o
+artigo mora, e aí ele não ordena nem acompanhado.
 
 ⚠️ **EMPATE DENTRO DA INCERTEZA DECLARADA É EMPATE.** Se a própria rubrica atribui faixa de erro ao
 número (*"a vazão declarada é medida com a colmeia SECA; molhada cai 20 a 40%"*), diferença MENOR
