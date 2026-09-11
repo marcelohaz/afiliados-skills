@@ -257,7 +257,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 - **cons** (1-5 itens): mesma formatação.
 
-- **specs** (3-10 pares label/value): strings simples sem HTML. Reuso labels comuns do lineup pra alinhar com `specLabels`.
+- **specs** (3-10 pares label/value): strings simples sem HTML. Reuso labels comuns do lineup pra alinhar com `specLabels` — mas quando a bíblia veta o dado de uma coluna, a `decisaoEditorial` vence e a row não existe (ver a seção `specs`).
 
 - **subtitle** (10-150 chars): híbrido keyword-first (lead com a keyword + gancho, sem dois-pontos, ≤13 palavras); ver "Os 6 campos".
 
@@ -519,6 +519,19 @@ Mesma formatação e mesmos limites dos pros. Trade-offs reais.
 
 ### specs (3-10 pares label/value)
 Specs técnicas derivadas de `specsAmazon`/`doFabricante`/`conteudoBrutoFabricante`. Strings simples. Reuso labels do lineup quando possível.
+
+⚠️ **A `decisaoEditorial` da bíblia VENCE o `specLabels` (canon Marcelo 2026-09-11).** Coluna que o
+artigo declara mas cuja bíblia veta o dado **não vira row**, e o que a decisão oferecer no lugar
+(faixa aproximada, as duas fontes, atribuição ao fabricante) é o que vale. **Nunca preencha com
+valor evasivo** ("não informado", aproximação inventada) só para a coluna não ficar vazia: o
+`spec-data` que o `audit-article` dispara é `warn` informativo, e é o preço certo a pagar.
+
+Medido 5 vezes, em 2 datas e 4 colunas diferentes: Peso e Ruído no `melhoraspirador` (14/08, flag
+`peso-divergente`), Ruído no Mondial CL-03 ("1 decibel" na ficha, impossível) e no Ventisol CLIN35
+PRO (relatos divergem e não há dB), Timer no Ponente CLIP20 (lacuna de ficha, que não é o mesmo que
+ausência) e Peso no EOS ECL300M (18,5 kg na Amazon contra 10 kg no fabricante, medidas idênticas).
+Nas 5 a inferência certa foi a mesma e custou deliberação nova cada vez, porque esta seção mandava
+"alinhar com `specLabels`" e a Armadilha 4 mandava seguir a bíblia, sem dizer quem vence.
 
 ## Voz editorial
 
