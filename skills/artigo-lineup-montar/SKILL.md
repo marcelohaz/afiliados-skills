@@ -1,6 +1,6 @@
 ---
 name: artigo-lineup-montar
-description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL — e com --aplicar cria o artigo no painel (make-reviews-stub + add-products-stub) e devolve a URL do editor. NÃO escreve conteúdo nem badge. Bíblia relevante SEM página entra marcada e o gate fica na Etapa 8 (que não cria artigo com produto sem página). Antes de abrir qualquer produto, consulta CEGA a um sub-agent isolado ('como escolher {keyword}') vira rubrica pré-registrada; depois lê a página INTEIRA de cada candidato pra julgar aderência à keyword e só abre a bíblia dos sobreviventes (comprasMesPassado, marca, disponibilidade, pontosFracos). Ordena por venda, resolve gêmeo/sucessão/rebadge cross-marca. AUDITA o próprio lineup num sub-agent isolado: toda exclusão exige prova citável no degrau certo.
+description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL — e com --aplicar cria o artigo no painel (make-reviews-stub + add-products-stub) e devolve a URL do editor. NÃO escreve conteúdo nem badge. Bíblia relevante SEM página entra marcada e o gate fica na Etapa 8 (que não cria artigo com produto sem página). Antes de abrir qualquer produto, consulta CEGA a um sub-agent isolado ('como escolher {keyword}') vira rubrica pré-registrada; depois lê a página INTEIRA de cada candidato pra julgar aderência à keyword e só abre a bíblia dos sobreviventes (comprasMesPassado, marca, disponibilidade, pontosFracos). Ordena o top-3 por PAPEL (#1 melhor geral pelo eixo mestre da rubrica, #2 custo-benefício, #3 bom e barato — venda confirma, não escolhe), resolve gêmeo/sucessão/rebadge cross-marca. AUDITA o próprio lineup num sub-agent isolado: toda exclusão exige prova citável no degrau certo.
 ---
 
 ## Parse de input
@@ -59,9 +59,29 @@ A resposta vira **RUBRICA**, registrada no relatório final. É contra ela que a
 | metade | quem usa | com que autoridade |
 |---|---|---|
 | eliminatórios | Etapa 2b e Etapa 3 | **apontam o que procurar, não eliminam sozinhos** — quem elimina é a página (ver Etapa 3) |
-| qualidade · perfis · armadilhas | relatório da Etapa 7, e insumo pra `artigo-guia-escrever` | informativo |
+| **qualidade** | **passo 3 e passo 4 — ORDENAM o top-3** | **apontam QUAL eixo mede, não quem ganha** (ver salvaguarda abaixo) |
+| perfis · armadilhas | relatório da Etapa 7, e insumo pra `artigo-guia-escrever` | informativo |
 
-Os de qualidade **não ordenam o lineup hoje**. Ordenar por eles exige resolver o conflito com os 71% da posição-1-mais-vendida, e isso é medição, não redação.
+⚠️ **Os de qualidade ORDENAM o top-3 (canon Marcelo 2026-09-11).** Até aqui esta linha dizia
+*"os de qualidade não ordenam o lineup hoje. Ordenar por eles exige resolver o conflito com os
+71% da posição-1-mais-vendida"*. **O conflito era aparente.** Os 71% são a taxa em que a posição 1
+publicada **coincide** com o mais vendido — e a própria skill escreve isso na Etapa 3
+(`melhor escolha ≠ mais vendido` → **coincidem** em 71%). Coincidir não é ser critério: eles
+coincidem porque o melhor tende a vender mais, não porque venda escolhe o melhor. Dissolvido o
+conflito, o critério de qualidade da rubrica passa a ser o que decide o top-3 (ver passo 3).
+
+⚠️ **SALVAGUARDA — a rubrica diz QUAL número, o arquivo dá O NÚMERO.** Ordenar pela rubrica não
+a torna autoridade (ver o aviso logo abaixo, que continua valendo integralmente). A divisão é a
+mesma que já vale para eliminar:
+
+```
+rubrica     "vazão em m³/h é o número mestre; 20 m² pedem 1.000 a 1.600"   ← diz o EIXO
+página      4.000 · 2.000 · 370 m³/h                                       ← dá o VALOR
+```
+
+A rubrica **nunca** nomeia qual produto é o melhor — ela não viu o catálogo. Se ela sugerir um
+vencedor, é ruído, igual a nome de modelo. E ordenar erra mais barato que eliminar: produto em
+posição errada continua no artigo, produto cortado some dele.
 
 ⚠️ **A rubrica é insumo, nunca autoridade.** Ela é memória de um modelo, sem acesso ao catálogo — acerta o que a categoria tem e erra o recorte do que "deveria" estar na mesma lista. Em 2026-08-02 ela me convenceu a cortar a `PartyBox Ultimate` de um artigo de caixa de som JBL porque "misturar caixa de festa com portátil é o erro mais comum". É juízo editorial sobre estrutura de artigo, e virou critério de admissão nas minhas mãos.
 
@@ -252,7 +272,7 @@ O que sustenta é a página **qualificar o formato**, que é o que decide a cate
 
 O campo bruto entrega só o número. Sem a qualificação eu teria tratado como iguais produtos que a consulta cega identificou como coisas fisicamente diferentes vendidas sob o mesmo rótulo. **É a qualificação que decide, não a contagem** — se for citar a medição, cite as duas metades.
 
-**Aderência à keyword é informativa, ainda NÃO ordena.** Quando a keyword tem número, o valor útil costuma divergir do nominal — nos 8 finalistas de "12 litros" o cesto real ia de 3,5 L a 5 L. **Reporte a divergência numa coluna**, não a use pra reordenar: a regra de posição 1 tem 71% de 307 artigos atrás dela e esta observação tem **uma** execução. Nesta mesma sessão inventei três regras de observação única e as três morreram na medição (`melhor escolha ≠ mais vendido` → coincidem em 71% · `artigo de 4 produtos é raso` → 42 existem, todos de recorte estreito · `escada decrescente é padrão` → 27%). Medir antes de promover.
+**Aderência à keyword é informativa, ainda NÃO ordena.** Quando a keyword tem número, o valor útil costuma divergir do nominal — nos 8 finalistas de "12 litros" o cesto real ia de 3,5 L a 5 L. **Reporte a divergência numa coluna**, não a use pra reordenar: quem ordena o top-3 é o eixo mestre da rubrica (passo 3), e esta observação tem **uma** execução. Nesta mesma sessão inventei três regras de observação única e as três morreram na medição (`melhor escolha ≠ mais vendido` → coincidem em 71% · `artigo de 4 produtos é raso` → 42 existem, todos de recorte estreito · `escada decrescente é padrão` → 27%). Medir antes de promover.
 
 ### Etapa 4 — bíblia dos sobreviventes
 
@@ -299,8 +319,9 @@ entram aqui já filtrados pela rubrica + página (Etapa 3), com o tipo lido da P
 1. gêmeo / sucessão / rebadge   A e C REMOVEM · B só amarra ordem
 2. DOMINAÇÃO             quem não acrescenta nada sai
    ▶ CHECKPOINT DE EXCLUSÕES — imprime o livro-razão antes do trabalho caro
-3. posição 1             mais vendido entre os viáveis, preço de meio de faixa
-4. top-3                 escada de preço a partir do #1
+3. posição 1             o MELHOR pelo eixo mestre da rubrica (venda CONFIRMA, não escolhe)
+4. top-3 por PAPEL       #1 melhor geral · #2 custo-benefício · #3 bom e barato
+                         a escada de preço decrescente é consequência disso
 5. teste de LEAD         admissão das posições 4+, POR VENDA DECRESCENTE
                          quem tem comprasMesPassado = 0 entra no FIM da fila
 6. tamanho               corta o excedente pela cauda, PRESERVANDO representante único
@@ -422,21 +443,74 @@ com --aplicar   imprime e PARA. Criar artigo é escrita — não crie sobre excl
 
 #### Passo 3 — posição 1
 
-**O mais vendido entre os viáveis, em preço de meio de faixa.** Medido na rede: a posição 1 é o mais vendido do lineup em **71%** dos 307 artigos com bíblia completa, e **não é o extremo de preço em 79%**.
+**O MELHOR DO CONJUNTO pelo critério de qualidade da rubrica** — na prática, o **melhor
+custo-benefício geral** (canon Marcelo 2026-09-11). Normalmente **não é o mais barato**, e
+**pode não ser o mais vendido**.
 
-⚠️ **`comprasMesPassado` é degrau, não número.** A Amazon publica faixa, então `1000` pode ser 1.000 ou 9.000 e empate é comum. Quando empatar, **não invente desempate**: caia no critério seguinte (preço de meio de faixa) e **registre o empate**. Caso real: Mondial e Philips empataram em `1000`, e decidiu o preço — R$ 550 no meio da faixa contra R$ 850 no teto.
+```
+1º  aplique o EIXO MESTRE que a rubrica elegeu, com o valor lido da página/bíblia
+2º  desempate pelo 2º critério de qualidade da rubrica
+3º  só então use venda e preço — como CONFIRMAÇÃO, nunca como escolha
+```
+
+⚠️ **VENDA NÃO É O CRITÉRIO — ela confirma.** Medido na rede: a posição 1 publicada **coincide**
+com o mais vendido em **71%** dos 307 artigos, e **não é o extremo de preço em 79%**. Os dois
+números são **descritivos**: dizem o que a rede produziu, não o que decide a posição. Coincidem
+porque o melhor tende a vender mais. **Quando o mais vendido NÃO for o melhor pelo eixo mestre,
+o melhor fica em #1** e a divergência entra como nota no relatório ("o mais vendido é X, ficou
+em #N porque Y vence no eixo Z").
+
+⚠️ **Esta seção dizia "o mais vendido entre os viáveis" até 2026-09-11, e produzia erro.** Caso
+real (`melhorclimatizador`, `melhor climatizador de ar`): dois produtos empataram em 500/mês e o
+desempate caiu no preço, colocando em #1 um aparelho de **370 m³/h** — contra 4.000 m³/h de outro
+candidato **R$ 95 mais barato** —, justamente no eixo que a rubrica daquela execução chamava de
+*"o número mestre"*. Ordenar por venda escolheu o pior produto no critério da própria categoria.
+
+⚠️ **`comprasMesPassado` é degrau, não número.** A Amazon publica faixa, então `1000` pode ser
+1.000 ou 9.000 e empate é comum. Empate em venda **não precisa de desempate**: venda não estava
+escolhendo. Vá para o eixo mestre, que é quem decide, e **registre o empate** no relatório.
+
+⚠️ **O extremo de preço é sinal, não veto.** Se o melhor pelo eixo mestre for também o mais
+barato do lineup, ele fica em #1 — e você **reporta a exceção** com os 79% ao lado. Não troque o
+melhor produto por um pior só para fugir do extremo.
 
 ---
 
-#### Passo 4 — top-3 e escada de preço
+#### Passo 4 — os PAPÉIS do top-3, e a escada de preço
 
-**Top-3 com preço decrescente** (preferência do Marcelo). A rede NÃO tem padrão aqui — medido: `#2 é o mais barato` 41%, `decrescente` 27%, `crescente` 16%, `#2 é o mais caro` 14%. É preferência declarada, não observação; não apresente como "o que a rede faz".
+**O top-3 tem três papéis, e é o papel que ordena** (canon Marcelo 2026-09-11):
+
+```
+#1  melhor em geral    o melhor do conjunto pelo eixo mestre da rubrica = melhor
+                       custo-benefício GERAL. Normalmente não é o mais barato,
+                       e pode não ser o mais vendido (passo 3).
+#2  custo-benefício    o SEGUNDO melhor nessa mesma conta.
+#3  bom e barato       o melhor ENTRE os de preço baixo — aqui o preço entra
+                       como critério, e só aqui.
+```
+
+⚠️ **Isto vinha só no passo 5, como formato de subtitle** (`pos 0 Melhor em Geral · pos 1 Custo
+Benefício · pos 2 Boa e Barata`), e chegava **tarde demais**: quando o executor lia, o top-3 já
+tinha sido ordenado por venda e preço. A sequência é a lógica de SELEÇÃO; o passo 5 fica só com o
+formato do texto. **Tem nuance, não é regra dura** — um catálogo pode não ter os três papéis
+distintos, e aí você reporta em vez de forçar.
+
+**A escada de preço decrescente é CONSEQUÊNCIA disso, não preferência avulsa.** Se #1 é o melhor
+geral (costuma ficar no meio da faixa), #2 é custo-benefício e #3 é o bom e barato, o preço cai
+sozinho. Medido na rede a escada decrescente aparece em só **27%** — mas essa medição é de
+artigos ordenados pela régua ANTIGA (venda primeiro). Não apresente a escada como "o que a rede
+faz": ela é o que os **papéis** produzem. **Se os papéis estiverem certos e a escada não sair
+decrescente, os papéis vencem** — reporte a escada e siga.
 
 💡 **RECOMENDAÇÃO, não regra: evite duas marcas iguais SEGUIDAS no top-3** (canon Marcelo 2026-08-02). As três primeiras posições são a vitrine, e `Epson · Epson · HP` lê como preferência de marca antes de ler como recomendação. Não trava nada.
 
 ⚠️ **Isento quando a keyword nomeia a marca.** `melhor impressora HP`, `melhor caixa de som JBL` — ali a marca única é o recorte, e diversificar seria trair a keyword.
 
 ⚠️ **Briga com a escada de preço, e não há precedência.** Caso real: o top-3 saiu `L3250 R$1060 · L1250 R$850 · Smart Tank 581 R$820`, com duas Epson seguidas. Trocar #2 e #3 resolve a marca e **quebra a escada** (1060 → 820 → 850). Quando colidem, **reporte as duas ordens**.
+
+⚠️ **Mas nem a marca nem a escada movem produto entre PAPÉIS.** As duas são ajuste de vitrine e
+operam **dentro** da ordem que os papéis definiram. Se resolver a marca exigir pôr o "bom e
+barato" em #1, não resolva: reporte.
 
 ---
 
@@ -457,7 +531,8 @@ com --aplicar   imprime e PARA. Criar artigo é escrita — não crie sobre excl
 
 Cortar produto por aí é heurística própria, defensável (se não dá pra articular papel distinto, talvez o produto não pertença) mas **sem respaldo no crit. 22**. Por isso o resultado é sinal, não veredito: **produto sem lead disponível é candidato a ficar de fora — reporte em vez de cortar calado.**
 
-Sequência típica, não canônica:
+Sequência típica, não canônica — **é o FORMATO do texto; quem decide QUEM ocupa cada posição é o
+passo 4** (os papéis), não esta tabela:
 
 ```
 pos 0   Melhor {Categoria} em Geral ...      ← "Melhor" obrigatório SÓ aqui
@@ -579,10 +654,19 @@ O número continua válido como referência **relativa** dentro do mesmo catálo
 
 Roda com `run_in_background: false`: o relatório só sai depois que ele voltar, no mesmo turno. Sub-agent que não voltou = refazer inline, não "Etapa 6 não rodou, quer que eu dispare depois?" (02/08).
 
-**O sub-agent RECEBE:** site · keyword · o lineup final (ASIN, ordem, subtítulo) · a lista de **excluídos com motivo e prova alegada** · a rubrica · acesso aos arquivos.
+**O sub-agent RECEBE:** site · keyword · o lineup final (ASIN, ordem, subtítulo) · a lista de
+**excluídos com motivo e prova alegada** · a rubrica · **a régua de posicionamento (os papéis do
+passo 4 e o critério do passo 3)** · acesso aos arquivos.
 **NÃO recebe:** o seu raciocínio, a sua narrativa, nem o relatório escrito. Lendo como você chegou ali, ele concorda com você.
 
-**As seis checagens:**
+⚠️ **A régua de posicionamento entrou no briefing em 2026-09-11, e a falta dela custou caro.** Um
+auditor que recebe só a rubrica julga a posição 1 **pela qualidade do produto**, que é a pergunta
+que ele consegue responder — e recomenda inverter o top-3 sem saber que existe régua. Foi o que
+aconteceu no `melhorclimatizador`: o audit apontou (corretamente) que o #1 era dominado pelo #2,
+o executor inverteu, e a inversão pôs o produto **mais barato do catálogo** em #1, contra o
+passo 3. Auditor sem régua audita por gosto.
+
+**As sete checagens:**
 
 ```
 1  toda exclusão tem trecho CITÁVEL — e no degrau CERTO da escada?
@@ -604,6 +688,15 @@ Roda com `run_in_background: false`: o relatório só sai depois que ele voltar,
    havendo par de geração, a mais nova está acima?
 
 6  algum problema reportado SOME se desfizer uma exclusão?
+
+7  o TOP-3 respeita os PAPÉIS do passo 4, ou foi ordenado por venda/preço?
+   #1  é o melhor pelo EIXO MESTRE da rubrica, com o valor lido do arquivo?
+       (se for só "o mais vendido" ou "o mais barato" → achado)
+   #2  é o segundo nessa mesma conta?
+   #3  é o melhor entre os de preço baixo?
+   ⚠ julgue contra a RÉGUA que veio no briefing, não contra a sua opinião sobre
+     qual produto é melhor. Dominação entre #1 e #2 é achado REAL — mas a correção
+     é reordenar pelos papéis, nunca "promover o que domina".
 ```
 
 ⚠️ **A checagem 6 é a razão de o audit existir**, e o método é mecânico: **pegue cada problema que o lineup declara e teste re-inserindo os excluídos.**
