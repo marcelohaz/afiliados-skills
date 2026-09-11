@@ -1080,6 +1080,19 @@ quem executa avisa sobre um e cala sobre o outro, que é exatamente o que aconte
 skill pode fazer é **avisar**, e é isso que os dois itens acima cobram. Se um dia o endpoint passar a
 aceitar o campo, mande-o e apague este aviso.
 
+**Diga a consequência, não só o campo.** Desde 2026-09-11 o builder emite `keywordPlural` VAZIO quando
+a keyword é singular (antes gravava o singular), e vazio é o sentinela que as guardas downstream
+esperam. Isso torna o aviso acionável, porque o pipeline **para** em vez de errar calado:
+
+```
+artigo-intro-escrever   keywordPlural ausente → ABORTA e pede pro usuário preencher
+audit-article.ts        keywordPlural ausente → warn "sinaliza pra adicionar"
+o site (review-data)    keywordPlural ausente → H2 genérico "Comparativo técnico dos produtos"
+```
+
+Antes as três guardas existiam e **nenhuma disparava**, porque o campo vinha preenchido com o valor
+errado. Então o relatório não pede um favor: sem o plural, a intro não roda.
+
 Barreiras que vêm de graça do endpoint: **423** em site com edição travada, **409** se o `.mdx` já existir, e o `gateRequiresOkBibles` barrando produto sem bíblia pronta.
 
 ## O subtítulo sugerido é vinculante na prática
