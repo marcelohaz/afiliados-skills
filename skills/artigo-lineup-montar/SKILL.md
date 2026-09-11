@@ -1057,7 +1057,28 @@ curl -sS -H "Authorization: Basic $AUTH_B64" -H 'content-type: application/json'
 
 ⚠️ **Espere entre levas e valide o campo `added` da resposta.** O `add-products-stub` tem rate-limit por artigo — `checkCooldown({ cooldownMs: 5_000 })`, ou seja **5 segundos** entre chamadas no mesmo artigo. Quando estoura, devolve `ok:false` e **a leva some em silêncio**. Se a próxima entrar, a ordem quebra. Ver Armadilha 3.
 
-**A skill NÃO consegue gravar o título.** O endpoint recebe só `{keyword, slug, products}`, e o `buildArticleSkeleton` monta `capitalize(keyword)` — sai "Melhor Caixa De Som Jbl", sem o número e com caixa errada. Proponha um no padrão-assinatura do site (lead = campo `keyword`, número N obrigatório, ≤60 chars, tag do site) e **destaque no relatório que precisa ser colado no editor**. Em site sem artigo nenhum não há padrão pra inferir, e a escolha define a assinatura dali em diante ([[afiliados.seo.titulos-artigo-3-padroes-anti-dup]]).
+**DOIS campos nascem errados do endpoint, e você tem que avisar sobre OS DOIS.** Ele recebe só
+`{keyword, slug, products}` — o botão "+ Criar artigo" do painel manda exatamente o mesmo —, então o
+`buildArticleSkeleton` deriva o resto do `keyword` sozinho:
+
+```
+title          ed?.title || capitalize(keyword)   → "Melhor Caixa De Som Jbl", sem número, caixa errada
+keywordPlural  ed?.keywordPlural || keyword       → grava o SINGULAR no campo do plural
+```
+
+- **`title`**: proponha um no padrão-assinatura do site (lead = campo `keyword`, número N obrigatório, ≤60 chars, tag do site) e **destaque no relatório que precisa ser colado no editor**. Em site sem artigo nenhum não há padrão pra inferir, e a escolha define a assinatura dali em diante ([[afiliados.seo.titulos-artigo-3-padroes-anti-dup]]).
+- **`keywordPlural`**: proponha o plural correto e **destaque igual**. Ele alimenta o H2 `Comparativo técnico {dos|das} {keywordPlural}` (`packages/ui/src/utils/review-data.ts`), que com o singular renderiza *"Comparativo técnico dos melhor climatizador de ar"* — errado em número **e** em gênero, porque o `getArtigoPlural` acha o substantivo-núcleo removendo `"melhores "` e, sem isso, toma `"melhor"` como núcleo e escolhe masculino.
+
+⚠️ **Este segundo aviso faltava até 2026-09-11, e a omissão tem consequência medida.** A skill
+documentava o `title` com precisão e não citava `keywordPlural` uma única vez em 1.190 linhas — então
+quem executa avisa sobre um e cala sobre o outro, que é exatamente o que aconteceu no
+`melhorclimatizador`. Dois artigos da rede estão **no ar** nesse estado (`melhoressuplementos`:
+`melhor-creatina-monohidratada` e `melhor-creatina-para-ganhar-massa-muscular`).
+
+⚠️ **Não é defeito desta skill mandar o valor errado — ela não tem canal.** O endpoint não aceita
+`keywordPlural`, e o `frontmatterEditorial` do builder é omitido de propósito no `server.ts`. O que a
+skill pode fazer é **avisar**, e é isso que os dois itens acima cobram. Se um dia o endpoint passar a
+aceitar o campo, mande-o e apague este aviso.
 
 Barreiras que vêm de graça do endpoint: **423** em site com edição travada, **409** se o `.mdx` já existir, e o `gateRequiresOkBibles` barrando produto sem bíblia pronta.
 
