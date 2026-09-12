@@ -81,9 +81,28 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 
 ### Etapa 0 — Pré-flight (auto; aborta cedo se faltar)
 0. **Arma o heartbeat** (só se NÃO for `FILA=yes` — com `FILA=yes` esta skill não toca em `ScheduleWakeup`, nem arma nem para; ver "## Turno vivo" Regra 2): `ScheduleWakeup(1800, prompt="/artigo-clonar-em-massa {args} RETOMAR=yes")`. Se `RETOMAR=yes`, re-arme e **pule o `init` abaixo** (leia o clone-log e retome da primeira etapa não marcada).
+0a. **Decide a SLUG do destino AGORA, antes do `init` (canon Marcelo 2026-09-12).** O clone herda a slug do FONTE; o histórico no Google é do DESTINO. São coisas diferentes, e a diferença custa tráfego. Dois casos medidos: o `amelhorimpressora` (28/08) recebeu as duas maiores páginas do domínio em slugs de 0 e 6 impressões; o `compraguia/melhor-climatizador` (12/09) nasceu numa slug sem histórico enquanto `/melhor-climatizador-de-ar/` do próprio domínio acumulava 28.725 impressões e 186 cliques em 16 meses (461 nos últimos 28 dias).
+
+   Leia a keyword do fonte (`grep -m1 '^keyword:' sites/{source}/src/content/reviews/{slug-fonte}.mdx`) e o mapa de órfãs (`docs/painel/_data/mapa-artigos-orfaos.json` → `sites[{target}]`, campos `slug`/`imp16m`/`cli16m`/`imp28d`). **Renomeia só quando as QUATRO condições valem juntas:**
+
+   ```
+   slugify(keyword) == slug de uma órfã do PRÓPRIO destino    ← IGUALDADE, nunca semelhança
+   slugify(keyword) != slug planejada (a que veio do fonte)
+   órfã.imp16m >= 1000                                        ← PISO_IMP, o mesmo do audit-slugs.ts
+   slugify(keyword) livre em sites/{target}/src/content/reviews/
+   ```
+
+   **A igualdade é a guarda que mais trabalha, e o contraexemplo é o air fryer.** O `cozinhaideal` tem o artigo `melhor-air-fryer` e duas órfãs muito maiores do que ele: `melhor-air-fryer-12-litros` (96.235 imp) e `melhor-air-fryer-custo-beneficio` (56.230). A tentação é pôr o artigo na órfã de 96 mil. São **keywords diferentes** (guarda 3 do `audit-slugs.ts`): sequestrar a slug da irmã joga o artigo genérico numa URL cuja busca é outra E queima a slug do artigo que deveria nascer ali. A guarda `orfaEhFormaCurtaDe` (`audit-slugs.ts:414`) **não substitui** a igualdade — medido em 12/09, ela sozinha aprovaria 3 movimentos que a igualdade barra, entre eles mandar o `melhor-aspirador-de-po-vertical` pra órfã `melhor-aspirador-de-po` (89.159 imp), que é o artigo genérico, não o vertical.
+
+   Medição da régua em 12/09 sobre os 404 artigos da rede: **0 disparos indevidos**, concorda com as 3 slugs históricas já adotadas (`impressora-para-fotos` 214.870, `melhor-impressora-tanque-de-tinta` 111.696, `melhor-climatizador-de-ar` 28.725), e o piso barra 3 candidatas de 99, 77 e 2 impressões em 16 meses.
+
+   **Por que aqui e não no fim:** a slug entra no nome do clone-log (0b), dos 2 marcadores de auditoria e do `.mdx`, e o **gate de invocação** do `verify-output` procura o slug no transcript. Renomear com o artigo pronto custou 4 `git mv` e invalidou o gate das 5 skills (caso real de 12/09, registrado como desvio no clone-log daquela run). Aqui custa uma variável. Com `RETOMAR=yes`, **pule**: a slug já foi decidida e está no log. Com `FILA=yes`, a fila já resolveu a slug por esta mesma régua antes de abrir o log — **confira que bate** e siga; se divergir, a régua é a daqui e a fila é quem se realinha (a decisão é determinística: mesma keyword + mesmo mapa de órfãs = mesma slug).
+
+   Quando o fonte e o destino ficam com slugs diferentes, o `--source` do `init` e do `verify-output` leva as DUAS partes (`--source={source-site}/{slug-DO-FONTE}`) — sem isso o comparador procura o fonte pelo slug do destino e o gate reprova com "fonte existe: false".
+
 0b. **Abre o log de execução** (vale nos DOIS modos, individual e fila):
    ```bash
-   bun scripts/clone-log.ts init {target} {slug} --source={source-site}/{slug}
+   bun scripts/clone-log.ts init {target} {slug-DECIDIDA-NA-0a} --source={source-site}/{slug-do-fonte}
    ```
    O `init` é **idempotente** (canon 2026-08-15): se o log já existe com alguma etapa `[x]`, ele NÃO sobrescreve (avisa e mantém — é retomada). Recomeçar do zero de propósito exige `--force`. Antes disso, um `init` em retomada apagava o progresso e a janela do gate de invocação.
    A partir daqui, **feche cada etapa com `check`** assim que ela terminar (não no fim, de memória):
@@ -181,7 +200,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 3.6. **6.3.6 GATE MECÂNICO ANTES DO COMMIT (obrigatório):**
 
    ```bash
-   bun scripts/clone-log.ts verify-output {target} {slug} --source={source-site}
+   bun scripts/clone-log.ts verify-output {target} {slug} --source={source-site}/{slug-do-fonte}
    bun scripts/clone-log.ts verify {target} {slug}
    ```
 
@@ -200,6 +219,9 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 
 **Antes de escrever o relatório: `ScheduleWakeup(stop:true)` se você armou heartbeat (standalone). Com `FILA=yes`, NÃO chame `ScheduleWakeup` (o despertar é da fila).** O relatório final é a ÚNICA mensagem que encerra o turno neste pipeline.
 - Artigo criado: site/slug, título, N produtos (ordem final + badges), home sim/não.
+- **Slug (linha OBRIGATÓRIA, saia ela como sair — mudou ou não).** É o que deixa um rename errado visível na hora, pro Marcelo corrigir no mesmo turno em vez de descobrir semanas depois no GSC:
+  - mudou → `🔗 **Slug adequada ao histórico:** \`melhor-climatizador\` → **\`melhor-climatizador-de-ar\`** (a órfã do destino tem 28.725 impressões e 186 cliques em 16 meses; a slug do fonte não tinha histórico)`
+  - não mudou → `🔗 **Slug:** \`melhor-x\` — mantida (nenhuma órfã do destino bate com slugify(keyword) acima do piso de 1.000)`
 - Por etapa: o que cada audit pegou, o que foi auto-corrigido, **o que NÃO convergiu** (⚠ revisar).
 - Comparação vs fonte: frases idênticas, near-dup, overlap, specs — antes e depois da reescrita.
 - Build/infra: status. Commit hash. FAQ-shuffle aplicada (Etapa 6.3.5).
