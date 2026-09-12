@@ -161,18 +161,29 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
      sobreposição alta com o tópico pai. Validado em 8 sites: 1 achado no total, zero
      falso positivo.
 
-   **Todo achado vai por PROPOR→APROVAR, nunca auto-fix.** Renomear muda a URL pública:
-   se estiver errado, o custo é o tráfego do artigo. E a decisão tem dois julgamentos
-   que o script não faz sozinho (ver as 5 guardas no cabeçalho dele):
+   **Todo achado vai por PROPOR→APROVAR, nunca auto-fix.** Mexer em URL pública errado
+   custa o tráfego do artigo. E a decisão tem julgamentos que o script não faz sozinho
+   (ver as 5 guardas no cabeçalho dele):
+   - **Artigo NO AR não muda de slug (canon Marcelo 2026-09-12).** A ação padrão é **301
+     da slug histórica PARA o artigo**, no domínio do site. O `audit-slugs.ts` mede se a
+     URL do artigo responde 200 e já sai com `acao: '301'` (no ar), `'rename'` (fora do
+     ar) ou `'medir'` (não conseguiu medir: confira antes). Por quê: renomear também cria
+     um 301, só que no sentido contrário, e a única diferença é qual URL fica oficial. A
+     que está no ar já tem indexação, sitemap e links internos; renomear joga isso fora e
+     foi a operação dos 4 movimentos invertidos de 04/09 (ver o incidente abaixo). Que o
+     301 consolida no destino a rede já mediu: o escritorioecasa.com passou a autoridade
+     pro .com.br por um 301 longo. **Rename só vale pra artigo fora do ar** (existe no
+     repo e nunca foi publicado, como o climatizador do compraguia em 12/09) **ou como
+     exceção que o Marcelo aprovar caso a caso.** O caso em que a exceção pode valer é
+     artigo no ar com histórico perto de zero contra slug histórica muito forte
+     (amelhorimpressora, 28/08, renomeado antes desta regra). O que já foi renomeado
+     fica: desfazer é mais uma troca de URL.
    - **`pareceCategoria: true` → quase sempre NÃO é rename.** A slug candidata coincide
      com um `categorySlug` do site, então provavelmente era a LISTAGEM antiga, não um
      artigo. Aí o certo é 301 pra `/categoria/`, e mover o artigo pra lá é erro.
-   - **Mover o artigo ou inverter o 301?** Quando a candidata tem histórico pequeno mas
-     real (dezenas/centenas de impressões) e a slug atual tem o histórico grande, não se
-     move nada: cria-se 301 da candidata PRA o artigo, capturando o resíduo sem largar o
-     principal.
+   **O 301 (caso padrão) é uma regra só:** `{ from: "/{slug-historica}", to: "/{slug-do-artigo}/", status: 301, hostname: "{domínio do site}" }` no `worker/redirects.json`, seguida de `bun scripts/cf-deploy-worker.ts` e conferência com `curl -sL -o /dev/null -w "%{http_code} %{num_redirects}"` (200 em 1 salto). Não mexe em link interno nem no `.mdx`. **Antes de criar, confira que a origem não é a slug de um artigo vivo do site:** o worker responde o 301 antes de servir a página, e a regra deixaria o artigo inalcançável.
 
-   **Se o rename for aprovado, são 4 passos e a ordem importa:** renomear o `.mdx`,
+   **Se o rename for aprovado (artigo fora do ar, ou exceção), são 4 passos e a ordem importa:** renomear o `.mdx`,
    corrigir os links internos que apontam pra slug antiga (é o trabalho desta skill, e o
    motivo de a regra morar aqui), criar 301 da slug antiga pra nova no domínio do site, e
    **remover qualquer 301 cuja origem seja a slug NOVA** — o worker responde redirect
