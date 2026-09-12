@@ -108,7 +108,13 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
    ```bash
    bun scripts/audit-slugs.ts {site} --json
    ```
-   Parse: `{ ok, linhagem, propriedadesSemAcesso, achados:[{nivel,regra,artigo,sugerida,atual,candidata,pareceCategoria,msg}], orfasSemArtigo }`.
+   Parse: `{ ok, inconclusivo, motivo, linhagem, propriedadesSemAcesso, achados:[{nivel,regra,artigo,sugerida,atual,candidata,pareceCategoria,msg}], disputas, orfasSemArtigo }`.
+
+   O script **grava** `docs/painel/_data/slugs-historicas.json` (merge por site, só
+   quando mediu) e o painel lê dali pro chip da coluna Slug. Commite esse arquivo junto
+   com o resto da auditoria: sem ele, o site fica marcado como "nunca medido" na tela, que
+   é o estado correto mas some assim que alguém roda — e a medição custa uma rodada de GSC
+   por domínio da linhagem.
 
    **A pergunta é outra que a do `slug-vs-keyword`.** Aquela é convenção e dispara em
    32% da rede (127 de 390 artigos), por isso é INFO. Esta é histórico e dispara em 7
@@ -118,6 +124,42 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
    com o resto da auditoria, sem afirmar nada sobre slug. Mesma régua pra
    `propriedadesSemAcesso`: propriedade sem permissão soma zero, então o achado daquele
    site pode estar incompleto e o relatório diz isso.
+
+   ⚠ **`inconclusivo:true` + exit 2 (canon 2026-09-12).** Até aqui a guarda cobria só
+   credencial ausente, e faltava o caso de ENTRADA vazia: no `melhoremcasa` a linhagem
+   saiu com um domínio só (o novo, sem histórico), as duas janelas vieram zeradas e o
+   relatório imprimiu **"✅ toda slug do site é a que tem o histórico"** sem ter medido
+   nada. Aprovação sem medição é pior que erro — ela encerra a investigação. Agora sai
+   `INCONCLUSIVO` com motivo e **exit 2**, que NÃO é falha do passo: leia o `motivo`,
+   diga no relatório que esta classe não foi verificada, e siga.
+
+   **Regra `orfa-mesma-busca` (disputas), canon 2026-09-12.** O casamento antigo exigia
+   que a órfã fosse EXATAMENTE uma das três formas de keyword do artigo. Quando o clone
+   copia keyword e slug da mesma fonte, as duas ficam coerentes entre si e nada liga o
+   artigo ao passado do domínio de DESTINO — o caso mais comum, e o que deixava o aviso
+   mudo. A regra nova liga pela CONSULTA real do Search Console (`dimensions:
+   ['page','query']`), então a guarda 3 (nunca casar por semelhança de palavra) continua
+   de pé: o elo é o termo que a pessoa digitou, não inferência de sinônimo.
+
+   **Disputa é FATO, não conselho.** Ela diz "esta URL histórica e este artigo recebem a
+   mesma busca", com as consultas e os números dos dois lados. As três saídas — mover a
+   slug, emitir 301 pra cá, ou tratar como artigo separado — são decisão do dono do
+   conteúdo (canon 2026-09-06: 301 pra artigo similar é válido). **Propor→aprovar**, e
+   leia a fração com o denominador junto: ela é sobre as impressões com CONSULTA
+   IDENTIFICADA, que no caso-origem eram 144 de 2.142 da página (o GSC anonimiza termo
+   raro). "50%" ali é metade da parte identificada, não metade da página.
+
+   As duas guardas da regra, as duas calibradas contra medição — se mexer nelas, meça de
+   novo nos mesmos sites:
+   - **Fração mínima (1%).** Sem ela saem 5 achados no `compraguia`, todos cauda: 859 de
+     272.852 impressões (0,3%). Uma órfã grande sempre tem ALGUMA busca que contém a
+     keyword de um artigo do site.
+   - **Direção.** A slug órfã não pode ter token de conteúdo fora da forma do artigo. Sem
+     ela, o piso de fração acusava `/melhor-air-fryer-custo-beneficio/` contra
+     `/melhor-air-fryer/` com 29,7% — o par exato que a guarda 3 existe pra nunca fundir.
+     Subtópico é **artigo a escrever**, não slug a corrigir, e por definição tem
+     sobreposição alta com o tópico pai. Validado em 8 sites: 1 achado no total, zero
+     falso positivo.
 
    **Todo achado vai por PROPOR→APROVAR, nunca auto-fix.** Renomear muda a URL pública:
    se estiver errado, o custo é o tráfego do artigo. E a decisão tem dois julgamentos
