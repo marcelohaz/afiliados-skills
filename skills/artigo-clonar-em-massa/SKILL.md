@@ -98,6 +98,8 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 
    **Por que aqui e não no fim:** a slug entra no nome do clone-log (0b), dos 2 marcadores de auditoria e do `.mdx`, e o **gate de invocação** do `verify-output` procura o slug no transcript. Renomear com o artigo pronto custou 4 `git mv` e invalidou o gate das 5 skills (caso real de 12/09, registrado como desvio no clone-log daquela run). Aqui custa uma variável. Com `RETOMAR=yes`, **pule**: a slug já foi decidida e está no log. Com `FILA=yes`, a fila já resolveu a slug por esta mesma régua antes de abrir o log — **confira que bate** e siga; se divergir, a régua é a daqui e a fila é quem se realinha (a decisão é determinística: mesma keyword + mesmo mapa de órfãs = mesma slug).
 
+   ⚠ O mapa de órfãs é um **snapshot** — confira o `fetched_at` no topo do JSON. Meses de idade escondem URL que virou órfã depois dele; atualize com `bun scripts/mapa-artigos-orfaos.ts` se der. Mas **não aborte por mapa velho nem por mapa ausente**: o custo de não adequar a slug é o histórico ficar parado, o mesmo que já acontecia antes desta régua existir. Registre "mapa de {data}" na linha de slug do relatório final e siga.
+
    Quando o fonte e o destino ficam com slugs diferentes, o `--source` do `init` e do `verify-output` leva as DUAS partes (`--source={source-site}/{slug-DO-FONTE}`) — sem isso o comparador procura o fonte pelo slug do destino e o gate reprova com "fonte existe: false".
 
 0b. **Abre o log de execução** (vale nos DOIS modos, individual e fila):
