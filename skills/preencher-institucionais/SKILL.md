@@ -36,6 +36,13 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 ## Invariantes
 
 - **Faz as DUAS páginas** (sobre + autor) numa execução, com papéis distintos.
+  **Exceção: site portado do WordPress** (artigos com `portadoDe:` no frontmatter). O
+  /sobre/ fica com o texto do WordPress, adaptado só no que o port manda mudar (marca e
+  domínio novos, sem alegar teste, sem travessão, com o escopo que o site tem), conforme
+  `docs/port-wordpress/CHECKLIST.md`. Nesse caso a skill faz **só a /author/**, que o
+  WordPress não tem e o scaffold deixa com texto de template. Os gates (6-gramas contra a
+  rede, sobre↔autor, voz natural) valem igual. Duas execuções saíram da régua por isso
+  antes de ela existir (melhoresparacasa 20/09, melhortech 21/09/2026).
 - **NÃO inventa** credencial/empresa/processo. Autor/critérios/e-mail do config + niche.
 - **Metodologia VAGA**: dá impressão de análise real SEM (a) alegar teste físico ["testamos/laboratório/bancada/presencial/medimos"] NEM (b) expor pesquisa de mesa ["partimos das especificações", "lendo a ficha linha por linha", "cruzamos com opiniões de compradores"]. Use "avaliamos a fundo", "indo além da ficha técnica", "comparamos os modelos de verdade", "o que faz diferença no dia a dia". Enquadramento anti-spec OK ("não de repetir a ficha que o fabricante divulga", "nunca de uma planilha decorada de specs").
 - **Disclosure Amazon** obrigatória no /sobre/ (Independência editorial).

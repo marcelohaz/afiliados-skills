@@ -181,6 +181,7 @@ Não é hipótese: em 2026-08-10 o `compraguia/melhor-caixa-de-som-jbl` (artigo 
    - **`pareceCategoria: true` → quase sempre NÃO é rename.** A slug candidata coincide
      com um `categorySlug` do site, então provavelmente era a LISTAGEM antiga, não um
      artigo. Aí o certo é 301 pra `/categoria/`, e mover o artigo pra lá é erro.
+
    **O 301 (caso padrão) é uma regra só:** `{ from: "/{slug-historica}", to: "/{slug-do-artigo}/", status: 301, hostname: "{domínio do site}" }` no `worker/redirects.json`, seguida de `bun scripts/cf-deploy-worker.ts` e conferência com `curl -sL -o /dev/null -w "%{http_code} %{num_redirects}"` (200 em 1 salto). Não mexe em link interno nem no `.mdx`. **Antes de criar, confira que a origem não é a slug de um artigo vivo do site:** o worker responde o 301 antes de servir a página, e a regra deixaria o artigo inalcançável.
 
    **Se o rename for aprovado (artigo fora do ar, ou exceção), são 4 passos e a ordem importa:** renomear o `.mdx`,
