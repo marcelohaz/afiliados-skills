@@ -108,12 +108,13 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 - `config.ts`: H1 da home (o scaffold monta "O melhor {nome}" e quebra quando o nome não é substantivo simples), `contactMainTopic`, `knowsAbout`, e-mail do autor, bio sem "Testo" nem frase-sacada.
 - `/sobre/` do WordPress adaptado (marca e domínio novos, sem alegar teste, com o escopo real) e `/author/` pela `preencher-institucionais` (ela tem a exceção de site portado).
 - Descrição de categoria pela `categoria-descricao-escrever` (ou `-criar-em-massa`): as do WordPress repetem o mesmo molde entre sites.
-- Linkagem entre os artigos pela `linkagem-auditar {site}`, autorizando a edição dos portados (seção "Portados do WordPress" dela: com a regra de sempre ela pula todo artigo travado e não muda nada). O texto chega com os órfãos e as âncoras do WordPress, e a hora de mudar é antes de o artigo rankear (Marcelo, 22/09/2026). Precisa da keyword da Fase 2 preenchida.
 
 **Cenário A (herdeiro):**
 - Template do herdeiro precisa aceitar produto sem página: t6 com `productPages: false`; t5 com `productPagesOnlyWithMdx: true` (link pela página do mesmo ASIN, âncora quando não há página). Outro template: código novo, com build antes e depois de outro site do mesmo template provando que nada muda.
 - Estrela: decidir e registrar (o herdeiro pode dar nota automática aos portados; os ports de domínio novo saíram sem estrela).
 - Regras do herdeiro que escondem slug: o `port-regras.ts` acusa na Fase 6; elas saem junto com a virada.
+
+**Todos os cenários:** linkagem entre os artigos pela `linkagem-auditar {site}`, autorizando a edição dos portados (seção "Portados do WordPress" dela: com a regra de sempre ela pula todo artigo travado e não muda nada). O texto chega com os órfãos e as âncoras do WordPress, e a hora de mudar é antes de o artigo rankear (Marcelo, 22/09/2026). Precisa da keyword da Fase 2 preenchida. No herdeiro (A) entram também os links entre os portados e os artigos que o site já tinha.
 
 ## Fase 4 — travas antes de publicar
 
