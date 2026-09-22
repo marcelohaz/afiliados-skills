@@ -1,6 +1,6 @@
 ---
 name: site-portar-wordpress
-description: Porta um site WordPress da rede (Hostinger) para Astro com o MESMO texto e os mesmos endereços, e vira os 301 de TODA a cadeia de domínios dele para um único herdeiro. Três cenários, em ordem de preferência — devolver o texto a um herdeiro Astro que já existe (cozinha), portar no mesmo domínio, ou domínio novo (só com decisão registrada do Marcelo: 9 de 10 domínios que receberam texto de outro domínio caíram em 05-06/2026). Fases com gates — decisão, levantamento, exportação na VPS, conversão e conferência dos dados de produto (ASIN × nome × bíblia), site (institucionais, H1, categorias, estrela, páginas de produto), travas antes de publicar, virada (regras geradas da varredura, deploy, worker, zonas antigas, conferência pelo histórico do GSC a partir da VPS), Search Console, painel (coletas, linhagem, mapa) e medição semanal por 8 semanas com grupo de controle e plano B. Aceita `{dominio-wp} {site}` ou `medir {site...} --desde=AAAA-MM-DD`. NÃO é a site-migrar-dominio (site Astro que só troca de domínio). NÃO registra domínio, NÃO aponta NS, NÃO publica sem aprovação.
+description: "Porta um site WordPress da rede (Hostinger) para Astro com o MESMO texto e os mesmos endereços, e vira os 301 de TODA a cadeia de domínios dele para um único herdeiro. Três cenários, em ordem de preferência — devolver o texto a um herdeiro Astro que já existe (cozinha), portar no mesmo domínio, ou domínio novo (só com decisão registrada do Marcelo: 9 de 10 domínios que receberam texto de outro domínio caíram em 05-06/2026). Fases com gates — decisão, levantamento, exportação na VPS, conversão e conferência dos dados de produto (ASIN × nome × bíblia), site (institucionais, H1, categorias, estrela, páginas de produto), travas antes de publicar, virada (regras geradas da varredura, deploy, worker, zonas antigas, conferência pelo histórico do GSC a partir da VPS), Search Console, painel (coletas, linhagem, mapa) e medição semanal por 8 semanas com grupo de controle e plano B. Aceita `{dominio-wp} {site}` ou `medir {site...} --desde=AAAA-MM-DD`. NÃO é a site-migrar-dominio (site Astro que só troca de domínio). NÃO registra domínio, NÃO aponta NS, NÃO publica sem aprovação."
 ---
 
 ## Parse de input
@@ -60,8 +60,8 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 ## Fase 1 — levantamento
 
 - **Domínio de destino** (só C): RDAP (titular, **vencimento**: avise se vence em menos de 60 dias), sem pasta, sem sites-meta, sem regra no worker, não serve nada (controle positivo num WordPress de verdade). Dono anterior: Arquivo da Internet e sitemaps antigos no GSC.
-- **Exportação, NA VPS**, na pasta do repo (a Hostinger bloqueia o Mac):
-  `sudo -u melhorserum-painel bun scripts/wp-exportar.ts {dominio-wp} /home/melhorserum-painel/wp-export/{dominio-wp}-{data}`
+- **Exportação, NA VPS** (a Hostinger bloqueia o Mac):
+  `sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && bun scripts/wp-exportar.ts {dominio-wp} /home/melhorserum-painel/wp-export/{dominio-wp}-{data}'`
   e copiar para `~/Backups/afiliados/wp-export/`. Conferir: posts, páginas, categorias, autores, imagens com 0 falha.
 - **Cenário A:** slugs do WordPress que já existem no herdeiro. Reescrito do zero e no ar fica como está (artigo no ar não muda: canon 12/09); só entram os que faltam.
 
@@ -71,7 +71,7 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
    - `--tag`: a do próprio WordPress (conferir a mais usada nos posts) ou a do herdeiro. Nunca inventar tag.
    - `--so` regrava o `port-plano.json` só com esses posts: rode de novo sem `--gravar` e sem `--so` para refazer o plano inteiro.
    - Cenário A: categorias do WordPress genéricas ("melhores") saem; cada artigo vai para a categoria do seu produto que o herdeiro já tem.
-2. `bun scripts/port-dados-produto.ts {site}` — ASIN × nome da página ou da bíblia, ASIN repetido, cobertura de página e de bíblia. Marca diferente confirmada (a bíblia e a página batem entre si) é corrigida trocando só o ASIN, com o motivo no commit. Nos 6 ports de referência ele achou 18 erros herdados do WordPress (ASIN trocado, repetido ou de outro produto).
+2. `bun scripts/port-dados-produto.ts {site}` — ASIN × nome da página ou da bíblia, ASIN repetido, cobertura de página e de bíblia. Marca diferente confirmada (a bíblia e a página batem entre si) é corrigida trocando só o ASIN, com o motivo no commit. Nos 6 ports de referência ele achou 17 casos herdados do WordPress: 8 certos (2 ASINs trocados entre si, 3 repetidos entre marcas diferentes, 3 de outra marca confirmados pela bíblia), 4 prováveis (repetidos entre modelos da mesma marca, que podem ser anúncio com variações), 1 produto listado duas vezes e 4 nomes que não batem com a Amazon. ASIN repetido sem bíblia não diz qual dos dois está errado: confira no anúncio antes de trocar.
 3. Links internos quebrados que já eram quebrados no WordPress: apontar para o artigo que a âncora nomeia (só o `href`).
 
 ## Fase 3 — o site
@@ -100,14 +100,14 @@ Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar
 1. `bun scripts/port-regras.ts {dominio-wp} {site} --extra={arquivo.tsv}` — mostra as regras da cadeia inteira, os endereços que vão para a home e as regras do site que escondem artigo. O que tiver destino óbvio vai para o `--extra` (erro de digitação, home que era o próprio artigo no Arquivo da Internet, categoria renomeada). Depois `--gravar` (e `--tirar-escondidas` no cenário A) e commit. **Não publique o worker ainda.**
 2. `bun scripts/cf-deploy-r2.ts {site}` e conferir **pela VPS** (200, `www` com 301, canonical). `live: true` no sites-meta.
 3. `bun scripts/cf-deploy-worker.ts`.
-4. `bun scripts/port-zonas-antigas.ts {dominios da cadeia}` e, conferido, `--aplicar` (rotas, proxy, purge, MX igual).
-5. `bun scripts/port-conferir.ts --montar {dominio-wp} {site} --extra={arquivo.tsv} [--com-site] > lista.tsv` no Mac, copiar a lista para a VPS e lá, na pasta do repo (`/home/melhorserum-painel/afiliados`, com o commit dos scripts já puxado), `sudo -u melhorserum-painel bun scripts/port-conferir.ts --testar /tmp/lista.tsv`. Todo endereço com clique tem que cair no destino em 1 salto. O que ficar fora volta ao passo 1. `--com-site` no cenário A: o histórico do próprio herdeiro também muda com a virada.
+4. `bun scripts/port-zonas-antigas.ts {dominios que o port-regras cobriu}` e, conferido, `--aplicar` (rotas, proxy, purge, MX igual). Os que o `port-regras` deixou de fora (a Hostinger já leva ao site em 1 salto) ficam como estão: o script recusa domínio sem catch-all no worker.
+5. `bun scripts/port-conferir.ts --montar {dominio-wp} {site} --extra={arquivo.tsv} [--com-site] > lista.tsv` no Mac, copiar a lista para a VPS e lá, com o commit dos scripts já puxado, `sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && bun scripts/port-conferir.ts --testar /tmp/lista.tsv'`. Todo endereço com clique tem que cair no destino em 1 salto. O que ficar fora volta ao passo 1. `--com-site` no cenário A: o histórico do próprio herdeiro também muda com a virada.
 
 ## Fase 7 — Search Console e painel
 
 - C: `bun scripts/gsc-registrar-dominio.ts {dominio-novo}`.
 - Depois da virada: `bun scripts/gsc-apagar-sitemaps-wordpress.ts {todos os domínios, inclusive o novo} --aplicar` (a propriedade nova pode trazer sitemaps do dono anterior).
-- As quatro coletas: `bun docs/painel/scripts/cf-accounts-snapshot.ts` (commit à mão) e `bash scripts/cron-domains-status.sh` **na VPS**, como `melhorserum-painel`, na pasta do repo; `bun docs/painel/scripts/linhagens-snapshot.ts` e `bun scripts/mapa-artigos-orfaos.ts` no Mac (conferir antes que o Mac resolve o domínio novo).
+- As quatro coletas: `bun docs/painel/scripts/cf-accounts-snapshot.ts` (commit à mão) e `bash scripts/cron-domains-status.sh` **na VPS**, do mesmo jeito que acima (`sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && …'`); `bun docs/painel/scripts/linhagens-snapshot.ts` e `bun scripts/mapa-artigos-orfaos.ts` no Mac (conferir antes que o Mac resolve o domínio novo).
 - Linhagem: `bun scripts/port-linhagem.ts {site}` sugere os elos da Hostinger que faltam declarar (régua da inclusão, ou "visto" pela primeira coleta da sonda) e os declarados que o worker encerrou. Gravar em `linhagens-declaradas.json` com nota.
 - Gerar o painel e **olhar o mapa na tela** (prévia com o `main.css` embutido, sem scripts nem tabelas, abaixo de 512 KB, apagada depois): um card, domínios em laranja ou roxo, nenhum ponto vermelho, o domínio portado fora de "Sem site no painel", cadeia original na ordem do tempo.
 - C: conferir no console da Amazon se o domínio novo está na lista de sites (`amazon-lista-sites-auditar`).
@@ -134,6 +134,7 @@ Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar
 10. **Commit do scaffold falhando na VPS** (`index.lock`, rebase): o `detail` do `gitSync` diz o motivo; commitar à mão com `PAINEL_AUTO_COMMIT=1`.
 11. **Página de produto casada pelo nome** (t5): produto com página de outro nome quebrava o build; o flag casa pelo ASIN.
 12. **Número de memória no relatório.** Todo número do relatório sai de um arquivo ou de uma medição feita na hora.
+13. **`sudo -u melhorserum-painel bun` na VPS dá "command not found":** o `sudo` não carrega o PATH do usuário. Use `sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && bun …'`.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 
