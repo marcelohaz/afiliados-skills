@@ -1,0 +1,150 @@
+---
+name: site-portar-wordpress
+description: Porta um site WordPress da rede (Hostinger) para Astro com o MESMO texto e os mesmos endereços, e vira os 301 de TODA a cadeia de domínios dele para um único herdeiro. Três cenários, em ordem de preferência — devolver o texto a um herdeiro Astro que já existe (cozinha), portar no mesmo domínio, ou domínio novo (só com decisão registrada do Marcelo: 9 de 10 domínios que receberam texto de outro domínio caíram em 05-06/2026). Fases com gates — decisão, levantamento, exportação na VPS, conversão e conferência dos dados de produto (ASIN × nome × bíblia), site (institucionais, H1, categorias, estrela, páginas de produto), travas antes de publicar, virada (regras geradas da varredura, deploy, worker, zonas antigas, conferência pelo histórico do GSC a partir da VPS), Search Console, painel (coletas, linhagem, mapa) e medição semanal por 8 semanas com grupo de controle e plano B. Aceita `{dominio-wp} {site}` ou `medir {site...} --desde=AAAA-MM-DD`. NÃO é a site-migrar-dominio (site Astro que só troca de domínio). NÃO registra domínio, NÃO aponta NS, NÃO publica sem aprovação.
+---
+
+## Parse de input
+
+- `{dominio-wp} {site}` — porta o WordPress `{dominio-wp}` para a pasta `sites/{site}` (que já existe, no cenário do herdeiro, ou vai ser criada).
+- `medir {site...} --desde=AAAA-MM-DD` — só a Fase 8, para ports já feitos.
+
+# Portar um WordPress para Astro
+
+Casos de referência: seis ports de 19 a 21/09/2026 (analistadeprodutos → melhoreseletro, cadeirasconfortaveis → melhorcadeiradeescritorio, melhorwifi → melhoresparacasa, melhorbeleza → melhorestetica, melhoreseletronicos → melhortech, melhordacozinha → cozinhaideal). O que cada um ensinou, com números, está em `docs/port-wordpress/relatorio-analistadeprodutos-melhoreseletro.md`. Cada port novo acrescenta uma seção lá.
+
+## O que esta skill É (e não é)
+
+É levar o **texto** de um WordPress para um site Astro e fazer **todos** os domínios da cadeia apontarem para ele, em 1 salto. O texto entra como está (`scripts/wp-portar.ts`, com `portadoDe` e `contentLocked: true`) e é reescrito aos poucos depois, se a medição mandar.
+
+- **NÃO é a `site-migrar-dominio`**: aquela troca o domínio de um site Astro que já está no ar, sem mexer em conteúdo, de 1 domínio para 1. Ela mesma diz que não cobre consolidação nem go-live de site novo, e o port é as duas coisas. A Fase 5 daqui aponta para a Fase 2 dela (zona e DNS de domínio novo).
+- **NÃO é clone** (`artigo-clonar-em-massa`): clone escreve do zero a partir das bíblias. Reescrever o portado é o plano B da Fase 8, e usa as skills de escrita.
+- **NÃO registra domínio, NÃO aponta NS** (passo humano no Registro.br) e **NÃO publica sem o Marcelo pedir**.
+
+## A evidência que pesa na decisão (medida em 22/09/2026)
+
+O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o tráfego de volta maior. Medido depois, com a série semanal do GSC:
+
+- **Trocas de domínio com o mesmo texto, de 11/2025 a 02/2026:** o domínio novo chegou a 11%–51% do pico do anterior em 5 de 7 casos. Só 2 passaram do pico anterior (o analistadeprodutos, no segundo salto, e a melhorbeleza, que partiu de base pequena).
+- **Depois, todas caíram**, 3 a 6 meses após a troca. Foram três ondas: 18–25/05, 08–15/06 e 29/06/2026. Entre os sites com ≥10 cliques por semana no começo de maio, **9 de 10 domínios que tinham recebido texto de outro domínio perderam mais da metade até o fim de junho, contra 1 de 6 dos que nunca trocaram**. O melhorfonedeouvido, WordPress que nunca trocou, ficou estável.
+- Hipóteses descartadas: "domínio com dono anterior" (os derrubados incluem domínios novos) e "a frota WordPress inteira caiu". A que sobra é "domínio jovem que recebeu texto e tráfego de outro", exatamente o que o cenário C cria.
+- Reescrever do zero em Astro recuperou em 2 de 3 casos medidos (melhordaimpressora 99% do nível de maio, melhorestablets 192%; o compraguia não voltou). O produtosanalisados foi reescrito em 26/07 e ainda é cedo.
+- É correlação com 16 sites, do mesmo período e da mesma família. Não é prova. É por isso que a Fase 8 mede com controle.
+
+## Invariantes
+
+- **Uma linhagem vai para UM herdeiro** (canon Marcelo, 19/09/2026). Se já existe site Astro nosso herdeiro dessa linhagem, o texto vai para ele (cenário A), nunca para um segundo site.
+- **Cenário C (domínio novo) só com decisão do Marcelo registrada na conversa**, mostrando a evidência acima. Não é escolha da skill.
+- **Não mexer no melhorfonedeouvido.com.br** sem pedido explícito: é o único WordPress com tráfego que resistiu a maio e junho.
+- **Texto do WordPress não é reescrito no port.** Correção permitida sem perguntar: dado errado com destino óbvio (href quebrado, ASIN trocado confirmado pela página ou pela bíblia, meta vazia com `og:description` do próprio post). Cada uma vai no commit e no relatório.
+- **Ordem da virada é dura:** o site serve → worker com as regras → rotas nas zonas antigas. Rota antes da regra manda o domínio para o fallback de 404 da rede (a home).
+- **Domínio antigo nunca recebe `cf-create-zone`** (derruba o WordPress que ainda está lá) e o **MX dele fica intocado** (o e-mail mora na Hostinger).
+- **Site com `contentLocked` ou `deployBlocked` no sites-meta: parar e avisar.** Código compartilhado (`packages/ui`) só com prova de que os outros sites do template não mudam (build antes e depois).
+- **Deploy e virada só com aprovação explícita do Marcelo**, e só de site dele (a regra de rollout da memória: nunca dos sites da Bárbara nem em massa).
+
+## Cenários (a Fase 0 escolhe)
+
+| | quando | o que muda |
+|---|---|---|
+| **A. herdeiro que já existe** | há site Astro nosso na linhagem (cozinhaideal) | sem domínio novo; conferir template, slugs que já existem, regras do site que escondem slug, estrela, página de produto |
+| **B. no mesmo domínio** | o WordPress é o próprio fim da cadeia e não há herdeiro | sem troca de domínio (a hipótese que sobra da evidência não se aplica). **Ainda não testado na rede.** O site é criado com o domínio do WordPress e o deploy põe as rotas do worker na zona que já existe: o `A` fica com proxy e o MX da Hostinger fica. **Não rodar `cf-create-zone`** nesse domínio: ele troca o MX pelo e-mail da Cloudflare e derruba a caixa da Hostinger |
+| **C. domínio novo** | só com decisão do Marcelo | tudo do B, mais domínio novo (RDAP, dono anterior, GSC, DNSSEC, lista da Amazon) |
+
+## Fase 0 — decisão (BLOQUEANTE)
+
+1. Montar a cadeia: o card da linhagem no mapa das cadeias do painel, a sonda (`docs/painel/_data/domains-status.json`) e o worker. Declarar o grupo em `docs/painel/_data/grupos-legado.json` já aqui (do mais antigo para o mais novo, com o domínio de destino no fim), porque os scripts das próximas fases leem de lá.
+2. `bun scripts/port-linhagem.ts {site}` — vida de cada domínio no GSC, elos, quem faz o 301 hoje.
+3. Escolher o cenário pela tabela acima e dizer ao Marcelo, com os números da cadeia (pico, mês da queda, nível de agora) e a evidência. **Cenário C: parar aqui até ele decidir.**
+4. Sobreposição com a rede: artigos com o mesmo slug em outros sites nossos. Texto diferente (menos de 10% de 8-gramas iguais) pode conviver; texto igual não.
+
+## Fase 1 — levantamento
+
+- **Domínio de destino** (só C): RDAP (titular, **vencimento**: avise se vence em menos de 60 dias), sem pasta, sem sites-meta, sem regra no worker, não serve nada (controle positivo num WordPress de verdade). Dono anterior: Arquivo da Internet e sitemaps antigos no GSC.
+- **Exportação, NA VPS**, na pasta do repo (a Hostinger bloqueia o Mac):
+  `sudo -u melhorserum-painel bun scripts/wp-exportar.ts {dominio-wp} /home/melhorserum-painel/wp-export/{dominio-wp}-{data}`
+  e copiar para `~/Backups/afiliados/wp-export/`. Conferir: posts, páginas, categorias, autores, imagens com 0 falha.
+- **Cenário A:** slugs do WordPress que já existem no herdeiro. Reescrito do zero e no ar fica como está (artigo no ar não muda: canon 12/09); só entram os que faltam.
+
+## Fase 2 — conversão e dados
+
+1. `bun scripts/wp-portar.ts {export} sites/{site} --tag {tag} [--cadeia dominios-anteriores] [--irmaos dominios] [--so slugs]` sem `--gravar`: todo post no formato, texto ≥99%, imagens 0 faltando. Depois com `--gravar`.
+   - `--tag`: a do próprio WordPress (conferir a mais usada nos posts) ou a do herdeiro. Nunca inventar tag.
+   - `--so` regrava o `port-plano.json` só com esses posts: rode de novo sem `--gravar` e sem `--so` para refazer o plano inteiro.
+   - Cenário A: categorias do WordPress genéricas ("melhores") saem; cada artigo vai para a categoria do seu produto que o herdeiro já tem.
+2. `bun scripts/port-dados-produto.ts {site}` — ASIN × nome da página ou da bíblia, ASIN repetido, cobertura de página e de bíblia. Marca diferente confirmada (a bíblia e a página batem entre si) é corrigida trocando só o ASIN, com o motivo no commit. Nos 6 ports de referência ele achou 18 erros herdados do WordPress (ASIN trocado, repetido ou de outro produto).
+3. Links internos quebrados que já eram quebrados no WordPress: apontar para o artigo que a âncora nomeia (só o `href`).
+
+## Fase 3 — o site
+
+**Cenário C ou B (site novo):** persona pelo painel (`bun scripts/painel-api.ts POST /authors` e a foto), `POST /sites/create` (template6, `ratingStars` decidido na Fase 0) e a `site-criar-workflow` para o resto do scaffold. Se o `gitSync` voltar `commit-failed`, commitar na VPS com `PAINEL_AUTO_COMMIT=1` (aconteceu em 3 de 5 criações; o `detail` diz o motivo).
+- `productPages: false`, o `[slug].astro` só com artigos (copiar de um site portado t6) e a divergência em `docs/painel/_lib/template-divergences.ts`.
+- `config.ts`: H1 da home (o scaffold monta "O melhor {nome}" e quebra quando o nome não é substantivo simples), `contactMainTopic`, `knowsAbout`, e-mail do autor, bio sem "Testo" nem frase-sacada.
+- `/sobre/` do WordPress adaptado (marca e domínio novos, sem alegar teste, com o escopo real) e `/author/` pela `preencher-institucionais` (ela tem a exceção de site portado).
+- Descrição de categoria pela `categoria-descricao-escrever` (ou `-criar-em-massa`): as do WordPress repetem o mesmo molde entre sites.
+
+**Cenário A (herdeiro):**
+- Template do herdeiro precisa aceitar produto sem página: t6 com `productPages: false`; t5 com `productPagesOnlyWithMdx: true` (link pela página do mesmo ASIN, âncora quando não há página). Outro template: código novo, com build antes e depois de outro site do mesmo template provando que nada muda.
+- Estrela: decidir e registrar (o herdeiro pode dar nota automática aos portados; os ports de domínio novo saíram sem estrela).
+- Regras do herdeiro que escondem slug: o `port-regras.ts` acusa na Fase 6; elas saem junto com a virada.
+
+## Fase 4 — travas antes de publicar
+
+Build · `check-dist-links` (0 quebrado) · `check-broken-images` · `audit-article` (portado: só erro técnico conta) · checklist do painel (`GET /site/{site}/audit-checklist`) · pré-checagem de publicação (`GET /deploy-precheck/{site}`) · no HTML gerado: canonical no domínio certo, 0 menção ao domínio antigo, uma tag só, sitemaps certos · **cenário A: toda URL do sitemap no ar tem que estar no build novo** (o deploy faz prune) · home, artigo, categoria e autor vistos no navegador.
+
+## Fase 5 — zona e DNS (só C)
+
+Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar` e depois sem a flag, `conferir-delegacao.ts` antes e depois de trocar o NS (DS órfão do DNSSEC), `activation_check` se a zona ficar `pending`, e `cf-create-zone` de novo para ligar o e-mail.
+
+## Fase 6 — publicar e virar (com aprovação)
+
+1. `bun scripts/port-regras.ts {dominio-wp} {site} --extra={arquivo.tsv}` — mostra as regras da cadeia inteira, os endereços que vão para a home e as regras do site que escondem artigo. O que tiver destino óbvio vai para o `--extra` (erro de digitação, home que era o próprio artigo no Arquivo da Internet, categoria renomeada). Depois `--gravar` (e `--tirar-escondidas` no cenário A) e commit. **Não publique o worker ainda.**
+2. `bun scripts/cf-deploy-r2.ts {site}` e conferir **pela VPS** (200, `www` com 301, canonical). `live: true` no sites-meta.
+3. `bun scripts/cf-deploy-worker.ts`.
+4. `bun scripts/port-zonas-antigas.ts {dominios da cadeia}` e, conferido, `--aplicar` (rotas, proxy, purge, MX igual).
+5. `bun scripts/port-conferir.ts --montar {dominio-wp} {site} --extra={arquivo.tsv} [--com-site] > lista.tsv` no Mac, copiar a lista para a VPS e lá, na pasta do repo (`/home/melhorserum-painel/afiliados`, com o commit dos scripts já puxado), `sudo -u melhorserum-painel bun scripts/port-conferir.ts --testar /tmp/lista.tsv`. Todo endereço com clique tem que cair no destino em 1 salto. O que ficar fora volta ao passo 1. `--com-site` no cenário A: o histórico do próprio herdeiro também muda com a virada.
+
+## Fase 7 — Search Console e painel
+
+- C: `bun scripts/gsc-registrar-dominio.ts {dominio-novo}`.
+- Depois da virada: `bun scripts/gsc-apagar-sitemaps-wordpress.ts {todos os domínios, inclusive o novo} --aplicar` (a propriedade nova pode trazer sitemaps do dono anterior).
+- As quatro coletas: `bun docs/painel/scripts/cf-accounts-snapshot.ts` (commit à mão) e `bash scripts/cron-domains-status.sh` **na VPS**, como `melhorserum-painel`, na pasta do repo; `bun docs/painel/scripts/linhagens-snapshot.ts` e `bun scripts/mapa-artigos-orfaos.ts` no Mac (conferir antes que o Mac resolve o domínio novo).
+- Linhagem: `bun scripts/port-linhagem.ts {site}` sugere os elos da Hostinger que faltam declarar (régua da inclusão, ou "visto" pela primeira coleta da sonda) e os declarados que o worker encerrou. Gravar em `linhagens-declaradas.json` com nota.
+- Gerar o painel e **olhar o mapa na tela** (prévia com o `main.css` embutido, sem scripts nem tabelas, abaixo de 512 KB, apagada depois): um card, domínios em laranja ou roxo, nenhum ponto vermelho, o domínio portado fora de "Sem site no painel", cadeia original na ordem do tempo.
+- C: conferir no console da Amazon se o domínio novo está na lista de sites (`amazon-lista-sites-auditar`).
+
+## Fase 8 — medir e decidir
+
+- No dia da virada e toda semana, por 8 semanas:
+  `bun scripts/port-medir.ts {site} --desde={virada} --controle={3 ou 4 sites não portados} --gravar=docs/port-wordpress/medicao/{site}-{data}.json`
+  Controle: sites Astro feitos do zero em domínio com histórico e publicados perto da mesma data (em 09/2026: oguiacompra, guiamelhor, melhorescustobeneficio; e o melhorimpressora como referência de site que cresceu).
+- **Critério, escrito antes de ver o resultado:** o port vale se, na semana 8, a soma (novo + cadeia) estiver acima da média das 4 semanas antes da virada **e** crescendo mais que o controle em cliques por artigo. Abaixo da média de antes na semana 8: plano B.
+- **Plano B:** reescrever pelas skills de escrita (lineup, reviews, guia, intro, meta) nos MESMOS endereços, começando pelos artigos de maior histórico. Em site com muitos artigos, reescrever metade e manter metade portada: mesmo domínio e mesmo período dão a única comparação limpa entre "mesmo texto" e "reescrita".
+
+## Armadilhas (cada uma aconteceu)
+
+1. **Varrer só o domínio pedido.** Os domínios de cima da cadeia, que redirecionam pela Hostinger, ficaram em 2 saltos no wi-fi e na beleza. `port-regras.ts` usa a cadeia inteira.
+2. **Conferir a regra contra ela mesma.** A lista de teste tem que vir do histórico do GSC (`port-conferir.ts`), não das regras.
+3. **Home que era o artigo.** A home do melhoresnotebooks2025 (2.383 cliques) era o próprio artigo "Melhores Notebooks"; o catch-all mandaria para a home do site novo.
+4. **Regra do herdeiro que esconde o artigo portado.** 20 no cozinhaideal; no worker, a regra vale antes da página.
+5. **Dados de produto do WordPress.** ASINs trocados, repetidos e de outro produto (Fase 2).
+6. **Scaffold com texto de template:** `/sobre/` provisório, autor alegando teste presencial, H1 quebrado, e-mail `@dominio`, `knowsAbout` de outro nicho.
+7. **Descrição de categoria do WordPress** repete o mesmo molde entre os sites portados.
+8. **Sitemap de dono anterior** na propriedade nova do GSC (melhoreseletro, melhorestetica, melhortech).
+9. **DNSSEC:** domínio que usava o DNS do Registro.br tem DS; trocar o NS sem tirar o DS derruba a resolução.
+10. **Commit do scaffold falhando na VPS** (`index.lock`, rebase): o `detail` do `gitSync` diz o motivo; commitar à mão com `PAINEL_AUTO_COMMIT=1`.
+11. **Página de produto casada pelo nome** (t5): produto com página de outro nome quebrava o build; o flag casa pelo ASIN.
+12. **Número de memória no relatório.** Todo número do relatório sai de um arquivo ou de uma medição feita na hora.
+
+## Registrar desvio de execução (obrigatório quando houver)
+
+SE você (a) executou diferente do que esta skill manda, (b) **criou um passo que ela
+não tem**, (c) achou a régua ambígua/contraditória, ou (d) topou com bug numa
+ferramenta dela — ENTÃO registre antes de fechar:
+
+```bash
+bun scripts/skill-log.ts note site-portar-wordpress <desvio|ambiguidade|bug|inventou-passo> "<o que fugiu e por quê>" [--ctx=site/slug] [--alvo=<fase>]
+```
+
+Execução limpa **não gera linha** — vazio é dado. O que se lê depois é
+`bun scripts/skill-log.ts report`, que conta por skill e destaca o que já bateu
+mais de uma vez. Sem `--alvo` a nota cai em `geral` e sai do detector de
+reincidência, então **nomeie a fase** quando ela existir.

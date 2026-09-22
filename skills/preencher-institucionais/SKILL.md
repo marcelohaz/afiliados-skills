@@ -39,7 +39,7 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
   **Exceção: site portado do WordPress** (artigos com `portadoDe:` no frontmatter). O
   /sobre/ fica com o texto do WordPress, adaptado só no que o port manda mudar (marca e
   domínio novos, sem alegar teste, sem travessão, com o escopo que o site tem), conforme
-  `docs/port-wordpress/CHECKLIST.md`. Nesse caso a skill faz **só a /author/**, que o
+  skill `site-portar-wordpress` (Fase 3). Nesse caso a skill faz **só a /author/**, que o
   WordPress não tem e o scaffold deixa com texto de template. Os gates (6-gramas contra a
   rede, sobre↔autor, voz natural) valem igual. Duas execuções saíram da régua por isso
   antes de ela existir (melhoresparacasa 20/09, melhortech 21/09/2026).
