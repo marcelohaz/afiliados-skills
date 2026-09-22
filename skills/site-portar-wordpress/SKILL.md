@@ -54,6 +54,7 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 1. Montar a cadeia: o card da linhagem no mapa das cadeias do painel, a sonda (`docs/painel/_data/domains-status.json`) e o worker. Declarar o grupo em `docs/painel/_data/grupos-legado.json` já aqui (do mais antigo para o mais novo, com o domínio de destino no fim), porque os scripts das próximas fases leem de lá.
 2. `bun scripts/port-linhagem.ts {site}` — vida de cada domínio no GSC, elos, quem faz o 301 hoje.
 3. Escolher o cenário pela tabela acima e dizer ao Marcelo, com os números da cadeia (pico, mês da queda, nível de agora) e a evidência. **Cenário C: parar aqui até ele decidir.**
+   Decidir junto a estrela no Google: os ports de domínio novo saíram sem estrela (`ratingStars: false`, "sem estrela inventada"), e o herdeiro pode dar nota automática aos portados (cozinhaideal). Uma política só por site, registrada no relatório.
 4. Sobreposição com a rede: artigos com o mesmo slug em outros sites nossos. Texto diferente (menos de 10% de 8-gramas iguais) pode conviver; texto igual não.
 
 ## Fase 1 — levantamento
