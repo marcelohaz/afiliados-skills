@@ -117,17 +117,21 @@ Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar
 
 ## Fase 6 — publicar e virar (com aprovação)
 
-1. `bun scripts/port-regras.ts {dominio-wp} {site} --extra={arquivo.tsv}` — mostra as regras da cadeia inteira, os endereços que vão para a home e as regras do site que escondem artigo. O que tiver destino óbvio vai para o `--extra` (erro de digitação, home que era o próprio artigo no Arquivo da Internet, categoria renomeada). Depois `--gravar` (e `--tirar-escondidas` no cenário A) e commit. **Não publique o worker ainda.**
+1. `bun scripts/port-regras.ts {dominio-wp} {site} --incluir-hostinger --extra={arquivo.tsv}` — mostra as regras da cadeia inteira, os endereços que vão para a home e as regras do site que escondem artigo. O que tiver destino óbvio vai para o `--extra` (erro de digitação, home que era o próprio artigo no Arquivo da Internet, categoria renomeada). Depois `--gravar` (e `--tirar-escondidas` no cenário A) e commit. **Não publique o worker ainda.**
+   - `--incluir-hostinger` sempre: todo 301 de domínio antigo mora no worker, inclusive o que a Hostinger já levava direto ao site (decisão do Marcelo, 22/09/2026). Na Hostinger ele fica fora do painel e não aceita regra por endereço.
+   - Domínio da cadeia sem propriedade no Search Console (a varredura avisa "GSC 403"): liste os endereços dele no Arquivo da Internet (`https://web.archive.org/cdx/search/cdx?url={dominio}/*&output=json&fl=original,timestamp,statuscode&collapse=urlkey`) e ponha no `--extra` os que não têm equivalente no site, para irem à home em 1 salto.
 2. `bun scripts/cf-deploy-r2.ts {site}` e conferir **pela VPS** (200, `www` com 301, canonical). `live: true` no sites-meta.
 3. `bun scripts/cf-deploy-worker.ts`.
-4. `bun scripts/port-zonas-antigas.ts {dominios que o port-regras cobriu}` e, conferido, `--aplicar` (rotas, proxy, purge, MX igual). Os que o `port-regras` deixou de fora (a Hostinger já leva ao site em 1 salto) ficam como estão: o script recusa domínio sem catch-all no worker.
+4. `bun scripts/port-zonas-antigas.ts {todos os domínios antigos da cadeia}` e, conferido, `--aplicar` (rotas, proxy, purge, MX igual). O script recusa domínio sem catch-all no worker. Endereço com `www` chega em 2 saltos (o worker tira o `www` antes da regra), como em todo domínio antigo do worker.
 5. `bun scripts/port-conferir.ts --montar {dominio-wp} {site} --extra={arquivo.tsv} [--com-site] > lista.tsv` no Mac, copiar a lista para a VPS e lá, com o commit dos scripts já puxado, `sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && bun scripts/port-conferir.ts --testar /tmp/lista.tsv'`. Todo endereço com clique tem que cair no destino em 1 salto. O que ficar fora volta ao passo 1. `--com-site` no cenário A: o histórico do próprio herdeiro também muda com a virada.
 
 ## Fase 7 — Search Console e painel
 
 - C: `bun scripts/gsc-registrar-dominio.ts {dominio-novo}`.
 - Depois da virada: `bun scripts/gsc-apagar-sitemaps-wordpress.ts {todos os domínios, inclusive o novo} --aplicar` (a propriedade nova pode trazer sitemaps do dono anterior).
-- As quatro coletas: `bun docs/painel/scripts/cf-accounts-snapshot.ts` (commit à mão) e `bash scripts/cron-domains-status.sh` **na VPS**, do mesmo jeito que acima (`sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && …'`); `bun docs/painel/scripts/linhagens-snapshot.ts` e `bun scripts/mapa-artigos-orfaos.ts` no Mac (conferir antes que o Mac resolve o domínio novo).
+- As quatro coletas:
+  - **na VPS**, do mesmo jeito que acima (`sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && …'`): `bun docs/painel/scripts/cf-accounts-snapshot.ts` (commit à mão) e `bash scripts/cron-domains-status.sh`. O retrato das contas **só na VPS**: no Mac há credencial de uma conta só, e o arquivo sai com `accounts_checked: 1` e as zonas da outra conta sem dado (22/09/2026). Confira `accounts_checked: 2` antes do commit;
+  - **no Mac**: `bun docs/painel/scripts/linhagens-snapshot.ts` (é dele a data "na Cloudflare desde" das caixas do mapa) e `bun scripts/mapa-artigos-orfaos.ts`. Confira antes que o Mac resolve o domínio novo.
 - Linhagem: `bun scripts/port-linhagem.ts {site}` sugere os elos da Hostinger que faltam declarar (régua da inclusão, ou "visto" pela primeira coleta da sonda) e os declarados que o worker encerrou. Gravar em `linhagens-declaradas.json` com nota.
 - Gerar o painel e **olhar o mapa na tela** (prévia com o `main.css` embutido, sem scripts nem tabelas, abaixo de 512 KB, apagada depois): um card, domínios em laranja ou roxo, nenhum ponto vermelho, o domínio portado fora de "Sem site no painel", cadeia original na ordem do tempo.
 - C: conferir no console da Amazon se o domínio novo está na lista de sites (`amazon-lista-sites-auditar`).
