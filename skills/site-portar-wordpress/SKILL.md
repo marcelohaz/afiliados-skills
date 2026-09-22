@@ -71,7 +71,14 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
    - `--tag`: a do próprio WordPress (conferir a mais usada nos posts) ou a do herdeiro. Nunca inventar tag.
    - `--so` regrava o `port-plano.json` só com esses posts: rode de novo sem `--gravar` e sem `--so` para refazer o plano inteiro.
    - Cenário A: categorias do WordPress genéricas ("melhores") saem; cada artigo vai para a categoria do seu produto que o herdeiro já tem.
-2. `bun scripts/port-dados-produto.ts {site} --amazon` (no Mac). Sai 1 enquanto sobrar achado:
+2. **Keyword.** O `wp-portar` propõe `keyword` e `keywordPlural` de cada artigo (`scripts/lib/keyword-do-port.ts`): o 1º negrito da introdução, que é a keyword que o texto do WordPress já usa, e o plural pelo último negrito ou pelo `listHeading` quando o negrito repete o singular. A lista sai no relatório ("keywords propostas") e no `port-plano.json`. **É proposta:** confira toda linha marcada com ⚠ antes do `--gravar`, com esta régua (Marcelo, 22/09/2026):
+   - keyword é **"melhor X" por padrão**. A forma sem "melhor" costuma ter SERP transacional (loja, fabricante, Shopping) e só vale quando a SERP dela é de conteúdo: faixa de preço ("celular até 1000 reais"), uso ("notebook para trabalhar"). **Não é regra:** abra a SERP do Google BR e conte conteúdo × loja nos orgânicos;
+   - Search Console da linhagem (buscas da página, com posição e CTR): título e busca concordando contra o negrito, vence o título. Posição boa com CTR muito baixo no termo sem "melhor" é o sinal de SERP transacional: em 22/09/2026, na mesma faixa de posição, o termo sem "melhor" teve de 3 a 10× menos CTR ("roteador mesh" 0,5% × "melhor roteador mesh" 5,0%);
+   - artigo que rankeia bem na forma ampla sem "melhor" é **artigo forte**, não motivo para mirar nela ("pressurizador de água" na posição 3,5, com os 4 primeiros orgânicos todos lojas);
+   - keyword no singular e sem ano; plural com concordância ("melhores cadeiras gamer", não "melhores cadeira gamers").
+
+   Por que importa: a `artigo-guia-escrever` analisa os concorrentes da SERP da keyword EXATA (numa SERP transacional, os "concorrentes" são lojas) e a `linkagem-auditar` compara a âncora com ela. Os 6 primeiros ports saíram **sem keyword** nos 112 artigos e ela foi preenchida depois (commit `49e29cfe6`); a proposta automática acerta 104 keywords e 102 plurais desses 112, e o resto foi decisão por Search Console e SERP.
+3. `bun scripts/port-dados-produto.ts {site} --amazon` (no Mac). Sai 1 enquanto sobrar achado:
    - **marca** do nome contra a página ou a bíblia do mesmo ASIN, e **ASIN repetido** no artigo;
    - **card × texto** (`scripts/lib/card-texto.ts`): o texto do produto, ou o guia, linka com o nome do produto um ASIN diferente do card. É o erro mais comum: no WordPress o autor copiava o card do produto vizinho e esquecia de trocar o ASIN, e o texto ficava com o certo. A dica diz o provável (card errado, texto errado ou dois ASINs com o mesmo nome);
    - `--amazon` lê título e estoque dos dois ASINs pelo curl. Funciona no Mac; a Amazon bloqueia a VPS, e a PA-API foi desligada.
@@ -92,7 +99,7 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
    - marca e repetido achavam 15 delas;
    - card × texto achou as outras 9, 2 delas no guia;
    - 14 casos ficaram como variante ou esgotado.
-3. Links internos quebrados que já eram quebrados no WordPress: apontar para o artigo que a âncora nomeia (só o `href`).
+4. Links internos quebrados que já eram quebrados no WordPress: apontar para o artigo que a âncora nomeia (só o `href`).
 
 ## Fase 3 — o site
 
@@ -109,7 +116,7 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 
 ## Fase 4 — travas antes de publicar
 
-`port-dados-produto` com saída 0 · Build · `check-dist-links` (0 quebrado) · `check-broken-images` · `audit-article` (portado: só erro técnico conta) · checklist do painel (`GET /site/{site}/audit-checklist`) · pré-checagem de publicação (`GET /deploy-precheck/{site}`) · no HTML gerado: canonical no domínio certo, 0 menção ao domínio antigo, uma tag só, sitemaps certos · **cenário A: toda URL do sitemap no ar tem que estar no build novo** (o deploy faz prune) · home, artigo, categoria e autor vistos no navegador.
+`port-dados-produto` com saída 0 · keyword em todo artigo (`audit-linkagem {site}` sem `ancora-nao-verificada` nem `extracao-incompleta`) · Build · `check-dist-links` (0 quebrado) · `check-broken-images` · `audit-article` (portado: só erro técnico conta) · checklist do painel (`GET /site/{site}/audit-checklist`) · pré-checagem de publicação (`GET /deploy-precheck/{site}`) · no HTML gerado: canonical no domínio certo, 0 menção ao domínio antigo, uma tag só, sitemaps certos · **cenário A: toda URL do sitemap no ar tem que estar no build novo** (o deploy faz prune) · home, artigo, categoria e autor vistos no navegador.
 
 ## Fase 5 — zona e DNS (só C)
 
@@ -161,6 +168,7 @@ Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar
 12. **Número de memória no relatório.** Todo número do relatório sai de um arquivo ou de uma medição feita na hora.
 13. **`sudo -u melhorserum-painel bun` na VPS dá "command not found":** o `sudo` não carrega o PATH do usuário. Use `sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && bun …'`.
 14. **Regra para a home em slug de artigo.** Para cumprir "1 salto", criei 218 regras de slug de artigo e endereço malformado para a home nos domínios antigos do compraguia e da cozinha, e 24 cópias das regras do próprio compraguia (22/09/2026). As duas seguravam o endereço: a do artigo, quando ele fosse criado; a cópia, quando o site mudasse a regra dele. Foram apagadas; o critério de saltos agora aceita 2 pela regra geral.
+15. **Port sem keyword.** Os 112 artigos dos 6 primeiros ports saíram sem `keyword`, e a linkagem passou "0 erros de âncora" com 195 links sem medição. Preenchida em 22/09/2026 pela régua da Fase 2; ao escolher, a tentação era seguir o termo com mais clique, que em 3 artigos era o termo de compra ("pressurizador de água", os dois de robô aspirador). A SERP decidiu.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 
