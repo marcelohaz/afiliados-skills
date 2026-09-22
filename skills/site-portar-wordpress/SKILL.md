@@ -14,7 +14,7 @@ Casos de referência: seis ports de 19 a 21/09/2026 (analistadeprodutos → melh
 
 ## O que esta skill É (e não é)
 
-É levar o **texto** de um WordPress para um site Astro e fazer **todos** os domínios da cadeia apontarem para ele, em 1 salto. O texto entra como está (`scripts/wp-portar.ts`, com `portadoDe` e `contentLocked: true`) e é reescrito aos poucos depois, se a medição mandar.
+É levar o **texto** de um WordPress para um site Astro e fazer **todos** os domínios da cadeia apontarem direto para ele, sem passar por outro domínio antigo. O texto entra como está (`scripts/wp-portar.ts`, com `portadoDe` e `contentLocked: true`) e é reescrito aos poucos depois, se a medição mandar.
 
 - **NÃO é a `site-migrar-dominio`**: aquela troca o domínio de um site Astro que já está no ar, sem mexer em conteúdo, de 1 domínio para 1. Ela mesma diz que não cobre consolidação nem go-live de site novo, e o port é as duas coisas. A Fase 5 daqui aponta para a Fase 2 dela (zona e DNS de domínio novo).
 - **NÃO é clone** (`artigo-clonar-em-massa`): clone escreve do zero a partir das bíblias. Reescrever o portado é o plano B da Fase 8, e usa as skills de escrita.
@@ -147,7 +147,7 @@ Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar
 
 ## Armadilhas (cada uma aconteceu)
 
-1. **Varrer só o domínio pedido.** Os domínios de cima da cadeia, que redirecionam pela Hostinger, ficaram em 2 saltos no wi-fi e na beleza. `port-regras.ts` usa a cadeia inteira.
+1. **Varrer só o domínio pedido.** Os domínios de cima da cadeia, que redirecionam pela Hostinger, ficaram passando por outro domínio antigo (2 saltos entre domínios) no wi-fi e na beleza. `port-regras.ts` usa a cadeia inteira. Não confundir com os 2 saltos aceitos da armadilha 14, que são dentro do site novo (caminho sem artigo → página inicial).
 2. **Conferir a regra contra ela mesma.** A lista de teste tem que vir do histórico do GSC (`port-conferir.ts`), não das regras.
 3. **Home que era o artigo.** A home do melhoresnotebooks2025 (2.383 cliques) era o próprio artigo "Melhores Notebooks"; o catch-all mandaria para a home do site novo.
 4. **Regra do herdeiro que esconde o artigo portado.** 20 no cozinhaideal; no worker, a regra vale antes da página.
