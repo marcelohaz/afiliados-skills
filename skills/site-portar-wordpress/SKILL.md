@@ -35,7 +35,7 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 - **Uma linhagem vai para UM herdeiro** (canon Marcelo, 19/09/2026). Se já existe site Astro nosso herdeiro dessa linhagem, o texto vai para ele (cenário A), nunca para um segundo site.
 - **Cenário C (domínio novo) só com decisão do Marcelo registrada na conversa**, mostrando a evidência acima. Não é escolha da skill.
 - **Não mexer no melhorfonedeouvido.com.br** sem pedido explícito: é o único WordPress com tráfego que resistiu a maio e junho.
-- **Texto do WordPress não é reescrito no port.** Correção permitida sem perguntar: dado errado com destino óbvio (href quebrado, ASIN trocado confirmado pela página ou pela bíblia, meta vazia com `og:description` do próprio post). Cada uma vai no commit e no relatório.
+- **Texto do WordPress não é reescrito no port.** Correção permitida sem perguntar: dado errado com destino óbvio (href quebrado, ASIN trocado confirmado pela página, pela bíblia ou pelo título na Amazon, meta vazia com `og:description` do próprio post). Cada uma vai no commit e no relatório. Depois de publicado, o artigo portado está `contentLocked: true`: corrigir só com o sim do Marcelo, com backup em `.painel-backups/` e `--no-verify` (a Fase J barra `.mdx` fora do painel).
 - **Ordem da virada é dura:** o site serve → worker com as regras → rotas nas zonas antigas. Rota antes da regra manda o domínio para o fallback de 404 da rede (a home).
 - **Domínio antigo nunca recebe `cf-create-zone`** (derruba o WordPress que ainda está lá) e o **MX dele fica intocado** (o e-mail mora na Hostinger).
 - **Site com `contentLocked` ou `deployBlocked` no sites-meta: parar e avisar.** Código compartilhado (`packages/ui`) só com prova de que os outros sites do template não mudam (build antes e depois).
@@ -71,7 +71,27 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
    - `--tag`: a do próprio WordPress (conferir a mais usada nos posts) ou a do herdeiro. Nunca inventar tag.
    - `--so` regrava o `port-plano.json` só com esses posts: rode de novo sem `--gravar` e sem `--so` para refazer o plano inteiro.
    - Cenário A: categorias do WordPress genéricas ("melhores") saem; cada artigo vai para a categoria do seu produto que o herdeiro já tem.
-2. `bun scripts/port-dados-produto.ts {site}` — ASIN × nome da página ou da bíblia, ASIN repetido, cobertura de página e de bíblia. Marca diferente confirmada (a bíblia e a página batem entre si) é corrigida trocando só o ASIN, com o motivo no commit. Nos 6 ports de referência ele achou 17 casos herdados do WordPress: 8 certos (2 ASINs trocados entre si, 3 repetidos entre marcas diferentes, 3 de outra marca confirmados pela bíblia), 4 prováveis (repetidos entre modelos da mesma marca, que podem ser anúncio com variações), 1 produto listado duas vezes e 4 nomes que não batem com a Amazon. ASIN repetido sem bíblia não diz qual dos dois está errado: confira no anúncio antes de trocar.
+2. `bun scripts/port-dados-produto.ts {site} --amazon` (no Mac). Sai 1 enquanto sobrar achado:
+   - **marca** do nome contra a página ou a bíblia do mesmo ASIN, e **ASIN repetido** no artigo;
+   - **card × texto** (`scripts/lib/card-texto.ts`): o texto do produto, ou o guia, linka com o nome do produto um ASIN diferente do card. É o erro mais comum: no WordPress o autor copiava o card do produto vizinho e esquecia de trocar o ASIN, e o texto ficava com o certo. A dica diz o provável (card errado, texto errado ou dois ASINs com o mesmo nome);
+   - `--amazon` lê título e estoque dos dois ASINs pelo curl. Funciona no Mac; a Amazon bloqueia a VPS, e a PA-API foi desligada.
+
+   O `wp-portar` já avisa o card × texto na conversão. Decida cada achado pelo título na Amazon:
+
+   | o que a Amazon mostra | o que fazer |
+   |---|---|
+   | o ASIN do texto é o produto do nome, e o do card é outro | trocar o `asin` do card (ele gera 7 links na página: tabela do topo, foto, nome, botões) e os links com o nome que ainda levem ao errado |
+   | o ASIN do link é o card de outro produto da lista | trocar o link do texto |
+   | o certo está indisponível e o card leva a outro produto | pôr o certo mesmo assim: o leitor não vai a outro produto com o nome errado |
+   | nenhum dos dois é o produto (o WordPress nunca teve o certo) | achar na Amazon o anúncio que bate com o texto (modelo, memória, 4G ou 5G) e anotar no commit |
+   | variante (cor, memória, voltagem), modelo vizinho à venda com o do nome esgotado, ou os dois esgotados | não mexer; registrar em `docs/port-wordpress/card-texto-conferidos.tsv` com o veredito |
+   | produto listado duas vezes (o título diz N e a lista tem N+1) | tirar a repetição |
+
+   Medido nos 6 primeiros ports, que foram ao ar sem este passo (22/09/2026):
+   - **24 correções em 19 artigos**, feitas depois de no ar;
+   - marca e repetido achavam 15 delas;
+   - card × texto achou as outras 9, 2 delas no guia;
+   - 14 casos ficaram como variante ou esgotado.
 3. Links internos quebrados que já eram quebrados no WordPress: apontar para o artigo que a âncora nomeia (só o `href`).
 
 ## Fase 3 — o site
@@ -89,7 +109,7 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 
 ## Fase 4 — travas antes de publicar
 
-Build · `check-dist-links` (0 quebrado) · `check-broken-images` · `audit-article` (portado: só erro técnico conta) · checklist do painel (`GET /site/{site}/audit-checklist`) · pré-checagem de publicação (`GET /deploy-precheck/{site}`) · no HTML gerado: canonical no domínio certo, 0 menção ao domínio antigo, uma tag só, sitemaps certos · **cenário A: toda URL do sitemap no ar tem que estar no build novo** (o deploy faz prune) · home, artigo, categoria e autor vistos no navegador.
+`port-dados-produto` com saída 0 · Build · `check-dist-links` (0 quebrado) · `check-broken-images` · `audit-article` (portado: só erro técnico conta) · checklist do painel (`GET /site/{site}/audit-checklist`) · pré-checagem de publicação (`GET /deploy-precheck/{site}`) · no HTML gerado: canonical no domínio certo, 0 menção ao domínio antigo, uma tag só, sitemaps certos · **cenário A: toda URL do sitemap no ar tem que estar no build novo** (o deploy faz prune) · home, artigo, categoria e autor vistos no navegador.
 
 ## Fase 5 — zona e DNS (só C)
 
@@ -126,7 +146,7 @@ Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar
 2. **Conferir a regra contra ela mesma.** A lista de teste tem que vir do histórico do GSC (`port-conferir.ts`), não das regras.
 3. **Home que era o artigo.** A home do melhoresnotebooks2025 (2.383 cliques) era o próprio artigo "Melhores Notebooks"; o catch-all mandaria para a home do site novo.
 4. **Regra do herdeiro que esconde o artigo portado.** 20 no cozinhaideal; no worker, a regra vale antes da página.
-5. **Dados de produto do WordPress.** ASINs trocados, repetidos e de outro produto (Fase 2).
+5. **Dados de produto do WordPress.** O card levava a outro produto em 24 lugares de 19 artigos nos 6 primeiros ports, publicados assim. A checagem de marca não vê erro dentro da mesma marca (Deco M5 com o ASIN do M4) nem ASIN sem bíblia. Card × texto e leitura na Amazon, na Fase 2.
 6. **Scaffold com texto de template:** `/sobre/` provisório, autor alegando teste presencial, H1 quebrado, e-mail `@dominio`, `knowsAbout` de outro nicho.
 7. **Descrição de categoria do WordPress** repete o mesmo molde entre os sites portados.
 8. **Sitemap de dono anterior** na propriedade nova do GSC (melhoreseletro, melhorestetica, melhortech).
