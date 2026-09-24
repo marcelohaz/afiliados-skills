@@ -82,7 +82,7 @@ Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` n
    fez 58 consertos em vez de zero.
 0.3. **Carregar cada bíblia** (`docs/biblias-v2/<ASIN>.json`). Ausente → pular + listar.
 0.4. **Classificar**: Pendente (não coreDone) → **PULA** ("preencha primeiro"). Contaminada-hard (`check-contamination.ts` com `cross-brand-mention`) → **EXCLUI** (corrigir à mão na individual). Sem-dados-brutos → **EXCLUI**. Preenchida + não-hard-contaminada → **ENTRA**.
-0.5. **Mostrar plano + confirmar** (tabela ENTRA/PULA/EXCLUI + nº no lote + estimativa). `S/N` antes do paralelo. (Quando encadeada pelo `preencher-em-massa --audit`, herda o lote recém-preenchido, sem nova confirmação.)
+0.5. **Mostrar plano e seguir direto** (tabela ENTRA/PULA/EXCLUI + nº no lote + estimativa), **sem pedir `S/N`**. As skills de bíblia são full-auto (canon Marcelo 2026-09-13) e o pré-flight 0.1-0.4 é a barreira. Isto vale em dobro quando esta skill é chamada por outra (`preencher-em-massa --audit`, e desde 2026-09-24 a Etapa 4.5 da `pagina-produto-auditar-em-massa` e o passo 12d da `pagina-produto-criar-em-massa`): uma pergunta aqui encerra o turno e trava o lote de quem chamou no meio. Até 24/09 este passo pedia `S/N`, e o 12d/4.5 recém-criados teriam parado nele.
 
 ### Etapa 1 — Camada MECÂNICA grupo (A) (grep determinístico, sem IA)
 
