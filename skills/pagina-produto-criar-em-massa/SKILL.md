@@ -570,11 +570,14 @@ Detecção:
       (canon 2026-07-10, que esta régua refina e não revoga). ⚠️ Se a página
       contradiz a `decisaoEditorial` **mas obedece outro campo da mesma bíblia**,
       NÃO toque na página — o alvo é a bíblia, e o relatório aponta pra lá.
+    - **Achado cuja raiz é a BÍBLIA** (seção "Registre a raiz como PENDÊNCIA DA
+      BÍBLIA" da individual): NÃO grave a fila, devolva em `pendenciasBiblia`,
+      com evidência literal do bruto. A mãe grava.
     - **Escreva o relatório `.md`** em `docs/biblias-v2/.audits/products/{site}-{slug}-last.md`,
       distinguindo **CORRIGIDO** (com o diff) de **REPORTADO**
     - **NÃO faça** `git add`, `git commit`, `git push`, nem
       `painel-vps-pull.sh` — skill mãe controla isso
-    - Retorne: `{ok: true, slug, severity, corrigidos: [{campo, de, para}], issues: [...]}`
+    - Retorne: `{ok: true, slug, severity, corrigidos: [{campo, de, para}], issues: [...], pendenciasBiblia: [{campo, problema, evidencia}]}`
 
     Skill mãe agrega:
     - **Páginas SEM issues críticos**: aprovadas
@@ -633,10 +636,30 @@ Detecção:
     termine-a **inline** em vez de re-disparar o sub-agent — o `Edit` dele já está no
     disco, e um agente novo re-audita um arquivo que já mudou sem saber disso.
 
-    **12c.** Skill mãe faz **DOIS commits separados**, nesta ordem:
+    **12c.** Antes dos commits, grave a fila da bíblia com o que voltou em
+    `pendenciasBiblia` (a mãe preenche `asin`, `site` e `slug` de cada item):
+    `bun scripts/biblia-pendencias.ts add-json {arquivo.json}`.
+
+    Skill mãe faz **DOIS commits separados**, nesta ordem:
     1. os `.mdx` consertados (se houver), com a mensagem dizendo o que foi trocado
-    2. os `.md` de audit
+    2. os `.md` de audit **+ `docs/biblias-v2/.audits/pendencias-biblia-{owner}.jsonl`** (se houve pendência)
     Lista específica em cada `git add`, nunca glob. Depois push + VPS pull.
+
+    **12d. Fechar o ciclo na bíblia (canon 2026-09-24, só se houve pendência).**
+    O achado de página que aponta para a bíblia só vale se chegar nela. Rode, no
+    mesmo turno, a **`biblia-auditar-em-massa`** nos ASINs com pendência
+    (`bun scripts/biblia-pendencias.ts asins`): ela lê a fila como entrada
+    obrigatória, corrige, re-audita e dá baixa item a item. Depois,
+    `bun scripts/biblia-pendencias.ts reauditar --json` lista as páginas da rede
+    escritas antes do conserto (inclusive as deste lote e as de outros sites):
+    rode **uma** rodada da `pagina-produto-auditar-em-massa` nelas, com
+    `ANINHADA=yes`, agrupadas por site e com o aviso do que mudou em cada bíblia.
+    Pendência nova que surgir nessa rodada fica na fila para a próxima execução.
+
+    Caso-origem (24/09/2026, dois lotes do compraguia): 7 bíblias apontadas pelas
+    auditorias de página, 6 delas marcadas como aprovadas. Corrigidas com os
+    achados como entrada, deram 58 consertos, e 15 páginas em 4 sites ainda diziam
+    a versão antiga.
 
     Separar importa: o commit de conteúdo tem que ser legível sozinho no
     histórico e revertível sem levar os relatórios junto.
@@ -697,6 +720,8 @@ Detecção:
     📦 Commit (criação): {hash-1}
     📦 Commit (fixes):   {hash-2}   ← só se houve conserto
     📦 Commit (audits):  {hash-3}
+    📚 Bíblias (12d):    {N} ASINs, {X} pendências baixadas → {consertado | improcedente | chip}
+                         páginas realinhadas: {site/slug, ...}
     🔄 VPS sincronizado: {OK | bloqueado}
     🔍 Audits: {ok} OK / {fix} corrigidos / {warn} warnings / {err} críticos abertos
     ```

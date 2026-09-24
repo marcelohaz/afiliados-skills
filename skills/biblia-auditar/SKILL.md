@@ -53,6 +53,12 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
    Sem avisos, siga. Caso real: o aviso *"Atualizei a pagina do fornecedor"* na B0FGDJNXPP era a chave dos
    7 achados daquela auditoria, e sem ele o relatório teria descrito sintoma em vez de causa. Medido em
    2026-09-04: 17 bíblias da rede têm aviso, e 9 delas nunca foram auditadas.
+1.5. **Ler a fila de pendências vindas das páginas** (canon 2026-09-24):
+   `bun scripts/biblia-pendencias.ts list <ASIN>`. Cada item é um problema que a auditoria de uma
+   PÁGINA achou nesta bíblia, com o campo, o problema e a evidência do bruto. **Entrada obrigatória:**
+   confira cada um contra os brutos e decida: consertar (entra nos achados), improcedente (diga por
+   quê) ou indeterminável (vira `auditFlags` de revisão). A fila existe porque o relatório da página
+   ninguém lia de volta: em 24/09 seis bíblias aprovadas tinham problema de fato que só as páginas viram.
 2. **Rodar as 5 categorias de checagem** (abaixo). Anote achados em memória.
 3. **Verificação externa opcional**: Se houver claims numéricos específicos (wattagem, dpi, capacidade) e dúvida, use `WebFetch` em `identidade.urlFabricante` pra cruzar. Não navegue em sites aleatórios; priorize fabricante oficial > Amazon ao vivo > nada.
 3.5. **Auto-baixar imagem pendente** (régua 2026-06-03 — a auditoria FECHA o gap, não só sugere): se `identidade.imagemAmazon` está preenchido **e** `docs/biblias-v2/<ASIN>.webp` NÃO existe, baixe agora antes de escrever o relatório:
@@ -93,6 +99,11 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
    - Backup: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/$(date +%Y-%m-%d)/<ASIN>-v2-$(date +%H%M%S).json`.
    - Editar os campos curados (óbvios + aprovados) **e o naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (script que lê o JSON, muta os campos, escreve `JSON.stringify(b, null, 2) + '\n'`). NUNCA tocar nos campos brutos.
    - **Bumpar `b.lastModified = new Date().toISOString()`** (ver invariante — sem isso o push é clobberado). Manter `lastAuthor`.
+   - **Dê baixa em cada pendência do passo 1.5**, com o resultado:
+     `bun scripts/biblia-pendencias.ts baixa <ASIN> <id> "consertado: ... | improcedente: ... | virou chip de revisão: ..."`.
+     O arquivo `docs/biblias-v2/.audits/pendencias-biblia-{owner}.jsonl` vai no commit do passo 9.5.
+     A baixa é o que faz as páginas da rede escritas antes do conserto aparecerem em
+     `bun scripts/biblia-pendencias.ts reauditar` (cite o comando no relatório final).
 
 9.5. **Reescrever o `-last.md` e recommitar depois do apply** (canon 2026-08-15): o relatório do passo 4 foi escrito ANTES dos consertos; sem este passo o `-last.md` no git (o que o painel exibe) não tem os "✅ CORRIGIDO" nem os diffs aplicados. Regrave os dois arquivos do passo 4 com o estado final e repita o commit do passo 5.
 10. **Sync R2 + confirmar (SEMPRE roda)**: `bun scripts/sync-biblias-r2.ts --apply --push`. Roda mesmo em audit read-only — a Etapa 4.5 sempre grava `lastAuditedAt` no JSON, então há sempre algo pra subir. Conferir que a linha do ASIN é `enviado` (local mais novo) e não `recebido` (clobber). Re-rodar o sync: deve dar `0 enviadas, 0 recebidas` (steady-state = local==R2). Reportar o que foi aplicado + status do push.

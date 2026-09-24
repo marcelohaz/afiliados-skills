@@ -175,6 +175,20 @@ ter sido auditada. Medido 2026-08-29:
 commit "remove audit órfão do slug antigo", página seguiu no ar. Se a skill
 herdasse esse critério, pularia exatamente as páginas que mais precisam.
 
+**Também é pendente a página cuja BÍBLIA foi corrigida depois do relatório dela**
+(canon 2026-09-24). Consertar a bíblia não conserta as páginas já escritas a partir
+dela: em 24/09 a correção de 6 bíblias deixou 15 páginas em 4 sites dizendo a versão
+antiga, todas com relatório de auditoria e todas fora do critério acima. Some estas
+à lista:
+
+```bash
+bun scripts/biblia-pendencias.ts reauditar [site] --json   # {site: [slugs]} com relatório anterior à última baixa da bíblia
+```
+
+No prompt dessas páginas, diga o que mudou na bíblia (a `resultado` das baixas e o
+relatório `docs/biblias-v2/.audits/{ASIN}-last.md`). É o aviso por bíblia que a
+Etapa 2 já pede, e sem ele o auditor não sabe o que procurar.
+
 Zero pendentes = **fim legítimo**, relatório de 3 linhas + `stop`. Não é uma lista
 de opções esperando resposta.
 
@@ -237,12 +251,16 @@ Contexto deste lote:
 - ⚠ `warn` de julgamento NUNCA aplica.
 - ⚠ Página contradiz `decisaoEditorial` mas obedece outro campo da mesma bíblia
   → NÃO toque; o alvo é a bíblia e o relatório aponta pra lá.
+- ⚠ Achado cuja raiz é a BÍBLIA (seção "Registre a raiz como PENDÊNCIA DA BÍBLIA"
+  da individual): NÃO grave a fila, devolva em `pendenciasBiblia`, com evidência
+  literal do bruto. A mãe grava.
 - Chavões: `{site}` {está/NÃO está} em `_sites_aplicaveis` — {bloco X vale / só o `_genericos`}.
 - Site {live/em construção}. {avisos por bíblia, se houver — dadosInconsistentes/auditFlags}
 - Relatório em `docs/biblias-v2/.audits/products/{site}-{slug}-last.md`,
   separando **CORRIGIDO** (com diff) de **REPORTADO**.
 
-Retorne: {ok, slug, severity, corrigidos:[{campo,de,para}], issues:[...]}
+Retorne: {ok, slug, severity, corrigidos:[{campo,de,para}], issues:[...],
+          pendenciasBiblia:[{campo,problema,evidencia}]}
 ```
 
 ⚠ **A linha do backup não é redundante com a Invariante.** A exigência já morava
@@ -321,10 +339,17 @@ Conserto que não passa na guarda não vale o risco.
 
 ### Etapa 4 — Dois commits separados, push, VPS
 
+**Antes dos commits, grave a fila da bíblia** com o que os sub-agents devolveram em
+`pendenciasBiblia` (a mãe preenche `asin`, `site` e `slug` de cada item):
+
+```bash
+bun scripts/biblia-pendencias.ts add-json {arquivo.json}   # array de {asin,site,slug,campo,problema,evidencia}
+```
+
 Nesta ordem, com lista explícita em cada `git add` (nunca glob):
 
 1. os `.mdx` consertados (se houver) — mensagem dizendo o que foi trocado
-2. os `.md` de auditoria
+2. os `.md` de auditoria **+ `docs/biblias-v2/.audits/pendencias-biblia-{owner}.jsonl`** (se houve pendência)
 
 ```bash
 git add sites/{site}/src/content/products/{slug}.mdx ...
@@ -337,6 +362,24 @@ git pull --rebase origin main && git push origin main
 echo "local=$(git rev-parse --short=9 HEAD) remote=$(git ls-remote origin main | cut -c1-9)"
 bash scripts/painel-vps-pull.sh
 ```
+
+### Etapa 4.5 — Fechar o ciclo na bíblia (quando houve pendência nova)
+
+Se a Etapa 4 gravou pendência, rode a **`biblia-auditar-em-massa`** nos ASINs dela, no
+mesmo turno (full-auto, ela lê a fila e dá baixa item a item):
+
+```bash
+bun scripts/biblia-pendencias.ts asins      # → B0...,B0...
+```
+`Skill(afiliados-skills:biblia-auditar-em-massa, "{asins}")`
+
+Depois, `bun scripts/biblia-pendencias.ts reauditar --json` lista as páginas da rede
+escritas antes do conserto. Rode **uma** rodada desta skill nelas (com `ANINHADA=yes`,
+agrupadas por site), com o aviso do que mudou em cada bíblia. **Com `ANINHADA=yes`,
+pule esta etapa inteira:** quem chamou já está fechando o ciclo, e chamar de novo daqui
+seria recursão. **Uma rodada só:**
+pendência nova que surgir nessa segunda passada fica na fila para a próxima execução,
+e vai no relatório. Sem esse corte o ciclo página → bíblia → página não termina.
 
 ⚠ **`--only` + pathspec nos DOIS, nunca `git commit` nu (canon 2026-09-02).**
 Commit sem pathspec leva **o índice inteiro**, e o índice é do REPOSITÓRIO: se
@@ -367,8 +410,9 @@ CORRIGIDO NA HORA ({F}) — passou no teste da frase nova:
 REPORTADO ({R}) — exige decisão sua:
   {slug} · {categoria} · {evidência curta}
 
-RAIZ NA BÍBLIA ({B}) — o alvo não é a página:
-  {ASIN} · {campo} · {o que contradiz}
+RAIZ NA BÍBLIA ({B}) — gravado na fila e resolvido na Etapa 4.5:
+  {ASIN} · {campo} · {o que contradiz} → {consertado | improcedente | chip de revisão}
+  páginas realinhadas depois: {site/slug, ...}
 
 📦 Commit (fixes): {hash}   📦 Commit (audits): {hash}
 🔄 VPS: {OK | bloqueado}
@@ -399,7 +443,7 @@ poder discordar de uma troca sem abrir o diff do git.
 
 - Não cria página, não preenche campo vazio, não regera conteúdo.
 - Não aplica `warn` de julgamento, nem "óbvio".
-- Não edita a BÍBLIA (o alvo é a página; achado de raiz vai pro relatório).
+- Não edita a BÍBLIA com as próprias mãos. Achado de raiz vai para a fila (`biblia-pendencias.ts`), e quem edita a bíblia é a `biblia-auditar-em-massa`, chamada na Etapa 4.5.
 - Não faz deploy nem `cf-deploy-*`.
 - Não toca em site/página com `contentLocked`.
 

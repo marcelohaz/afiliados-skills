@@ -8,6 +8,7 @@ description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (
 Args no `$ARGUMENTS`:
 - **Lista de ASINs** (forma do botão do painel): `B0CH5RSZTP,B01I78MAHW,B093Q7LLD6` (vírgula, sem espaço). Cada um `^[A-Z0-9]{10}$`.
 - **`todas`**: varre `docs/biblias-v2/*.json`, pega as **preenchidas** (coreDone) auditáveis (ver Etapa 0.4).
+- **`pendentes`**: as bíblias com pendência aberta na fila que as auditorias de página alimentam (`bun scripts/biblia-pendencias.ts asins`). É o que as skills de página em massa chamam no fim do lote.
 - **Filtro** (opcional): `niche=Panela Elétrica` ou `sub=panela-eletrica` → restringe o "todas" àquela subcategoria.
 - **Flag `--report-only`** (opcional, default DESLIGADO): se passada, NÃO auto-aplica nada — só reporta tudo (modo conservador, vira a antiga triagem). Default é auto-aplicar o conhecível.
 
@@ -73,7 +74,12 @@ Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` n
 ### Etapa 0 — Pré-flight (auto; aborta/exclui cedo)
 
 0.1. **Sync R2 pull**: `bun scripts/sync-biblias-r2.ts --apply 2>&1 | tail -3` (pull-only). Falhou → seguir, avisar que ausentes pulam.
-0.2. **Parse** dos ASINs (ou expandir `todas`/filtro). Validar `^[A-Z0-9]{10}$`.
+0.2. **Parse** dos ASINs (ou expandir `todas`/`pendentes`/filtro). Validar `^[A-Z0-9]{10}$`.
+0.2.1. **Fila de pendências vindas das páginas** (canon 2026-09-24): pra cada ASIN do lote,
+   `bun scripts/biblia-pendencias.ts list <ASIN> --json`. O que voltar vai no prompt daquele auditor
+   como **ENTRADA EXTRA obrigatória** (Etapa 2). Caso-origem: em 24/09 seis bíblias aprovadas tinham
+   problema de fato que só as auditorias de página viram, e com os achados como entrada a auditoria
+   fez 58 consertos em vez de zero.
 0.3. **Carregar cada bíblia** (`docs/biblias-v2/<ASIN>.json`). Ausente → pular + listar.
 0.4. **Classificar**: Pendente (não coreDone) → **PULA** ("preencha primeiro"). Contaminada-hard (`check-contamination.ts` com `cross-brand-mention`) → **EXCLUI** (corrigir à mão na individual). Sem-dados-brutos → **EXCLUI**. Preenchida + não-hard-contaminada → **ENTRA**.
 0.5. **Mostrar plano + confirmar** (tabela ENTRA/PULA/EXCLUI + nº no lote + estimativa). `S/N` antes do paralelo. (Quando encadeada pelo `preencher-em-massa --audit`, herda o lote recém-preenchido, sem nova confirmação.)
@@ -96,6 +102,9 @@ Scan determinístico nos campos curados. **Só LIXO DE DADO + NAMING** (não voz
 ### Etapa 2 — Camada LLM: achar + redigir conserto (sub-agents ISOLADOS)
 
 N sub-agents Opus, levas ≤10. Cada um (Agent tool, `model: opus`, fresh) vê SÓ sua bíblia. Anti-contaminação no prompt: "Você vê SÓ esta bíblia. NÃO mencione/leia outra. NÃO compare com outras." **Régua = FONTE ÚNICA: o prompt manda o sub-agent LER `.claude/skills/biblia-auditar/SKILL.md` + `docs/painel/_data/regras-biblia.md` à risca e aplicar as categorias de FATO de lá** — resumo inline de régua = proibido (evita drift; sub-agent não invoca Skill tool, por isso LÊ o arquivo; mesma fonte única da `pagina-produto-criar-em-massa`/clone). ⚠️ **A lista de categorias é a do arquivo lido, NÃO a deste parágrafo.** O que vem a seguir é orientação **não-exaustiva** pra montar o prompt — a checklist operativa do sub-agent tem que sair de `regras-biblia.md` (categorias do auditor) + categorias da `biblia-auditar`. Esta skill proíbe resumo inline de régua justamente porque ele drifta: em 2026-07-30 esta enumeração já estava sem **voz-comprador**, e 9 auditores em sequência deixaram passar a moldura de comprador plural por tomarem a enumeração como a lista fechada. Se você (skill-mãe) colar um "## Escopo" no prompt, marque-o como não-exaustivo e mande o sub-agent conferir a lista canônica antes de fechar o JSON. Escopo de FATO (orientação): consistência interna, **contaminação cross-produto** (dado de OUTRO produto em qualquer campo inclusive bruto), verificação externa, frescor, completude, naming, **voz-comprador** (inclui a moldura de sujeito humano MESMO com cardinalidade certa — ver categoria 5 da `biblia-auditar`), **e imagem anexada não lida** (canon 2026-07-26 — passar as URLs de `conteudoBrutoFabricanteImagens`/`doFabricanteImagens` no prompt e autorizar `curl` + `sips -Z 1400` + `Read`; sem isso o sub-agent audita só o texto e o achado nunca aparece. Se `imagensVerificadasEm` existe e a lista não mudou, avisar que já foram lidas). **NÃO audita voz editorial** (travessão/muleta/superlativo/concordância — é do review). Pra cada achado, **classifica B ou C e, se B, JÁ REDIGE o texto corrigido**:
+- **Pendências da fila (0.2.1) no prompt, com o id de cada uma.** O auditor confere cada uma contra os
+  brutos, sem aceitar de graça, e devolve `pendencias: [{id, veredito: 'consertado'|'improcedente'|'indeterminavel', nota}]`
+  junto de `fixes_B`/`report_C`. Pendência consertada tem fix B correspondente; indeterminável tem report_C.
 - **Substituição de claim sem lastro usa a forma ESTRITAMENTE REGISTRADA, mesmo mais seca.** Trocar inferência por inferência é onde o erro volta: em 27/08 um conserto trocou claim sem lastro por "dimensionado para uma ou duas xícaras" e a própria ficha desmentia (0,6 L ÷ doses de 40 ml ≈ 15 espressos). Derivação nova só se TODA a conta estiver nos dados.
 - **`dadosInconsistentes` tem o MESMO padrão de lastro dos campos públicos.** Afirmar atributo da versão-irmã dentro da flag é claim sem lastro, mesmo em campo interno e mesmo em forma de proibição (2 bíblias-irmãs, 27/08).
 - **(B) direção conhecida → redige o fix**: voz-comprador crua → observação analítica (vira fato usável) — **preservando a cardinalidade**: 1 review vira "há relato de X" (hedge singular), nunca consenso plural cru (Armadilha 1 da biblia-preencher); contradição contra a **própria `decisaoEditorial`** da bíblia → seguir a decisão; fonte atribuída errada num item curado → corrigir a fonte; claim curado que contradiz o bruto quando o bruto tem o valor certo → alinhar ao bruto. **NOVO 2026-09-04:** `dadosInconsistentes` que
@@ -152,7 +161,11 @@ Pra **cada** bíblia auditada (consertada ou não), no MESMO write: backup (se a
 
 4.1. **Por bíblia**: `docs/biblias-v2/.audits/<ASIN>-last.md` (formato `biblia-auditar`; painel lê). Lista o que foi **auto-consertado** (A+B, com antes→depois) + os **report-only (C)** pendentes + as **`auditFlags`** gravadas (chip do painel).
 4.2. **Consolidado no chat**: tabela por bíblia 🟢/🟡/🔴 + nº consertado + nº report-only. Resumo: X auto-consertadas, Y itens report-only (com o porquê de não dar pra aplicar).
-4.3. **Commit dos relatórios** (`.audits/<ASIN>-last.md` tracked) + push + `bash scripts/painel-vps-pull.sh`.
+4.2.1. **Baixa na fila** (só depois da re-auditoria da 3.5 ter passado, porque conserto revertido não resolve nada):
+   pra cada pendência, `bun scripts/biblia-pendencias.ts baixa <ASIN> <id> "<veredito>: <nota>"`. Pendência de
+   bíblia revertida na 3.5 NÃO leva baixa: fica aberta pra próxima execução. No consolidado, liste as páginas que
+   `bun scripts/biblia-pendencias.ts reauditar` passou a apontar (são as escritas antes do conserto).
+4.3. **Commit dos relatórios** (`.audits/<ASIN>-last.md` tracked) **+ `docs/biblias-v2/.audits/pendencias-biblia-{owner}.jsonl`** + push + `bash scripts/painel-vps-pull.sh`.
 
 ### Etapa 5 — Sync R2 push (SEMPRE — todas levam carimbo)
 

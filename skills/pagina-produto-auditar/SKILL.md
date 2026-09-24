@@ -750,6 +750,40 @@ o texto da flag que **proíbe** o claim, e deixou passar uma `dicasAcionaveis` q
 "desligue … pelo aplicativo" (o grep procurava "desligar"). Use a busca para **estreitar**, depois
 leia os campos. O que conta é o campo afirmar o claim, não conter a palavra.
 
+#### Registre a raiz como PENDÊNCIA DA BÍBLIA (canon 2026-09-24)
+
+**Reportar no relatório da página não basta: ninguém lê esse relatório de volta a partir da bíblia.**
+Todo achado cuja raiz é a bíblia vira uma pendência na fila `scripts/biblia-pendencias.ts`, que a
+`biblia-auditar` e a `biblia-auditar-em-massa` leem como entrada obrigatória e baixam item a item.
+
+Entra na fila (sempre com evidência): a página contradiz a `decisaoEditorial` mas obedece outro campo
+(o caso acima), um campo curado perdeu o qualificador que o bruto tem ("se disponível", "até",
+"MPRT"), uma `decisaoEditorial` apoiada em leitura errada do bruto, nome sem lastro em campo bruto
+nenhum. **Não entra:** `warn` de julgamento, voz editorial, saúde fora de suplemento, preferência de
+redação.
+
+Cada pendência tem três partes, nesta forma:
+- `campo`: caminho até a folha na bíblia (`dadosInconsistentes[3].decisaoEditorial`, `pontosFortes[3].texto`). Se o claim mora em vários campos, um deles e a lista dos outros no `problema`.
+- `problema`: uma frase dizendo o que está errado na bíblia, não na página.
+- `evidencia`: trecho literal do BRUTO (até ~25 palavras) com o nome do campo bruto, ou a URL oficial consultada.
+
+**Fora de lote:** registre você mesmo e leve o arquivo no commit do relatório:
+
+```bash
+bun scripts/biblia-pendencias.ts add {ASIN} --site={site} --slug={slug} \
+  --campo="..." --problema="..." --evidencia="..."
+# commit junto do relatório: docs/biblias-v2/.audits/pendencias-biblia-*.jsonl
+```
+
+**Com `EM_MASSA=yes`: NÃO grave.** Devolva no JSON de retorno
+`pendenciasBiblia: [{campo, problema, evidencia}]` e a skill-mãe grava, uma escrita por arquivo.
+
+**Por quê:** em 24/09/2026 as auditorias de página de dois lotes do compraguia apontaram 7 bíblias com
+problema de fato (altura trocada pela profundidade, WPS sem "se disponível", nome de outra variante).
+Seis delas estavam marcadas como auditadas e aprovadas, e a sétima tinha chip aberto havia dois meses.
+Com os achados como entrada, a auditoria das 6 fez 58 consertos e 15 páginas em 4 sites foram
+realinhadas. Sem a fila, os achados teriam ficado só na mensagem do chat.
+
 ### Como aplicar, quando aplicar
 
 Copie a mecânica da `biblia-auditar-em-massa`, não invente outra:
