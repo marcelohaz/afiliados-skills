@@ -95,10 +95,17 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
    |---|---|
    | o ASIN do texto é o produto do nome, e o do card é outro | trocar o `asin` do card (ele gera 7 links na página: tabela do topo, foto, nome, botões) e os links com o nome que ainda levem ao errado |
    | o ASIN do link é o card de outro produto da lista | trocar o link do texto |
-   | o certo está indisponível e o card leva a outro produto | pôr o certo mesmo assim: o leitor não vai a outro produto com o nome errado |
+   | o certo saiu da Amazon (404) ou está indisponível, e o card leva a outro produto | **sucessor** (ver abaixo): o card do WordPress costuma já ser o sucessor, porque essa era a prática do Marcelo; confira se é da mesma linha. Não serve: sucessor novo ou, sem sucessor claro, o certo mesmo fora de estoque |
+   | o certo saiu da Amazon, mas o mesmo modelo está à venda em outro anúncio | o anúncio atual (é o mesmo produto, não é sucessor) |
    | nenhum dos dois é o produto (o WordPress nunca teve o certo) | achar na Amazon o anúncio que bate com o texto (modelo, memória, 4G ou 5G) e anotar no commit |
    | variante (cor, memória, voltagem), modelo vizinho à venda com o do nome esgotado, ou os dois esgotados | não mexer; registrar em `docs/port-wordpress/card-texto-conferidos.tsv` com o veredito |
    | produto listado duas vezes (o título diz N e a lista tem N+1) | tirar a repetição |
+
+   **Produto que saiu de linha: link para o sucessor, sem aviso** (Marcelo, 24/09/2026; era a prática dele no WordPress, e vale para qualquer artigo, não só no port):
+   - **Só o link muda.** O `asin` do card vai para o sucessor (gera os 7 links do card) e todo link do texto que ia ao original vai também. Nome, review, foto (a do original, que combina com o nome) e texto ficam. Sem foto do original em lugar nenhum, a do sucessor.
+   - **Marcação interna, obrigatória:** `sucessorDe: { asin: <original>, motivo: "fora da Amazon (404)" | "indisponível", em: AAAA-MM-DD }` no produto. Não aparece na página (a página de produto tem o `descontinuado`, que mostra banner; o artigo não mostra nada). `bun scripts/sucessores.ts` lista a rede; o `port-dados-produto` deixa de acusar card × texto entre sucessor e original.
+   - **Sucessor de verdade:** mesma marca e linha, mesma faixa de preço e de uso (Redmi 13C → 15C, POCO C65 → C85). No compraguia o WordPress tinha trocado o Galaxy M55 pelo A07 (faixa mais barata) e o Xiaomi 13C pelo POCO M7 Pro (mais cara): isso não é sucessor. Sem sucessor claro, o original fica e o artigo entra na lista da reescrita.
+   - **Escopo no port:** os que saíram da Amazon e os que o WordPress já tinha trocado. Os só indisponíveis, que ainda têm página, ficam para uma passada da rede com o mapa pronto: ler todos custa várias rodadas por causa do captcha (257 produtos em 34 artigos).
 
    Medido nos 6 primeiros ports, que foram ao ar sem este passo (22/09/2026):
    - **24 correções em 19 artigos**, feitas depois de no ar;
