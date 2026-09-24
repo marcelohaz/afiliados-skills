@@ -645,21 +645,19 @@ Detecção:
     2. os `.md` de audit **+ `docs/biblias-v2/.audits/pendencias-biblia-{owner}.jsonl`** (se houve pendência)
     Lista específica em cada `git add`, nunca glob. Depois push + VPS pull.
 
-    **12d. Fechar o ciclo na bíblia (canon 2026-09-24, só se houve pendência).**
-    O achado de página que aponta para a bíblia só vale se chegar nela. Rode, no
-    mesmo turno, a **`biblia-auditar-em-massa`** nos ASINs com pendência
-    (`bun scripts/biblia-pendencias.ts asins`): ela lê a fila como entrada
-    obrigatória, corrige, re-audita e dá baixa item a item. Depois,
-    `bun scripts/biblia-pendencias.ts reauditar --json` lista as páginas da rede
-    escritas antes do conserto (inclusive as deste lote e as de outros sites):
-    rode **uma** rodada da `pagina-produto-auditar-em-massa` nelas, com
-    `ANINHADA=yes`, agrupadas por site e com o aviso do que mudou em cada bíblia.
-    Pendência nova que surgir nessa rodada fica na fila para a próxima execução.
+    **12d. Pendência de bíblia: só reportar, não executar (canon Marcelo 2026-09-24).**
+    Esta skill NÃO roda a `biblia-auditar-em-massa` nem reaudita páginas de outros
+    sites. O que voltou em `pendenciasBiblia` fica gravado na fila (12c) e aparece no
+    relatório como pergunta: "posso rodar `/biblia-auditar-em-massa pendentes` nestes
+    N ASINs?". Só roda com o sim do Marcelo. Depois da bíblia corrigida,
+    `bun scripts/biblia-pendencias.ts reauditar` lista as páginas escritas antes do
+    conserto, e reauditá-las também é pedido à parte.
 
-    Caso-origem (24/09/2026, dois lotes do compraguia): 7 bíblias apontadas pelas
-    auditorias de página, 6 delas marcadas como aprovadas. Corrigidas com os
-    achados como entrada, deram 58 consertos, e 15 páginas em 4 sites ainda diziam
-    a versão antiga.
+    Por quê: a primeira versão deste passo (24/09/2026) mandava encadear bíblia e
+    reauditoria da rede no mesmo turno. Num lote de 10 páginas isso virou 9 auditorias
+    de bíblia, 10 re-auditorias e 46 páginas em 12 sites, perto de 11 milhões de tokens.
+    O pedido era criar páginas. Escopo é o que foi pedido: etapa que dispara
+    sub-agents fora do lote precisa de sim explícito, mesmo quando a régua recomenda.
 
     Separar importa: o commit de conteúdo tem que ser legível sozinho no
     histórico e revertível sem levar os relatórios junto.
@@ -720,8 +718,7 @@ Detecção:
     📦 Commit (criação): {hash-1}
     📦 Commit (fixes):   {hash-2}   ← só se houve conserto
     📦 Commit (audits):  {hash-3}
-    📚 Bíblias (12d):    {N} ASINs, {X} pendências baixadas → {consertado | improcedente | chip}
-                         páginas realinhadas: {site/slug, ...}
+    📚 Bíblia (12d):     {N} pendências na fila ({ASINs}) → posso rodar /biblia-auditar-em-massa pendentes?
     🔄 VPS sincronizado: {OK | bloqueado}
     🔍 Audits: {ok} OK / {fix} corrigidos / {warn} warnings / {err} críticos abertos
     ```

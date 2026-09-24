@@ -363,23 +363,18 @@ echo "local=$(git rev-parse --short=9 HEAD) remote=$(git ls-remote origin main |
 bash scripts/painel-vps-pull.sh
 ```
 
-### Etapa 4.5 — Fechar o ciclo na bíblia (quando houve pendência nova)
+### Etapa 4.5 — Pendência de bíblia: só reportar, não executar (canon Marcelo 2026-09-24)
 
-Se a Etapa 4 gravou pendência, rode a **`biblia-auditar-em-massa`** nos ASINs dela, no
-mesmo turno (full-auto, ela lê a fila e dá baixa item a item):
+Esta skill NÃO roda a `biblia-auditar-em-massa` nem reaudita páginas de outros sites.
+A pendência gravada na Etapa 4 aparece no relatório como pergunta: "posso rodar
+`/biblia-auditar-em-massa pendentes` nestes N ASINs?". Só roda com o sim do Marcelo, e a
+reauditoria das páginas escritas antes do conserto (`bun scripts/biblia-pendencias.ts
+reauditar`) é outro pedido.
 
-```bash
-bun scripts/biblia-pendencias.ts asins      # → B0...,B0...
-```
-`Skill(afiliados-skills:biblia-auditar-em-massa, "{asins}")`
-
-Depois, `bun scripts/biblia-pendencias.ts reauditar --json` lista as páginas da rede
-escritas antes do conserto. Rode **uma** rodada desta skill nelas (com `ANINHADA=yes`,
-agrupadas por site), com o aviso do que mudou em cada bíblia. **Com `ANINHADA=yes`,
-pule esta etapa inteira:** quem chamou já está fechando o ciclo, e chamar de novo daqui
-seria recursão. **Uma rodada só:**
-pendência nova que surgir nessa segunda passada fica na fila para a próxima execução,
-e vai no relatório. Sem esse corte o ciclo página → bíblia → página não termina.
+Por quê: a primeira versão desta etapa (24/09/2026) encadeava bíblia e reauditoria da rede
+no mesmo turno. Num lote de 10 páginas isso virou 9 auditorias de bíblia e 46 páginas em
+12 sites, perto de 11 milhões de tokens que ninguém pediu. Etapa que dispara sub-agents
+fora do lote precisa de sim explícito.
 
 ⚠ **`--only` + pathspec nos DOIS, nunca `git commit` nu (canon 2026-09-02).**
 Commit sem pathspec leva **o índice inteiro**, e o índice é do REPOSITÓRIO: se
@@ -410,9 +405,9 @@ CORRIGIDO NA HORA ({F}) — passou no teste da frase nova:
 REPORTADO ({R}) — exige decisão sua:
   {slug} · {categoria} · {evidência curta}
 
-RAIZ NA BÍBLIA ({B}) — gravado na fila e resolvido na Etapa 4.5:
-  {ASIN} · {campo} · {o que contradiz} → {consertado | improcedente | chip de revisão}
-  páginas realinhadas depois: {site/slug, ...}
+RAIZ NA BÍBLIA ({B}) — gravado na fila, NÃO executado:
+  {ASIN} · {campo} · {o que contradiz}
+  → posso rodar /biblia-auditar-em-massa pendentes nestes {N} ASINs?
 
 📦 Commit (fixes): {hash}   📦 Commit (audits): {hash}
 🔄 VPS: {OK | bloqueado}
@@ -443,7 +438,7 @@ poder discordar de uma troca sem abrir o diff do git.
 
 - Não cria página, não preenche campo vazio, não regera conteúdo.
 - Não aplica `warn` de julgamento, nem "óbvio".
-- Não edita a BÍBLIA com as próprias mãos. Achado de raiz vai para a fila (`biblia-pendencias.ts`), e quem edita a bíblia é a `biblia-auditar-em-massa`, chamada na Etapa 4.5.
+- Não edita a BÍBLIA com as próprias mãos. Achado de raiz vai para a fila (`biblia-pendencias.ts`), e quem edita a bíblia é a `biblia-auditar-em-massa`, que só roda quando o Marcelo pede.
 - Não faz deploy nem `cf-deploy-*`.
 - Não toca em site/página com `contentLocked`.
 
