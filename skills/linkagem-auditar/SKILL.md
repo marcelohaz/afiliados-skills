@@ -1,6 +1,6 @@
 ---
 name: linkagem-auditar
-description: Audita E MELHORA a linkagem interna do SITE INTEIRO (cross-artigo), propor→aprovar. Roda os núcleos determinísticos (scripts/audit-linkagem.ts + audit-links.ts) + camada de julgamento LLM (placement contextual, links novos pra órfãos/sublinkados). Quantidade: 2 mín / ~3 ideal / 4 máx peers distintos por artigo; HUB (homeReviewSlug ou pillar:true) isento do teto. Conserta: link quebrado 404, /{homeReviewSlug}/→/, âncora≠keyword, âncora de produto sem marca, peer/home na Conclusão, excesso >4. Confere também SLUG × HISTÓRICO DO GSC (`scripts/audit-slugs.ts`): o artigo está na URL que o Google conhece, medindo os DOIS lados nos domínios da linhagem — renomear slug quebra link interno, então mora aqui. contentLocked-aware (rerroteia a fonte). Artigo PORTADO do WordPress (`portadoDe`): com a autorização do Marcelo na execução, edita os travados só no link e nas palavras coladas nele, com a trava ligada; âncora no plural vai para o `keywordPlural`; artigo sem guia recebe link no `fullReview`. Aceita site OU URL do painel. Fecha com commit + push + painel-vps-pull + marcador .audits/linkagem/{site}-last.md.
+description: Audita E MELHORA a linkagem interna do SITE INTEIRO (cross-artigo), propor→aprovar. Roda os núcleos determinísticos (scripts/audit-linkagem.ts + audit-links.ts) + camada de julgamento LLM (placement contextual, links novos pra órfãos/sublinkados). Quantidade: 2 mín / ~3 ideal / 4 máx peers distintos por artigo; HUB (homeReviewSlug ou pillar:true) isento do teto. Conserta: link quebrado 404, /{homeReviewSlug}/→/, âncora≠keyword, âncora de produto sem marca, peer/home na Conclusão, excesso >4. Confere também SLUG × HISTÓRICO DO GSC (`scripts/audit-slugs.ts`): o artigo está na URL que o Google conhece, medindo os DOIS lados nos domínios da linhagem — renomear slug quebra link interno, então mora aqui. contentLocked-aware (rerroteia a fonte). Artigo PORTADO do WordPress (`portadoDe`): com a autorização do Marcelo na execução, edita os travados só no link e nas palavras coladas nele, com a trava ligada; âncora no plural vai para o `keywordPlural`; artigo sem guia recebe link no `fullReview`. ARTIGO QUE JÁ RANKEIA (clique em 28 dias, `rankeando[]` do audit-slugs): só conserto de defeito e 1 link novo com aprovação, o resto vai para o relatório; no site que recebeu portados, os links dos artigos antigos para os portados vêm 3 a 4 semanas depois do port. Link para outro site da rede (`link-rede`) é defeito. Aceita site OU URL do painel. Fecha com commit + push + painel-vps-pull + marcador .audits/linkagem/{site}-last.md.
 ---
 
 ## Parse de input
@@ -93,6 +93,25 @@ O port copia o texto do WordPress sem reescrever e grava `contentLocked: true` e
 
 No relatório, a linha **Portados** diz quantos são e se a edição foi autorizada. Sem autorização, os consertos deles saem como "bloqueado (travado)".
 
+## Artigo que já rankeia (`rankeando[]`, canon Marcelo 2026-09-24)
+
+Pedido do Marcelo ao planejar o port do compraguia: melhorar a linkagem "com cuidado para não mudar muito os artigos que já estão rankeando bem". O critério é medido: o `audit-slugs.ts --json` (passo 4.6) devolve `rankeando[]`, os artigos com clique nos últimos 28 dias na própria slug, somando a linhagem. No compraguia, em 24/09/2026, eram os 24 artigos do site (de 1 a 131 cliques).
+
+Num artigo de `rankeando[]`:
+
+1. **Aplica direto, como sempre:** `link-quebrado`, `link-home-errado`, `link-rede` e `anchor-frase-quebrada` de level=error. São defeitos visíveis, e o conserto mexe só no link e nas palavras coladas nele.
+2. **Com aprovação:** **1 link novo por execução** saindo do artigo, numa frase que já fala do assunto do destino, mexendo só no `<a>` e nas palavras coladas nele. Frase nova inteira só se nenhuma frase servir, e ela é a mudança da execução. Link novo que ENTRA no artigo não mexe nele (a edição é na fonte) e segue a régua de sempre.
+3. **Só relata, não aplica:** `anchor-nao-keyword`, `anchor-produto-sem-nome`, `peer-link-na-conclusao`, `linkagem-excesso`, remoção de link fora de contexto e `anchor-frase-quebrada` de level=warn. Saem no relatório como "não aplicado: artigo rankeando (N cliques em 28 dias)". Aplica só se o Marcelo pedir para aquele artigo.
+4. **Sem medição, todo artigo conta como rankeando.** `audit-slugs.ts` com `ok:false` ou `inconclusivo` → aplique esta seção ao site inteiro e diga no relatório. Mexer de menos por falta de dado é reversível; mexer demais num artigo posicionado pode custar a posição.
+
+**Site que recebeu artigos portados** (herdeiro, cenário A da `site-portar-wordpress`): a linkagem vai em dois tempos.
+- **No port:** só os portados. Links entre eles e deles para os artigos que o site já tinha. Os artigos do site não ganham link novo nesta execução.
+- **3 a 4 semanas depois**, se os artigos do site seguirem estáveis no Search Console: os links dos artigos do site para os portados, com a regra acima (1 por artigo).
+
+Motivo: se o site cair depois do port, dá para saber se foi o port ou a mudança nos artigos que já rankeavam. Com as duas mudanças juntas, não dá para separar.
+
+No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o número) e quantos consertos ficaram só no relatório por causa desta regra.
+
 ## Fluxo
 
 1. **Parse args**: detecta URL vs slug, extrai `site`. Valida `[a-z0-9-]+`.
@@ -119,6 +138,7 @@ No relatório, a linha **Portados** diz quantos são e se a edição foi autoriz
    bun scripts/audit-links.ts {site} --no-fetch --json
    ```
    Use SÓ pra contexto (tag/404 interno). **Não conserte tag aqui** — só reporte que `fill-affiliate-tag.ts` resolve.
+   **Exceção: `link-rede` (error) se conserta aqui.** Site da rede não linka outro site da rede (Marcelo, 24/09/2026: "se achar, tem algo errado"). Aplica direto: tira o `<a>` e mantém o texto. Se o próprio site tem artigo do mesmo assunto, propõe (julgamento) o link interno no lugar. Em 24/09/2026 eram 0 na rede; um achado novo quase sempre é texto portado com link para um domínio antigo da cadeia que faltou no `--irmaos` do `wp-portar`.
 
 4.5. **Links nascidos no TEMPLATE (canon 2026-09-02).** Tabela de specs, "Produtos testados", cards de categoria e o `sitemap-produtos.xml` montam `href` que não estão em campo nenhum do `.mdx`, então os passos 3 e 4 **não os veem** — foi assim que esta skill disse "limpo" com 12 links 404 no ar (creatina, ago/2026). Se `sites/{site}/dist/` existe e é mais novo que o último commit que tocou o site, rode:
    ```bash
@@ -130,7 +150,7 @@ No relatório, a linha **Portados** diz quantos são e se a edição foi autoriz
    ```bash
    bun scripts/audit-slugs.ts {site} --json
    ```
-   Parse: `{ ok, inconclusivo, motivo, linhagem, propriedadesSemAcesso, achados:[{nivel,regra,artigo,sugerida,atual,candidata,pareceCategoria,msg}], disputas, orfasSemArtigo }`.
+   Parse: `{ ok, inconclusivo, motivo, linhagem, propriedadesSemAcesso, achados:[{nivel,regra,artigo,sugerida,atual,candidata,pareceCategoria,msg}], disputas, rankeando:[{slug,cliques28d,impressoes28d}], orfasSemArtigo }`. O `rankeando` decide o que se aplica em cada artigo (seção "Artigo que já rankeia").
 
    O script **grava** `docs/painel/_data/slugs-historicas.json` (merge por site, só
    quando mediu) e o painel lê dali pro chip da coluna Slug. Commite esse arquivo junto
@@ -248,7 +268,7 @@ No relatório, a linha **Portados** diz quantos são e se a edição foi autoriz
    ```
    `Write` em `docs/biblias-v2/.audits/linkagem/{site}-last.md`: título (`# Auditoria de linkagem: {site}`), contagens (`- Erros: N · Avisos: M · Infos: K · Oportunidades: O`), a mesma linha "Não medido" do relatório (quem abrir o marcador depois precisa saber se o "0 erros" foi medido), lista curta dos tipos disparados (ou "nenhum"). **NÃO** invente timestamp (a fonte de tempo é o commit git).
 
-8. **Aplicar o óbvio + esperar aprovação só do julgamento** (canon 2026-07-24): os fixes **determinísticos** (link-quebrado, link-home-errado, anchor-nao-keyword, anchor-produto-sem-nome + reconciliação de concordância, `anchor-frase-quebrada` de level=error) **aplicam direto** no passo 10 sem esperar, marcados ✅ CORRIGIDO. Só os de **julgamento** (link NOVO, mover peer-link-na-conclusao, linkagem-excesso) esperam aprovação granular: "aplica tudo" / "aplica 1,3" / "aplica canon" (por tema) / "rejeita 2" / "refaz 1". Se não houver nenhum de julgamento, pula a espera e vai pro build/commit.
+8. **Aplicar o óbvio + esperar aprovação só do julgamento** (canon 2026-07-24): os fixes **determinísticos** (link-quebrado, link-home-errado, anchor-nao-keyword, anchor-produto-sem-nome + reconciliação de concordância, `anchor-frase-quebrada` de level=error) **aplicam direto** no passo 10 sem esperar, marcados ✅ CORRIGIDO. Só os de **julgamento** (link NOVO, mover peer-link-na-conclusao, linkagem-excesso) esperam aprovação granular: "aplica tudo" / "aplica 1,3" / "aplica canon" (por tema) / "rejeita 2" / "refaz 1". Se não houver nenhum de julgamento, pula a espera e vai pro build/commit. **Artigo de `rankeando[]` segue a seção "Artigo que já rankeia"**: dos determinísticos, só os do item 1 dela aplicam direto; os outros ficam no relatório.
 
 9. **Backup** antes de aplicar (1 por artigo tocado):
    `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-guide.mdx` (via helper `readGuideContent` do painel, mesmo formato dos outros). Portado sem guia, com edição no `fullReview`: cópia do `.mdx` inteiro em `article-{site}-{slug}-{HHMMSS}.mdx`.
@@ -261,6 +281,7 @@ No relatório, a linha **Portados** diz quantos são e se a edição foi autoriz
     - **REMOVER link fora de contexto** (aprovado no julgamento): tira o `<a>` mantendo/reescrevendo a prosa pra frase seguir fazendo sentido sem ele. Aplicar **junto** com o link substituto quando a guarda de inbound exigir (ver passo 5).
     - **link-home-errado**: trocar `href="/{homeReviewSlug}/"` por `href="/"` (manter a âncora = keyword da home).
     - **link-quebrado**: corrigir o href pro slug REAL (confirmar o arquivo existe) OU, se não há destino, remover o `<a>` mantendo o texto.
+    - **link-rede**: remover o `<a>` mantendo o texto (outro site da rede nunca é destino). Link interno no lugar só com aprovação.
     - **peer-link-na-conclusao**: MOVER o link pro spot contextual aprovado (remover da Conclusão + inserir no parágrafo-alvo). Produto/Amazon na Conclusão ficam.
     - **link novo**: inserir o `<a>` no spot exato aprovado, âncora = keyword singular do destino, href = slug REAL (`/slug/` ou `/` pra home), sem `rel`/`target` (interno passa autoridade).
 
@@ -328,7 +349,7 @@ No relatório, a linha **Portados** diz quantos são e se a edição foi autoriz
 
 ## Critérios (referência — vêm dos scripts)
 
-- `link-quebrado` (error), `link-home-errado` (error), `linkagem-fraca` (warn, <2 peers distintos de saída), `linkagem-excesso` (warn, >4 peers distintos num artigo NÃO-hub — enxugar pros 3-4 contextuais ou marcar `pillar:true`), `peer-repetido` (warn), `anchor-nao-keyword` (warn; compara sem acento, hífen nem espaço, então "micro-ondas" = "microondas" e "Wi-Fi" = "wifi"; keyword sem "melhor" aceita "melhor " + keyword), `anchor-frase-quebrada` (**error** = indefinido/qualificador antes de âncora com superlativo, ex. "um melhor pré-treino" — fix: artigo definido contraindo a preposição, ver Invariantes; artigo no número errado, ex. "das melhor impressora"; "melhor" repetido fora do link; **warn** = "na/no/em" que não retoma guia/artigo, "qual" sem artigo, ou "qualquer" + superlativo, que pedem reescrita), `anchor-produto-sem-nome` (warn), `slug-vs-keyword` (**info** — convenção comum na rede, 32% dos artigos medidos em 2026-09-04; o 404 real já é coberto por link-quebrado/link-home-errado; NÃO é defeito a consertar), `slug-sem-historico` (**warn**, do `audit-slugs.ts` — pergunta DIFERENTE da anterior: não é "segue a convenção?" e sim "é a URL que o Google conhece?", medindo os dois lados nos domínios da linhagem; dispara em 7 casos na rede contra os 127 da `slug-vs-keyword`; **sempre propor→aprovar**, e `pareceCategoria:true` quase sempre significa 301 pra `/categoria/`, não rename), `peer-link-na-conclusao` (info), `hub-and-spoke-incompleto` (info, **1 linha-resumo colapsada** — **fora de escopo desta skill**), `orfao` (warn)/`sublinkado` (info, mas **acionável** — ver régua E no passo 5), `extracao-incompleta` (**error** — o grafo do site não vale; a skill para, ver os portões do passo 3), `ancora-nao-verificada` (warn, 1 por site — âncora não medida por falta de keyword no destino; sem link novo para esses destinos), `link-fora-do-guia` (info — link entre artigos no `fullReview`; listar, não mover).
+- `link-rede` (error, do `audit-links.ts`: link para outro site da rede), `link-quebrado` (error), `link-home-errado` (error), `linkagem-fraca` (warn, <2 peers distintos de saída), `linkagem-excesso` (warn, >4 peers distintos num artigo NÃO-hub — enxugar pros 3-4 contextuais ou marcar `pillar:true`), `peer-repetido` (warn), `anchor-nao-keyword` (warn; compara sem acento, hífen nem espaço, então "micro-ondas" = "microondas" e "Wi-Fi" = "wifi"; keyword sem "melhor" aceita "melhor " + keyword), `anchor-frase-quebrada` (**error** = indefinido/qualificador antes de âncora com superlativo, ex. "um melhor pré-treino" — fix: artigo definido contraindo a preposição, ver Invariantes; artigo no número errado, ex. "das melhor impressora"; "melhor" repetido fora do link; **warn** = "na/no/em" que não retoma guia/artigo, "qual" sem artigo, ou "qualquer" + superlativo, que pedem reescrita), `anchor-produto-sem-nome` (warn), `slug-vs-keyword` (**info** — convenção comum na rede, 32% dos artigos medidos em 2026-09-04; o 404 real já é coberto por link-quebrado/link-home-errado; NÃO é defeito a consertar), `slug-sem-historico` (**warn**, do `audit-slugs.ts` — pergunta DIFERENTE da anterior: não é "segue a convenção?" e sim "é a URL que o Google conhece?", medindo os dois lados nos domínios da linhagem; dispara em 7 casos na rede contra os 127 da `slug-vs-keyword`; **sempre propor→aprovar**, e `pareceCategoria:true` quase sempre significa 301 pra `/categoria/`, não rename), `peer-link-na-conclusao` (info), `hub-and-spoke-incompleto` (info, **1 linha-resumo colapsada** — **fora de escopo desta skill**), `orfao` (warn)/`sublinkado` (info, mas **acionável** — ver régua E no passo 5), `extracao-incompleta` (**error** — o grafo do site não vale; a skill para, ver os portões do passo 3), `ancora-nao-verificada` (warn, 1 por site — âncora não medida por falta de keyword no destino; sem link novo para esses destinos), `link-fora-do-guia` (info — link entre artigos no `fullReview`; listar, não mover).
 
 ## Armadilhas
 

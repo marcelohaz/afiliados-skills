@@ -1,6 +1,6 @@
 ---
 name: site-portar-wordpress
-description: "Porta um site WordPress da rede (Hostinger) para Astro com o MESMO texto e os mesmos endereços, e vira os 301 de TODA a cadeia de domínios dele para um único herdeiro. Três cenários, em ordem de preferência — devolver o texto a um herdeiro Astro que já existe (cozinha), portar no mesmo domínio, ou domínio novo (só com decisão registrada do Marcelo: 9 de 10 domínios que receberam texto de outro domínio caíram em 05-06/2026). Fases com gates — decisão, levantamento, exportação na VPS, conversão e conferência dos dados de produto (ASIN × nome × bíblia), site (institucionais, H1, categorias, estrela, páginas de produto), travas antes de publicar, virada (regras geradas da varredura, deploy, worker, zonas antigas, conferência pelo histórico do GSC a partir da VPS), Search Console, painel (coletas, linhagem, mapa) e medição semanal por 8 semanas com grupo de controle e plano B. Aceita `{dominio-wp} {site}` ou `medir {site...} --desde=AAAA-MM-DD`. NÃO é a site-migrar-dominio (site Astro que só troca de domínio). NÃO registra domínio, NÃO aponta NS, NÃO publica sem aprovação."
+description: "Porta um site WordPress da rede (Hostinger) para Astro com o MESMO texto e os mesmos endereços, e vira os 301 de TODA a cadeia de domínios dele para um único herdeiro. Três cenários, em ordem de preferência — devolver o texto a um herdeiro Astro que já existe (cozinha), portar no mesmo domínio, ou domínio novo (só com decisão registrada do Marcelo: 9 de 10 domínios que receberam texto de outro domínio caíram em 05-06/2026). Fases com gates — decisão, levantamento, exportação na VPS (ou pelo Arquivo da Internet quando o WordPress já saiu do ar), conversão e conferência dos dados de produto (ASIN × nome × bíblia), site (institucionais, H1, categorias, estrela, páginas de produto), travas antes de publicar, virada (regras geradas da varredura, deploy, worker, zonas antigas, conferência pelo histórico do GSC a partir da VPS), Search Console, painel (coletas, linhagem, mapa) e medição semanal por 8 semanas com grupo de controle e plano B. Aceita `{dominio-wp} {site}` ou `medir {site...} --desde=AAAA-MM-DD`. NÃO é a site-migrar-dominio (site Astro que só troca de domínio). NÃO registra domínio, NÃO aponta NS, NÃO publica sem aprovação."
 ---
 
 ## Parse de input
@@ -63,11 +63,17 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 - **Exportação, NA VPS** (a Hostinger bloqueia o Mac):
   `sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && bun scripts/wp-exportar.ts {dominio-wp} /home/melhorserum-painel/wp-export/{dominio-wp}-{data}'`
   e copiar para `~/Backups/afiliados/wp-export/`. Conferir: posts, páginas, categorias, autores, imagens com 0 falha.
+- **WordPress que já saiu do ar** (a Hostinger só devolve 301, sem API; caso do compraguia, 24/09/2026): o texto vem das cópias do Arquivo da Internet, no Mac:
+  `bun scripts/wp-exportar-arquivo.ts ~/Backups/afiliados/wp-export/{site}-arquivo-{data} --dominios {todos os domínios onde o texto esteve} --origem {herdeiro} --site {site} --amazon --slugs-de {lista}`.
+  Vence a cópia mais nova com o artigo inteiro, em qualquer domínio da cadeia (no compraguia, o próprio compraguia teve os textos como WordPress até 06/2026, mais novos que os do guiacompra). O script desfaz o carregamento preguiçoso das imagens, tira a caixa do autor e troca os domínios da cadeia pelo `--origem`.
+  **A foto do produto quase nunca está no Arquivo** (3 de 157 no compraguia): o robô dele não pede a imagem que carrega com a rolagem. Ela vem, nesta ordem, do mesmo arquivo trazido por outro port, da página de produto do mesmo ASIN no herdeiro e da foto principal da Amazon (`--amazon`, para no primeiro captcha; rode de novo depois). A fonte de cada uma fica em `imagens.json` da pasta.
 - **Cenário A:** slugs do WordPress que já existem no herdeiro. Reescrito do zero e no ar fica como está (artigo no ar não muda: canon 12/09); só entram os que faltam.
 
 ## Fase 2 — conversão e dados
 
-1. `bun scripts/wp-portar.ts {export} sites/{site} --tag {tag} [--cadeia dominios-anteriores] [--irmaos dominios] [--so slugs]` sem `--gravar`: todo post no formato, texto ≥99%, imagens 0 faltando. Depois com `--gravar`.
+1. `bun scripts/wp-portar.ts {export} sites/{site} --tag {tag} [--cadeia dominios-anteriores] [--irmaos dominios] [--so slugs] [--ano AAAA]` sem `--gravar`: todo post no formato, texto ≥99%, imagens 0 faltando, 0 link para outro site da rede. Depois com `--gravar`.
+   - **Link para outro site da rede impede o `--gravar`** (Marcelo, 24/09/2026: site da rede não linka outro site da rede). Quase sempre é domínio da cadeia que faltou no `--irmaos`: o texto antigo linka os domínios anteriores em endereço absoluto (543 links no compraguia).
+   - `--ano 2026` troca o ano velho do título e da descrição (o texto fica). Decisão do Marcelo para o compraguia: título com "2025" em 2026 perde clique.
    - `--tag`: a do próprio WordPress (conferir a mais usada nos posts) ou a do herdeiro. Nunca inventar tag.
    - `--so` regrava o `port-plano.json` só com esses posts: rode de novo sem `--gravar` e sem `--so` para refazer o plano inteiro.
    - Cenário A: categorias do WordPress genéricas ("melhores") saem; cada artigo vai para a categoria do seu produto que o herdeiro já tem.
@@ -110,11 +116,11 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 - Descrição de categoria pela `categoria-descricao-escrever` (ou `-criar-em-massa`): as do WordPress repetem o mesmo molde entre sites.
 
 **Cenário A (herdeiro):**
-- Template do herdeiro precisa aceitar produto sem página: t6 com `productPages: false`; t5 com `productPagesOnlyWithMdx: true` (link pela página do mesmo ASIN, âncora quando não há página). Outro template: código novo, com build antes e depois de outro site do mesmo template provando que nada muda.
+- Template do herdeiro precisa aceitar produto sem página: t6 com `productPages: false`; t5 e t7 com `productPagesOnlyWithMdx: true` (link pela página do mesmo ASIN, âncora quando não há página; no t7 desde 24/09/2026, para o compraguia) e o bloco do `[slug].astro` do cozinhaideal ou do compraguia. Outro template: código novo, com build antes e depois de outro site do mesmo template provando que nada muda.
 - Estrela: decidir e registrar (o herdeiro pode dar nota automática aos portados; os ports de domínio novo saíram sem estrela).
 - Regras do herdeiro que escondem slug: o `port-regras.ts` acusa na Fase 6; elas saem junto com a virada.
 
-**Todos os cenários:** linkagem entre os artigos pela `linkagem-auditar {site}`, autorizando a edição dos portados (seção "Portados do WordPress" dela: com a regra de sempre ela pula todo artigo travado e não muda nada). O texto chega com os órfãos e as âncoras do WordPress, e a hora de mudar é antes de o artigo rankear (Marcelo, 22/09/2026). Precisa da keyword da Fase 2 preenchida. No herdeiro (A) entram também os links entre os portados e os artigos que o site já tinha.
+**Todos os cenários:** linkagem entre os artigos pela `linkagem-auditar {site}`, autorizando a edição dos portados (seção "Portados do WordPress" dela: com a regra de sempre ela pula todo artigo travado e não muda nada). O texto chega com os órfãos e as âncoras do WordPress, e a hora de mudar é antes de o artigo rankear (Marcelo, 22/09/2026). Precisa da keyword da Fase 2 preenchida. No herdeiro (A) entram também os links entre os portados e os artigos que o site já tinha, **em dois tempos** (Marcelo, 24/09/2026): no port, só os portados (links entre eles e deles para os artigos do site); os links dos artigos do site para os portados, 3 a 4 semanas depois, se eles seguirem estáveis, com a regra "Artigo que já rankeia" da `linkagem-auditar` (1 link por artigo, sem mexer no resto). Separar no tempo é o que permite saber, se o site cair, qual das duas mudanças causou.
 
 ## Fase 4 — travas antes de publicar
 
