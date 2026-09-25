@@ -43,6 +43,15 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
   **só a /author/**, que o WordPress não tem e o scaffold deixa com texto de template. Os
   gates (6-gramas contra a rede, sobre↔autor, voz natural) valem igual. Duas execuções
   saíram da régua por isso antes de ela existir (melhoresparacasa 20/09, melhortech 21/09/2026).
+  **A exceção só vale para Sobre do WordPress que tem conteúdo:** diz quem escreve, como o site
+  avalia e tem o aviso de afiliado (as seções "Quem está por trás", "Como avaliamos" e
+  "Independência editorial" da estrutura abaixo, com qualquer título). Sem elas, faça as DUAS
+  páginas. O Sobre não tem histórico de busca a proteger (o do analistadeprodutos teve 16 cliques
+  de janeiro a maio de 2026), então vale o mesmo argumento das descrições de categoria portadas:
+  reescrever não arrisca nada. Caso que gerou a régua (25/09/2026): o do melhoreseletro tinha
+  470 caracteres de saudação ("Olá! Bem-vindo(a)… Esperamos que goste") e descrevia o site como
+  de "ferramentas manuais", com celulares, aspiradores e climatização no ar. Os 5 sites criados
+  pelo port tinham Sobre de 470 a 1.390 caracteres.
   **Herdeiro NÃO é exceção** (cenário A: site Astro que já existia e recebeu artigos
   portados, ou seja, tem pelo menos 1 artigo SEM `portadoDe`). O /sobre/ dele é nosso, nunca
   foi do WordPress, e ficou com o escopo de antes do port: faça as DUAS páginas, com o

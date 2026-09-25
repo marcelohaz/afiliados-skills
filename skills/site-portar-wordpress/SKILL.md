@@ -120,7 +120,7 @@ O cânone da CLAUDE.md (19/09) diz que o texto igual em domínio novo trouxe o t
 **Cenário C ou B (site novo):** persona pelo painel (`bun scripts/painel-api.ts POST /authors` e a foto), `POST /sites/create` (template6, `ratingStars` decidido na Fase 0) e a `site-criar-workflow` para o resto do scaffold. Se o `gitSync` voltar `commit-failed`, commitar na VPS com `PAINEL_AUTO_COMMIT=1` (aconteceu em 3 de 5 criações; o `detail` diz o motivo).
 - `productPages: false`, o `[slug].astro` só com artigos (copiar de um site portado t6) e a divergência em `docs/painel/_lib/template-divergences.ts`.
 - `config.ts`: H1 da home (o scaffold monta "O melhor {nome}" e quebra quando o nome não é substantivo simples), `contactMainTopic`, `knowsAbout`, e-mail do autor, bio sem "Testo" nem frase-sacada.
-- `/sobre/` do WordPress adaptado (marca e domínio novos, sem alegar teste, com o escopo real) e `/author/` pela `preencher-institucionais` (ela tem a exceção de site portado).
+- `/sobre/` do WordPress adaptado (marca e domínio novos, sem alegar teste, com o escopo real) e `/author/` pela `preencher-institucionais` (ela tem a exceção de site portado). Se o Sobre do WordPress não diz quem escreve, como o site avalia nem tem o aviso de afiliado, a `preencher-institucionais` faz as duas páginas (régua de 25/09/2026: os 5 primeiros sites criados pelo port saíram com Sobre de 470 a 1.390 caracteres).
 - Descrição de categoria pela `categoria-descricao-escrever` (ou `-criar-em-massa`): as do WordPress repetem o mesmo molde entre sites.
 
 **Cenário A (herdeiro):**
