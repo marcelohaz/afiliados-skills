@@ -36,15 +36,22 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 ## Invariantes
 
 - **Faz as DUAS páginas** (sobre + autor) numa execução, com papéis distintos.
-  **Exceção: site portado do WordPress** (artigos com `portadoDe:` no frontmatter). O
-  /sobre/ fica com o texto do WordPress, adaptado só no que o port manda mudar (marca e
-  domínio novos, sem alegar teste, sem travessão, com o escopo que o site tem), conforme
-  skill `site-portar-wordpress` (Fase 3). Nesse caso a skill faz **só a /author/**, que o
-  WordPress não tem e o scaffold deixa com texto de template. Os gates (6-gramas contra a
-  rede, sobre↔autor, voz natural) valem igual. Duas execuções saíram da régua por isso
-  antes de ela existir (melhoresparacasa 20/09, melhortech 21/09/2026).
+  **Exceção: site criado pelo port do WordPress** (cenários B e C da `site-portar-wordpress`:
+  TODO artigo tem `portadoDe:` no frontmatter). O /sobre/ fica com o texto do WordPress,
+  adaptado só no que o port manda mudar (marca e domínio novos, sem alegar teste, sem
+  travessão, com o escopo que o site tem), conforme a Fase 3 dela. Nesse caso a skill faz
+  **só a /author/**, que o WordPress não tem e o scaffold deixa com texto de template. Os
+  gates (6-gramas contra a rede, sobre↔autor, voz natural) valem igual. Duas execuções
+  saíram da régua por isso antes de ela existir (melhoresparacasa 20/09, melhortech 21/09/2026).
+  **Herdeiro NÃO é exceção** (cenário A: site Astro que já existia e recebeu artigos
+  portados, ou seja, tem pelo menos 1 artigo SEM `portadoDe`). O /sobre/ dele é nosso, nunca
+  foi do WordPress, e ficou com o escopo de antes do port: faça as DUAS páginas, com o
+  escopo novo. Casos: compraguia (24/09) e cozinhaideal (25/09/2026). O Sobre do cozinhaideal
+  ainda descrevia "eletroportáteis" com 20 categorias que incluem fogão, geladeira e lava-louças.
+  Conta rápida: `grep -L '^portadoDe:' sites/{site}/src/content/reviews/*.mdx | wc -l`
+  (0 = criado pelo port; 1 ou mais = herdeiro).
 - **NÃO inventa** credencial/empresa/processo. Autor/critérios/e-mail do config + niche.
-- **Metodologia VAGA**: dá impressão de análise real SEM (a) alegar teste físico ["testamos/laboratório/bancada/presencial/medimos"] NEM (b) expor pesquisa de mesa ["partimos das especificações", "lendo a ficha linha por linha", "cruzamos com opiniões de compradores"]. Use "avaliamos a fundo", "indo além da ficha técnica", "comparamos os modelos de verdade", "o que faz diferença no dia a dia". Enquadramento anti-spec OK ("não de repetir a ficha que o fabricante divulga", "nunca de uma planilha decorada de specs").
+- **Metodologia VAGA**: dá impressão de análise real SEM (a) alegar teste físico ["testamos/laboratório/bancada/presencial/medimos"] NEM (b) expor pesquisa de mesa ["partimos das especificações", "lendo a ficha linha por linha", "cruzamos com opiniões de compradores"]. Use "avaliamos a fundo", "indo além da ficha técnica", "comparamos os modelos lado a lado", "o que faz diferença no dia a dia" (até 25/09/2026 a lista trazia "comparamos os modelos de verdade", que a "Voz natural" abaixo proíbe: "de verdade" é muleta). Enquadramento anti-spec OK ("não de repetir a ficha que o fabricante divulga", "nunca de uma planilha decorada de specs").
 - **Disclosure Amazon** obrigatória no /sobre/ (Independência editorial).
 - **YMYL** (nicho saúde): disclaimer obrigatório — /sobre/ tem "Um lembrete importante"; /author/ embute no "Meu compromisso".
 - **DISTINÇÃO sobre↔autor**: a /author/ NÃO repete "Independência editorial" nem "Como avaliamos os produtos" do /sobre/. /sobre/ = o que o SITE faz; /author/ = quem a PESSOA é + como ELA trabalha (1ª pessoa).
@@ -86,7 +93,7 @@ a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
 ```
 <!-- contentLocked: false -->
 <h2>Como eu trabalho</h2>      → 1ª pessoa: quem sou ({role/credencial REAL do config}), por que entendo do nicho, o que faço pelo leitor. Enquadramento anti-spec ("não de repetir a ficha"). NÃO repetir o disclosure.
-<h2>Como eu avalio {o/a {nicho}}</h2>  → 1ª pessoa + <ul> com 3 PRIORIDADES PESSOAIS do autor (o que ELE mais olha), NÃO a lista completa de critérios do /sobre/; redação FRESCA + "quando dá pra ir além da ficha, olho..." (vago)
+<h2>Como eu avalio {o/a {nicho}}</h2>  → 1ª pessoa + <ul> com 3 PRIORIDADES PESSOAIS do autor (o que ELE mais olha), NÃO a lista completa de critérios do /sobre/; redação FRESCA + um fecho vago sobre olhar detalhes que a ficha não mostra, com frase SUA (a frase que ficava aqui de exemplo, "quando dá pra ir além da ficha, olho...", saiu copiada em 3 sites da mesma autora: cozinhaideal, melhorcozinha e melhorliquidificador-com, medido 25/09/2026)
 <h2>Meu compromisso com você</h2>  → honestidade (aponto forte e fraco) + (SAÚDE) YMYL embutido ("não substitui orientação de médico/nutricionista")
 ```
 
