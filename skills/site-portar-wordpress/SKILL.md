@@ -180,7 +180,7 @@ Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar
 7. **Descrição de categoria do WordPress** repete o mesmo molde entre os sites portados.
 8. **Sitemap de dono anterior** na propriedade nova do GSC (melhoreseletro, melhorestetica, melhortech).
 9. **DNSSEC:** domínio que usava o DNS do Registro.br tem DS; trocar o NS sem tirar o DS derruba a resolução.
-10. **Commit do scaffold falhando na VPS** (`index.lock`, rebase): o `detail` do `gitSync` diz o motivo; commitar à mão com `PAINEL_AUTO_COMMIT=1`.
+10. **Commit do scaffold falhando na VPS** (`index.lock`, rebase): o `detail` do `gitSync` diz o motivo; commitar à mão com `PAINEL_AUTO_COMMIT=1`, e o `pnpm-lock.yaml` vai no mesmo commit (`git diff --numstat pnpm-lock.yaml` só com adições; se houver remoção, rode `pnpm install --lockfile-only` antes). Sem ele o painel-ci falha no install até alguém commitá-lo: o melhoresparacasa (20/09) foi commitado à mão sem o lockfile e o CI ficou vermelho.
 11. **Página de produto casada pelo nome** (t5): produto com página de outro nome quebrava o build; o flag casa pelo ASIN.
 12. **Número de memória no relatório.** Todo número do relatório sai de um arquivo ou de uma medição feita na hora.
 13. **`sudo -u melhorserum-painel bun` na VPS dá "command not found":** o `sudo` não carrega o PATH do usuário. Use `sudo -u melhorserum-painel bash -lc 'cd /home/melhorserum-painel/afiliados && bun …'`.
