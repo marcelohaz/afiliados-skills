@@ -67,6 +67,8 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
   > "Se o seu objetivo é o rendimento na academia, vale comparar com o nosso guia de **melhor pré-treino** antes de decidir."
   > "Quem já pensa na marca encontra mais no guia de **melhor impressora hp**."
 
+  ⚠ **"tem guia próprio no {keyword}" só fecha com keyword masculina** ("no melhor tablet"). Com keyword feminina sai "no melhor cadeira presidente", erro que a régua de âncora não pega porque a âncora está certa (melhorcadeiradeescritorio, 26/09/2026). "Encontra mais no guia de {keyword}" e "veja o guia de {keyword}" não dependem de gênero: use uma delas quando a keyword for feminina.
+
   A moldura é o **padrão recomendado, não obrigatório**: link integrado ao texto continua válido quando passa nos checks de frase (ex.: *"vale olhar os melhores Kindles"*). O que não passa é a keyword enfiada como objeto de verbo no singular.
 - **Régua de QUANTIDADE (canon Marcelo 2026-06-09): 2 mínimo · ~3 ideal · 4 máximo** peers DISTINTOS de saída, sempre **contextuais e naturais** (nunca decorativos). Não linkar o mesmo peer 2× no mesmo artigo. O **HUB** (artigo-cabeça: `homeReviewSlug` ou frontmatter `pillar: true`) é **isento do teto de 4** — ele linka todos os filhos (hub-and-spoke ideal). O script emite `linkagem-fraca` (<2) e `linkagem-excesso` (>4 não-hub); a régua "~3 ideal" é alvo de julgamento (mire 3 ao ADICIONAR), não um flag por-artigo.
 

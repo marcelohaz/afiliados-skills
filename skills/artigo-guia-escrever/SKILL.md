@@ -606,6 +606,8 @@ Molde aprovado, com quatro traços:
 > "Se o seu objetivo é o rendimento na academia, vale comparar com o nosso guia de **melhor pré-treino** antes de decidir."
 > "Quem já pensa na marca encontra mais no guia de **melhor impressora hp**."
 
+⚠ **"tem guia próprio no {keyword}" só fecha com keyword masculina** ("no melhor tablet"). Com keyword feminina sai "no melhor cadeira presidente", erro que a régua de âncora não pega porque a âncora está certa (melhorcadeiradeescritorio, 26/09/2026). "Encontra mais no guia de {keyword}" e "veja o guia de {keyword}" não dependem de gênero: use uma delas quando a keyword for feminina.
+
 Recomendado, não obrigatório: link integrado ao texto vale quando a frase fecha (ex. *"vale olhar os melhores Kindles"*). O que não vale é a keyword enfiada como objeto de verbo no singular.
 
 ### Slug REAL — NUNCA derivar do keyword
