@@ -209,31 +209,37 @@ No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o 
    **Todo achado vai por PROPOR→APROVAR, nunca auto-fix.** Mexer em URL pública errado
    custa o tráfego do artigo. E a decisão tem julgamentos que o script não faz sozinho
    (ver as 5 guardas no cabeçalho dele):
-   - **Artigo NO AR não muda de slug (canon Marcelo 2026-09-12).** A ação padrão é **301
-     da slug histórica PARA o artigo**, no domínio do site. O `audit-slugs.ts` mede se a
-     URL do artigo responde 200 e já sai com `acao: '301'` (no ar), `'rename'` (fora do
-     ar) ou `'medir'` (não conseguiu medir: confira antes). Por quê: renomear também cria
-     um 301, só que no sentido contrário, e a única diferença é qual URL fica oficial. A
-     que está no ar já tem indexação, sitemap e links internos; renomear joga isso fora e
-     foi a operação dos 4 movimentos invertidos de 04/09 (ver o incidente abaixo). Que o
-     301 consolida no destino a rede já mediu: o escritorioecasa.com passou a autoridade
-     pro .com.br por um 301 longo. **Rename só vale pra artigo fora do ar** (existe no
-     repo e nunca foi publicado, como o climatizador do compraguia em 12/09) **ou como
-     exceção que o Marcelo aprovar caso a caso.** O caso em que a exceção pode valer é
-     artigo no ar com histórico perto de zero contra slug histórica muito forte
-     (amelhorimpressora, 28/08, renomeado antes desta regra). O que já foi renomeado
-     fica: desfazer é mais uma troca de URL.
+   - **Fica a URL mais forte, medida nos dois lados (canon Marcelo 2026-09-12, revisto
+     em 26/09).** O `audit-slugs.ts` mede se a URL do artigo responde 200 e sai com:
+     - `acao: '301'`: artigo no ar COM histórico próprio (1.000 impressões ou mais em 16
+       meses). A slug histórica ganha **301 PARA o artigo**, sem renomear. Por quê:
+       renomear também cria um 301, só que no sentido contrário; a URL no ar já tem
+       indexação, sitemap e links internos; e tirar o artigo da URL forte foi a operação
+       dos 4 movimentos invertidos de 04/09 (ver o incidente abaixo). Que o 301
+       consolida no destino a rede já mediu: o escritorioecasa.com passou a autoridade
+       pro .com.br por um 301 longo.
+     - `acao: 'rename'`: artigo fora do ar (existe no repo e nunca foi publicado, como o
+       climatizador do compraguia em 12/09) OU **artigo no ar SEM histórico próprio**
+       contra histórica que vence o piso e o fator. Medido em 26/09: nos 7 casos da rede
+       o artigo no ar tinha de 0 a 944 impressões em 16 meses contra 13 mil a 1,9 milhão
+       da histórica (a do WordPress antigo), quase sempre porque o clone nasceu na slug
+       do site de origem. Os 7 foram para a histórica pelo rename do painel, e a Bárbara
+       fez o mesmo com 3 artigos do melhoresporte. Com o artigo na URL que o Google já
+       conhecia, os backlinks dela chegam direto nele.
+     - `acao: 'medir'`: não conseguiu medir se o artigo está no ar. Confira antes.
+
+     As `disputas` (casamento por consulta) saem sempre com 301 quando o artigo está no
+     ar: o elo delas é mais fraco (no melhoreletro a disputa apontava o subtópico "frio
+     silencioso", não o artigo geral). Slug histórica que já tem 301 para o próprio
+     artigo sai em `resolvidos` e não é achado. O que já foi renomeado fica: desfazer é
+     mais uma troca de URL.
    - **`pareceCategoria: true` → quase sempre NÃO é rename.** A slug candidata coincide
      com um `categorySlug` do site, então provavelmente era a LISTAGEM antiga, não um
      artigo. Aí o certo é 301 pra `/categoria/`, e mover o artigo pra lá é erro.
 
    **O 301 (caso padrão) é uma regra só:** `{ from: "/{slug-historica}", to: "/{slug-do-artigo}/", status: 301, hostname: "{domínio do site}" }` no `worker/redirects.json`, seguida de `bun scripts/cf-deploy-worker.ts` e conferência com `curl -sL -o /dev/null -w "%{http_code} %{num_redirects}"` (200 em 1 salto). Não mexe em link interno nem no `.mdx`. **Antes de criar, confira que a origem não é a slug de um artigo vivo do site:** o worker responde o 301 antes de servir a página, e a regra deixaria o artigo inalcançável.
 
-   **Se o rename for aprovado (artigo fora do ar, ou exceção), são 4 passos e a ordem importa:** renomear o `.mdx`,
-   corrigir os links internos que apontam pra slug antiga (é o trabalho desta skill, e o
-   motivo de a regra morar aqui), criar 301 da slug antiga pra nova no domínio do site, e
-   **remover qualquer 301 cuja origem seja a slug NOVA** — o worker responde redirect
-   antes de servir a página, então uma regra sobrando deixa o artigo inalcançável.
+   **Se o rename for aprovado, faça pelo rename do painel** (`bun scripts/painel-api.ts POST /article/{site}/{slug}/rename corpo.json`, com `{"newSlug": "{slug-historica}"}`, ou o botão do editor). Ele faz, num commit só e na ordem certa: renomeia o `.mdx`, corrige os links internos que apontam pra slug antiga, cria o 301 da slug antiga pra nova, leva os relatórios de auditoria e de clonagem para o nome novo (desde 26/09) e **recusa com 409 quando a slug NOVA já é origem de um 301** — o worker responde redirect antes de servir a página, então uma regra sobrando deixaria o artigo inalcançável. Se a histórica já tinha 301 para o artigo (produtosanalisados, 26/09), tire essa regra do `worker/redirects.json` antes, num commit seu, e sincronize a VPS. Depois: build + deploy do site e deploy do worker da conta da zona, um logo depois do outro (entre os dois, a slug que saiu cai na home), e `curl -L` contando saltos: histórica 200 em 0, slug que saiu 200 em 1.
 
    ⚠ **`orfasSemArtigo` não é trabalho desta skill.** São URLs com histórico sem artigo
    nenhum do mesmo tópico no site: 199 das 209 órfãs da rede. Isso é artigo a escrever
