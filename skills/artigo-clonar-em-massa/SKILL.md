@@ -266,6 +266,9 @@ Aplique ESSA régua na íntegra. Onde este prompt e a SKILL.md divergirem, a SKI
 
 PASSO 2 — Inputs deste produto:
 - target, slug-artigo, ASIN, badge, affiliateTag (crua se vazia)
+- keyword do artigo e, se ela tem recorte (público ou uso), o TEMA do recorte e o que ele muda
+  na escolha (dose, formato, alérgeno, custo por dia). O tema orienta o ângulo; não é frase
+  para repetir: escreva sobre o recorte com palavras suas, diferentes em cada campo.
 - bíblia (conteúdo de docs/biblias-v2/{ASIN}.json) — ÚNICA fonte, não leia mais nada
 
 DELTAS DO CLONE (adições à régua da skill):
@@ -284,6 +287,8 @@ DELTAS DO CLONE (adições à régua da skill):
 SAÍDA: retorne SÓ um JSON com os 6 campos (subtitle, shortDescription, pros[], cons[], specs[],
 fullReview). A skill-mãe monta o .mdx — NUNCA edite .mdx nem rode git.
 ```
+
+⚠️ **O recorte da keyword vai por TEMA, nunca por frase pronta (26/09/2026).** Frase pronta no prompt vira frase copiada: no clone `produtosanalisados/melhor-creatina-para-mulher` o prompt descrevia o público como "mulher que quer começar ou manter creatina", e essa frase saiu literal em 10 campos dos 10 produtos; a Etapa 1.4 limpou, mas gastou uma rodada. Escreva no prompt o tema e o efeito na escolha ("recorte: mulheres; muda a atenção a formato (goma, pó sem sabor), porção e alérgenos"), sem uma frase sobre o público que o sub-agent possa copiar.
 
 ⚠️ **Se a mãe optar por deixar CADA worker persistir o próprio JSON** (variante legítima: fecha o
 buraco de 2.5, onde uma queda antes do último retorno joga fora a leva inteira), o caminho é

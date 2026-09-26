@@ -44,7 +44,10 @@ PROF = r'(?:m[ée]dic[oa]|pediatra|nutricionista|profissional de sa[úu]de|espec
 AVISO = re.compile(
     rf'(?:consulte|procure|converse com|fale com|orienta[çc][ãa]o d[eo]|acompanhamento d[eo]|'
     rf'sob orienta[çc][ãa]o d[eo]|indica[çc][ãa]o d[eo]|supervis[ãa]o d[eo])\s+'
-    rf'(?:um |uma |seu |sua )?{PROF}'
+    # Artigo definido também: "converse com o médico que acompanha a gestação"
+    # contava 0 e o clone de 26/09 trocou o texto para "seu médico" só para o
+    # gate enxergar. O texto não deve mudar para caber no regex.
+    rf'(?:(?:um|uma|seu|sua|seus|suas|o|a|os|as)\s+)?{PROF}'
     rf'|n[ãa]o substitui[^.<>]{{0,45}}{PROF}', re.I)
 
 
