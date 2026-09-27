@@ -49,7 +49,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 - **6.000 a 25.000 chars** no total do HTML (faixa válida; o tamanho sai da cobertura, ver "Tamanho típico").
 - **Estrutura: 5 H2 base obrigatórios + H2 extras dirigidos pela SERP.** Os 5 base (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) são sempre obrigatórios; H2 informacionais extras (O que é / gasta energia / receitas / como limpar) entram quando a análise de concorrentes mostra intenção informacional. Faltar qualquer base = ERRO. Ver "Régua editorial — ESTRUTURA" abaixo.
 - **Links Amazon.** Proibidos em "Vale a pena" e "Como escolher" (educativas). Permitidos em "Melhor marca" (busca da marca), "FAQ" e "Conclusão" (recomendação de produto). `/dp/` cru; busca `/s?k=` com a tag (ver Pré-requisitos).
-- **Linkagem interna: 2 a 4 links (ideal ~3), contextuais e naturais** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (ou o total de peers, se o site tiver menos de 2; 0 se for o 1º artigo do site **ou se nenhum peer passar no teste do "encaminhamento útil"** — ver "Desempate" em "Linkagem interna"). Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
+- **Linkagem interna: até 4 links (ideal ~3; 2 é alvo, não obrigação), contextuais e naturais** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Régua de quantidade canon (Marcelo 2026-06-09, revista em 27/09/2026): ~3 ideal · 4 máx · 2 como alvo; menos de 2 quando nenhum peer passa no "Teste da decisão" (ver "Desempate" em "Linkagem interna"), e 0 no 1º artigo do site. Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
 - **Sem travessão (—).** Use vírgula, ponto, dois pontos ou parênteses.
 - **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Sem superlativos sem evidência** ("o melhor disponível", "incomparável", "imbatível"). "Excelente", "ótimo" OK se contextualizado.
@@ -529,7 +529,7 @@ Antes de inserir <a> pra produto no guide (FAQ/Conclusão):
 
 #### Links internos (peer articles)
 
-- **2-4 links totais (ideal ~3)** no guide inteiro — régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (0 se o site não tiver peers ainda, **ou se nenhum peer passar no teste do "encaminhamento útil"** — ver "Desempate" em "Linkagem interna"). Já documentado em "Linkagem interna".
+- **Até 4 links (ideal ~3; 2 é alvo)** no guide inteiro — régua de quantidade canon (Marcelo 2026-06-09, revista em 27/09/2026): menos de 2 quando nenhum peer passa no "Teste da decisão" (ver "Desempate" em "Linkagem interna"), 0 se o site não tiver peers ainda. Já documentado em "Linkagem interna".
 - **Contextual, NÃO na Conclusão (v1.24.0):** distribuir ao longo do texto, cada um no spot onde o tema do artigo-irmão aparece naturalmente. **Evite a Conclusão** pra links peer/home — fecho com link de navegação é decorativo. Melhor não forçar do que enfiar no fim.
 - Bons encaixes: dentro de H3 de "Como escolher" pra cross-linkar critério com outro artigo (ex: H3 "Com fio ou sem fio" → "/melhor-aspirador-sem-fio-vertical/"); resposta de FAQ que toca no tema do irmão; "Vale a pena" pra apontar a categoria-mãe/home; H3 de marca pra apontar o guia daquela marca.
 
@@ -555,7 +555,7 @@ A keyword nomeia um **GUIA** ("melhor whey protein"), não um produto do mundo. 
 
 **O singular é o alvo por razão de SEO**, não estética: é a forma que as pessoas **buscam**, e a âncora reforça essa keyword. Quando não couber, nesta ordem:
 1. **Artigo definido** — `um melhor pré-treino` → `o melhor pré-treino`, **contraindo** a preposição: `a um`→`ao`, `a uma`→`à`, `de um`→`do`, `em um`→`no`.
-2. **Moldura de destino** — `no guia de melhor pré-treino`. Imune a concordância (a keyword vira complemento, sem artigo antes).
+2. **Moldura de destino, com artigo** — `no guia do melhor pré-treino`, `no guia da melhor impressora hp`. O artigo concorda com a palavra depois de "melhor", e o `audit-linkagem.ts` confere (`ancora-genero`). Até 27/09/2026 este item ensinava `no guia de melhor pré-treino`, sem artigo, e isso virou 38% dos links da rede: lê como título colado na frase.
 3. **Plural** (`os melhores pré-treinos`) — aceito pelo script, mas é válvula de escape, não primeira opção. ⚠ exige `keywordPlural` preenchida.
 4. Reescrever a frase.
 
@@ -573,12 +573,16 @@ Molde aprovado, com quatro traços:
 3. **Verbo de leitura, não de compra** — veja, vale comparar, encontra mais, tem guia próprio.
 4. **A frase existe PRA encaminhar** — não é frase sobre outro assunto com link enfiado no meio.
 
-> "Pra ver só os isolados, veja o guia de **melhor whey protein isolado**."
+> "Pra ver só os isolados, veja o guia do **melhor whey protein isolado**."
 > "Esse cenário de produtividade tem guia próprio no **melhor tablet para trabalho**."
-> "Se o seu objetivo é o rendimento na academia, vale comparar com o nosso guia de **melhor pré-treino** antes de decidir."
-> "Quem já pensa na marca encontra mais no guia de **melhor impressora hp**."
+> "Se o seu objetivo é o rendimento na academia, vale comparar com o nosso guia do **melhor pré-treino** antes de decidir."
+> "Quem já pensa na marca encontra os modelos no comparativo das **melhores impressoras hp**."
 
-⚠ **"tem guia próprio no {keyword}" só fecha com keyword masculina** ("no melhor tablet"). Com keyword feminina sai "no melhor cadeira presidente", erro que a régua de âncora não pega porque a âncora está certa (melhorcadeiradeescritorio, 26/09/2026). "Encontra mais no guia de {keyword}" e "veja o guia de {keyword}" não dependem de gênero: use uma delas quando a keyword for feminina.
+(Aprovados em 2026-07-31; em 27/09/2026 ganharam o artigo antes da âncora.)
+
+⚠ **O artigo antes da âncora concorda com a palavra depois de "melhor"**: "do melhor pré-treino", "da melhor glutamina", "das melhores impressoras". "tem guia próprio no {keyword}" só fecha com palavra masculina ("no melhor tablet"); com feminina, outra frase. Em 27/09/2026 havia 9 erros assim na rede ("tem guia próprio no melhor glutamina"), e o `audit-linkagem.ts` passou a avisar (`ancora-genero`).
+
+⚠ **Variar o molde.** Os exemplos são formas, não texto para copiar: em 27/09/2026, "o guia de melhor X" estava em 38% dos links da rede e "Quem… encontra mais no guia de" em 240, copiados daqui. No mesmo guia, não repita o molde entre os links; no site, nenhum molde em mais de 1/3 dos links (o script dá `moldura-repetida`). Outras formas: "as opções estão no guia da…", "o comparativo das melhores…" (plural), "vale ler antes o guia do…", ou a keyword dentro do texto quando a frase fecha.
 
 Recomendado, não obrigatório: link integrado ao texto vale quando a frase fecha (ex. *"vale olhar os melhores Kindles"*). O que não vale é a keyword enfiada como objeto de verbo no singular.
 
@@ -605,7 +609,7 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 - Pense no grafo do site: linke os **irmãos mais relevantes** (ex: o guia do termo-head linka custo-benefício + tanque + barata; cada sub-artigo aponta de volta pra home via `/`). Evita artigo órfão/sub-linkado.
 - **A home é um peer como qualquer artigo.** Ela é o `homeReviewSlug`, servida na raiz (`/` = dominio.com.br), âncora = a keyword dela (ex: "melhor impressora"). Os outros artigos DEVEM linká-la via `<a href="/">{keyword da home}</a>` (NUNCA `/{homeReviewSlug}/`, que é 404) — **não deixe a home órfã**. O `href="/"` CONTA como peer link (vale pros ≥2 distintos).
 - Atributos: SEM `target="_blank"`, SEM `rel="nofollow"` (interno passa autoridade).
-- Quantidade: **mínimo 2 peer ARTICLES DISTINTOS** (NUNCA repita o mesmo destino 2×), até 4 (ideal ~3), + os links de PRODUTO (hub-and-spoke, quantos forem naturais).
+- Quantidade: **alvo de 2 a 4 peer ARTICLES DISTINTOS** (ideal ~3; NUNCA repita o mesmo destino 2×), só com link que passe no "Teste da decisão", + os links de PRODUTO (hub-and-spoke, quantos forem naturais).
 - **Só no guia**: todos os links internos (peer + produto) vivem **só no `guideContent`** (Como escolher / FAQ / Marca / Vale a pena / Conclusão). **NUNCA** na introdução nem nos reviews dos produtos (lá só vai link Amazon).
 - **Onde colocar o link peer/home — contextual, EVITAR a Conclusão (v1.24.0):** cada link pra artigo-irmão ou pra home entra no spot onde o assunto aparece **naturalmente no meio do texto** — uma resposta de FAQ que toca no tema do artigo-irmão, a seção "Qual a melhor marca" (pra apontar o guia daquela marca), ou "Vale a pena" / "Como escolher" (pra ligar a categoria-mãe/home). **NÃO concentre links de navegação peer/home na Conclusão.** Link de navegação jogado no fecho é decorativo, não contextual; o ideal é evitar a Conclusão de vez pra esses links. Se não houver encaixe natural fora da Conclusão, **melhor não forçar o link** do que enfiá-lo no fecho.
   - ⚠ **Distinção importante:** essa régua é pra links **peer-article + home** (navegação entre artigos). Links de **PRODUTO** (hub-and-spoke `/{slug-produto}/` ou Amazon `/dp/`) **continuam OK na Conclusão** — ali são recomendação direta de compra, que é a função do fecho. O que sai da Conclusão é só a navegação inter-artigo.
@@ -614,19 +618,19 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 
 1. Cada `href="/{slug}/"` existe em `reviews/` OU `products/`? Se não → 404, **regenerar com o slug real**. Nenhum aponta pro `homeReviewSlug` (esse vira `/`).
 2. Âncora de peer == keyword do destino (singular preferido)? Âncora de produto contém a marca + é o nome completo?
-3. **A FRASE de cada link fecha?** Reler a frase INTEIRA de cada `<a>` (não só a âncora): zero `um/uma/bom/boa/outro/outra/qualquer` antes de âncora com superlativo; `na/no` só se retomar guia/artigo; o artigo concorda em gênero com o núcleo REAL da keyword. Este é o passo que faltava até 2026-07-31 e que deixou 64 frases quebradas irem pro ar.
+3. **A FRASE de cada link fecha?** Reler a frase INTEIRA de cada `<a>` (não só a âncora): zero `um/uma/bom/boa/outro/outra/qualquer` antes de âncora com superlativo; `na/no` só se retomar guia/artigo; o artigo concorda em gênero com a palavra depois de "melhor" (o `audit-linkagem.ts` avisa `ancora-genero`). Este é o passo que faltava até 2026-07-31 e que deixou 64 frases quebradas irem pro ar.
 4. **Cada link para outro artigo passa no "Teste da decisão"?** Reler o PARÁGRAFO de cada um: ele trata do destino ou da decisão? A frase não é "quem combina com outros suplementos" nem prioridade inventada?
 Se algo falhar, **corrijo o trecho antes de aplicar**. Não passa link inventado nem âncora fora da régua.
 
 Se peer list está vazia (1º artigo do site), **ZERO links de peer**.
 
-### ⚖️ Desempate: o piso de 2 NÃO vence o "encaminhamento útil" (canon 2026-08-10)
+### ⚖️ Desempate: o 2 é alvo, não obrigação (canon 2026-08-10, revisto em 27/09/2026)
 
-O piso de 2 e o molde de encaminhamento acima podem se contradizer num caso só: **o site TEM peers, mas nenhum responde a uma decisão que o leitor deste artigo está tomando.** Quando isso acontece, **a régua qualitativa ganha e o artigo fica abaixo do piso** (zero peer, ou só os irmãos de categoria que já linka), declarando o motivo no relatório. Não invente ponte pra bater o número.
+Quando nenhum peer responde a uma decisão que o leitor deste artigo está tomando, **a régua qualitativa ganha e o artigo fica abaixo de 2** (zero peer, ou só os que passam no teste), declarando o motivo no relatório. Não invente ponte pra bater o número.
 
-**PRÉ-CONDIÇÃO MECÂNICA — sem ela a exceção NÃO está disponível:** o artigo tem **ZERO peers da mesma `category`, ou já linka todos os que existem**. Confira contando: `category` dos outros `.mdx` de `reviews/` do site, e quais deles o guia já linka. Se existe pelo menos 1 irmão da mesma categoria **ainda não linkado**, **o piso de 2 vale integralmente** e não há discussão — linke. Irmão de categoria passa no "Teste da decisão" como escolha entre dois recortes ("quem quer só os isolados…"): escreva a frase nessa forma, no parágrafo que trata do recorte. A exceção cobre dois casos: o artigo é o primeiro da categoria dele num site que já tem outras, ou a categoria dele já está toda linkada (produtosanalisados, 27/09/2026: a categoria Fones de Ouvido tem 2 artigos, que já se linkam, e exigir um segundo link de saída levou o fone de academia a linkar a bicicleta ergométrica "onde o cabo incomoda menos"). Isso é deliberado: a exceção é julgamento, e julgamento sem porta de entrada verificável vira atalho (foi assim que a régua qualitativa perdeu pro piso numérico em primeiro lugar).
+**Por que não é obrigação.** O bloco "Posts Interessantes" no fim de cada artigo (`relatedPosts` em `packages/ui/src/utils/review-data.ts`) já liga todos os artigos finalizados da mesma categoria, e a home e a página de categoria listam todos. O link no texto vale pela âncora e pelo contexto, e só quando serve ao leitor. Até 27/09/2026 havia uma "pré-condição mecânica": havendo irmão de categoria ainda não linkado, o link era obrigatório. Ela produziu links como "fone de academia → bicicleta ergométrica, onde o cabo incomoda menos" (produtosanalisados) e "roçadeira → lavadora de alta pressão" (melhoreseletro, 25/09/2026). O irmão de categoria continua sendo o candidato mais natural, como escolha entre dois recortes ("quem quer só os isolados…"): escreva a frase nessa forma, no parágrafo que trata do recorte.
 
-**Passada a pré-condição, o teste é a decisão, não a categoria** (seção "Teste da decisão" acima). Se você precisa construir o cenário em que o leitor iria pro outro artigo, o cenário não existe. Note que a pré-condição NÃO decide sozinha: os 34 links E-reader↔Tablet da rede passam por artigos que também têm 0 peer da própria categoria, e são links bons — o que os salva é o teste da decisão, não a contagem.
+**O teste é a decisão, não a categoria** (seção "Teste da decisão" acima). Se você precisa construir o cenário em que o leitor iria pro outro artigo, o cenário não existe. Os 34 links E-reader↔Tablet da rede, por exemplo, ligam categorias diferentes e são links bons: o que os salva é o teste da decisão, não a categoria.
 
 **Por que não basta "só linkar dentro da mesma categoria":** muitos links da rede entre categorias diferentes (E-reader e Tablet, suplementos entre si) respondem a uma decisão real do leitor, e a taxonomia não separa os casos (Tablets e Impressoras são subs de Eletrônicos como Creatinas e Glutamina são de Suplementos). O que separa é o "Teste da decisão", lido no parágrafo. Entre suplementos, é justamente onde aparece a frase genérica que ele barra.
 
