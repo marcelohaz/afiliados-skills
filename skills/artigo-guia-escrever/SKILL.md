@@ -582,6 +582,19 @@ Molde aprovado, com quatro traços:
 
 Recomendado, não obrigatório: link integrado ao texto vale quando a frase fecha (ex. *"vale olhar os melhores Kindles"*). O que não vale é a keyword enfiada como objeto de verbo no singular.
 
+### Teste da decisão: vale para todo link entre artigos (canon Marcelo 2026-09-27)
+
+Todo link para outro artigo responde a uma decisão que o leitor DESTE artigo está tomando. São três tipos, cada um com uma condição:
+- **Escolha entre dois** ("tablet ou Kindle?", "BCAA ou whey?"): o parágrafo compara as duas coisas.
+- **Compra conjunta** ("creatina dentro do pré-treino ou comprada à parte?"): o parágrafo trata daquele par. "Quem combina com outros suplementos", "quem monta a rotina" e "quem está montando essa parte" não contam: cabem em qualquer artigo e acabam sempre no mesmo destino.
+- **Um antes do outro** ("resolva a proteína do dia antes da glutamina"): só quando a ordem é verdadeira para o produto. Vitamina D corrige deficiência e não depende de proteína, então "feche a proteína antes de somar vitaminas" não passa.
+
+E o link fica num parágrafo que trata do destino ou da decisão. Frase de encaminhamento colada no fim de um parágrafo sobre outro assunto (quanto tempo pedalar por dia, como dosar a creatina, alérgeno no rótulo) é link protocolar, mesmo com o molde de frase certo.
+
+**O artigo mais forte do site não é destino padrão.** Em site de suplemento, qualquer guia "combina" com whey, e o segundo link de todo artigo vira o guia de whey. Antes de linkar o pillar ou o artigo mais linkado do site, confira se o parágrafo fala do assunto dele. Caso real (produtosanalisados, 27/09/2026): o whey recebia 16 links, e 5 vinham de frase genérica em parágrafo de outro assunto. Na rede, uma busca por essas frases achou 53 links, 28 deles para artigos de whey (nem todos são defeito: quem decide é a leitura do parágrafo).
+
+Link que não passa não entra. Se isso deixa o artigo com menos de 2 links para outros artigos, vale o Desempate abaixo.
+
 ### Slug REAL — NUNCA derivar do keyword
 
 O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `products/`), copiado verbatim. **NUNCA derive o slug do keyword** (slugify do título). Foi exatamente assim que nasceu `/impressora-boa-e-barata/` (keyword "impressora boa e barata") quando o arquivo real é `impressora-barata.mdx` → 404 em produção. Se o destino é o `homeReviewSlug` do site, o href é `/` (a home), **não** `/{homeReviewSlug}/` (esse é filtrado do getStaticPaths → 404).
@@ -602,19 +615,20 @@ O `href` é o **slug REAL do arquivo de destino** (da peer-list / pasta `product
 1. Cada `href="/{slug}/"` existe em `reviews/` OU `products/`? Se não → 404, **regenerar com o slug real**. Nenhum aponta pro `homeReviewSlug` (esse vira `/`).
 2. Âncora de peer == keyword do destino (singular preferido)? Âncora de produto contém a marca + é o nome completo?
 3. **A FRASE de cada link fecha?** Reler a frase INTEIRA de cada `<a>` (não só a âncora): zero `um/uma/bom/boa/outro/outra/qualquer` antes de âncora com superlativo; `na/no` só se retomar guia/artigo; o artigo concorda em gênero com o núcleo REAL da keyword. Este é o passo que faltava até 2026-07-31 e que deixou 64 frases quebradas irem pro ar.
+4. **Cada link para outro artigo passa no "Teste da decisão"?** Reler o PARÁGRAFO de cada um: ele trata do destino ou da decisão? A frase não é "quem combina com outros suplementos" nem prioridade inventada?
 Se algo falhar, **corrijo o trecho antes de aplicar**. Não passa link inventado nem âncora fora da régua.
 
 Se peer list está vazia (1º artigo do site), **ZERO links de peer**.
 
 ### ⚖️ Desempate: o piso de 2 NÃO vence o "encaminhamento útil" (canon 2026-08-10)
 
-O piso de 2 e o molde de encaminhamento acima podem se contradizer num caso só: **o site TEM peers, mas nenhum responde a uma decisão que o leitor deste artigo está tomando.** Quando isso acontece, **a régua qualitativa ganha e o artigo vai a ZERO peer**, declarando o motivo no relatório. Não invente ponte pra bater o número.
+O piso de 2 e o molde de encaminhamento acima podem se contradizer num caso só: **o site TEM peers, mas nenhum responde a uma decisão que o leitor deste artigo está tomando.** Quando isso acontece, **a régua qualitativa ganha e o artigo fica abaixo do piso** (zero peer, ou só os irmãos de categoria que já linka), declarando o motivo no relatório. Não invente ponte pra bater o número.
 
-**PRÉ-CONDIÇÃO MECÂNICA — sem ela a exceção NÃO está disponível:** o artigo tem **ZERO peers da mesma `category`**. Confira contando: `category` dos outros `.mdx` de `reviews/` do site. Se existe pelo menos 1 irmão da mesma categoria, **o piso de 2 vale integralmente** e não há discussão — linke. A exceção existe só pro caso em que o artigo é o primeiro da categoria dele num site que já tem outras categorias. Isso é deliberado: a exceção é julgamento, e julgamento sem porta de entrada verificável vira atalho (foi assim que a régua qualitativa perdeu pro piso numérico em primeiro lugar).
+**PRÉ-CONDIÇÃO MECÂNICA — sem ela a exceção NÃO está disponível:** o artigo tem **ZERO peers da mesma `category`, ou já linka todos os que existem**. Confira contando: `category` dos outros `.mdx` de `reviews/` do site, e quais deles o guia já linka. Se existe pelo menos 1 irmão da mesma categoria **ainda não linkado**, **o piso de 2 vale integralmente** e não há discussão — linke. A exceção cobre dois casos: o artigo é o primeiro da categoria dele num site que já tem outras, ou a categoria dele já está toda linkada (produtosanalisados, 27/09/2026: a categoria Fones de Ouvido tem 2 artigos, que já se linkam, e exigir um segundo link de saída levou o fone de academia a linkar a bicicleta ergométrica "onde o cabo incomoda menos"). Isso é deliberado: a exceção é julgamento, e julgamento sem porta de entrada verificável vira atalho (foi assim que a régua qualitativa perdeu pro piso numérico em primeiro lugar).
 
-**Passada a pré-condição, o teste é a decisão, não a categoria.** Link peer bom responde a uma bifurcação ("tablet ou Kindle?"), a uma soma ("whey + creatina?") ou a uma ordem de prioridade ("fecha a proteína antes da glutamina"). Se você precisa construir o cenário em que o leitor iria pro outro artigo, o cenário não existe. Note que a pré-condição NÃO decide sozinha: os 34 links E-reader↔Tablet da rede passam por artigos que também têm 0 peer da própria categoria, e são links bons — o que os salva é o teste da decisão, não a contagem.
+**Passada a pré-condição, o teste é a decisão, não a categoria** (seção "Teste da decisão" acima). Se você precisa construir o cenário em que o leitor iria pro outro artigo, o cenário não existe. Note que a pré-condição NÃO decide sozinha: os 34 links E-reader↔Tablet da rede passam por artigos que também têm 0 peer da própria categoria, e são links bons — o que os salva é o teste da decisão, não a contagem.
 
-**Por que não basta "só linkar dentro da mesma categoria":** quase todos os links da rede entre categorias diferentes (E-reader e Tablet, suplementos entre si) respondem a uma decisão real do leitor, e a taxonomia não separa os casos (Tablets e Impressoras são subs de Eletrônicos como Creatinas e Glutamina são de Suplementos).
+**Por que não basta "só linkar dentro da mesma categoria":** muitos links da rede entre categorias diferentes (E-reader e Tablet, suplementos entre si) respondem a uma decisão real do leitor, e a taxonomia não separa os casos (Tablets e Impressoras são subs de Eletrônicos como Creatinas e Glutamina são de Suplementos). O que separa é o "Teste da decisão", lido no parágrafo. Entre suplementos, é justamente onde aparece a frase genérica que ele barra.
 
 **Consequência aceita:** o `audit-linkagem.ts` e o critério `linkagem-fraca` vão emitir `warn` nesse artigo (o script conta peer bruto e não sabe avaliar decisão). É `warn`, não bloqueia `readyToLock`, e é o custo certo — melhor um warn conhecido do que um link que não serve ao leitor. Registre no relatório como exceção justificada.
 
