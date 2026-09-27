@@ -272,7 +272,7 @@ No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o 
     - **link novo**: inserir o `<a>` no spot exato aprovado, âncora = keyword singular do destino, href = slug REAL (`/slug/` ou `/` pra home), sem `rel`/`target` (interno passa autoridade).
     - **anchor-maiuscula**: passar a âncora para minúscula, mantendo marca e sigla ("Melhor Whey Protein" → "melhor whey protein", "Melhor Impressora HP" → "melhor impressora HP").
     - **ancora-genero** (aprovado no julgamento): acertar o artigo antes da âncora pelo gênero da palavra depois de "melhor" ("do melhor vitamina C" → "da melhor vitamina C"); se a frase não fecha com o artigo certo ("tem guia próprio na melhor glutamina" lê como lugar), reescrever a frase.
-    - **promessa-sem-link** (aprovado no julgamento): pôr o `<a>` na keyword citada, com a âncora e a concordância da régua, ou tirar a frase quando ela promete artigo que não existe.
+    - **promessa-sem-link** (aprovado no julgamento): pôr o `<a>` na keyword citada, com a âncora e a concordância da régua, ou tirar a frase quando ela promete artigo que não existe ou quando o artigo já linka esse destino em outro ponto (a mensagem do script diz qual é o caso; pôr o link daria `peer-repetido`).
     - **link-utm**: tirar os parâmetros `utm_` da URL do link externo, mantendo o resto.
     - **peer-repetido**: ao tirar o link repetido, reescreva a frase que ficou citando o guia sem link, ou tire-a. Tirar só o `<a>` deixou "o guia do melhor tablet samsung ajuda a decidir…" sem link em 3 sites (tabletparatrabalho 06/07, amelhorimpressora 24/07, melhorcreatina 07/06).
 
