@@ -33,6 +33,7 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
 ## Invariantes
 
 - **Uma linhagem vai para UM herdeiro** (canon Marcelo, 19/09/2026). Se já existe site Astro nosso herdeiro dessa linhagem, o texto vai para ele (cenário A), nunca para um segundo site.
+- **O artigo é portado uma vez só: nunca dois sites no ar com o mesmo conteúdo** (Marcelo, 19/09 e 27/09/2026: *"ferramentasuteis e analista de produtos são o mesmo… ou faz um ou faz o outro"*). O herdeiro é o site **no ar** que tem os portados do grupo: se ele for redirecionado inteiro para um site novo que recebe todos os artigos dele (inclusive os portados), o novo passa a ser o herdeiro, e o antigo sai da conta quando fica `live: false` com catch-all. Mesmo assunto com texto próprio em outro site é permitido (vários sites na mesma busca). O `wp-portar` recusa o `--gravar` em três casos (`scripts/lib/texto-portado.ts`): artigo com 10% ou mais do texto corrido igual a um artigo de outro site no ar; grupo com portados em outro site no ar; domínio fora de `grupos-legado.json`. Mandar parte de uma cadeia para um segundo site só com decisão do Marcelo: `--outro-herdeiro "motivo"`, que vai para o `port-plano.json` e para o relatório. Texto repetido não tem exceção.
 - **Site da linhagem que está no ar fica com os endereços dele** (Marcelo, 27/09/2026). Numa linhagem partida, com mais de um site vivo (grupo "Esporte e suplementos": os 5 sites no ar, cada um com seus artigos), a cadeia do port são só os domínios que já redirecionam inteiros para o herdeiro, ou que vão deixar de existir como site. Endereço antigo de um site vivo cujo artigo foi portado para o herdeiro não recebe 301 para ele: fica no site vivo, indo para a home dele pelo fallback, ou vira artigo escrito lá. O `port-regras` e o `cf-deploy-worker` recusam as duas formas do erro: regra de caminho para outro domínio num domínio sem catch-all, e catch-all no domínio de site com `live: true` (`scripts/lib/regras-sites-vivos.ts`).
 - **Cenário C (domínio novo) só com decisão do Marcelo registrada na conversa**, mostrando a evidência acima. Não é escolha da skill.
 - **Não mexer no melhorfonedeouvido.com.br** sem pedido explícito: é o único WordPress com tráfego que resistiu a maio e junho.
@@ -56,7 +57,7 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
 2. `bun scripts/port-linhagem.ts {site}` — vida de cada domínio no GSC, elos, quem faz o 301 hoje.
 3. Escolher o cenário pela tabela acima e dizer ao Marcelo, com os números da cadeia (pico, mês da queda, nível de agora) e a evidência. **Cenário C: parar aqui até ele decidir.**
    Decidir junto a estrela no Google: os ports de domínio novo saíram sem estrela (`ratingStars: false`, "sem estrela inventada"), e o herdeiro pode dar nota automática aos portados (cozinhaideal). Uma política só por site, registrada no relatório.
-4. Sobreposição com a rede: artigos com o mesmo slug em outros sites nossos. Texto diferente (menos de 10% de 8-gramas iguais) pode conviver; texto igual não.
+4. Sobreposição com a rede: `bun scripts/lib/texto-portado.ts` lista o herdeiro de cada grupo (o site no ar que já tem portados dele). Grupo com herdeiro que não é o `{site}`: o port vai para o herdeiro, ou para quando o Marcelo decidir outro (ver Invariantes). O texto de cada artigo é conferido pelo `wp-portar` na Fase 2.
 
 ## Fase 1 — levantamento
 
@@ -73,6 +74,7 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
 ## Fase 2 — conversão e dados
 
 1. `bun scripts/wp-portar.ts {export} sites/{site} --tag {tag} [--cadeia dominios-anteriores] [--irmaos dominios] [--so slugs] [--ano AAAA]` sem `--gravar`: todo post no formato, texto ≥99%, imagens 0 faltando, 0 link para outro site da rede. Depois com `--gravar`.
+   - **Texto já em outro site no ar, grupo com outro herdeiro ou domínio sem grupo impede o `--gravar`** (Invariantes, "o artigo é portado uma vez só"). O relatório mostra a linha "artigo portado uma vez só" com o maior porcentual de texto igual; os 183 portados até 27/09/2026 ficam em até 1,1%. Port feito em sessão na nuvem: rode `bun scripts/lib/texto-portado.ts` no Mac antes de juntar o ramo, porque sessões em ramos diferentes não veem o port uma da outra.
    - **Link para outro site da rede impede o `--gravar`** (Marcelo, 24/09/2026: site da rede não linka outro site da rede). Quase sempre é domínio da cadeia que faltou no `--irmaos`: o texto antigo linka os domínios anteriores em endereço absoluto (543 links no compraguia).
    - `--ano 2026` troca o ano velho do título e da descrição (o texto fica). Decisão do Marcelo para o compraguia (24/09/2026). Confira os avisos: o `listHeading` e a introdução continuam com o ano do texto, e um ano que é nome de modelo ("iPad 2025") também seria trocado.
    - `--tag`: a do próprio WordPress (conferir a mais usada nos posts) ou a do herdeiro. Nunca inventar tag.
