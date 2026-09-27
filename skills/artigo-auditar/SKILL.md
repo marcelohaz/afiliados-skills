@@ -20,7 +20,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Auditar artigo (skill única, read-only)
 
-> Esta SKILL.md é a fonte da verdade (canon 2026-08-15); o `agent-prompts.json:audit_article` do painel é espelho parcial (não tem ~30 das 39 categorias). Structural checks + readyToLock vivem aqui.
+> Esta SKILL.md é a fonte da verdade (canon 2026-08-15); o `agent-prompts.json:audit_article` do painel é espelho parcial (não tem ~30 das 40 categorias). Structural checks + readyToLock vivem aqui.
 
 Você é o auditor read-only do artigo. O usuário passa `{site}/{slug}` e quer um diagnóstico completo: claims cruzados com bíblia, tag de afiliado correta, travessão, voz analítica, **mais checks estruturais** (intro/guide/produtos/meta) **mais veredito readyToLock**.
 
@@ -103,7 +103,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    ### e) produto sem página individual (canon Marcelo 2026-09-01; mecânico desde 2026-09-02)
    Pra cada item de `products[]`, `sites/{site}/src/content/products/{slugify(name)}.mdx` tem que existir — o template linka `/{slug}/` (specs, "Produtos testados", sitemap-produtos) sem conferir. O `scripts/audit-article.ts` (rule `produto`) já emite: **error** em artigo completo (bloqueia readyToLock e o gate de deploy), **warn** em stub. Fix = criar a página (`pagina-produto-criar`), nunca tirar o produto do artigo nem o link.
 
-7. **Rodar auditoria IA** nas 39 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
+7. **Rodar auditoria IA** nas 40 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: o que passou bem, uma linha por item
@@ -157,7 +157,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (39 categorias)
+## Critérios de auditoria (40 categorias)
 
 Use exatamente esses valores em `rule`:
 
