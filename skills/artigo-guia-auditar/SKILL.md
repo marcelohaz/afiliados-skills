@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-auditar
-description: Audita o guideContent de um artigo E aplica correções CIRÚRGICAS por seção (nunca rewrite total) — contraparte da artigo-reviews-auditar pro guide. Aceita URL do painel OU site/slug. Critérios: produto do lineup fora do guide, claim stale, estrutura 5 H2, tamanho, HTML allowlist, links hub-and-spoke, link quebrado, peer na Conclusão, âncora≠keyword, travessão, voz-comprador, chavões por nicho, superlativo sem lastro, naturalidade (palavra fora do sentido/verbo-curinga, frase-sacada, molde de seção), concordância PT-BR, e faq-order-shuffle (anti-footprint determinístico — só reordena a FAQ, não muda redação). Relatório com diffs por seção; user aprova granular ('aplica 1,3' / 'aplica tudo'). Usa artigo-guia-escrever (rewrite total) só com guia ausente/stub ou 3+ H2 faltando.
+description: Audita o guia "Como escolher" (guideContent) de um artigo que já tem guia e corrige por trecho, sem reescrever o guia inteiro; aplica direto o conserto mecânico e propõe o de julgamento para aprovação. Use quando o lineup mudou depois do guia, há link quebrado ou âncora errada, faltam 1 ou 2 seções, ou o texto fere a régua editorial. Guia ausente, esboço ou com 3 ou mais seções faltando vai para artigo-guia-escrever. Aceita URL do painel ou site/slug.
 ---
 
 ## Parse de input
@@ -59,14 +59,14 @@ Pra tudo mais (lineup mudou, 1 link quebrado, 1 FAQ faltando, 1 H2 ausente, trav
 - **Preservar tudo fora do `guideContent`.** Não tocar em title, description, keyword, products, intro do body.
 - **Sem travessão (—).**
 - **Sem inventar.** Cada claim novo (ex: ao integrar um produto) tem origem rastreável na bíblia do ASIN.
-- **Régua de guia canônica** (igual `artigo-guia-escrever`): 5 H2 na ordem, allowlist h2/h3/p/ul/ol/li/strong/em/a/br, links Amazon tag-aware em FAQ/Marca/Conclusão, hub-and-spoke pra peers, sem voz-comprador.
+- **Régua de guia canônica** (igual `artigo-guia-escrever`): 5 H2 na ordem, allowlist h2/h3/p/ul/ol/li/strong/em/a, links Amazon tag-aware em FAQ/Marca/Conclusão, hub-and-spoke pra peers, sem voz-comprador.
 - **Português brasileiro editorial**, tom analítico.
 
 ## Fluxo
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+`.
 
-1.5. **Git pull antes de ler** (CRÍTICO — evita estado stale):
+1.5. **Git pull antes de ler** (evita estado stale):
    ```bash
    bash scripts/git-pull-seguro.sh "skill-artigo-guia-auditar-temp"
    ```
@@ -172,11 +172,7 @@ O motivo nº1 desta skill existir. Quando o `products[]` do artigo cresce (produ
 2. Conferir se o guia menciona o `name` (ou marca, se a seção "Melhor marca" for por-marca) OU linka `/{slug}/`.
 3. Se um produto do lineup **não aparece em lugar nenhum** do guia → flag.
 
-**Fix cirúrgico proposto** (NÃO rewrite): integrar o produto na **seção mais natural**, com 1 frase + link interno + 1 diferencial da bíblia:
-- Laser/mono → FAQ "Impressora laser vale a pena em casa?" ou similar.
-- Tanque colorido → FAQ "imprimir muito e gastar pouco?" ou seção de marca.
-- Cartucho entrada → FAQ "imprime pouco?".
-- Se não houver FAQ temático, adicionar 1 frase no "resumo por perfil" da seção "Melhor marca" ou na Conclusão.
+**Fix cirúrgico proposto** (NÃO rewrite): integrar o produto na seção onde o perfil de uso dele já é discutido (a FAQ desse uso, o H3 da marca em "Melhor marca" ou a Conclusão), com 1 frase + link interno + 1 diferencial da bíblia.
 
 **Caso real (2026-06-05, impressora-barata)**: Brother HL-L1232W entrou como 5º produto (2º laser) depois do guia; o guia linkava 4 de 5 e tratava laser como "a impressora laser da HP". Fix: 1 frase no FAQ laser + link `/brother-hl-l1232w/` + diferencial (toner inicial 1.500 págs). 1 Edit, sem rewrite.
 
@@ -196,10 +192,10 @@ Cruzar claims numéricos/contagem/exclusividade contra o `products[]` atual + `s
 - 3+ faltando OU fora de ordem grave → recomendar `artigo-guia-escrever` (rewrite).
 
 ### 4. `guide-tamanho` (level=`info`)
-6000-25000 chars (alvo 12-18k). < 6000 → "aprofundar" (info). > 25000 → "condensar" (info). Não bloqueia.
+6000-25000 chars. < 6000 → "aprofundar" (info). > 25000 → "condensar" (info). Não bloqueia.
 
 ### 5. `guide-html-allowlist` (level=`error`)
-Permitidas: `<h2> <h3> <p> <ul> <ol> <li> <strong> <em> <a href rel target> <br>`. Proibidas: `<h1> <h4>-<h6> <table>/<tr>/<td> <img> <picture> <video> <iframe> <script> <style> <div> <span>`. Fix cirúrgico: converter `<table>` → `<ul>`/`<p>`, desembrulhar `<div>`/`<span>`, remover mídia.
+Permitidas: `<h2> <h3> <p> <ul> <ol> <li> <strong> <em> <a href rel target>`. Proibidas: `<br> <h1> <h4>-<h6> <table>/<tr>/<td> <img> <picture> <video> <iframe> <script> <style> <div> <span>`. Fix cirúrgico: converter `<table>` → `<ul>`/`<p>`, desembrulhar `<div>`/`<span>`, remover mídia.
 
 ### 6. `guide-links-hub-and-spoke` (tag errada: `error` se live / `warn` em construção; posição: `info`)
 - Links Amazon (`/dp/`): flag só tag **diferente** da do config (ou `AFFILIATE_TAG_AQUI`); URL crua é OK (o build injeta a tag — canon 2026-08-15). Severity da tag errada igual `artigo-auditar` (live=true → error; live=false → warn).
@@ -224,7 +220,7 @@ Peer article = outro `.mdx` em `reviews/` que compartilha 2+ palavras iniciais d
 Âncora de link interno fora da régua. Dois sub-casos:
 - **peer (artigo)**: âncora ≠ `keyword` do destino. Régua: âncora = **keyword do destino, preferência SINGULAR** (`keywordPlural` só se a frase exigir). Fix: trocar o anchor pela keyword (qualificadores ficam FORA do `<a>`).
 - **produto**: âncora não contém a **marca** OU não é o **nome completo** (ex: `L4360`/`EcoTank L4360` em vez de `Epson EcoTank L4360`). Fix: usar o `name` completo do produto.
-Era `info`; subiu pra `warn` porque âncora errada é perda de SEO real e foi recorrente (melhorimpressora, 2026-06-05). Não bloqueia readyToLock.
+`warn` porque âncora errada é perda de SEO real. Não bloqueia readyToLock.
 **⚠ Ao APLICAR o fix, reconciliar a concordância do artigo/preposição ANTES do `<a>` (canon 2026-06-23):** se a âncora nova muda NÚMERO/GÊNERO em relação à antiga, o artigo que a rege acompanha (`das→da`, `dos→do`, `nas→na`, `nos→no`, `pelas→pela`, `essas→essa`). Caso real (escritoriocasa sublimatica): âncora `melhores impressoras de tanque de tinta`→`melhor impressora tanque de tinta` deixou "no guia **das** melhor impressora" quebrado. Reler a FRASE INTEIRA do `<a>` tocado. Auto-check pós-aplicação: `grep -nE '\b(das|dos|nas|nos|aos|pelas|pelos) +<a [^>]*>\s*(melhor|impressora|tablet|opção)\b'` no `.mdx` — match = corrigir o artigo. O `\b` é obrigatório (senão `melhor` casa `melhores` e "das melhores creatinas" falsa-positiva).
 
 ### 9b. `linkagem-fraca` (level=`warn`, v1.22.0)
@@ -249,7 +245,7 @@ Carregar `docs/painel/_data/chavoes-por-nicho.json`: `_genericos` SEMPRE + bloco
 
 ### 12b. `superlativo-sem-evidencia` (level=`warn`, v1.69.0 — 2026-07-02)
 
-Absoluto de VITRINE sem lastro na prosa do guia. **Faltava esta checagem aqui** (a `chavoes-por-nicho` só pega palavra banida tipo lineup/SKU, não superlativo) — caso real 2026-07-02: "imbatível", "o mais forte do mercado" e "melhor do mercado" passaram batido pela guia-auditar em 3 guias de tablet e só o `artigo-auditar` pegou. Este critério fecha o buraco.
+Absoluto de VITRINE sem lastro na prosa do guia.
 
 **FLAG** (absoluto de mercado/mundo, sem escopo nem dado):
 - Bare-boasts: "imbatível", "incomparável", "insuperável", "imperdível", "sem igual", "não tem concorrente", "campeão absoluto", "nada se compara", "o número 1".
@@ -265,7 +261,7 @@ Regra mental: **absoluto de MERCADO/MUNDO sem lastro = flag; keyword, escopo loc
 
 ### 12c. `naturalidade` (level=`warn`; `error` se ≥3 na mesma seção H2 ou ≥8 no guia — régua comum 2026-08-15, JULGAMENTO → propor→aprovar)
 
-O guia é 50-60% do texto do artigo e até 2026-08-15 não tinha nenhum critério de tom. A classe a flagrar é **palavra comum fora do sentido do dicionário** (quase sempre colocação inglesa vertida), não gíria nem termo técnico:
+O guia é 50-60% do texto do artigo. A classe a flagrar é **palavra comum fora do sentido do dicionário** (quase sempre colocação inglesa vertida), não gíria nem termo técnico:
 - objeto/preço/peso como agente com verbo humano: "resolve, dá conta, entrega, segura, pede, exige, aguenta, sustenta, encara, cobra, cobre, trabalha, vira, brilha" ("O de tomada não se cansa", "casa grande pede remanejo", "o sem fio se paga", "reorganiza a categoria inteira");
 - substantivo-figura: "a conta", "degrau", "piso", "porta de entrada", "pacote", "produção", "cenário", "posicionamento", "ressalva honesta", "trunfo", "fôlego";
 - frase-sacada / aforismo: "não é X: é Y", "não é X, e sim Y", "é aí que mora", "e é justamente", "Marca que só divulga watt está divulgando a conta de luz", "Modelo sem reposição no mercado tem prazo de validade";
@@ -283,7 +279,7 @@ Bugs de substituição mecânica (composiçãos, "a produto", "no em 20XX", term
 
 **Aplicação:** é fix DETERMINÍSTICO → **aplica direto** (canon 24/06 e 24/07; não espera aprovação): rode `bun scripts/faq-shuffle.ts {site}/{slug} --apply` (preserva block-scalar + indentação sozinho) e marque ✅ CORRIGIDO no relatório. Determinístico e seguro → pode auto-aplicar junto dos demais fixes aprovados. **level=info** (não bloqueia readyToLock; é polimento anti-footprint, não erro).
 
-ℹ️ A clone (`artigo-clonar-em-massa`) roda o `faq-shuffle.ts` direto na Etapa 6.3.5 dela (obrigatório desde 2026-06-24 quando há irmão na keyword) — artigo novo de clone já sai embaralhado. Esta skill/o script seguem sendo o caminho pra artigos ANTIGOS (pré-shuffle) ou pra reembaralhar um cluster inteiro (determinístico, pode rodar a qualquer momento).
+ℹ️ A `artigo-clonar-em-massa` roda o `faq-shuffle.ts` na Etapa 6.3.5 quando há irmão na keyword; esta skill cobre os demais artigos e o reembaralhamento de um cluster.
 
 ## Formato do relatório
 

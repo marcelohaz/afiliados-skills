@@ -1,6 +1,6 @@
 ---
 name: artigo-auditar
-description: Audita artigo inteiro read-only: 39 categorias editoriais (claim-vs-bible, tag-affiliate contextual — error se site live, warn em construção —, travessão, voz-comprador explícita+implícita, HTML inválido, qualidade de intro/title/meta/listHeading, estrutura/tamanho/links do guide, link interno quebrado, linkagem, chavões por nicho, naturalidade (palavra fora do sentido/verbo-curinga, frase-sacada, molde), concordância PT-BR, YMYL, badge-ausente) + 4 checks estruturais (hasIntro, hasGuide, ≥3 produtos, hasMeta) e calcula readyToLock pro contentLocked:true. NÃO modifica o .mdx. Imprime o relatório completo inline no chat + salva em docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md (painel lê). Aceita URL do painel OU site/slug.
+description: "Auditoria read-only de um artigo comparativo inteiro (claims contra a bíblia, tag de afiliado, régua editorial, estrutura, linkagem, YMYL) com veredito readyToLock para travar com contentLocked. Use quando pedirem para auditar um artigo ou checar se ele está pronto para travar, por site/slug ou URL do editor do painel. Não modifica o .mdx: imprime o relatório inline e grava docs/biblias-v2/.audits/articles/{site}-{slug}-audit-last.md."
 ---
 
 ## Parse de input
@@ -26,8 +26,6 @@ Você é o auditor read-only do artigo. O usuário passa `{site}/{slug}` e quer 
 
 A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera relatório + commita o `.md` da auditoria.
 
-**Histórico**: até 2026-05-24 existiam 2 skills separadas (`artigo-auditar` puro + `artigo-analise-final` com structural+lock). Foram consolidadas — separação era artificial (custo extra de $0.02, mesmas 9 categorias). Quem quiser audit "leve" no meio do dev pode simplesmente ignorar o campo `readyToLock` no output.
-
 ## Pré-requisitos
 
 - O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx`.
@@ -39,8 +37,8 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 - **NÃO MODIFICA O `.mdx`.** Skill é read-only no conteúdo editorial. Só escreve o relatório de audit + commita ele.
 - **NÃO inventa findings.** Se não encontrou problema numa categoria, não fabrica. Audit vazio em categoria = legítimo.
-- **Toda issue precisa de evidência.** Cite trecho literal do `.mdx` (`evidence` ≤ 160 chars, idealmente < 15 palavras) OU da bíblia.
-- **Código manda no readyToLock.** Override determinístico: IA pode dizer `true`, mas se estruturalmente falta peça obrigatória OU tem issue level=error, readyToLock final é `false`. IA só pode AFROUXAR, nunca APERTAR.
+- **Toda issue precisa de evidência.** Cite o trecho literal mínimo do `.mdx` (ou o campo da bíblia) que prova o achado.
+- **readyToLock é conta, não opinião.** `readyToLock = checks estruturais ok && zero issue level=error` (passo 9). Nenhum julgamento seu muda esse resultado; o que você escreve é o `lockReasoning`.
 - **Português brasileiro editorial.** Tom analítico, factual.
 
 ## Fluxo
@@ -78,7 +76,11 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
      - `live: true` + tag vazia → SEMPRE 🔴 error crítico (sem afiliação no ar = perda direta)
      - **Fallback se `live` não definido em sites-meta**: tratar como `false` (default leniente — site recém-criado pode não ter o campo populado ainda).
 
-6. **Rodar 4 checks estruturais determinísticos** (não-IA, código mental):
+6. **Rodar o núcleo determinístico** (não conte lendo):
+   ```bash
+   bun scripts/audit-article.ts {site} {slug} --json
+   ```
+   Os achados dele entram verbatim no relatório, com a severidade que ele deu (é a régua do pre-commit e do gate de deploy): estrutura do guia, travessão e ponto-e-vírgula, meta 120-160, regras da intro, badge, produto sem página, links do guia, preço. Os 4 checks estruturais abaixo saem de contagem feita com ferramenta (`python3` ou `bun -e` sobre o `.mdx`), não de leitura. A auditoria do passo 7 cobre o que o script não mede.
 
    ### a) `hasIntro`
    Body markdown do `.mdx` (tudo após o segundo `---` do frontmatter).
@@ -104,7 +106,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 7. **Rodar auditoria IA** nas 39 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
-   - `passed`: bullets MUITO curtos (10-30 palavras) do que passou bem
+   - `passed`: o que passou bem, uma linha por item
 
 8. **Detectar meta description placeholder específico** (placeholder `[descrição a definir` — a mesma string que o `editor-artigo.html` insere no stub):
    ```js
@@ -174,7 +176,7 @@ Link Amazon com tag **diferente** da do config (canon 2026-08-15). **URL crua `/
 - `live: false` (em construção): divergência vira **🟡 warn** — site ainda não foi pro ar, tag pode ser preenchida pré-deploy. Não bloqueia readyToLock.
 - `live: true` + tag vazia: 🔴 error crítico **sempre** — site no ar sem afiliação é grave (perda direta de comissão).
 
-### `travessao` (level=`warn`)
+### `travessao` (level=`error` para travessão, como no `audit-article.ts`; `warn` para ponto-e-vírgula)
 
 **+ Ponto-e-vírgula (;)** (régua 2026-06-20): mesma família do travessão. Flag `;` em prosa como **warn** (auto-fixável: ;→"." ou ","). Detecção **entity-aware**: remova `&amp;`/`&#..;` e a querystring dos links de afiliado antes de checar, senão todo link falsa-positiva. Só prosa, nunca código.
 Travessão (`—` ou `–`) detectado em qualquer campo editorial: title, description, subtitle, shortDescription, fullReview, pros, cons, intro (body markdown), guideContent.
@@ -206,8 +208,8 @@ Só flag tone-clone se houver:
 ### `spec-ausente` (level=`info`)
 Produto sem campo de spec que outros do artigo têm (incompletude). Ex: 3 produtos com "Conectividade: Wi-Fi" no specs e 1 sem.
 
-### `badge-ausente` (level=`error`, promovido de warn em 2026-06-22 — canon Marcelo)
-Produto do `products[]` SEM o campo `badge` (etiqueta do card individual). A convenção da rede é que **TODO produto do comparativo leva badge** (os 2 primeiros = ranking "Melhor Escolha"/"Boa Alternativa"; os demais = descritivos como "Laser Monocromática", "Fotográfica", "Frente e Verso Automático", "Boa e Barata"). Conferir contra os irmãos do site (ex.: melhor-impressora-hp/tanque = 7/7 com badge). Flag cada produto sem badge. **Fix:** atribuir badge descritivo curto derivado do ângulo/categoria (texto livre — renderiza com cor padrão, não precisa registrar no `amazon.ts`). Caso real 2026-06-14: o artigo sublimática tinha badge só nos 2 primeiros; L3250/L1250 saíram sem etiqueta (e o `artigo-clonar-em-massa` propagou pra 2 clones, pois o badge viaja por ASIN). **BLOQUEIA readyToLock** (canon Marcelo 2026-06-22: badge é OBRIGATÓRIO em todo produto do comparativo, sem exceção — alinha com o HARD GATE de badge da `artigo-clonar-em-massa`, que já exige etiqueta em 100% dos produtos na criação). Era `warn` até 2026-06-22; promovido a `error` por inconsistência (criação travava, audit deixava passar). Sempre atribuir badge descritivo curto — é texto livre com cor fallback, não há produto legítimo sem etiqueta num comparativo.
+### `badge-ausente` (level=`error`, decisão do Marcelo)
+Produto do `products[]` sem o campo `badge`. Todo produto do comparativo leva badge: os 2 primeiros de ranking ("Melhor Escolha"/"Boa Alternativa"), os demais descritivos ("Laser Monocromática", "Fotográfica", "Boa e Barata"). **Fix:** badge descritivo curto derivado do ângulo do produto (texto livre, cor padrão, não precisa registrar no `amazon.ts`). **Bloqueia readyToLock**, alinhado ao gate de badge da `artigo-clonar-em-massa`: o badge viaja por ASIN e o que falta aqui se propaga para os clones.
 
 ### `dado-inconsistente-ignorado` (level=`warn`)
 Bíblia tem `dadosInconsistentes` com `decisaoEditorial`; review não respeita a decisão.
@@ -293,7 +295,7 @@ Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-
 
 **Fix sugerido pelo audit**: linguagem editorial pra alérgenos:
 - ❌ "Risco de contaminação cruzada na linha de produção"
-- ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
+- ✅ "Pode conter traços de leite. Quem tem alergia severa deve ler o rótulo antes de usar."
 
 ### `intro-qualidade` (level=`warn`)
 
@@ -488,7 +490,7 @@ O slug do arquivo (`reviews/{slug}.mdx`) difere do `slugify(keyword)` do frontma
 
 ### `linkagem-fraca` (level=`warn`, régua v1.22.0)
 
-Cada artigo deve linkar peer articles DISTINTOS (outros `.mdx` de `reviews/`) seguindo a **régua de quantidade canon (Marcelo 2026-06-09): 2 mínimo · ~3 ideal · 4 máximo**, **sem repetir** o mesmo destino, e SÓ no `guideContent` (nunca na intro/reviews). O **HUB** (artigo-cabeça: `homeReviewSlug` ou frontmatter `pillar: true`) é **isento do teto de 4** (linka todos os filhos). **A home é peer como qualquer artigo**: `href="/"` conta como link pro `homeReviewSlug`, e a home NÃO pode ficar órfã (deve receber ≥2 entradas). Flag se: <2 peers distintos, >4 peers distintos num artigo NÃO-hub, peer repetido, link interno na intro/review, ou a home órfã.
+Cada artigo deve linkar peer articles DISTINTOS (outros `.mdx` de `reviews/`) seguindo a **régua de quantidade canon (Marcelo 2026-06-09): 2 mínimo · ~3 ideal · 4 máximo**, **sem repetir** o mesmo destino, no `guideContent` (no artigo portado do WordPress sem guia, no `fullReview`, como faz a `linkagem-auditar`; nunca na intro). O **HUB** (artigo-cabeça: `homeReviewSlug` ou frontmatter `pillar: true`) é **isento do teto de 4** (linka todos os filhos). **A home é peer como qualquer artigo**: `href="/"` conta como link pro `homeReviewSlug`, e a home NÃO pode ficar órfã (deve receber ≥2 entradas). Flag se: <2 peers distintos, >4 peers distintos num artigo NÃO-hub, peer repetido, link interno na intro, ou no review de artigo que tem guia, ou a home órfã.
 
 ⚠️ **Exceção legítima de `<2 peers` (canon 2026-08-10):** site que TEM peers mas **nenhum que responda a uma decisão do leitor deste artigo** (bifurcação/soma/prioridade) vai a **0 peer de propósito** — a régua qualitativa da `artigo-guia-escrever` ("encaminhamento útil × link protocolar") vence o piso. O script conta peer bruto e não sabe avaliar isso, então o `warn` aparece de qualquer jeito: **classifique como exceção justificada no relatório, não mande adicionar link.** Caso-origem: `compraguia/melhor-caixa-de-som-jbl`, artigo de áudio num site generalista de impressora/tablet/Kindle. Confirme antes de aceitar: o site realmente não tem peer da mesma categoria nem de categoria adjacente com caminho de leitor real.
 
@@ -516,7 +518,7 @@ Audit cross-article: detecta quando o site tem **2+ artigos comparativos** sobre
 - Exemplo de inserção:
   ```html
   <h3>[Pergunta sobre o tema do peer]?</h3>
-  <p>[explicação contextual]. Cobrimos isso no nosso guia do <a href="/{peer.slug}/">{peer.keyword}</a>.</p>
+  <p>[explicação contextual]. [Frase de encaminhamento que diz para quem é o link] no guia de <a href="/{peer.slug}/">{peer.keyword}</a>.</p>
   ```
 
 **Bloqueia readyToLock?** Não — é melhoria editorial/SEO, mas o artigo é válido sem ela.
@@ -557,7 +559,7 @@ Audit dos limites editoriais de tamanho nos campos do produto-no-artigo. Bullets
 - `bullet-longo`: pros[i] ou cons[i] texto puro > 180 chars
 - `listagem-peers-exaustiva`: bullet/parágrafo cita 4+ peers (lista virou tabela em texto)
 - `palavra-chavao-banida`: ocorrência de "lineup", "do lineup", "do nosso lineup", "desta seleção", "do nosso comparativo" em qualquer campo do produto
-- `palavra-chavao-alta-freq` (level=`info` desde v1.21.0 — era `warn`; teto numérico não reprova): "fórmula" > 60, "ativo"/"ativos" > 50, "preço médio" > 15, "parestesia"+"formigamento" > 20 combinados — chavões que precisam variação léxica. ⚠️ Subset cru mantido por conveniência; a checagem AUTORITATIVA por nicho é a rule `chavoes-por-nicho` abaixo (lê o `_max` do JSON)
+- `palavra-chavao-alta-freq`: contada pela regra `chavoes-por-nicho` (limites do JSON por nicho); não emita aqui.
 
 **Caso real `melhorpretreino`** (regressão pré-v1.16.0): shortDescription média 329-414 chars (canon vivo: 225); bullets média 175-182 chars (canon: 65); 50 ocorrências de "lineup" + 114 de "seleção" num único artigo.
 
@@ -597,15 +599,7 @@ Fix sugerido: regex find-and-replace direto, sem ambiguidade semântica.
 Teto numérico vira linha de relatório ("filtro apareceu 73 vezes"), útil quando o texto ficou mesmo
 repetitivo. **Não bloqueia, não reprova, e NUNCA justifica trocar a palavra certa por outra.**
 
-**Por quê, medido no skill-log em 05/09/2026:** 43 das 448 notas de desvio da rede (10%) são deste
-arquivo — 36 sobre teto numérico e **zero** sobre banido absoluto. Dois defeitos. (a) O teto cai sobre
-a palavra que É o produto: `cápsula` numa cápsula, `litros` numa geladeira, `proteína` num artigo de
-proteína, `filtro` num aspirador. (b) É a única régua desta família **sem script** que conte, então
-palavra-vs-substring, nome do produto, superfície e divisor por página nunca tiveram resposta — dois
-auditores do MESMO lote deram vereditos opostos sobre a mesma palavra. Dano consumado: um agente trocou
-"impede calcular" por "não permite calcular" porque o teto de `pede` casava dentro de `impede`; outro
-reescreveu 27 valores de spec pra baixar `porção` de 69 pra 39. E o teto não mostrou efeito: o único
-site de aspirador sob o bloco tem 11,4 ocorrências por mil palavras contra 12,5 do irmão fora dele.
+**Por quê:** o teto cai sobre a palavra que É o produto (`cápsula` numa cápsula, `filtro` num aspirador), nenhum script o conta do mesmo jeito, e baixar a contagem já levou agente a trocar palavra certa por pior e a reescrever spec. No skill-log, as notas de desvio deste arquivo são quase todas sobre teto numérico e nenhuma sobre banido absoluto.
 
 **Regra de ouro:** repetir a palavra certa é normal. Se o único jeito de baixar a contagem é usar uma
 palavra pior, apagar um fato ou reescrever uma spec, **não baixe** — registre e siga.
@@ -677,6 +671,8 @@ for produto in products:
 
 ### `ymyl-aviso-repetido` (level=`warn`, régua v1.117.0 — canon Marcelo 2026-06-25 + 2026-07-30)
 
+Aplica só em site de nicho suplemento/saúde.
+
 **Não confunda com o `health-absolutes-ymyl` abaixo.** Aquele é lista de PROIBIÇÕES
 ("100% seguro", "sem efeitos colaterais"). Este conta a REPETIÇÃO do aviso
 "procure um médico/nutricionista", que a régua limita a **1 por artigo**.
@@ -742,19 +738,9 @@ fix e leem o mesmo `.mdx`.
 
 Fix sugerido: qualificar sempre — "Tolerado pela maioria, consulte um profissional se tem comorbidade" em vez de "uso regular é seguro".
 
-### `disclaimer-saude-repetido` (level=`warn`, régua v1.57.0 — SÓ nicho suplemento/saúde)
+### `disclaimer-saude-repetido` (absorvida por `ymyl-aviso-repetido`)
 
-**Escopo: aplica APENAS se o `niche` do site é suplemento/saúde** (Creatinas, Whey Protein, Pré Treino, Ômega 3, Vitaminas, Suplementos, Colágeno, beleza-saúde). Em eletrônicos, cozinha, tablets, impressoras, etc. **NÃO roda** (pula a regra).
-
-**Bug-class** (canon Marcelo 2026-06-25): o encaminhamento genérico a profissional ("consulte/converse/alinhe/confirme/defina a dose com médico ou nutricionista") estava colado no fim de quase todo review, virando ladainha. Caso real: artigos de vitamina/multivitamínico/ômega com o aviso em 8 de ~10 produtos + 3-6× no guia (~14×/artigo). Cansa o leitor e não pontua mais no Google (1 aviso claro basta). Mediana da rede = 2; só ~25% dos artigos de suplemento passam de 5.
-
-**Como contar**: nos reviews (fullReview + cons), conta quantos PRODUTOS têm encaminhamento genérico — regex aproximado `(consult\w+|convers\w+|alinh\w+|confirm\w+|defin\w+ a dose|acompanhamento)[^.!?]{0,50}(m[ée]dico|nutricionista|profissional)`.
-
-**FLAG se**: (a) total de produtos-com-aviso > **5** no artigo, OU (b) a mesma frase de encaminhamento aparece quase idêntica (≥6 palavras iguais) em ≥2 produtos.
-
-**Fix sugerido**: manter o aviso geral no **guia** (1×) + no **1º produto** da lista (se natural) + nos produtos com motivo REALMENTE distinto (cafeína muito acima, anticoagulante/interação, contraindicação específica, restrição de gestante/lactante no rótulo). Cortar o encaminhamento genérico dos demais e variar a redação dos que ficam. NÃO mexer no conteúdo de segurança específico de um produto (isso é fato, não ladainha).
-
-**Bloqueia readyToLock?** Não (`warn`) — é qualidade editorial, não risco YMYL: o aviso continua existindo, só deixa de ser repetido. (A régua `health-absolutes-ymyl` acima continua valendo e ESSA sim bloqueia.)
+Não emita esta regra. A repetição do aviso de saúde é contada só pelo `ymyl-aviso-repetido` (script `ymyl-avisos.py`, 1 por artigo), e só em site de nicho suplemento/saúde (Creatinas, Whey Protein, Pré Treino, Ômega 3, Vitaminas, Suplementos, Colágeno, beleza-saúde). Conteúdo de segurança específico de um produto (interação, contraindicação, restrição de gestante no rótulo) é fato e não entra na contagem.
 
 ### `voz-eximir-responsabilidade` (level=`error`, régua v1.19.1)
 
@@ -839,7 +825,7 @@ Template do markdown (gravado em arquivo E impresso inline no chat):
 
 ### {rule}: {message curta}
 - **Produto:** {ASIN ou nome — opcional, só se aplicável}
-- **Evidência:** "{citação literal < 15 palavras}"
+- **Evidência:** "{trecho literal mínimo}"
 - **Fix sugerido:** {1 frase}
 
 ## 🟡 Warnings ({M})
@@ -852,8 +838,7 @@ Template do markdown (gravado em arquivo E impresso inline no chat):
 
 ## ✅ Passed ({P})
 
-- {bullet curto, 10-30 palavras}
-- {bullet curto, 10-30 palavras}
+- {uma linha por item}
 ```
 
 ## Voz analítica (CRÍTICO)
@@ -887,9 +872,6 @@ Skill é read-only no conteúdo editorial. Mesmo que veja problema fácil de con
 ### 2. Confundir com `artigo-reviews-auditar`
 Aquela é WRITE op cross-produto (sugere mudanças, user aprova granular). Esta é READ-only de TODO o artigo + structural + readyToLock.
 
-### 3. IA forçar readyToLock=true sem checks estruturais
-Override determinístico (passo 9) cobre isso. Se IA disse `true` mas falta intro/guide/produtos/meta, reescrevo o `lockReasoning` listando blockers e força `readyToLock = false`.
-
 ### 4. Citar comprador no audit
 "Compradores reclamam de X" → quebra a voz analítica. Sempre reescreva: "Bíblia registra a contrapartida X (campo Y)".
 
@@ -910,7 +892,7 @@ Site em construção tem `affiliateTag: ''`. Nesse caso, links Amazon devem ser 
 Se artigo já é `contentLocked: true`, a skill ainda roda (útil pra reauditar pós-trava), mas o relatório deve mencionar no header. UI do painel oferece "Destravar" se houver issue crítica achada.
 
 ### 9. Inventar issues pra ter "achados"
-Audit vazio é válido. Se artigo está bom, `issues: []` + `passed: [...]` + `readyToLock: true` é o output correto. Prefira 5 findings bem evidenciados a 20 vagos.
+Audit vazio é válido. Se o artigo está bom, `issues: []` + `passed: [...]` + `readyToLock: true` é o output correto; achado sem evidência não entra.
 
 ### 10. Esquecer de imprimir inline no chat
 A diferença chave dessa skill é o output FULL inline (não apenas summary + path). Sempre imprimir o markdown completo do relatório como resposta no chat.
@@ -923,10 +905,6 @@ Exemplos válidos do user:
 - "https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "audita")
 
 Args canônico: `Skill(skill="artigo-auditar", args="melhorimpressora/melhor-impressora-custo-beneficio")`
-
-## Limitação intrínseca conhecida
-
-Sem schema Zod programático no output, validação fica editorial. ~5% de chance de algum issue ter `evidence` levemente fora do limite. Mitigação: conferir mentalmente antes de salvar o `.md`.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

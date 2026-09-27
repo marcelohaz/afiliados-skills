@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar-em-massa
-description: Cria os 6 campos editoriais de TODAS as páginas individuais vazias de um site em PARALELO via sub-agents (até 10 simultâneos). Qualidade IDÊNTICA à skill individual `pagina-produto-criar` — cada sub-agent é conversa fresh do Opus, sem cross-contamination. Skill mãe orquestra: pre-flight bíblias (única barreira, aborta se incompleto) → imprime plano e dispara direto (SEM confirmação S/N) → N Agents paralelos → 1 commit lote → push + VPS pull → report. Aceita `site` (todos stubs vazios) OU `site/ASIN1,ASIN2` (subset). Flag opcional `--audit` dispara audit pós-batch em paralelo. NÃO toca em stubs parciais. CRIA o stub que faltar quando a bíblia passa no gate do painel (scripts/painel-criar-stubs.ts, canon 2026-09-05) — antes disso abortava e duas execuções registraram desvio por criar mesmo assim. Sub-agents herdam toda a régua editorial da `pagina-produto-criar` (chavões por nicho, concordância PT-BR, ban "declarado pelo fabricante" muleta, health YMYL, hard caps, voz consultiva).
+description: "Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) de várias páginas individuais de produto de um site numa execução só, em paralelo, com a régua da `pagina-produto-criar`. Use quando o pedido é preencher em lote as páginas de produto de um site: todos os stubs vazios (`site`) ou uma lista de ASINs (`site/ASIN1,ASIN2`), com `--audit` opcional para auditar e consertar fato depois. Só preenche stub vazio; no modo com ASINs, cria o stub que faltar quando a bíblia passa no gate do painel. Fecha com um commit do lote, push e sync da VPS."
 ---
 
 ## Parse de input
@@ -19,10 +19,7 @@ Aceita 2 formatos no $ARGUMENTS, com flag opcional `--audit`:
 
 **Flag opcional `--audit`** (default OFF — opt-in pra qualidade extra):
 - `melhorpretreino --audit` → após criar páginas, roda `pagina-produto-auditar` em paralelo pra cada uma
-- ⚠️ **`--audit` não é mais só relatório.** Desde 2026-08-06 ele **conserta o erro de FATO** que
-  passa no teste da frase nova (apagar termo que a bíblia não tem, trocar por como ela chama,
-  restaurar qualificador que ela exige) e **reporta** o resto. **`warn` continua report-only**.
-  Ver passo 12 e a seção homônima da `pagina-produto-auditar`.
+- `--audit` **conserta o erro de fato** que passa no teste da frase nova (apagar termo que a bíblia não tem, trocar por como ela chama, restaurar qualificador que ela exige) e **reporta** o resto; `warn` de julgamento é só relatório. Ver passo 12 e a seção homônima da `pagina-produto-auditar`.
 - Sem a flag, skill batch tem comportamento idêntico à skill individual (não audita automaticamente)
 - Adicione `--audit` quando: site novo importante, qualidade-crítico, primeiro batch
 - Pule `--audit` quando: re-rodar, batch rotineiro, vai auditar separado depois
@@ -113,7 +110,7 @@ Detecção:
      Se a resposta do `/admin/update` trouxer *"N commit local enviado pro
      origin/main"*, era isto: havia trabalho preso lá. Reclassifique antes de seguir.
 
-   ⛔⛔ **ANTES DE ABORTAR, OLHE O REMOTE CANÔNICO — ele nem sempre se chama `origin`.**
+   **Antes de abortar, olhe o remote canônico: ele nem sempre se chama `origin`.**
    Esta é a causa nº 1 de abort falso desta skill: **15 notas no skill-log entre 16/08 e
    03/09/2026, todas no passo 2**, incluindo *cinco reincidências no mesmo dia* (31/08) e
    três lotes seguidos no `melhoreletro`. A palavra `upstream` não aparecia nesta SKILL.md.
@@ -171,17 +168,9 @@ Detecção:
    humano do outro lado reenvia o comando achando que nada rodou (nota de 25/08). Os
    passos 10 e 12c valem para o **canônico**, não para um remote chamado `origin`.
 
-   ⛔ **AINDA ZERO? NÃO ABORTE — CRIE O STUB (canon Marcelo 2026-09-05).**
+   **Ainda zero? Crie o stub em vez de abortar** quando a bíblia está pronta: sem stub e sem bíblia aborta; sem stub com bíblia aprovada cria (como a clone faz no passo 5).
 
-   Esta skill dizia em três lugares que "NÃO cria stubs" e mandava abortar, e ao
-   mesmo tempo sancionava o endpoint no rodapé ("Quando NÃO usar"). **As duas
-   linhas se contradiziam**, e o skill-log tem DUAS execuções que escolheram a
-   segunda pra não travar o lote — 25/08 (`guiabelezasaudavel`, 10 ASINs de BCAA) e
-   26/08 (`melhoresporte`, 5 ASINs). A segunda nota propôs exatamente esta régua:
-   *"distinguir 'sem stub E sem bíblia' (abortar) de 'sem stub MAS com bíblia
-   completa' (criar via create-from-bible), como a clone já faz no passo 5"*.
-
-   ⚠⚠ **SÓ VALE NO MODO B (você recebeu os ASINs).** Criar stub exige saber QUAIS
+   **Só vale no modo B (você recebeu os ASINs).** Criar stub exige saber QUAIS
    produtos, e no **modo A** (site sozinho) você não tem essa lista: zero candidatos
    ali significa que o site não tem página de produto NENHUMA, e decidir quais
    produtos entram é trabalho da `artigo-lineup-montar`, não desta skill. **Modo A com
@@ -220,23 +209,7 @@ Detecção:
    ⚠ Criar página é escrever no site: o `isSiteContentLocked` do endpoint recusa
    site travado com 423, e é a mesma trava do resto do fluxo.
 
-   ⚠️ **A VPS commita mas NEM SEMPRE pusha na hora** — a linha antiga desta skill dizia
-   "commita+pusha automaticamente" e isso é falso. Caso real 2026-08-13 (monitores no
-   `guiamelhorcompra`): os 10 stubs estavam num commit LOCAL da VPS de **11:24**
-   (`e333dba89 scaffold 10 páginas individualis`) e às **13:09** o `/admin/update` ainda
-   respondia só "já estava atualizado". Numa chamada posterior o mesmo endpoint soltou
-   ("1 commit local enviado pro origin/main") e o batch rodou normal.
-
-   ⚠️ **Não invente o mecanismo.** O `painel-vps-pull.sh` e a chamada manual batem no
-   MESMO `POST /admin/update` — não existe um "só puxa" e outro "empurra". Por que a
-   chamada das 13:09 não empurrou e a seguinte empurrou, não está estabelecido. O que
-   está medido é que **chamar de novo, no momento do pré-flight, destravou** — e custa
-   uma chamada. Basta isso pra justificar o passo; não hipotetize causa na SKILL.md.
-
-   ⚠️ **`POST /product/:site/_actions/create-from-bible` respondendo 409 "já existe" com
-   o arquivo ausente no seu disco é a assinatura desse estado** — a VPS enxerga o próprio
-   disco, você enxerga o git. Os dois estão certos sobre estados diferentes. Não conclua
-   daí que o produto foi removido do site de propósito.
+   A VPS commita o scaffold mas nem sempre empurra na hora: `/admin/update` pode responder "já estava atualizado" com o commit ainda preso lá. Chamar de novo no pré-flight destravou nos casos medidos; a causa não está estabelecida, então não a presuma. `POST .../create-from-bible` respondendo 409 "já existe" com o arquivo ausente no seu disco é a assinatura desse estado, não sinal de que o produto saiu do site.
 
 3. **Classificar cada candidato** (detecção rigorosa):
    - **Stub vazio**: body contém `{/* STUB GERADO POR ` E frontmatter NÃO tem `pros`, `cons`, `specs`, `fullReview`, `subtitle`, `shortDescription`
@@ -275,8 +248,7 @@ Detecção:
      - {slug-parcial} (parcial: tem subtitle mas falta o resto)
      - {slug-preenchido} (já tem os 6 campos)
 
-   Cada produto = um sub-agent Opus INDEPENDENTE (conversa fresh, isolada,
-   sem cross-contamination). Mesma régua da skill individual `pagina-produto-criar`.
+   Cada produto = um sub-agent em conversa nova e isolada, com a mesma régua da skill individual `pagina-produto-criar`.
 
    {{Se flag --audit ativa}}: + audit pós-batch via `pagina-produto-auditar`.
    {{Se flag --audit ausente}}: sem audit automático.
@@ -288,7 +260,7 @@ Detecção:
 
 6. **Read affiliateTag do site** (uma única vez, passa pros sub-agents): `Read sites/{site}/src/config.ts` → extrai via regex `/affiliateTag:\s*['"]([^'"]*)['"]/`.
 
-7. **Dispara sub-agents em paralelo** (primeiro plano, `run_in_background: false`; a leva inteira num só bloco de chamadas):
+7. **Dispara sub-agents em paralelo** (primeiro plano, `run_in_background: false`, `model: "opus"`; a leva inteira num só bloco de chamadas):
    - Se `stubsVazios.length <= 10`: 1 leva (todos paralelos)
    - Se `stubsVazios.length > 10`: divide em levas de 10 (sequencial entre levas, paralelo dentro)
 
@@ -348,28 +320,7 @@ Detecção:
      julgamento (conteúdo que não batia com o nicho, mtime, backup), não por
      régua. Este teste é a régua que faltava.
 
-   ⚠ **A órfã de verdade (slug NA lista) não é hipótese, e a idempotência do passo 3 a esconde**
-   (medido 2026-08-29, `guiabemavaliado`, execução da Bárbara): 4 de 6 sub-agents
-   morreram com **HTTP 429** na mesma leva, e **dois morreram DEPOIS de gravar o
-   `.mdx` completo** — `sustagen-kids-morango` e `valda-imune-kids` ficaram 6/6
-   no disco, sem marcador de stub, sem auto-check e sem retorno. Na retomada
-   (`RETOMAR=yes`) o passo 3 classificou as duas como **"já preenchido → PULA
-   (idempotência)"**, *silenciosamente e por régua*. Resultado: página nunca
-   auto-conferida e fora do `sucessos`, portanto **fora das duas guardas**.
-
-   ⚠ **E elas foram commitadas assim mesmo — pelo commit desta skill.** Verificado
-   no `4e8380bbb` ("preenche 6 páginas individuais em batch via skill"): o commit
-   levou **as 6**, `sustagen-kids-morango` e `valda-imune-kids` inclusive. Ou seja,
-   a regra "use SÓ a lista dos paths retornados pelos sub-agents com sucesso" **não
-   foi o que aconteceu na prática** — a mãe commitou o lote planejado. É por isso
-   que a reconciliação tem que rodar **antes do `git add`** e não depois: quem
-   monta a lista do add é justamente quem precisa saber que há órfão nela.
-
-   A regra "**sub-agent que morreu → refaz inline no mesmo turno**" (Invariantes →
-   Turno vivo, item 5) só cobre a morte que você VÊ. Quando o turno inteiro morre
-   por cota, quem retoma não sabe que existiu um cadáver — e o pré-flight, sendo
-   idempotente, apaga o rastro. **É esta reconciliação que fecha o buraco**, e é
-   a mesma trava que a `pagina-produto-auditar-em-massa` já tem na Etapa 3.
+   A órfã de verdade existe: num lote de 6, dois sub-agents morreram por HTTP 429 depois de gravar o `.mdx` completo, a retomada classificou as duas como "já preenchido" e o commit do lote as levou sem guarda nem conferência. Por isso a reconciliação roda **antes** do `git add`; o "refaz inline" (Turno vivo, item 5) só cobre a morte que você vê.
 
    ⚠ **Na retomada, "já preenchido" NÃO é sinônimo de "conferido".** Se um slug
    caiu em `jaPreenchidos` mas está **modificado e não commitado** no `git status`,
@@ -564,10 +515,9 @@ Detecção:
       a bíblia não tem, trocar por como a bíblia chama, restaurar um qualificador
       que ela exige → **aplica**. Se o substituto for redação sua → **reporta**.
       Backup antes, `Edit` cirúrgico, re-audita o que tocou, e **reverte do
-      backup** se não convergir em ≤3 tentativas. ⚠️ **`warn` NUNCA aplica**,
+      backup** se não convergir em ≤3 tentativas. `warn` de julgamento não se aplica,
       nem parecendo óbvio: frase colada na página irmã, coloquialismo acima do
-      teto e redundância bullet↔parágrafo são report-only, sem exceção
-      (canon 2026-07-10, que esta régua refina e não revoga). ⚠️ Se a página
+      teto e redundância bullet↔parágrafo são só relatório. ⚠️ Se a página
       contradiz a `decisaoEditorial` **mas obedece outro campo da mesma bíblia**,
       NÃO toque na página — o alvo é a bíblia, e o relatório aponta pra lá.
     - **Achado cuja raiz é a BÍBLIA** (seção "Registre a raiz como PENDÊNCIA DA
@@ -751,19 +701,19 @@ Lógica em pseudo-Python:
 def classify(frontmatter, body):
     has_marker = '{/* STUB GERADO POR ' in body
     fields = ['subtitle', 'shortDescription', 'pros', 'cons', 'specs', 'fullReview']
-    populated = [f for f in fields if frontmatter.get(f)]
-
-    if len(populated) == 0 and has_marker:
-        return 'stub_vazio'  # entra no batch
-    elif len(populated) == 6:
-        return 'ja_preenchido'  # pula (idempotência)
+    present = [f for f in fields if f in frontmatter]      # chave presente conta, mesmo vazia
+    filled  = [f for f in fields if frontmatter.get(f)]
+    if not present and has_marker:
+        return 'stub_vazio'      # entra no batch
+    elif len(filled) == 6:
+        return 'ja_preenchido'   # pula (idempotência)
     else:
-        return 'stub_parcial'  # pula (proteção)
+        return 'stub_parcial'    # pula (proteção)
 ```
 
 ## Prompt do sub-agent
 
-**A régua editorial NÃO é re-escrita aqui — o sub-agent LÊ a `pagina-produto-criar/SKILL.md` e a executa à risca (régua v1.34.0, fonte única).** Resumo inline de régua = proibido: era a fonte do drift (o antigo inline tinha ficado pra trás em **Peso por fonte**, **Filtros editoriais** eco/origem, **banner de descontinuado** e atribuição-elíptica v1.21.1). Lendo o arquivo vivo, o batch herda SEMPRE a régua atual da individual, sem drift. Sub-agent do Agent tool não consegue invocar a Skill tool (são N agents PARALELOS), por isso ele LÊ o arquivo em vez de invocar.
+**A régua editorial não é reescrita aqui: o sub-agent lê a `pagina-produto-criar/SKILL.md` e a executa à risca (fonte única).** Não resuma a régua no prompt: resumo fica para trás da individual e o lote passa a seguir a cópia velha. O sub-agent lê o arquivo em vez de invocar a Skill tool porque a individual tem passos de git (12-13) que N agentes paralelos não podem rodar (Armadilha 1).
 
 ```
 Tarefa: gerar os 6 campos editoriais (subtitle, shortDescription, pros, cons,
@@ -790,15 +740,7 @@ Inputs deste produto (já resolvidos pela skill-mãe — NÃO faça parse de arg
 - Site: {{site}} · Slug: {{slug}} · ASIN: {{asin}} · AffiliateTag: {{tag}} (pode ser '')
 
 OVERRIDES DO BATCH (sobrepõem o Fluxo da individual):
-- ⛔⛔ **REGRA ZERO — NÃO RODE NENHUM COMANDO GIT.** Você NÃO tem os passos de git da
-  individual. É **PROIBIDO** `git add`/`git commit`/`git push`/`git stash`/`git pull` E
-  `painel-vps-pull.sh`. Pule o passo 1.5 (git pull) E os passos 12-13 inteiros. **A
-  skill-mãe faz TODO o git num commit-lote no fim** — você só faz `Read` + `cp` (backup) +
-  `Write` do `.mdx`. ⚠️ A `pagina-produto-criar.SKILL.md` que você leu TEM passos de
-  commit/push (12-13) — IGNORE-OS. O impulso de "seguir o fluxo da individual e commitar" é
-  exatamente o BUG: N sub-agents commitando em paralelo = race condition que corrompe o
-  histórico (caso real 2026-06-28: 2 de 11 sub-agents commitaram/pusharam no meio do batch e
-  bagunçaram a árvore). Se você se pegar prestes a rodar git, PARE — não é seu trabalho.
+- **REGRA ZERO: sem git.** Não rode `git` (add, commit, push, stash, pull) nem `painel-vps-pull.sh`: os passos 1.5, 12 e 13 da individual são da skill-mãe, que faz um commit do lote no fim. Você só faz `Read`, o backup com `cp` e o `Write` do `.mdx`. Motivo: N sub-agents commitando em paralelo corrompem a árvore (num lote de 11, dois commitaram no meio e bagunçaram o histórico).
 - Isolamento: você vê SÓ este produto. Não compare com outros sites nem "divirja ângulo" de
   propósito (dedup cross-site é trabalho da auditoria).
 - Você MESMO escreve o `.mdx` (passos 10-11 da individual: backup + Write + fence check).
@@ -836,11 +778,6 @@ Se o ambiente impedir o sub-agent de ler `pagina-produto-criar/SKILL.md` (raro, 
 - Entre levas: aguarda leva atual terminar antes de disparar próxima
 - Log: `Leva 1/3 (10 sub-agents)... ✓ → Leva 2/3 (10 sub-agents)...`
 
-### Context window dos sub-agents
-- Cada sub-agent é independente — não acumula contexto de outros
-- Carrega apenas: bíblia do SEU produto, .mdx do SEU stub, config, review-em-artigo (se houver)
-- Total ~30-50 KB por sub-agent → folgado dentro do limite Opus
-
 ## Comparação com fluxo individual
 
 | Aspecto | Individual (`pagina-produto-criar`) | Batch (`em-massa`) |
@@ -872,20 +809,20 @@ Sub-agents simultâneos fazendo `git add + commit + push` = race condition garan
 O plano não pergunta nada, mas se for a última coisa da mensagem o turno acaba e nada dispara (30/07 04:27, "travou?"). Plano + primeira leva de `Agent(...)` na mesma mensagem; sub-agents sem background; heartbeat armado no passo 0. Ver Invariantes → Turno vivo.
 
 ### 5. Pedir confirmação `S/N` (atrito desnecessário)
-**NÃO pergunte `S/N` antes de disparar** (mudança 2026-07-24). A régua antiga exigia confirmação; hoje a barreira é o pré-flight (passos 2-4), que aborta em site inexistente, zero stubs vazios ou bíblia incompleta. Se o pré-flight passou, imprime o plano (transparência) e dispara direto. Perguntar de novo só duplica o beat que o pré-flight já dá. Ambiguidade real (slug/ASIN que não casa com stub) é abort do passo 2/3, não pedido de confirmação.
+**Não pergunte `S/N` antes de disparar.** A barreira é o pré-flight (passos 2-4), que aborta em site inexistente, zero stubs vazios ou bíblia incompleta. Se o pré-flight passou, imprime o plano (transparência) e dispara direto. Perguntar de novo só duplica o beat que o pré-flight já dá. Ambiguidade real (slug/ASIN que não casa com stub) é abort do passo 2/3, não pedido de confirmação.
 
 ### 6. Pular VPS pull no fim
 Skill mãe DEVE rodar `bash scripts/painel-vps-pull.sh` depois do push. Sem isso, painel da Bárbara/produção não vê o batch até alguém manualmente puxar.
 
-### 7. Tone-clone entre sub-agents (paranoia infundada)
-Sub-agents são conversas INDEPENDENTES no Opus. Cada um é "fresh", sem contexto de outros. Tone-clone só rolaria se rodasse sequencial na mesma conversa. **Paralelo é seguro.**
+### 7. Tone-clone entre sub-agents
+Sub-agents paralelos não veem o texto uns dos outros, então não copiam entre si. Convergem no que todos leem igual: exemplos e moldes da individual (11 sub-agents repetiram o mesmo exemplo em 5 lugares, ver `pagina-produto-criar` → Voz natural). A defesa é exemplo de outra categoria e o `--audit`, não rodar em sequência.
 
 ### 8. Esquecer de passar `affiliateTag` resolvida pros sub-agents
 Skill mãe resolve `affiliateTag` UMA vez (passo 6). Passa pros sub-agents no prompt. Se cada sub-agent tentar resolver de novo, 10 reads paralelos do mesmo `config.ts` (waste mínimo mas evitável).
 
 ## Quando NÃO usar esta skill
 
-- ~~**Site sem stubs criados ainda**~~ — **não é mais motivo pra não usar** (2026-09-05): o passo 2 cria via `scripts/painel-criar-stubs.ts` quando a bíblia passa no gate. Continua valendo não usar quando a BÍBLIA não está pronta: aí o gate do painel recusa e o certo é rodar `biblia-preencher` / `biblia-auditar` antes.
+- **Bíblia fora do gate do painel** (por preencher ou nunca auditada): o passo 2 não consegue criar o stub; rode `biblia-preencher` / `biblia-auditar` antes.
 - **Bíblias incompletas** (pre-flight aborta): rode `biblia-preencher` nas ASINs reportadas antes do batch.
 - **Quer sobrescrever páginas com conteúdo**: use `pagina-produto-criar` no modo individual (ação explícita) ou delete o .mdx + recrie stub no painel + rode batch.
 - **Re-rodar é seguro (idempotente)**: pula automaticamente os já preenchidos. Skip ≠ erro.
@@ -913,44 +850,6 @@ pagina-produto-criar-em-massa melhorpretreino/B07XYZ123A,B08ABC456B --audit ← 
 
 Args canônico que invoco: `Skill(skill="afiliados-skills:pagina-produto-criar-em-massa", args="melhorpretreino")` (ou com `--audit` se quiser qualidade extra)
 
-### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
-
-**Bug-class real** (caso `melhorpretreino` commit `a72e7d9`): substituições mecânicas podem causar duplicação contígua, bullets minúsculos ou minúscula após ponto.
-
-**Auto-check obrigatório ANTES de gravar**:
-
-```python
-import re
-
-# Para cada campo gerado (shortDescription, fullReview, pros, cons, specs.value):
-
-# 14a) Duplicação contígua (>=8 chars repetidos em sequência)
-for m in re.finditer(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', campo):
-    print(f"⚠ duplicação: {m.group(0)}")
-    # → Reescreve removendo a metade duplicada
-
-# 14b) Bullet começa com minúscula (em pros/cons)
-for bullet in pros + cons:
-    if re.match(r'<strong>[a-záéíóúâêôãõàèìòùç]', bullet):
-        print(f"⚠ bullet minúsculo: {bullet[:60]}")
-        # → Capitalize primeira letra dentro de <strong>...</strong>
-
-# 14c) Minúscula após ponto (texto editorial — excluir URLs)
-for m in re.finditer(r'\. ([a-záéíóúâêôãõàèìòùç])', campo):
-    ctx = campo[max(0,m.start()-30):m.end()+30]
-    if 'http' in ctx or 'amazon.com.br' in ctx: continue
-    if re.search(r'\d+\. \w', ctx[:50]): continue  # lista numerada
-    print(f"⚠ minúsc após ponto: ...{ctx}...")
-    # → Capitalize a letra (.+ espaço + Letra)
-```
-
-**Exemplos reais** (commit a72e7d9, melhorpretreino):
-- 14a: `"sem empilhar suplementos sem empilhar suplementos"`
-- 14b: `"<strong>aminoácidos essenciais na fórmula</strong>"` (era BCAAs → minúsculo)
-- 14c: `"(maior dose declarada). pra emagrecer onde"` (era "em cutting" → minúsculo)
-
-Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evita commit com erro.
-
 ## Limitação intrínseca conhecida
 
 1. **Sem progress logging incremental** — sub-agents só reportam no fim do trabalho, não emitem "[3/10] processando..." conforme andam. Pra batch de 5 min, aceitável; pra batch de 30 min (50+ produtos), user fica no escuro. Mitigação: dividir batches grandes em levas explícitas (skill mãe loga "Leva 1/3 começando").
@@ -959,9 +858,7 @@ Se achar qualquer bug: corrija ANTES de gravar. Não bloqueia geração, mas evi
 
 3. **Limite de paralelismo do harness** ≈10 sub-agents simultâneos. Batches >10 são divididos em levas. Não é limite formal documentado — assumido conservador. Pode ser mais (15-20) na prática, mas evita timeouts/throttling.
 
-4. **Falha silenciosa possível** — sub-agent pode retornar `{ok: true}` mas o `.mdx` ficou com problema sutil. **A subclasse MECÂNICA já é pega pela skill-mãe sempre** (guarda de fence = frontmatter quebrado; guarda de tamanho = shortDescription/pros/cons estourados — ambas no passo 9, determinísticas, com re-dispatch). Resta a subclasse de JULGAMENTO editorial (travessão escapado, HTML inválido em campo texto-puro, voz-citação burocrática, claim-vs-bible) — risco real mas baixo (mesma régua + sub-agent fresh do Opus). Mitigação pra ESSA: rodar com `--audit`, que desde 2026-08-06 não só detecta como **conserta o erro de fato que passa no teste da frase nova** (passo 12). Sem `--audit`, user audita quando quiser — paridade com a individual (que também não auto-audita). Ou seja: fence+tamanho são rede automática do passo 9; `--audit` é a rede do julgamento, e nela o fato de direção única fecha sozinho enquanto o que exige redação vai pro relatório.
-
-   ⚠️ **Medição que motivou o auto-fix** (4 batches de 10 páginas em 2026-08-06, `melhorcaixadesom`, `somprofissional`, `melhordosom`, `compraguia`): as guardas do passo 9 pegaram **zero** dos ~23 claims sem lastro. Todos vieram do `--audit`. A única coisa que a guarda achou foi 1 parágrafo órfão — e era falso positivo. Ou seja, sem `--audit` o batch **não tem rede factual nenhuma**, e com ele metade dos achados era substituição de uma palavra que custava um round-trip inteiro pra aplicar.
+4. **Falha silenciosa de julgamento.** O passo 9 pega o mecânico (fence, tamanho, travessão, `;`, HTML em texto-puro, voltagem, corpo/campo). O que sobra é julgamento (claim-vs-bible, voz-citação, naturalidade), e a rede para isso é o `--audit`: sem ele o lote não tem conferência factual (em 4 lotes de 10, as guardas pegaram zero dos ~23 claims sem lastro; todos vieram do `--audit`).
 
 5. **Sobreposição CROSS-SITE ~20-25% é ESPERADA e SEO-aceitável — NÃO auto-divergir (canon Marcelo 2026-07-10).** Quando o mesmo produto (mesma bíblia) vira página em sites irmãos, a criação ISOLADA converge naturalmente em ~20-25% de texto idêntico (⇒ ~75-80% diferente). Medido em 3 nichos: aspirador (masp↔escritorioecasa 74% dif), airfryer (melhorairfryer↔-com 73%), impressora (melhorimpressora↔impressoraideal 80%). **Nunca chega aos ~99% que a divergência explícita atinge — e não deveria tentar.** A razão é estrutural, não falta de "liberdade" do Opus: dois sub-agents destilando a MESMA bíblia chegam na forma natural de dizer o mesmo FATO ("bateria de íon de lítio com autonomia de até 25 minutos…"). Mais liberdade não move esse piso; só divergência explícita move.
    - **Política:** ~20% de sobreposição **não prejudica SEO** em página de produto (ativo secundário; indexada + self-canonical + em `sitemap-produtos`, mas de baixo risco; o footprint da rede — template/dono/linkagem/personas — pesa muito mais que 20% de texto igual). O grosso dos 20% é FATO (spec/autonomia/filtro), que o Google espera parecido entre qualquer site descrevendo o mesmo produto.

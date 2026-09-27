@@ -1,6 +1,6 @@
 ---
 name: biblia-preencher
-description: Preenche os 7 campos editoriais da bíblia v2 (docs/biblias-v2/<ASIN>.json) a partir dos dados brutos. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Curadoria: sentimentoCompradores, angulosConversao, pontosFortes, pontosFracos, dicasAcionaveis, dadosInconsistentes, observacoesAgente. Limpa ruído do conteudoBrutoFabricante. LÊ as imagens anexadas (conteudoBrutoFabricanteImagens/doFabricanteImagens) como fonte factual antes de curar. Flag --enriquecer = modo backfill que NUNCA sobrescreve curadoria existente, só acrescenta. Cria backup, sync R2.
+description: Preenche os 7 campos de curadoria da bíblia v2 de UM produto a partir dos dados brutos e das imagens anexadas, e limpa ruído do conteudoBrutoFabricante. Use quando pedirem para preencher, curar ou completar uma bíblia, por ASIN, nome ou URL do editor-v2. --enriquecer é o modo para bíblia já curada, que acrescenta e corrige sem perder a curadoria existente. Para várias, use biblia-preencher-em-massa.
 ---
 
 ## Parse de input
@@ -14,9 +14,9 @@ Aceita 2 formatos no $ARGUMENTS:
 **B) Args canônicos** (forma direta):
 - ASIN literal: `B07S61ZJCS` (regex `^[A-Z0-9]{10}$`)
 - Nome do produto: `HP Laser 107W` (fuzzy match contra `identidade.nome` dos arquivos em `docs/biblias-v2/*.json`)
-- "todas" → iterar sobre todas as bíblias que ainda não têm os 7 campos preenchidos
+- "todas" ou mais de um ASIN → use a `biblia-preencher-em-massa` (um sub-agent isolado por bíblia)
 
-**Flag `--enriquecer`** (em qualquer posição do `$ARGUMENTS`): liga o **modo backfill** — ver seção "Modo `--enriquecer`" abaixo. **NUNCA sobrescreve campo curado existente, só acrescenta.** É o modo obrigatório pra rodar por cima das 216 bíblias que já têm curadoria escrita mas foram curadas sem ler as imagens anexadas. Sem a flag, o fluxo normal REESCREVE os 7 campos — o que destruiria curadoria boa.
+**Flag `--enriquecer`** (em qualquer posição do `$ARGUMENTS`): liga o **modo backfill** (seção "Modo `--enriquecer`"). É o modo para bíblia que já tem curadoria, e nele nada da curadoria existente se perde: fato novo é acrescentado, e claim que o rótulo desmente com valor definido é corrigido, com o texto anterior movido literal para `dadosInconsistentes`. Sem a flag, o fluxo normal reescreve os 7 campos, o que destruiria curadoria boa.
 
 Detecção: se $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
@@ -34,7 +34,7 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
 - **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Sem superlativos absolutos** sem evidência: "o melhor", "o mais vendido", "o único". Se for recorrente nas opiniões, registre como TEMA com contagem, sem sujeito humano e sem "da categoria" (Armadilhas 1b e 4): "custo-benefício é o tema mais recorrente (N relatos)".
 - **Português brasileiro, escrita editorial limpa.** Sem gírias, sem anglicismos desnecessários.
-- **`lastModified` E `lastFilledAt`: bumpe AMBOS via `new Date().toISOString()` ao gravar; NUNCA toque em `lastAuthor`.** A skill modifica os **7 campos de curadoria** + `conteudoBrutoFabricante` + `lastModified` (bump) + **`lastFilledAt` (bump)**. Resto intacto. **`lastFilledAt` é o carimbo de "re-preenchimento"** (regra Marcelo 2026-06-15): o painel compara `lastFilledAt > lastAuditedAt` pra marcar "auditar de novo". Re-fill invalida a auditoria; edição manual NÃO — por isso é campo SEPARADO do `lastModified` (que bumpa em todo save e geraria falso-alarme). **Por que bumpar `lastModified`** (mudou 2026-06-09): o `sync-biblias-r2.ts` decide direção comparando o `lastModified` embutido (local) com o `uploadedAt` do OBJETO no R2 (remoto). Se você preservar o timestamp embutido e o objeto R2 já tiver `uploadedAt` posterior (acontece em re-fill / bíblia já sincronizada), o remoto vence e o **pull CLOBBERA seu edit** (incidente B0D21JPCF9: fill propagou só por schema-recovery; o re-edit seguinte foi clobberado). `toISOString()` é UTC REAL (now > qualquer uploadedAt passado) → push vence. **Mas NUNCA hand-rolle via `Date().getHours()/pad/Z`**: isso usa hora LOCAL (CEST/BRT) formatada como `.000Z`, fica 2-3h no futuro e quebra o `auditStale` (incidente 2026-05-24: 2 sub-agents quebraram Lavitan + Centrum). `toISOString()` não tem esse bug — use SÓ ele.
+- **Ao gravar, bumpe `lastModified` e `lastFilledAt` com `new Date().toISOString()`; nunca toque em `lastAuthor`.** A skill modifica só os 7 campos de curadoria, o `conteudoBrutoFabricante`, `lastModified` e `lastFilledAt`. `lastFilledAt` marca re-preenchimento: o painel compara `lastFilledAt > lastAuditedAt` para pedir nova auditoria, e é separado do `lastModified` porque edição manual não invalida a auditoria. O bump do `lastModified` é o que faz o push vencer: o `sync-biblias-r2.ts` compara o `lastModified` local com o `uploadedAt` do objeto no R2, e com timestamp antigo o pull sobrescreve o seu edit. Use só `toISOString()` (UTC real): montar o timestamp com `getHours()`/pad grava hora local com sufixo `Z`, fica horas no futuro e quebra o `auditStale`.
 
 ## Fluxo
 
@@ -63,15 +63,15 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
    - `descricaoProduto` — descrição adicional
    - `identidade` — nome, marca, modelo, categoria
    - `snapshot` — preço, compras, disponibilidade
-2.5. **LER AS IMAGENS ANEXADAS (OBRIGATÓRIO — antes de gerar qualquer campo).** Se `conteudoBrutoFabricanteImagens` ou `doFabricanteImagens` tiverem qualquer item, **baixe e LEIA cada uma**. Elas são fonte factual de **mesmo peso que os campos de texto**: é onde a editora cola tabela nutricional, tabela de dose e ficha técnica quando o fabricante só publica em imagem. Medido em 2026-07-25: **216 das 535 bíblias (40%) têm imagem anexada, e as 216 foram curadas sem ninguém abrir nenhuma.**
+2.5. **LER AS IMAGENS ANEXADAS (OBRIGATÓRIO — antes de gerar qualquer campo).** Se `conteudoBrutoFabricanteImagens` ou `doFabricanteImagens` tiverem qualquer item, **baixe e LEIA cada uma**. Elas são fonte factual de **mesmo peso que os campos de texto**: é onde a editora cola tabela nutricional, tabela de dose e ficha técnica quando o fabricante só publica em imagem.
 
    ⚠️ **Duas imagens que NÃO são fonte sobre este produto (medido no piloto de 2026-07-30):**
    - **Banner institucional da marca** — fala da história da empresa e exibe OUTROS produtos da linha. Caso real: a imagem anexada ao BCAA da Integralmédica (B07HV4QZC8) mostra "My Whey 21g proteins" e Collagen, e nada sobre o BCAA. **Não importe nada dela**; registre em `observacoesAgente` que a imagem é institucional, pra próxima passada não tentar de novo.
    - **Ficha ou arte que cobre MODELO IRMÃO** — a ficha técnica da Agratto traz 783 (CE-01, 127V, 1000W) e 784 (CE-02, 220V, 1500W) na mesma tabela; a arte da Dux mostra os potes de 300 g e de 100 g juntos. **Case a linha com o ASIN desta bíblia antes de extrair qualquer número**, e diga na curadoria de qual versão você está falando. Ver `afiliados.armadilha.bruto-fabricante-de-modelo-irmao`.
 
-   **Rendimento esperado por tipo** (pra calibrar esforço, não pra pular a leitura): tabela nutricional e ficha técnica rendem fato duro; banner A+ de marketing rende ângulo de conversão e quase nunca fato; banner institucional rende zero. O melhor caso medido foi o Kimera, onde o rótulo **respondeu uma pergunta que a própria bíblia tinha registrado como sem resposta** (`flag: cafeina-por-dose-vs-comprimido`).
+   **Rendimento esperado por tipo** (pra calibrar esforço, não pra pular a leitura): tabela nutricional e ficha técnica rendem fato duro; banner A+ de marketing rende ângulo de conversão e quase nunca fato; banner institucional rende zero.
 
-   **Quando pular (a única exceção):** se `imagensVerificadasEm` existe E a lista de imagens não mudou desde então (mesma quantidade e mesmas URLs), as imagens já foram lidas numa passada anterior — pule e diga isso no relatório. Qualquer imagem nova ou lista diferente → lê tudo de novo. Isso mantém a garantia sem pagar o custo de reler 731 imagens a cada execução.
+   **Quando pular (a única exceção):** se `imagensVerificadasEm` existe E a lista de imagens não mudou desde então (mesma quantidade e mesmas URLs), as imagens já foram lidas numa passada anterior — pule e diga isso no relatório. Qualquer imagem nova ou lista diferente → lê tudo de novo. Isso mantém a garantia sem reler as mesmas imagens a cada execução.
 
    ```bash
    curl -s -o /tmp/<ASIN>-<n>.jpg "<url>"
@@ -99,14 +99,14 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
    mkdir -p "docs/painel/.painel-backups/$DAY"
    cp "docs/biblias-v2/$ASIN.json" "docs/painel/.painel-backups/$DAY/${ASIN}-v2-${TIME}.json" 2>/dev/null || true
    ```
-5. **Montar o JSON atualizado**: copiar o objeto inteiro da bíblia, substituindo APENAS os 7 campos de curadoria + o `conteudoBrutoFabricante` limpo (se modificado na etapa 3.5) ou enriquecido (se a etapa 2.5 transcreveu tabela de imagem) + **`imagensVerificadasEm = new Date().toISOString()`** (só se a etapa 2.5 leu imagens nesta execução — é o carimbo que evita reler as mesmas 731 imagens toda vez) + **`lastModified = new Date().toISOString()`** + **`lastFilledAt = new Date().toISOString()`** (mesmo timestamp; sinaliza re-preenchimento → painel marca "auditar de novo"). **Não toque em `lastAuthor`** nem em qualquer outra metadata. Resto preservado bit-a-bit.
+5. **Montar o JSON atualizado**: copiar o objeto inteiro da bíblia, substituindo APENAS os 7 campos de curadoria + o `conteudoBrutoFabricante` limpo (se modificado na etapa 3.5) ou enriquecido (se a etapa 2.5 transcreveu tabela de imagem) + **`imagensVerificadasEm = new Date().toISOString()`** (só se a etapa 2.5 leu imagens nesta execução — é o carimbo que evita reler as mesmas imagens toda vez) + **`lastModified = new Date().toISOString()`** + **`lastFilledAt = new Date().toISOString()`** (mesmo timestamp; sinaliza re-preenchimento → painel marca "auditar de novo"). **Não toque em `lastAuthor`** nem em qualquer outra metadata. Resto preservado bit-a-bit.
 6. **Escrever de volta**: `Write docs/biblias-v2/<ASIN>.json` com `JSON.stringify(dados, null, 2) + '\n'`.
-7. **Sincronizar com o R2** (obrigatório, sem perguntar): `bun scripts/sync-biblias-r2.ts --apply --push`. Propaga a curadoria pra colaboradoras (Bárbara) imediatamente — sem isso, o trabalho fica preso na máquina local até alguém rodar sync manualmente. ⚠ Desde 2026-05-17, `--apply` sozinho é pull-only (defesa contra ressurreição acidental de bíblias deletadas). Pra subir saves novos do local pro R2, `--push` é obrigatório. **Confira que a linha do ASIN diz `enviado` / `local mais novo`, NÃO `recebido`** — com o bump do lastModified (passo 5) o push deve vencer. Se vier `recebido`, o pull clobberou seu edit (timestamp não bumpado): re-aplique com o bump. Re-rodar o sync deve dar `0 enviadas, 0 recebidas` (steady-state = local==R2). Reportar o resultado (X enviadas / Y recebidas).
+7. **Sincronizar com o R2** (obrigatório, sem perguntar): `bun scripts/sync-biblias-r2.ts --apply --push`. Propaga a curadoria pra colaboradoras (Bárbara) imediatamente — sem isso, o trabalho fica preso na máquina local até alguém rodar sync manualmente. `--apply` sozinho é pull-only (defesa contra ressurreição acidental de bíblias deletadas). Pra subir saves novos do local pro R2, `--push` é obrigatório. **Confira que a linha do ASIN diz `enviado` / `local mais novo`, NÃO `recebido`** — com o bump do lastModified (passo 5) o push deve vencer. Se vier `recebido`, o pull clobberou seu edit (timestamp não bumpado): re-aplique com o bump. Re-rodar o sync deve dar `0 enviadas, 0 recebidas` (steady-state = local==R2). Reportar o resultado (X enviadas / Y recebidas).
 8. **Reportar no chat**: resumo de quantos itens foram gerados por campo + alertas se algum ficou vazio por falta de dados + status do sync R2.
 
 ## Modo `--enriquecer` (backfill das bíblias já curadas)
 
-Para as **216 bíblias que já têm curadoria escrita mas foram curadas sem ler as imagens**. Rodar o fluxo normal por cima delas **sobrescreveria curadoria boa**. Neste modo a regra é uma só: **NUNCA sobrescrever campo curado existente — só ACRESCENTAR.**
+Para bíblias que já têm curadoria escrita mas foram curadas sem ler as imagens. Rodar o fluxo normal por cima delas sobrescreveria curadoria boa. Neste modo a regra é **não perder informação**: acrescentar o que falta e, ao corrigir, preservar o texto anterior em `dadosInconsistentes` (ver Reconciliação).
 
 O fluxo é o mesmo até a etapa 2.5 (ler as imagens). A partir daí:
 
@@ -123,7 +123,7 @@ Sempre carimba `imagensVerificadasEm`, inclusive quando não achou nada — sen�
 
 ### Reconciliação — o objetivo é bíblia mais completa **e ainda confiável**
 
-"Só acrescentar" não basta, e isso foi medido (Marcelo, 2026-07-30). A regra antiga mandava registrar a contradição em `dadosInconsistentes` e não tocar no texto existente. O resultado: a bíblia do Kimera continuou afirmando em `pontosFortes` "cafeína em dose alta, **300mg por dose**" enquanto o rótulo mostrava 150 mg por comprimido e 300 mg na porção de 2. Mais completa, menos confiável — porque quem escreve review lê `pontosFortes`, e ia publicar um número de cafeína errado.
+"Só acrescentar" não basta. Se o rótulo mostra 150 mg por comprimido e `pontosFortes` segue dizendo "300mg por dose", a bíblia fica mais completa e menos confiável, porque quem escreve review lê `pontosFortes` e publica o número errado.
 
 **"Não perder informação" não é o mesmo que "não editar".** Mover o texto superado pra `dadosInconsistentes` preserva o registro e tira a afirmação errada do campo que é publicado. Nada some.
 
@@ -141,8 +141,6 @@ A supersessão pode ser **parcial**: no Lavitan, o rótulo confirmou B6 e cromo 
 **Depois de qualquer correção, re-audite** (mesma trava da Etapa 3.5 da `biblia-auditar-em-massa`): o conserto resolveu? não inverteu sentido? não perdeu o resto do item que estava certo? Não convergiu → reverte do backup e vira flag.
 
 ⚠️ Esta varredura é **semântica** — não existe check mecânico pra "esta decisão de dois meses atrás ainda vale?". Ela depende de o agente abrir `dadosInconsistentes` antes de escrever. As guardas mecânicas (3 chaves, diff de não-perda, não-carimbar-em-falha) cobrem o resto.
-
-**Ordem de prioridade — por RENDIMENTO e CUSTO, não por sensibilidade do nicho.** Medido no piloto de 2026-07-30 (12 bíblias): cozinha rendeu **13,3 itens por bíblia** contra **2,9** de suplemento e beleza, porque traz ficha técnica e etiqueta INMETRO, enquanto suplemento traz tabela nutricional (densa mas curta) ou banner de marketing. Em contrapartida cozinha concentra **82% das imagens** do acervo, que é onde está o custo. Decida por esses dois números. ⚠️ **Não priorize por "nicho YMYL"** — a bíblia captura fato, e dose é fato como potência é fato. Aviso ao leitor é decisão da hora de escrever página e review, não da captura.
 
 ## Os 7 campos
 
@@ -186,7 +184,7 @@ Exemplo de saída:
     "tema": "custo-beneficio",
     "frases": [
       "5g por dose com certificação Creapure a preço de marca nacional",
-      "Rende 20 doses por 100g, custo por dose entre os mais baixos da categoria",
+      "Rende 20 doses por 100g, com custo por dose baixo para uso diário",
       "Sem aditivos desnecessários: apenas creatina monohidratada pura"
     ]
   },
@@ -246,7 +244,7 @@ Exemplo de saída:
 ```json
 [
   { "texto": "Disponível apenas em versão sem sabor: sem opção para quem prefere produto aromatizado", "fonte": "bullets" },
-  { "texto": "Embalagem sem colher dosadora inclusa, citado por compradores", "fonte": "opiniões" }
+  { "texto": "Embalagem sem colher dosadora inclusa, tema recorrente nas opiniões", "fonte": "opiniões" }
 ]
 ```
 
@@ -285,7 +283,7 @@ O que fazer:
 - `decisaoEditorial` = o que fazer no review (ex.: "usar o dado da ficha técnica e ignorar o bullet", "omitir a feature até confirmar", "mencionar ambas as versões")
 - Se não houver inconsistências, deixar array vazio. Não fabricar inconsistências onde não existem
 
-⛔ **AS TRÊS CHAVES SÃO OBRIGATÓRIAS EM TODA ENTRADA.** Gravar um item só com `flag` e `descricao`, sem `decisaoEditorial`, **faz a bíblia ser revertida no R2 em silêncio** — o `sync --apply --push` responde `⬆ enviado / 0 falhas`, o conteúdo aparece lá, e 1 a 2 minutos depois o R2 está de volta na versão anterior, sem erro em lugar nenhum. Caso real 2026-07-30: reverteu 3 vezes seguidas, sempre nas mesmas bíblias, e eu diagnostiquei como "escrita concorrente de outra pessoa" antes de achar a causa. Guarda antes de qualquer push:
+⛔ **As três chaves são obrigatórias em toda entrada.** Item sem `decisaoEditorial` faz o R2 reverter a bíblia em silêncio: o `sync --apply --push` responde `⬆ enviado / 0 falhas` e 1 a 2 minutos depois o R2 está de volta na versão anterior, sem erro. Guarda antes de qualquer push:
 
 ```python
 faltando = [x.get('flag') for x in (b.get('dadosInconsistentes') or [])
@@ -346,7 +344,7 @@ O que fazer:
 - Ao escrever o arquivo de volta, use exatamente o formato `JSON.stringify(obj, null, 2) + '\n'` para consistência com o painel.
 
 
-## Régua editorial PT-BR (v1.19.2, 2026-05-28)
+## Régua editorial PT-BR
 
 > ⚠️ **Escopo (alinhado com `biblia-auditar`/`regras-biblia.md`, canon 2026-06-14):** a bíblia é FONTE DE FATO; a VOZ FINAL (health-absolutes, voz-consultiva/corporativa, muleta "declarado", superlativo) é aplicada pelo **review/página** sobre o texto reescrito — a `biblia-auditar` nem flagra isso na bíblia. As subseções de voz abaixo valem aqui só como **higiene de escrita** (não injetar lixo óbvio na curadoria), NÃO como polimento de voz-final. O que é dado limpo de verdade e SEMPRE vale: concordância PT-BR, capitalização, duplicação, chavões por nicho, voltagem. Ver [[afiliados.regras.audit-biblia-escopo-fato]].
 
@@ -363,7 +361,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 | `disponíveis no em 2026` | `disponíveis em 2026` |
 | `Pra a maioria/primeira` | `Para a maioria/primeira` |
 
-### Linguagem artificial banida
+### Linguagem artificial banida (nos campos que alimentam o review: `sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`; em `dadosInconsistentes`/`observacoesAgente`, nome de campo, ASIN e SKU são legítimos)
 
 - `calibrar/calibrada/calibragem` = 0 → "ajustar"
 - `empilhar` = 0 → "usar separado"
@@ -403,7 +401,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 - **ÚNICA exceção: o `specsAmazon` do ASIN diz "bivolt" (ou "100-240V"/"110-220V" como faixa contínua) EXPLÍCITO.** Aí — e só aí — pode registrar "bivolt". Sem essa palavra/faixa na ficha, voltagem não entra na curadoria.
 - **NUNCA infira bivolt de copy de POTÊNCIA** tipo `"1800W 110V | 2000W 220V"` ou `"110/127V e 220V"`. Isso são **SKUs SEPARADOS** (cada um voltagem única), **não** um aparelho bivolt. Esse foi o erro real (NA341/Midea/Mondial/WAP, 2026-06-28): copy dual-SKU virou "bivolt" → propagou pra 4 sites.
-- **Aparelho de aquecimento de alta potência é voltagem ÚNICA por design** (resistência feita pra uma tensão): air fryer, ferro de passar, secador de cabelo, chaleira, aquecedor, chuveiro. Varredura 2026-06-28: 19/19 air fryers da rede = voltagem única, 0 bivolt. Nesses, voltagem nunca entra (não é bivolt e muda por SKU).
+- **Aparelho de aquecimento de alta potência é voltagem ÚNICA por design** (resistência feita pra uma tensão): air fryer, ferro de passar, secador de cabelo, chaleira, aquecedor, chuveiro. Nesses, voltagem nunca entra (não é bivolt e muda por SKU).
 - Exceção de classe (onde bivolt é comum e a ficha costuma confirmar): impressora (100-240V) e cooktop a GÁS (ignição eletrônica bivolt). Mesmo aí, só cite se o `specsAmazon` trouxer bivolt/faixa explícito.
 
 ### Chavões por nicho (carregar `docs/painel/_data/chavoes-por-nicho.json`)
@@ -423,7 +421,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 **1. Atribuições de compradores — cardinalidade E moldura**
 
-São **duas** regras, e falhar em qualquer uma é erro. A segunda foi endurecida em 2026-07-30 (antes esta armadilha só cobria a primeira, e a redação liberava "compradores" no plural — foi essa brecha que produziu a moldura em 390 das 634 bíblias).
+São **duas** regras, e falhar em qualquer uma é erro.
 
 **(a) Cardinalidade.** Claim vindo de UMA opinião usa **"há relato de X"** (hedge singular). Generalizar uma opinião individual para o plural é invenção sutil.
 
@@ -471,10 +469,7 @@ Razão: o comprador típico não decide a compra por isso. Mesmo quando aparece 
 preenche a bíblia B0BBSKK8B7
 preenche a bíblia da Growth Creatina
 preenche todas as bíblias
-preenche as bíblias B0BBSKK8B7 e B098YHFT9S
 ```
-
-Para "todas as bíblias": iterar sobre `docs/biblias-v2/*.json`, pular as que já têm os campos core preenchidos (checar se `angulosConversao.length > 0 && pontosFortes.length > 0 && pontosFracos.length > 0`), processar as demais uma a uma.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

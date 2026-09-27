@@ -1,6 +1,6 @@
 ---
 name: categoria-descricao-escrever
-description: Escreve a descrição HTML de uma categoria do site (`/categoria/{slug}/`). Aceita URL do painel (editor-categoria.html?site=X&slug=Y) OU args canônicos site/categorySlug. Régua dura — 2-3 parágrafos `<p>` (sem outras tags de bloco), 100-2000 chars, inline `<strong>`/`<em>`/`<a>`/`<br>` OK, PROIBIDO `<h1>`/`<h2>`/`<h3>`/`<ul>`/`<ol>`/`<table>`/listas/headings. Substitui só a entry da categoria no `categoryDescriptions` do config.ts — resto do config preservado. Backup + commit + push + sync VPS.
+description: Escreve a descrição HTML (2 a 3 parágrafos <p>) do topo de uma página de categoria (/categoria/{slug}/) e grava só a entry dela em categoryDescriptions do config.ts, com backup, commit, push e sync da VPS. Use quando pedirem para escrever ou reescrever a descrição de uma categoria, por site/categoria ou URL do editor de categoria do painel.
 ---
 
 ## Parse de input
@@ -20,7 +20,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Escrever descrição de categoria
 
-> Versão executável local do prompt `docs/painel/_data/agent-prompts.json:category_description`. O conteúdo essencial está duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
+> Esta SKILL.md é a régua desta tarefa. O `ops.category_description` do `docs/painel/_data/agent-prompts.json` não é usado em runtime e está desatualizado (ainda traz a abertura e o fecho que a Régua ANTI-CLONE proíbe): não o use como referência.
 
 Você é o curador editorial das descrições de categoria. Cada site afiliado tem um objeto `categoryDescriptions: Record<string, string>` no `sites/{site}/src/config.ts`, onde cada chave é o slug da categoria (ex: `'impressoras'`) e o valor é HTML em template literal (backtick).
 
@@ -29,7 +29,7 @@ A descrição aparece no **topo da página `/categoria/{slug}/`** do site — fu
 ## Pré-requisitos
 
 - O site existe em `sites/{site}/src/config.ts`.
-- O site tem objeto `categoryDescriptions: { ... } as Record<string, string>` no config (todos os 8 sites têm).
+- O site tem objeto `categoryDescriptions: { ... } as Record<string, string>` no config.
 - A categoria tem ≥1 artigo no site (`category` ou `categorySlug` nos `.mdx` de `sites/{site}/src/content/reviews/`) OU é entry "órfã" no `categoryDescriptions` existente.
 
 Se ambos faltam (categoria não existe nos reviews E não tem entry no config), abortar com aviso "Categoria X não tem nenhum artigo nem entry no config. Cria categorias adicionando artigos com `categorySlug: 'X'` primeiro."
@@ -38,7 +38,7 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
 
 - **Nunca toque em nada além da entry específica do `categoryDescriptions`** no config.ts. Outros campos do siteConfig (name, slug, domain, navItems, etc.) ficam intactos.
 - **HTML em template literal** (backtick `` ` ``) — formato canônico do projeto.
-- **Allowlist de tags**: bloco `<p>` apenas. Inline OK: `<strong>`, `<em>`, `<a>`, `<br>`. (O sanitize do painel tecnicamente também aceita `<b>` e `<i>` como fallback, mas o prompt canônico só permite `<strong>` e `<em>` — uso a allowlist editorial restrita.)
+- **Allowlist de tags**: bloco `<p>` apenas. Inline: `<strong>`, `<em>`, `<a>`, `<br>` (não use `<b>`/`<i>`).
 - **PROIBIDO** tags de bloco: `<h1>`, `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<li>`, `<table>`, `<div>`, `<section>`, `<aside>`, `<img>`, `<script>`, `<iframe>`, `<style>`, `<form>`.
 - **Sem listas de qualquer tipo** (`<ul>`/`<ol>`/`<li>`) — listagem vira frase em prosa.
 - **2 a 3 parágrafos `<p>`.** Ideal: 3 (estrutura canônica). 2 aceitável se o nicho é simples.
@@ -99,16 +99,15 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
 
 8. **Gerar o HTML** seguindo a régua editorial (ver seção abaixo). 2-3 parágrafos `<p>` apenas.
 
-9. **Validar mentalmente** antes de salvar:
-   - 100-2000 chars
-   - 2-3 `<p>...</p>` (count das tags de bloco)
-   - ZERO tags proibidas (`<h1>`/`<h2>`/`<ul>`/etc.) — Grep mental
-   - ZERO `` ` `` (backtick) literal
-   - ZERO `${` literal
-   - Sem travessão
-   - Sem comentários HTML `<!-- ... -->`
-   - Sem placeholders `[TODO:...]`
-   - Não começa nem termina com whitespace estranho
+9. **Validar com ferramenta, não de cabeça**, antes de salvar:
+   ```bash
+   python3 - <<'EOF'
+   import re
+   h = r'''<novo HTML>'''
+   print(len(h), h.count('<p>'), re.findall(r'</?(?!(?:p|strong|em|a|br)\b)\w+', h), [c for c in ['`', '${', '—', '–', '<!--', '[TODO'] if c in h], ';' in re.sub(r'&#?\w+;', '', h))
+   EOF
+   ```
+   Tamanho 100-2000, 2 a 3 `<p>`, lista de tags vazia, nenhum caractere proibido, `False` no fim.
 
 10. **Backup** ANTES de sobrescrever (paridade com handler `category-desc.ts:139-147`):
     ```bash
@@ -193,12 +192,12 @@ Chama pra navegar pelos artigos. Pode ser omitido se a descrição fica grande d
 
 ## Régua ANTI-CLONE (CRÍTICO — v1.20.0, canon 2026-06-12)
 
-Os exemplos acima são **UM** preenchimento possível do esqueleto, **NÃO um template pra copiar verbatim**. Sem variação, categorias diferentes (e pior, sites de **MESMO nicho**) saem com descrição quase idêntica = **duplicate content** — fatal pra estratégia SERP-monopoly (2+ sites no mesmo nicho: impressoras = melhorimpressora+impressoraideal, pré-treino = melhorpretreino+melhorpretreino-com, creatina ×3) e pro guarda-chuva **melhoressuplementos** (que sobrepõe TODOS os nichos: creatinas, whey, ômega-3, pré-treino, suplementos). O `§3` "...antes de o produto chegar na sua casa" é o pior ofensor: niche-agnostic, o modelo copia verbatim em todo lugar.
+Os exemplos acima são **UM** preenchimento possível do esqueleto, **NÃO um template pra copiar verbatim**. Sem variação, categorias diferentes (e pior, sites de **MESMO nicho**) saem com descrição quase idêntica = **duplicate content** — fatal pra estratégia SERP-monopoly e pro guarda-chuva **melhoressuplementos** (que sobrepõe TODOS os nichos: creatinas, whey, ômega-3, pré-treino, suplementos). O `§3` "...antes de o produto chegar na sua casa" é o pior ofensor: niche-agnostic, o modelo copia verbatim em todo lugar.
 
-**Passo OBRIGATÓRIO antes de gerar** — leia as descrições de categoria JÁ existentes de **(a)** outras categorias do mesmo site e **(b)** sites de MESMO nicho (ex: gerando `impressoras` no impressoraideal → leia o `impressoras` do melhorimpressora). Anote a abertura (§1) e o fecho (§3) de cada uma, pra divergir.
+**Passo OBRIGATÓRIO antes de gerar**: leia as descrições de categoria já existentes de **(a)** outras categorias do mesmo site e **(b)** todos os sites de mesmo nicho (mesmo `niche` em `docs/painel/sites-meta.json`, mais o `melhoressuplementos` quando o nicho é suplemento). Anote a abertura (§1) e o fecho (§3) de cada uma, para divergir.
 
 **Regras de divergência (hard):**
-1. **Zero sequências de ≥6 palavras** iguais a uma descrição irmã (mesmo site) ou de mesmo nicho (site irmão). Mesmo limiar da intro e das institucionais (era 8 até 2026-09-01, sem motivo registrado pra ser mais frouxo).
+1. **Zero sequências de ≥6 palavras** iguais a uma descrição irmã (mesmo site) ou de mesmo nicho (site irmão), o mesmo limiar da intro e das institucionais.
 2. **NÃO reusar a família de abertura** "Escolher [o/a] {X} certo/a pode parecer simples, mas o mercado brasileiro oferece dezenas..." se já usada numa irmã/mesmo-nicho. Rotacione (pool abaixo).
 3. **NUNCA repetir o §3 verbatim** ("...antes de o produto chegar na sua casa"). Varie o fecho ou omita o §3.
 4. Critérios (§1) e perfis (§2) **específicos do nicho** — não a lista genérica reaproveitável.
@@ -273,9 +272,9 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
 7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
-9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
+9. **Também valem:** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria CONTA e reporta, mas desde 2026-09-05 teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta e reporta, mas teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
@@ -333,7 +332,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 ### Health absolutes YMYL banidos (Google penaliza páginas afiliadas)
 
-- "uso regular é seguro" → "tolerado pela maioria; consulte profissional se tem comorbidade"
+- "uso regular é seguro" → "tolerado pela maioria. Consulte um profissional se tem comorbidade"
 - "alternativa segura" → "alternativa mais leve"
 - "não causa dano" → "sem evidência de impacto em pessoas saudáveis em doses recomendadas"
 - "sem efeitos colaterais" → "efeitos colaterais raros quando reportados"
@@ -346,16 +345,15 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 - "todos/todas/doses declaradas pelo fabricante" → "fórmula totalmente transparente" ou drop
 - Alérgeno "contém X declarado pelo fabricante" → "contém X" direto
 - **Spec de fabricante = fato, afirme direto** (régua v1.21.1): rendimento, economia e velocidade da ficha (ex: "rende até 4.500 páginas") vão SEM "segundo a Epson"/"segundo o fabricante" (atribuir a cada spec vira muleta repetitiva, igual "declarado pelo fabricante"). Atribuição só vale pra recomendação/calibração do fabricante (ex: "a HP recomenda 50 a 100 páginas/mês").
-## Sincronização painel ↔ skill ↔ prompt canônico
+## Listas e tetos
 
-**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.category_description` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
+Listas, regex e tetos vivem em `docs/painel/_data/chavoes-por-nicho.json`: cite a chave, não copie a tabela.
 
 
 ## Quando NÃO usar essa skill
 
 - **Categoria sem artigos** E **sem entry no config**: skill aborta. Cria categoria adicionando artigos primeiro.
 - **Categoria travada** (`<!-- contentLocked: true -->` no início do HTML atual): o painel rejeita save em HTTP 423 (`category-desc.ts:250-254`). Skill grava direto via Edit tool (não passa pelo painel) — funciona, mas pergunta antes (há razão pra trava).
-- **Quer reescrita iterativa rápida**: skill custa ~$0.01-0.03 cada chamada. Mais barato dos prompts, mas ainda não é zero — não rodar 5x sequencialmente sem ler o output anterior.
 
 ## Armadilhas recorrentes
 
@@ -402,10 +400,6 @@ Exemplos com instrução inline:
 - "escreve a descrição de cadeiras com foco em home office"
 
 Args canônico que invoco: `Skill(skill="categoria-descricao-escrever", args="escritoriocasa/impressoras")` (instrução vai pelo contexto do prompt natural)
-
-## Limitação intrínseca conhecida
-
-Sem schema Zod programático no output, validação fica editorial. ~3% de chance de algum campo ficar levemente fora do limite editorial (HTML em 2050 chars, 4 parágrafos em vez de 3, alguma tag inline rara). Mitigação principal: validar mentalmente a tag list e os caracteres proibidos (`` ` `` e `${`) antes de aplicar.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

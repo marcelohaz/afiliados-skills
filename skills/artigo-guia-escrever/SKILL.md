@@ -1,6 +1,6 @@
 ---
 name: artigo-guia-escrever
-description: Escreve o guideContent do artigo (HTML 'Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão') + análise de concorrentes reusável por keyword. Aceita URL do painel OU site/slug. EXIGE concorrentes da keyword EXATA: carrega análise existente de _data/competitor-analyses/{keyword-slug}.md (match exato do slugify da KEYWORD — nunca keyword vizinha, nunca o slug do arquivo) ou o user cola 1-3 'Como escolher' da SERP; sem isso PARA e pede. Salva análise + texto cru pra reuso. 5 H2 base + extras dirigidos pela SERP, 6-25k chars, links Amazon só em Marca/FAQ/Conclusão (tag-aware), 2-4 links internos contextuais (âncora = keyword do destino, slug REAL, não na Conclusão). Substitui só o guideContent; backup + commit + push + sync VPS.
+description: Escreve do zero o guia "Como escolher" de um artigo comparativo (campo guideContent, em HTML) e salva a análise de concorrentes da keyword para reuso. Use quando o artigo não tem guia, tem só um esboço, faltam 3 ou mais seções, ou o usuário quer refazer o guia com concorrentes novos; para consertar trechos de um guia existente, use artigo-guia-auditar. Precisa dos concorrentes da keyword exata (análise salva em _data/competitor-analyses/ ou textos colados pelo usuário). Aceita URL do painel ou site/slug. Grava com backup, commit, push e sync da VPS.
 ---
 
 ## Parse de input
@@ -39,16 +39,16 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 - O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx`. Se não, abortar com orientação pra criar via painel ("✨ Criar artigo" no site detail → `make-reviews-stub`).
 - O artigo tem **pelo menos 1 produto** no lineup (`products: []` vazio = abortar — guide sem categoria concreta fica vago).
 - Bíblias dos produtos do artigo estão em `docs/biblias-v2/{ASIN}.json`. Se alguma faltar, rodar `bun scripts/sync-biblias-r2.ts --apply` antes (skill avisa e aborta se faltar).
-- `affiliateTag` em `sites/{site}/src/config.ts` é conhecida. Se vazia (site em construção), links Amazon do guide saem CRUS (`https://www.amazon.com.br/dp/{ASIN}`). Se preenchida, com tag (`?tag={tag}&linkCode=ogi&th=1&psc=1`). Guide TEM links Amazon em FAQ/Marca/Conclusão — então tag-aware importa.
+- `affiliateTag` em `sites/{site}/src/config.ts`: vazia (site em construção) ou preenchida. Link `/dp/` vai sempre cru (`https://www.amazon.com.br/dp/{ASIN}`): o build injeta a tag do config no `guideContent`, e link com `?tag=` escrito à mão fica congelado se a tag mudar. Link de busca de marca (`/s?k=`) não recebe a injeção e leva `&tag={affiliateTag}` quando a tag está preenchida.
 
 ## Invariantes
 
 - **Nunca toque em nada além do campo `guideContent`** do frontmatter. Title, description, keyword, products, intro do body, tudo intacto. Só substitui o block scalar do `guideContent` (ou insere se ainda não existir).
 - **HTML, não markdown.** Diferente da intro (que é markdown puro), o guide é HTML.
 - **Allowlist de tags**: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Tudo mais é proibido: `<h1>` (artigo já tem H1 no title), `<script>`, `<iframe>`, `<style>`, `<img>`, `<table>`, `<form>`, `<button>`, `<div>`, `<span>` (visual fica pro CSS).
-- **6.000 a 25.000 chars** no total do HTML (alvo típico 8-18k — vide canônicos do projeto).
+- **6.000 a 25.000 chars** no total do HTML (faixa válida; o tamanho sai da cobertura, ver "Tamanho típico").
 - **Estrutura: 5 H2 base obrigatórios + H2 extras dirigidos pela SERP.** Os 5 base (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) são sempre obrigatórios; H2 informacionais extras (O que é / gasta energia / receitas / como limpar) entram quando a análise de concorrentes mostra intenção informacional. Faltar qualquer base = ERRO. Ver "Régua editorial — ESTRUTURA" abaixo.
-- **Links Amazon: tag-aware.** PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca" (link de busca da marca), "FAQ" e "Conclusão" (recomendações de produto). Formato: `?tag={tag}&linkCode=ogi&th=1&psc=1` se tag preenchida; URL crua se vazia.
+- **Links Amazon.** Proibidos em "Vale a pena" e "Como escolher" (educativas). Permitidos em "Melhor marca" (busca da marca), "FAQ" e "Conclusão" (recomendação de produto). `/dp/` cru; busca `/s?k=` com a tag (ver Pré-requisitos).
 - **Linkagem interna: 2 a 4 links (ideal ~3), contextuais e naturais** pra **peer articles reais do mesmo site** (slug REAL do arquivo, NUNCA derivado do keyword). Régua de quantidade canon (Marcelo 2026-06-09): 2 mín · ~3 ideal · 4 máx (ou o total de peers, se o site tiver menos de 2; 0 se for o 1º artigo do site **ou se nenhum peer passar no teste do "encaminhamento útil"** — ver "Desempate" em "Linkagem interna"). Âncora = **keyword do destino (singular preferido)**; link de produto = **nome completo COM marca**. Sem `target="_blank"`, sem `rel="nofollow"` (links internos passam autoridade). Ver "Linkagem interna".
 - **Sem travessão (—).** Use vírgula, ponto, dois pontos ou parênteses.
 - **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
@@ -64,13 +64,13 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    - Identifique `niche` em `docs/painel/sites-meta.json` (ex: Pré Treino, Creatinas, Tablets)
    - Read `docs/painel/_data/chavoes-por-nicho.json` — use `_genericos` + bloco do nicho
    - `termos_banidos_absoluto` e tetos **0**: regra DURA. `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`: referência, não limite (não troque a palavra certa pra baixar contagem)
-   - Banidos absolutos sempre: lineup, SKU, ASIN, datasheet, notificado, trade-off, hardcore
+   - Banidos absolutos: `_genericos.termos_banidos_absoluto` do JSON.
    - **⚠ `_sites_aplicaveis` é o gate do bloco de nicho (canon 2026-08-15):** se o slug do site não está na lista do bloco, **o bloco não vale** e sobra só o `_genericos`. Não force pelo `niche`. Reporte como sugestão de incluir o site no JSON, nunca como defeito do texto.
    - **O `_genericos` vale SEMPRE e é o que mais dispara:** `termos_banidos_absoluto`, `chavoes_estruturais_max` (as 4 variantes de "seleção" têm cap **0**) e `industrial_max` (`declarado` 3, `fabricante` 12). Conte ele antes de qualquer bloco de nicho.
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+` em ambos.
 
-1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
+1.5. **Git pull antes de ler arquivos locais** (evita estado stale):
    ```bash
    bash scripts/git-pull-seguro.sh "skill-artigo-guia-escrever-temp"
    ```
@@ -96,7 +96,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    - `ls sites/{site}/src/content/reviews/*.mdx` (ou Glob)
    - Pra cada `.mdx` (excluindo o próprio): `Read` rápido pra extrair `title`, `keyword`, `keywordPlural` e `slug` (= filename sem `.mdx`)
    - Resultado: array `[{slug, title, keyword, keywordPlural}]` dos OUTROS artigos do site (a `keyword` vira a ÂNCORA do link interno — ver "Linkagem interna")
-   - Se vazio (este é o 1º artigo do site): NÃO incluir links internos no guide gerado
+   - Se vazio (este é o 1º artigo do site): nenhum link para peer article no guide gerado (links de produto seguem valendo)
 
 7. **Detectar instrução opcional** no prompt do user (paridade com outras skills):
    - "mais conciso" / "enfatize tanque de tinta" / "sem subseções" / "com foco em iniciantes" → extrai como instrução
@@ -113,18 +113,17 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
    - Reporta no chat: "📊 Análise de concorrentes carregada de `_data/competitor-analyses/{kw}.md` (gerada em DD/MM/YYYY)"
 
    ### Cenário B — análise NÃO existe + user colou textos de concorrentes
-   - Cada texto truncado em 16k chars (mais generoso que os 8k antigos — análise rica)
+   - Cada texto truncado em 16k chars
    - **Salvo o texto cru colado VERBATIM** em `competitor-sources/{keyword-slug}/` (passo 10c) — fonte dos headings reais
    - Eu analiso os textos e produzo a análise estruturada (passo 10b)
    - Uso os **headings reais do cru** pra derivar a estrutura (H2/H3/FAQ) + a ficha como topical map
    - Crio o `.md` da análise (10b) E salvo o cru (10c)
 
    ### Cenário C — não existe análise da keyword EXATA E user NÃO colou nada
-   - **PARAR e PEDIR os concorrentes. OBRIGATÓRIO, sem exceção.** NÃO gerar o guia sem análise da keyword exata. Não há mais opção de "fallback genérico", e é **PROIBIDO reusar a análise de outra keyword** (mesmo do mesmo site/categoria — ver Cenário A). Mensagem ao user:
+   - Pare e peça os concorrentes. Não gere o guia sem a análise desta keyword e não use a análise de outra keyword, mesmo do mesmo site ou categoria: keyword diferente tem intenção, SERP e concorrentes diferentes, e o guia sem eles sai genérico e volta para retrabalho. Mensagem ao user:
      > "Pra escrever o guia de **{keyword}** eu preciso dos concorrentes DESSA keyword. Não reuso a análise de keyword parecida (intenção/SERP/concorrentes diferentes) nem gero genérico. Cole 1-3 'Como escolher' dos resultados que aparecem ao buscar **'{keyword}'** no Google (Buscapé, Zoom, Canaltech, Mundo Conectado, TechTudo, etc). Eu analiso, gero o guia e salvo a análise pra reuso futuro nessa mesma keyword."
-   - **AGUARDAR os textos colados.** Depois processa como Cenário B (analisa, gera, salva `{keyword-slug}.md`).
-   - Se o user insistir em gerar SEM concorrentes: avisar explicitamente que o guia ficará fraco em SEO (não bate a SERP da keyword) e **exigir confirmação explícita** antes de prosseguir só com as bíblias. Nunca seguir sem concorrentes em silêncio.
-   - **Razão**: experiência real (2026-06-05) mostrou que reusar a análise de uma keyword vizinha ("melhor impressora custo benefício" pra "melhor impressora") ou cair em fallback silencioso desperdiça a oportunidade de SEO e gera retrabalho. Pedir os concorrentes da keyword EXATA é o único caminho.
+   - Aguarde os textos colados e siga como no Cenário B.
+   - Se o user insistir em gerar sem concorrentes, avise que o guia fica fraco em SEO (não acompanha a SERP da keyword) e só prossiga, com as bíblias, depois de ele confirmar.
 
    ### Slugify do keyword
    ```js
@@ -171,12 +170,12 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     - **Precedência de leitura da estrutura (passo 8/9): cru > ficha.** Se existir `competitor-sources/{keyword-slug}/`, leia o cru pra extrair os headings e derivar os H2. Se só houver ficha (keywords antigas, pré-2026-06-30), use a ficha topic-only como antes. Nenhum dos dois → Cenário C (pedir concorrentes).
     - **Anti-cópia (DURO):** o cru é material de pesquisa, NUNCA renderizado. Proibido copiar/parafrasear óbvio dele — a prosa do guia é original (a régua "concorrente parafraseado óbvio" vale com mais força agora que o texto fica salvo ao lado).
 
-11. **Validar mentalmente** antes de salvar:
-    - **6.000-25.000 chars** total (alvo 12-18k)
+11. **Validar antes de salvar com um script curto sobre o HTML gerado** (no estilo do auto-check da `artigo-intro-escrever`), não de cabeça. Conte e corrija o que falhar:
+    - **6.000-25.000 chars** total
     - **5 H2 base presentes na ordem relativa**: `Vale a pena` → `Como escolher` → `Melhor marca` → `Perguntas Frequentes` → `Conclusão`. **H2 extras informacionais permitidos** (O que é / gasta energia / receitas / como limpar) quando a SERP pedir, intercalados (+2 a +4, teto 9 H2 total); cada extra educacional = ZERO link Amazon; cada tópico em UM lugar só (regra anti-duplicação)
     - Primeiro tag = `<h2>` (NÃO `<h1>`, NÃO `<p>`)
     - HTML allowlist OK (Grep mental por tags fora da lista)
-    - 2-4 links internos (ideal ~3; 0 só sem peers): cada `href="/{slug}/"` aponta pra slug REAL da peer articles list
+    - 2-4 links para peer articles distintos (ideal ~3), ou 0 quando o site não tem peers ou quando vale a exceção do "Desempate"; cada `href="/{slug}/"` aponta para slug REAL da peer articles list
     - Links Amazon: ZERO em "Vale a pena" e "Como escolher"; PERMITIDOS em "Melhor marca" (busca), "FAQ" e "Conclusão" (recomendação). Tag-aware do site.
     - Sem travessão `—` nem `–`
     - Sem `<h1>` (artigo já tem H1 no title)
@@ -217,7 +216,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     - `old_string` = a linha imediatamente antes do `---` de fechamento do frontmatter (ex: linha do `products:` com seus items, ou alguma outra última linha do YAML) + `\n---`. Inclui contexto suficiente pra match único.
     - `new_string` = mesma linha de contexto + `\nguideContent: |\n  <html-line>\n  <html-line>...\n---`
     
-    **CRÍTICO sobre indent**: cada linha do HTML dentro do block scalar precisa começar com **exatamente 2 espaços**. Linhas em branco entre parágrafos HTML ficam sem indent (string vazia). Sem indent = YAML inválido = build do Astro quebra.
+    **Indent**: cada linha do HTML dentro do block scalar começa com exatamente 2 espaços; linha em branco entre parágrafos fica vazia. Indent errado quebra o YAML e o build do Astro.
     
     Exemplo de bloco bem formatado:
     ```yaml
@@ -252,29 +251,14 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     ```
     Falha graciosamente se `.env.painel-skills` não existir.
 
-15.5. **CONFIRMAR QUE A ANÁLISE FOI GRAVADA** (canon 2026-08-20 — gate, não
-    opcional). Nos cenários B/override, depois dos passos 10b e 10c:
+15.5. **Confirmar que a análise foi gravada** (cenários B e override, depois de 10b e 10c):
 
     ```bash
     ls -la docs/painel/_data/competitor-analyses/{keyword-slug}.md
     ls -la docs/painel/_data/competitor-sources/{keyword-slug}/
     ```
 
-    **Se algum não existir, GRAVE AGORA** e só então siga. E reporte o resultado
-    no passo 16, em uma linha, dizendo se gravou ou não.
-
-    **Por que virou gate:** os passos 10b e 10c não tinham confirmação nenhuma,
-    então quando a sessão pulava a gravação o material colado sumia **sem
-    ninguém perceber**. Medido em 2026-08-18: o cluster de creatina inteiro, 7
-    keywords, estava sem ficha salva — e os concorrentes tinham sido colados em
-    todas. A recuperação custou reconstruir 6 análises a partir dos guias da
-    rede.
-
-    O custo de não ter gravado aparece semanas depois e em outro lugar: a
-    `artigo-clonar-em-massa` aborta no passo 4b concluindo que "a análise não foi
-    feita". Ela foi — o repo é que perdeu. Perda silenciosa de insumo que o
-    humano colou é a pior classe de falha desta skill, porque o trabalho de
-    recolar é dele, não do agente.
+    Se algum não existir, grave agora e só então siga; reporte no passo 16, em uma linha, se gravou. Motivo: o material colado é o insumo mais caro desta skill (recolar é trabalho do usuário), e a falta só aparece semanas depois, quando a `artigo-clonar-em-massa` aborta no passo 4b por não achar a análise.
 
 16. **Reportar no chat**:
     - char count do HTML do guide + número de parágrafos + lista de links internos
@@ -282,9 +266,7 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
     - **Coverage report** (se análise foi usada):
       - "Cobri N/M tópicos do concorrente"
       - "Adicionei K tópicos extras (das bíblias / gaps): X, Y, Z"
-    - **Se análise foi criada/atualizada: diga explicitamente se a gravação foi
-      CONFIRMADA no passo 15.5** (path + ficha e cru). "Salvei" sem ter olhado é
-      exatamente o que fez 7 keywords sumirem.
+    - **Se análise foi criada/atualizada: diga se a gravação foi confirmada no passo 15.5** (path da ficha e do cru).
     - Se análise foi carregada de existente: lembrete "essa análise reusa em outros sites com mesma keyword"
 
 ## Formato da análise de concorrentes
@@ -393,7 +375,7 @@ Eles carregam a intenção comercial/comparativa + os links de afiliado (Marca/F
 - De uso ("Que receitas", "Como limpar") → depois de "Como escolher", antes da FAQ.
 - Os 5 base mantêm a ordem relativa ENTRE SI (Vale a pena → Como escolher → Marca → FAQ → Conclusão); os extras se intercalam.
 
-**🚨 REGRA ANTI-DUPLICAÇÃO (a que faz os extras valerem a pena):** cada tópico mora em **UM lugar só, com profundidade total**. Quando você cria um H2 informacional, ele **ABSORVE** a menção rasa que iria pros 5 base — não soma por cima (senão dispara o check `redundancy` do audit). Exemplos:
+**Regra anti-duplicação (é o que faz os extras valerem a pena):** cada tópico mora em **UM lugar só, com profundidade total**. Quando você cria um H2 informacional, ele **ABSORVE** a menção rasa que iria pros 5 base — não soma por cima (senão dispara o check `redundancy` do audit). Exemplos:
 - Criou "O que é {keyword}?" → o "Vale a pena" PARA de definir o produto e foca na DECISÃO de compra (compensa? pra quem? quando não vale).
 - Criou "{keyword} gasta energia?" / "Que receitas?" / "Como limpar?" → essas perguntas SAEM da FAQ (viram H2 próprios). A FAQ fica com o que sobra (comparações, "X ou Y", tamanho/medida, "qual a melhor").
 - Distinção legítima que NÃO é duplicação: "Facilidade de limpeza" dentro de "Como escolher" = **o que procurar na compra** (porta removível, antiaderente); "Como limpar" = **a rotina de limpeza**. São ângulos diferentes.
@@ -454,7 +436,7 @@ Régua de cada FAQ (profundidade por completude, **não cota** — régua canon 
 
 #### 6. Conclusão
 **2 parágrafos:**
-- **P1**: recomendação central do guide (1-2 modelos top com link Amazon)
+- **P1**: recomendação central do guide (1-2 modelos top, com link de produto)
 - **P2**: alternativas por perfil (modelos específicos por nicho ou redireciona pra artigos peer relacionados)
 - **Tom resolutivo** — leitor sai com decisão tomada
 
@@ -487,15 +469,7 @@ Lista de 1-2 itens vira prosa.
 
 ### Densidade visual: negrito e links Amazon
 
-**Régua descoberta em 2026-05** comparando 35 guides do monorepo.
-
-A rede tem 2 padrões coexistindo:
-
-- **Padrão NOVO (canon atual — usar SEMPRE em guides novos)**: melhoraspirador (5,3 strongs/1k), melhorestablets (2,8–5,6), qualamelhorcreatina (2,6–3,6), melhorimpressora. Pattern: **"negrito denso + links Amazon concentrados em Marca/FAQ/Conclusão"**.
-
-- **Padrão LEGADO (NÃO REPLICAR — herança histórica)**: escritoriocasa (8 guides, 0,15–2,7 strongs/1k), melhorcozinha (0,0–0,8), guides antigos de melhorcreatina (0,4–2,2). Pattern: **"poucos negritos + muitos links Amazon espalhados em todas as seções"**.
-
-Quando escrever guide novo ou refazer guide existente, seguir o padrão NOVO. Guides legados ficam onde estão até dor real (refazer compete com features); auditoria pode flaggar como info, mas migração é manual e caso a caso.
+Negrito em torno de 4-5 por 1.000 chars e links Amazon só em Marca/FAQ/Conclusão. Guias antigos da rede com poucos negritos e links Amazon em todas as seções não são modelo; a auditoria pode anotar como info, e refazê-los é decisão caso a caso.
 
 #### Negrito (`<strong>`) — alvo: 4-5 por 1.000 chars
 
@@ -542,9 +516,7 @@ Pra um guide de 18k chars, isso significa ~70-90 tags `<strong>` distribuídas. 
 Antes de inserir <a> pra produto no guide (FAQ/Conclusão):
   1. Existe sites/{site}/src/content/products/{slug-do-produto}.mdx?
      SIM → use <a href="/{slug}/">Nome</a>  (SEM rel, SEM target — link interno)
-     NÃO → use <a href="https://www.amazon.com.br/dp/{ASIN}?tag={tag}&..." rel="nofollow" target="_blank">Nome</a>
-  2. Sites em construção (affiliateTag vazia) podem trabalhar mesmo se peer page faltar:
-     usa link Amazon CRU sem tag pra esperar peer page ser criada
+     NÃO → use <a href="https://www.amazon.com.br/dp/{ASIN}" rel="nofollow" target="_blank">Nome</a>  (cru: o build põe a tag)
 ```
 
 **Padrões errados a evitar:**
@@ -642,7 +614,7 @@ O piso de 2 e o molde de encaminhamento acima podem se contradizer num caso só:
 
 **Passada a pré-condição, o teste é a decisão, não a categoria.** Link peer bom responde a uma bifurcação ("tablet ou Kindle?"), a uma soma ("whey + creatina?") ou a uma ordem de prioridade ("fecha a proteína antes da glutamina"). Se você precisa construir o cenário em que o leitor iria pro outro artigo, o cenário não existe. Note que a pré-condição NÃO decide sozinha: os 34 links E-reader↔Tablet da rede passam por artigos que também têm 0 peer da própria categoria, e são links bons — o que os salva é o teste da decisão, não a contagem.
 
-**Por que não basta "só linkar dentro da mesma categoria":** medido na rede em 2026-08-10, dos 942 links peer, 229 são cross-categoria — e 227 deles passam no teste da decisão (34 E-reader↔Tablet, 174 entre suplementos, 17 de fitness). Cortar por categoria mataria os 227 pra pegar os 2 ruins, e ilharia 31 artigos de suplemento que hoje se conversam legitimamente. A taxonomia também não ajuda: `Caixas de Som`, `Tablets` e `Impressoras` são todas subs de `Eletrônicos`, igualzinho a `Creatinas` e `Glutamina` sob `Suplementos`.
+**Por que não basta "só linkar dentro da mesma categoria":** quase todos os links da rede entre categorias diferentes (E-reader e Tablet, suplementos entre si) respondem a uma decisão real do leitor, e a taxonomia não separa os casos (Tablets e Impressoras são subs de Eletrônicos como Creatinas e Glutamina são de Suplementos).
 
 **Consequência aceita:** o `audit-linkagem.ts` e o critério `linkagem-fraca` vão emitir `warn` nesse artigo (o script conta peer bruto e não sabe avaliar decisão). É `warn`, não bloqueia `readyToLock`, e é o custo certo — melhor um warn conhecido do que um link que não serve ao leitor. Registre no relatório como exceção justificada.
 
@@ -710,9 +682,9 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
 7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
-9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
+9. **Também valem:** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria CONTA e reporta, mas desde 2026-09-05 teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta e reporta, mas teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
@@ -725,7 +697,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 | Se não tem, ela é a que resolve. | Se não tem, ela é a melhor opção. |
 | O tanque não se cansa. | O tanque de tinta rende o mesmo até o fim. |
 
-⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela (ou nos exemplos de shortDescription), reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
+⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela, reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
 
 **Referência de DENSIDADE VISUAL (negrito por 1k chars, links Amazon só em Marca/FAQ/Conclusão)**: `sites/melhoraspirador/src/content/reviews/melhor-aspirador-de-po-vertical.mdx` (campo `guideContent`). ⚠ É referência de estrutura e densidade, **não de tom**: o texto dele tem o registro que a régua de 2026-08-15 corrige ("o de tomada não se cansa", "marca que só divulga watt está divulgando a conta de luz"). Para tom, siga o bloco acima.
 
@@ -735,13 +707,13 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 - **Origem de fabricação** ("fabricado no Brasil", "made in X") → idem, salvo ângulo `produto-nacional`.
 - **Variantes Amazon** (tamanhos de embalagem, voltagens específicas, cores) → omitir (não é critério de categoria, é variante).
 
-## Regras duras (bloqueiam audit)
+## Regras duras (resumo)
 
 - **Estrutura: 5 H2 base obrigatórios** (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão). Faltar qualquer um dos 5 = ERRO. **H2 extras informacionais permitidos** (dirigidos pela SERP/análise de concorrentes, +2 a +4, teto 9 H2 total, educacionais = ZERO link Amazon, sem duplicar tópico dos 5 base). 6º opcional "Por que confiar" segue valendo.
 - Primeira tag é `<h2>` (NÃO `<h1>`, NÃO começa com `<p>`).
-- **6.000-25.000 chars** total no HTML (alvo típico 8-18k).
+- **6.000-25.000 chars** total no HTML.
 - HTML allowlist: `<h2>`, `<h3>`, `<p>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<a>`. Nada mais.
-- **Links Amazon**: PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca", "FAQ" e "Conclusão" (formato `?tag={tag}&...` tag-aware do site; também pode ser link de busca de marca `/s?k=...`).
+- **Links Amazon**: PROIBIDOS em "Vale a pena" e "Como escolher" (educativas). PERMITIDOS em "Melhor marca", "FAQ" e "Conclusão" (`/dp/` cru, o build põe a tag; busca de marca `/s?k=` com a tag).
 - **Linkagem interna**: 2-4 links (ideal ~3) pra peer articles reais (slug REAL, NUNCA derivado do keyword), âncora = keyword do destino (singular preferido); link de produto = nome completo COM marca. Sem `target`/`rel`. **Links peer/home são contextuais e NÃO entram na Conclusão** (v1.24.0) — vão no spot onde o tema aparece (FAQ/Marca/Vale a pena/Como escolher). Links de PRODUTO podem ficar na Conclusão (recomendação).
 - Sem travessão `—` nem `–`.
 - Sem superlativos sem evidência ("o melhor disponível", "incomparável", "imbatível").
@@ -819,29 +791,22 @@ Quando um valor numérico concreto já está citado, qualificadores como "declar
 
 Auto-check: grep por `declarad|informado|detalhado|especificado` logo após número concreto (`\d+\s*(?:mg|g)\s+(?:declarad|informad|detalhad|especificad)`). Se achar — drop o qualificador.
 
-### Chavões por nicho (carregar `docs/painel/_data/chavoes-por-nicho.json`)
+### Chavões por nicho
 
-- Identifique `niche` em `docs/painel/sites-meta.json`
-- Use `_genericos` + bloco do nicho (Pré Treino, Creatinas, Tablets, etc.)
-- Limites por nicho: `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`, `chavoes_estruturais_max`
-- Banidos absolutos: `lineup`, `SKU`, `ASIN`, `trade-off`, `hardcore`, `datasheet`, `notificado`, `peers`, `claim`, `stack`
+Ver passo 0.5 (`_genericos` sempre; bloco do nicho só com o site em `_sites_aplicaveis`; banidos e tetos 0 duros; os outros tetos são referência).
 
 ### Auto-check capitalização + duplicação
 
 - Duplicação contígua: `([a-zA-ZÀ-ÿ\s]{8,40})\1` → remover duplicado
-- Bullet minúsculo: `<strong>[a-z]` em pros/cons → capitalizar
 - Minúscula após ponto: `\. [a-z]` (excluir URLs) → capitalizar
 - Termo entre parênteses dup: `([a-zA-ZÀ-ÿ]{5,30}) \(\1\)` (ex: "formigamento (formigamento)")
 ## Armadilhas recorrentes
-
-### 1. H1 em vez de H2 na abertura
-Hábito de modelos LLM começar HTML com `<h1>`. Proibido aqui — o artigo já tem H1 no title do frontmatter. Sempre `<h2>`.
 
 ### 2. Mencionar produto específico FORA das seções permitidas
 "A Epson L3250 lidera o segmento" em "Como escolher" → NÃO. Generaliza: "marcas brasileiras com sistema EcoTank dominam o segmento de tanque". Produtos específicos podem ser citados em FAQ, Conclusão, Melhor Marca e como âncoras de preço em "Vale a pena" (ex: *"de R$ X (Modelo Y) a R$ Z (Modelo W)"*).
 
 ### 3. Slug inventado pra linkagem
-IA frequentemente inventa `/melhor-impressora-laser-barata/` quando esse artigo NÃO existe. Antes de salvar, eu Grep mentalmente todos os `href` e confiro contra peer list. Se inventar → regenero o trecho.
+Antes de salvar, confira cada `href` contra a lista de peers e de produtos com grep no HTML gerado. Se inventou, regenere o trecho.
 
 ### 4. Link Amazon FORA das seções permitidas
 Links Amazon em "Vale a pena" ou "Como escolher" = ERRO (essas 2 seções são educativas, sem CTA). Em "Melhor marca", "FAQ" e "Conclusão" são PERMITIDOS: prefira link INTERNO (página de produto do site) quando ela existe; Amazon `/dp/` só quando não há página, e busca de marca `/s?k=` na seção de marca. Não há cota de links Amazon (a frase "canônico tem ~10-20" era de antes do hub-and-spoke; o canônico atual tem 0 `/dp/` no guia e 13 internos).
@@ -870,17 +835,11 @@ Se user colou texto da Buscapé e o guide reusa frase quase literal, é cópia (
 ### 12. Citar comprador no guide
 "Compradores recorrentemente preferem..." → PROIBIDO. Substituir por linguagem analítica: "Para uso doméstico, o critério principal é..." ou "Quem imprime muito tende a recuperar...".
 
-### 13. Gerar só 1 H2 (estrutura antiga)
-Versão da skill pré-1.8.2 induzia "abertura com 1 H2 + H3 dentro". Estrutura atual é **5 H2 base obrigatórios** (Vale a pena / Como escolher / Melhor marca / FAQ / Conclusão) + **H2 extras informacionais quando a SERP pedir** (régua canon 2026-06-29). Conferir que os 5 base existem na ordem relativa antes de salvar; os extras (O que é / energia / receitas / limpeza) são bem-vindos pra keyword informacional, sem duplicar tópico dos base.
-
-### 14. Faltar FAQ ou Conclusão
-Modelo tende a parar em "Melhor marca" achando que cobriu o tema. Mas FAQ e Conclusão são obrigatórios pelo PADROES.md + são onde leitor decide a compra (FAQ responde dúvidas pré-compra; Conclusão dá recomendação clara). Sem essas 2 seções, guide fica fraco em SEO + UX.
-
 ### 15. Inflar "Vale a pena" sem ancorar preço
 P2 da seção "Vale a pena" pede âncoras de preço reais do lineup. Modelo tende a generalizar ("os preços variam") — VAI BUSCAR números reais nas bíblias (`snapshot.precoBRL`) ou no frontmatter do `.mdx` (`schemaPrice` dos produtos) e citar 2-3 modelos pra ancorar a faixa.
 
 ### 16. FAQ genérica sem produto específico
-"FAQ: Qual a melhor X? Resposta: depende das suas necessidades..." — FAQ inútil. Régua: cada FAQ deve ter resposta CONCRETA, geralmente com 1-2 links Amazon de produtos específicos do lineup que cobrem a resposta. Sem link Amazon ≠ FAQ ruim, mas sem CONCRETUDE = ruim.
+"FAQ: Qual a melhor X? Resposta: depende das suas necessidades..." — FAQ inútil. Régua: cada FAQ tem resposta concreta, em geral com 1-2 links para produtos do lineup que respondem à pergunta. Sem link não é defeito; sem concretude é.
 
 ### 17. Parágrafos densos com 3+ conceitos
 Cada parágrafo deve cobrir **1 ideia principal** (com 1-2 conceitos relacionados, no máximo). Quando um parágrafo lista 3+ conceitos distintos com `<strong>` dedicado pra cada (ex: "Wi-Fi Direct, AirPrint, Mopria e Bivolt automático" tudo junto), divide em 2 ou 3 parágrafos menores. **Regra prática**: se você usa 3+ tags `<strong>` no mesmo parágrafo pra introduzir conceitos diferentes, considere dividir.
@@ -892,7 +851,7 @@ Mesma regra aplica em listas tipo "tipos de impressora" (cartucho/tanque/laser) 
 ### 18. Negrito esparso (frases conceituais sem destaque)
 Inverso da armadilha 17. Modelo tende a negritar SÓ specs numéricos (R$ 450, 12W, 4.500 páginas) e deixar frases-chave conceituais em texto normal. Resultado: guide com 2 strongs/1k chars (visualmente fraco) em vez do alvo 4-5/1k dos canônicos.
 
-Antes de salvar, escaneie cada parágrafo procurando **frases-chave conceituais sem negrito**: o critério que decide a compra, a limitação real, o perfil de uso, o valor de referência ("8 GB é o suficiente para a maioria"). Negrite o **termo**, não a frase inteira. ⚠ Isso não é licença para escrever em molde ("o ponto que define X é Y", "o que importa de verdade é A", "o porém real:") — esses clefts eram sugeridos aqui até 2026-08-15 e viraram assinatura; a frase é literal, o negrito é o que a torna escaneável.
+Antes de salvar, escaneie cada parágrafo procurando **frases-chave conceituais sem negrito**: o critério que decide a compra, a limitação real, o perfil de uso, o valor de referência ("8 GB é o suficiente para a maioria"). Negrite o **termo**, não a frase inteira. Isso não é licença para escrever em molde ("o ponto que define X é Y", "o que importa de verdade é A", "o porém real:"): a frase é literal, o negrito é o que a torna escaneável.
 
 **Exemplo real do canon melhoraspirador** (`<h3>Peso e ergonomia</h3>`):
 
@@ -913,7 +872,7 @@ manobras.</p>
 5 strongs em ~50 palavras de conteúdo: 2 specs numéricos (1,43 kg, 5 kg) + 1 frase conceitual destacada (onde o peso se concentra) + 1 spec técnico (rotação 180°/360°). É o ritmo visual que diferencia bom de mediano.
 
 ### 19. Links Amazon nas seções "educativas" (Vale a pena / Como escolher)
-Régua dura: links Amazon SÓ em "Qual a melhor marca" + FAQ + Conclusão. Modelo violou várias vezes na prática (2026-05) colocando links de "Modelo Y" como âncora em Vale a pena P2 quando a régua é texto SIMPLES sem link. Fix: em Vale a pena, citar modelos como referência de preço *"Os preços vão de R$ X (Modelo Y) a R$ Z (Modelo W)"* mas com **Modelo Y / Modelo W em texto puro, sem `<a>`**. Em Como escolher, mesmo critério: produto se for citado vira texto simples.
+Em "Vale a pena" P2, os modelos citados como referência de preço ficam em texto simples, sem `<a>`; o mesmo vale para produto citado em "Como escolher".
 
 Verificação antes de salvar: `grep -c 'amazon\.com\.br' nas seções 1-2 do guide` deve retornar **0**.
 
@@ -934,7 +893,7 @@ Verificação antes de salvar: na seção Conclusão, nenhum `<a href="/{slug}/"
 - **Artigo travado** (`contentLocked: true`): o painel rejeita save em /guide endpoints (HTTP 423). Skill grava direto via Edit tool (não passa pelo painel) — funciona tecnicamente, mas editorialmente: se o artigo tá travado, há razão (SEO estável). Pergunta antes de prosseguir.
 - **Artigo sem produtos** (`products: []` vazio): guide sem categoria concreta fica vago. Abortar e orientar adicionar produtos primeiro.
 - **Falta de bíblia** dos produtos: rodar `bun scripts/sync-biblias-r2.ts --apply` primeiro. Sem as bíblias, o guide fica genérico demais (não consegue inferir critérios da categoria).
-- **Site recém-criado com 1 artigo só**: skill funciona mas peer list vai estar vazia → ZERO links internos. OK, é o estado natural.
+- **Site recém-criado com 1 artigo só**: skill funciona mas peer list vai estar vazia → nenhum link para peer article (links de produto seguem valendo). OK, é o estado natural.
 
 ## Exemplo de invocação
 
@@ -952,15 +911,6 @@ Exemplos com concorrentes:
 - "escreve o guia do X, usa esse texto da Buscapé como referência: [colou texto]"
 
 Args canônico que invoco: `Skill(skill="artigo-guia-escrever", args="melhorimpressora/melhor-impressora-custo-beneficio")` (instrução + concorrentes vão pelo contexto do prompt natural)
-
-### Auto-check de capitalização + duplicação (régua v1.18.3, canon 2026-05-28)
-
-Substituições mecânicas causam (caso real melhorpretreino `a72e7d9`): **14a** duplicação contígua (`sem empilhar suplementos sem empilhar suplementos`; regex `([a-zA-ZÀ-ÿ\s]{8,40})\1`) · **14b** bullet começando com minúscula dentro de `<strong>` (`<strong>aminoácidos…`) · **14c** minúscula após ponto em texto editorial (`(maior dose). pra emagrecer`; ignorar URLs e listas numeradas). Rodar no guideContent inteiro antes de gravar; achou → corrija.
-
-
-## Limitação intrínseca conhecida
-
-Sem schema Zod programático no output (diferente do painel), validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (link interno inventado, char count em 15100, tag fora da allowlist). Mitigação principal: hard-validation manual de links internos contra peer list antes de aplicar; se falhar, regenero o trecho.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

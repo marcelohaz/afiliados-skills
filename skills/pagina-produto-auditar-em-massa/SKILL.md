@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar-em-massa
-description: Audita E CORRIGE VÁRIAS páginas individuais de produto de uma vez, cada uma ISOLADA (sub-agents paralelos, ≤10 por leva). Régua = a canônica da `pagina-produto-auditar` (não reimplementa). Camada MECÂNICA na mãe primeiro (audit-editorial + guardas por slug), depois os sub-agents gastam contexto no JULGAMENTO. Auto-aplica o conserto de FATO que passa no TESTE DA FRASE NOVA; `warn` de julgamento é sempre report-only. Descobre sozinha as pendentes (conteúdo presente + sem relatório `.audits/products/{site}-{slug}-last.md` no DISCO). Aceita `site/slugs`, `site` (todas as pendentes) ou `todas` (rede). Dois commits separados (.mdx consertados / relatórios). NÃO faz deploy.
+description: Audita e corrige VÁRIAS páginas individuais de produto, cada uma num sub-agent isolado, com a régua da pagina-produto-auditar; aplica só o conserto de fato que passa no teste da frase nova e reporta o resto. Use para páginas com conteúdo e sem relatório, ou cuja bíblia foi corrigida depois (site/slugs, site ou todas). Não cria página e não faz deploy.
 ---
 
 ## Parse de input
@@ -40,23 +40,9 @@ Detecção: contém `/` seguido de vírgulas ou de um slug → subset. É a stri
   porque `--audit` é opt-in e a própria skill orienta a pular em lote rotineiro.
 - **NÃO faz deploy.** Para em "commitado + pushado + VPS sincronizada".
 
-## Por que esta skill existe (a dívida que ela quita)
-
-Medido em **2026-08-29**: **72 páginas** da rede com conteúdo e sem nenhuma
-auditoria, **59 delas num site só** (`guiamelhor`), em categorias inteiras
-(fones-de-ouvido 6/6, microfones 1/1, caixas-de-som 25/27). Causa: os lotes de
-criação de jul-ago rodaram sem `--audit`, com a intenção de "auditar separado
-depois" — e o *depois* não tinha ferramenta nem lembrete. O único sinal era um
-chip cinza numa tabela de 171 linhas.
-
-⚠ **Não foi bug de skill nem efeito do rename `escritoriocasa`→`guiamelhor`**
-(esse moveu os 100 relatórios corretamente). Foi opção de invocação. Ver
-[[afiliados.armadilha.paginas-produto-sem-auditoria]].
-
 ## Modelo
 
-Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` no
-Agent tool. NUNCA Sonnet/Haiku.
+Sub-agents com `model: opus` no Agent tool; o alias resolve para o Opus mais novo da conta, sem número de versão a manter. Motivo: é trabalho editorial e de fato, e a régua do projeto é sempre Opus (Sonnet e Haiku ficam fora).
 
 ## Garantia de qualidade (= skill individual)
 
@@ -167,13 +153,7 @@ print(json.dumps(pend, ensure_ascii=False, indent=1))
 PY
 ```
 
-⚠ **A verdade é a EXISTÊNCIA DO ARQUIVO NO DISCO, nunca o `git log`.** O painel
-usa `gitLastCommitMs` no relatório, e isso devolve a data do commit de
-**DELEÇÃO** quando o arquivo foi apagado — a página aparece "Auditado" sem nunca
-ter sido auditada. Medido 2026-08-29:
-`qualamelhorcreatina/atlhetica-creatina-100-pure`, relatório apagado em 18/06 no
-commit "remove audit órfão do slug antigo", página seguiu no ar. Se a skill
-herdasse esse critério, pularia exatamente as páginas que mais precisam.
+⚠ **A verdade é a existência do arquivo no disco, nunca o `git log`:** o `gitLastCommitMs` do painel devolve a data do commit de deleção quando o relatório foi apagado, e a página aparece "Auditado" sem nunca ter sido.
 
 **Também é pendente a página cuja BÍBLIA foi corrigida depois do relatório dela**
 (canon 2026-09-24). Consertar a bíblia não conserta as páginas já escritas a partir
@@ -263,16 +243,7 @@ Retorne: {ok, slug, severity, corrigidos:[{campo,de,para}], issues:[...],
           pendenciasBiblia:[{campo,problema,evidencia}]}
 ```
 
-⚠ **A linha do backup não é redundante com a Invariante.** A exigência já morava
-nas Invariantes desta skill e no passo 20 da individual, e mesmo assim **1 de 6
-sub-agents consertou sem gravar backup** (medido 2026-08-29,
-`produtosanalisados/bio2-pasta-de-amendoim-pura`, execução da Bárbara). O motivo é
-estrutural: a Invariante desta SKILL.md fala com a MÃE, e o sub-agent **não lê
-este arquivo** — ele lê a individual, onde o backup é o item 1 de uma lista
-numerada lá pelo fim. O único texto que alcança o sub-agent é o prompt. Regra da
-casa: **exigência que o sub-agent precisa cumprir mora no prompt**, não só na
-invariante. Sem o backup a Etapa 3.5 fica sem de onde reverter, e a reversão é
-metade da fiscalização que justifica aplicar conserto sem aprovação prévia.
+⚠ **A linha do backup fica no prompt, não só na Invariante.** O sub-agent lê a skill individual, não este arquivo: exigência que ele precisa cumprir mora no prompt. Sem backup, a Etapa 3.5 não tem de onde reverter.
 
 ⚠ **Passe os avisos por bíblia quando ela tiver `dadosInconsistentes`/`auditFlags`.**
 Medido nos lotes de 28/08: avisar caso a caso o que a bíblia decidiu (ex.: "a
@@ -371,10 +342,7 @@ A pendência gravada na Etapa 4 aparece no relatório como pergunta: "posso roda
 reauditoria das páginas escritas antes do conserto (`bun scripts/biblia-pendencias.ts
 reauditar`) é outro pedido.
 
-Por quê: a primeira versão desta etapa (24/09/2026) encadeava bíblia e reauditoria da rede
-no mesmo turno. Num lote de 10 páginas isso virou 9 auditorias de bíblia e 46 páginas em
-12 sites, perto de 11 milhões de tokens que ninguém pediu. Etapa que dispara sub-agents
-fora do lote precisa de sim explícito.
+Por quê: escopo é o pedido. Auditar bíblia e reauditar páginas de outros sites dispara sub-agents fora do lote, e isso precisa de sim explícito.
 
 ⚠ **`--only` + pathspec nos DOIS, nunca `git commit` nu (canon 2026-09-02).**
 Commit sem pathspec leva **o índice inteiro**, e o índice é do REPOSITÓRIO: se
@@ -441,17 +409,6 @@ poder discordar de uma troca sem abrir o diff do git.
 - Não edita a BÍBLIA com as próprias mãos. Achado de raiz vai para a fila (`biblia-pendencias.ts`), e quem edita a bíblia é a `biblia-auditar-em-massa`, que só roda quando o Marcelo pede.
 - Não faz deploy nem `cf-deploy-*`.
 - Não toca em site/página com `contentLocked`.
-
-## Disciplina de release
-
-Skill nova → **vai pro marketplace** (tabela do CLAUDE.md: feature nova = ✓ Sim).
-Checklist: copiar a SKILL.md, **registrar em `plugins[].skills` do
-`.claude-plugin/marketplace.json`** (arquivo sem entrada no manifesto NÃO carrega
-— foi assim que a v1.85.0 falhou), bumpar `metadata.version` + changelog na
-`metadata.description`, conferir a contagem de skills na `plugins[].description`,
-confirmar com `git ls-remote origin HEAD` (nunca pelo log local), realinhar o
-plugin daqui (`claude plugin update afiliados-skills@afiliados-skills`) e mandar o
-mesmo comando, um só, pra Bárbara (ela reinicia o Claude Code depois).
 
 ## Invocação
 

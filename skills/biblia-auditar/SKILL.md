@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar
-description: Audita E CORRIGE bíblia v2 no estilo propor→aprovar (igual artigo-guia-auditar/linkagem-auditar). Procura inconsistências factuais, contradições internas nas DUAS direções (bruto x bruto e CURADO x BRUTO, conferindo o campo `fonte` de cada claim contra o campo bruto que ele nomeia), registro de inconsistencia que descreve conflito ja extinto, claims não verificáveis, frescor de dados e problemas editoriais; lê `avisosAoAgente` antes de tudo e nunca o edita; gera o relatório; propõe fixes cirúrgicos NOS CAMPOS CURADOS (nunca nos brutos) e aplica os que você aprovar. Aceita URL do painel (editor-v2.html?asin=X) OU ASIN/nome diretamente. Usa as diretrizes editoriais embutidas na bíblia como régua. Gera relatório em docs/biblias-v2/.audits/<ASIN>-last.md (o que o painel lê). TODA auditoria carimba lastAuditedAt (+ bumpa lastModified via toISOString) na bíblia e faz push R2, mesmo read-only — é o que zera o "auditar de novo" no painel (que marca stale quando lastFilledAt > lastAuditedAt).
+description: Audita e corrige a bíblia v2 de UM produto (docs/biblias-v2/<ASIN>.json) em contradições entre brutos e entre curado e bruto (inclusive o campo `fonte`), registro de inconsistência já extinto, claim sem lastro, frescor, imagem anexada não lida, naming e voz-comprador. Mexe só nos campos curados, carimba a auditoria e grava o relatório que o painel lê. Use quando pedirem para auditar, revisar ou conferir uma bíblia, por ASIN, nome do produto ou URL do editor-v2. Para várias de uma vez, use biblia-auditar-em-massa.
 ---
 
 ## Parse de input
@@ -14,7 +14,7 @@ Aceita 2 formatos no $ARGUMENTS:
 **B) Args canônicos**:
 - ASIN literal: `B07S61ZJCS`
 - Nome do produto: `HP Laser 107W` (fuzzy match)
-- "todas" → iterar sobre todas as bíblias preenchidas
+- "todas" ou mais de um ASIN → use a `biblia-auditar-em-massa` (um sub-agent isolado por bíblia)
 
 Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B.
 
@@ -26,13 +26,12 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
 
 ## Invariantes
 
-- **PROPOR → APROVAR — exceto o ÓBVIO, que aplica direto (régua Marcelo 2026-06-27).** O relatório sai SEMPRE (read-only é o default). **Fix óbvio e inequívoco → APLICA SEM PEDIR** (e registra ✅ CORRIGIDO no relatório): naming derivável dos próprios dados da bíblia (`marca` vazia quando o nome/`specsAmazon` dizem a marca; marca duplicada no nome; espaço duplo; caractere invisível/BOM), HTML/tag vazado em campo curado, e qualquer conserto determinístico de direção única. **Só fica PROPOR→APROVAR** o que envolve julgamento/ambiguidade (reescrita de voz-comprador→análise, `decisaoEditorial`, adicionar fato de fonte externa, contradição com mais de uma leitura possível): aí lista com diff e espera aprovação granular ("aplica tudo" / "aplica 1,3" / "rejeita 2"). Na dúvida entre óbvio e ambíguo, trate como ambíguo (proponha).
+- **Full-auto: aplica o conserto e reporta o de→para** (mesma régua da `biblia-auditar-em-massa`). Conserto de direção conhecida aplica sem perguntar, inclusive o de julgamento (voz-comprador→análise, `decisaoEditorial` atualizada, fato confirmado em fonte oficial com a URL no registro). Depois de aplicar, re-audite os campos tocados; conserto que não se sustenta volta do backup e vira report-only. Report-only fica só o indeterminável: valor sem fonte única, frescor que exige re-captura, verificação externa não feita, qualquer coisa nos brutos.
 - **Toca nos CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`) **+ naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (derivável dos dados da própria bíblia). **NUNCA edita os campos BRUTOS** (`sobreEsteItem`, `doFabricante`, `descricaoProduto`, `specsAmazon`, `conteudoBrutoFabricante`) **nem `avisosAoAgente`** — os brutos são a fonte factual e o `avisosAoAgente` é o canal do HUMANO; achado neles é report-only (o humano corrige no editor). **NUNCA toca em `lastAuthor`.**
-  ⚠️ `avisosAoAgente` não estava em lista nenhuma até 2026-09-04 (nem curados, nem brutos), o que deixava ambíguo se a auditoria podia reescrevê-lo. Não pode.
 - **`lastAuditedAt`: TODA auditoria grava `lastAuditedAt = new Date().toISOString()` na bíblia (mesmo read-only, sem nenhum fix de curadoria).** É o carimbo que faz o painel saber que a bíblia foi auditada e parar de marcar "auditar de novo" (o painel compara `lastFilledAt > lastAuditedAt`; regra Marcelo 2026-06-15). Ver Etapa 4.5.
 - **`lastModified`: bumpe via `new Date().toISOString()` (UTC correto) SEMPRE que gravar a bíblia** (e como a Etapa 4.5 sempre grava `lastAuditedAt`, isso vale pra toda auditoria, não só quando aplica fix). Sem isso, o push do R2 NÃO vence: o sync compara `lastModified` embutido (local) vs `uploadedAt` do objeto R2 (remoto), e um objeto R2 enviado depois do timestamp embutido faz o pull CLOBBERAR o seu edit (incidente real 2026-06-09 na B0D21JPCF9). **NUNCA hand-rolle o timestamp via getHours/pad** (bug de timezone: vira 2-3h no futuro e quebra o audit-stale). `toISOString()` é UTC real, sem esse bug. **NUNCA toque em `lastAuthor`.**
 - **Escopo: FATO + DADO LIMPO + NAMING, não voz editorial** (ver categoria 5). NÃO flague/conserte travessão, muleta "declarado pelo fabricante", superlativo, concordância PT-BR na bíblia — é da criação do review/página (reescreve e tem auto-check próprio).
-- **`auditFlags` gravado junto do `lastAuditedAt`** (Etapa 4.5): avisos semânticos `{type,label}` report-only pro chip do painel (`'wrong-info'`/`'off-niche'`/`'review'`). ⚠ **Desde 2026-08-25 o chip acende SÓ para `'wrong-info'`/`'off-niche'`** — `'review'` é nota de auditoria: fica legível no relatório `-last.md` e no editor ("ver relatório de auditoria"), não pinta a coluna Observações e não tira a bíblia de "Prontos para clonar". **Grave `'review'` exatamente como antes** (o tipo continua válido e é o registro do achado); só não o dose achando que polui o painel. É o que surfaça contaminação cross-produto (dado de outro produto) que o detector mecânico não pega. **Esvaziar (`[]`) quando limpo** é obrigatório (chip preso = bug).
+- **`auditFlags` gravado junto do `lastAuditedAt`** (Etapa 4.5): avisos semânticos `{type,label}` report-only. `'wrong-info'` e `'off-niche'` acendem o chip na coluna Observações; `'review'` é nota de auditoria (fica no relatório `-last.md` e no editor, não pinta a coluna nem tira a bíblia de "Prontos para clonar"), e é gravada sempre que o achado couber. É o que surfaça contaminação cross-produto que o detector mecânico não pega. Esvaziar (`[]`) quando limpo é obrigatório: chip preso é bug.
 - **O que é auto-fixável**: lixo de dado nos campos curados (HTML/tags, caractere invisível/BOM, espaço duplo), naming (marca placeholder/vazia derivável dos dados, marca duplicada no nome), spec ambiental/origem que vazou pro curado, voz-comprador crua → observação analítica, `dadosInconsistentes.decisaoEditorial` quando a verificação resolveu o número, e adicionar aos curados um fato CONFIRMADO por fonte externa. Destes, o **óbvio/determinístico aplica direto** (naming derivável, HTML-strip, BOM, espaço duplo); o que tem **julgamento** (reescrita de voz, decisaoEditorial, fato externo) vai por **propor→aprovar** (ver 1º invariante). **Report-only** (nunca auto-fixar): contradição no raw sem valor certo conhecido, frescor (precisa re-captura), claim que exige verificação externa não feita, qualquer coisa nos campos brutos.
 - **Nunca invente achados.** Se não encontrou problema numa categoria, diga "nenhum". Mentir gera retrabalho pior do que um audit vazio.
 - **Toda afirmação precisa de evidência.** Cite trecho literal da bíblia (use blockquote curto < 15 palavras) OU URL externa que consultou. Achado sem evidência é descartado.
@@ -50,9 +49,7 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
    ⚠️ **Leia `avisosAoAgente` ANTES de qualquer checagem.** É o único canal em que o humano manda na
    bíblia, e costuma explicar o que você está prestes a interpretar como defeito. Confira instrução por
    instrução se a bíblia obedece; cada uma não respeitada é achado com a instrução literal como evidência.
-   Sem avisos, siga. Caso real: o aviso *"Atualizei a pagina do fornecedor"* na B0FGDJNXPP era a chave dos
-   7 achados daquela auditoria, e sem ele o relatório teria descrito sintoma em vez de causa. Medido em
-   2026-09-04: 17 bíblias da rede têm aviso, e 9 delas nunca foram auditadas.
+   Sem avisos, siga.
 1.5. **Ler a fila de pendências vindas das páginas** (canon 2026-09-24):
    `bun scripts/biblia-pendencias.ts list <ASIN>`. Cada item é um problema que a auditoria de uma
    PÁGINA achou nesta bíblia, com o campo, o problema e a evidência do bruto. **Entrada obrigatória:**
@@ -61,7 +58,7 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
    ninguém lia de volta: em 24/09 seis bíblias aprovadas tinham problema de fato que só as páginas viram.
 2. **Rodar as 5 categorias de checagem** (abaixo). Anote achados em memória.
 3. **Verificação externa opcional**: Se houver claims numéricos específicos (wattagem, dpi, capacidade) e dúvida, use `WebFetch` em `identidade.urlFabricante` pra cruzar. Não navegue em sites aleatórios; priorize fabricante oficial > Amazon ao vivo > nada.
-3.5. **Auto-baixar imagem pendente** (régua 2026-06-03 — a auditoria FECHA o gap, não só sugere): se `identidade.imagemAmazon` está preenchido **e** `docs/biblias-v2/<ASIN>.webp` NÃO existe, baixe agora antes de escrever o relatório:
+3.5. **Auto-baixar imagem pendente** (a auditoria FECHA o gap, não só sugere): se `identidade.imagemAmazon` está preenchido **e** `docs/biblias-v2/<ASIN>.webp` NÃO existe, baixe agora antes de escrever o relatório:
    ```bash
    bun scripts/baixar-imagens.ts <ASIN>           # baixa → docs/biblias-v2/<ASIN>.webp + grava imagemLocal
    bun scripts/sync-biblias-r2.ts --apply --push  # persiste webp + JSON no R2 (senão o auto-sync sobrescreve)
@@ -74,9 +71,14 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
 4. **Escrever relatório**: `Write docs/biblias-v2/.audits/<ASIN>-<YYYY-MM-DD-HHMM>.md` + `Write docs/biblias-v2/.audits/<ASIN>-last.md` (mesmo conteúdo, caminho fixo pro painel ler). Crie o diretório `.audits/` se não existir.
 4.5. **Carimbar a auditoria + gravar `auditFlags` na bíblia (SEMPRE, mesmo read-only)**: backup (`cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/$(date +%Y-%m-%d)/<ASIN>-v2-$(date +%H%M%S).json`), depois script que lê o JSON e seta, no mesmo write:
    - **`b.lastAuditedAt = new Date().toISOString()`** + **`b.lastModified = new Date().toISOString()`** (mesmo instante; mantém `lastAuthor`; NÃO toca curados/brutos). Zera o "auditar de novo".
-   - **`b.auditFlags`** = `[{ type, label }]` com os achados SEMÂNTICOS **report-only** que sobram — gravados na bíblia (`wrong-info`/`off-niche` acendem o chip na coluna Observações; `review` é nota, ver invariante acima) (o detector mecânico `contaminado` só pega marca/ASIN; estes são os que só a auditoria vê). `type`: **`'wrong-info'`** — SÓ em 3 casos (todos comprometem a confiança factual): **(a) ASIN da captura divergente** — o ASIN que aparece DENTRO do `specsAmazon` (ficha técnica tem a linha `ASIN  B0...`) é DIFERENTE do `asin` da bíblia → a captura inteira é de outro produto. ⚠️ **Este é o ÚNICO gatilho de `wrong-info` para o campo `specsAmazon`**: teste mecânico de igualdade de ASIN, NÃO julgamento de conteúdo. **(b) fato errado em campo CURADO** — o editor escreveu algo factualmente falso sobre ESTE produto num campo curado (ex: dica de "como recarregar" uma caneta passiva). **(c) contaminação cross-produto** — texto/dado de um produto GENUINAMENTE DIFERENTE (outra marca/outro modelo, não variante-irmã do mesmo modelo) colado em qualquer campo (ex: descrição de outro produto vazada no bruto). ⚠️ **NÃO acende NENHUM chip (nem `wrong-info`, nem `review`)**: divergência de ATRIBUTO entre `specsAmazon` e fabricante (CPU/tela/RAM/SO/bateria/peso/Wi-Fi capturado errado) **com o ASIN da ficha CONFERINDO**, atributos espúrios de listagem (AWD, Art Deco, "placa dedicada", etc.), ou material de variante-irmã (4G×Wi-Fi, base×Ultra) no `conteudoBrutoFabricante` com ASIN certo — é só ruído de captura/listagem; o produto é o certo e o conteúdo curado usa o valor do fabricante. **Ação certa: registrar em `dadosInconsistentes` (fix de direção conhecida, Etapa 9) — NÃO virar flag.** Critério-âncora do Marcelo (2026-06-22): **o campo `specsAmazon` só gera "informações erradas" se o ASIN que está lá for diferente do da bíblia; e divergência de atributo com ASIN certo NÃO gera nem "revisar" — não é problema, é ruído.** **`'off-niche'`** (tipo de produto do bruto contradiz a `categoria`/`subcategoria` da PRÓPRIA bíblia — raro; NÃO é "produto no site errado"), **`'review'`** (SÓ: frescor que exige re-captura / claim que exige verificação externa NÃO feita e que importa pro review / valor genuinamente incerto. ⚠️ **NÃO** emitir `review` por divergência de atributo `specsAmazon`×fabricante nem por variante-irmã no bruto. **NÃO** duplicar estados que já têm chip operacional próprio — `sem opiniões`/`sem preço`/`sem texto do fabricante`/`indisponível` saem dos campos de dado, não de `auditFlags`). `label` ≤ ~120 ch com o motivo concreto, sem aspas duplas. **Só achado report-only vira flag** (o que vai ser auto-fixado na Etapa 9 NÃO entra). **Se nada qualifica → `b.auditFlags = []`** (OBRIGATÓRIO esvaziar — re-auditar depois do conserto APAGA o chip; chip preso = bug).
+   - **`b.auditFlags`** = `[{ type, label }]` com os achados report-only que sobram (o que a Etapa 9 conserta não entra). Princípio: chip é para quando a bíblia descreve outro produto ou afirma fato falso deste; ruído de captura do próprio produto não é chip.
+     - `'wrong-info'`: (a) o ASIN escrito dentro do `specsAmazon` difere do `asin` da bíblia (único gatilho para esse campo, teste de igualdade e não julgamento de conteúdo); (b) fato falso sobre este produto num campo curado; (c) texto ou dado de produto genuinamente diferente (outra marca ou modelo, não variante-irmã) em qualquer campo.
+     - Divergência de atributo entre `specsAmazon` e fabricante com o ASIN conferindo, atributo espúrio de listagem e material de variante-irmã com ASIN certo não acendem chip: registre em `dadosInconsistentes` (Etapa 9).
+     - `'off-niche'`: o tipo de produto do bruto contradiz a `categoria`/`subcategoria` da própria bíblia (raro; não é "produto no site errado").
+     - `'review'`: frescor que exige re-captura, verificação externa não feita que importa para o review, valor genuinamente incerto, fato de imagem anexada que não está em nenhum campo de texto. Estado com chip próprio (sem opiniões, sem preço, sem texto do fabricante, indisponível) não vira flag.
+     - `label` até ~120 caracteres, motivo concreto, sem aspas duplas. Nada qualifica → `b.auditFlags = []`.
    - Write `JSON.stringify(b, null, 2) + '\n'`.
-   Vale mesmo read-only (sem fix). **`specsAmazon`: wrong-info SÓ por ASIN divergente** (o ASIN dentro da ficha ≠ `asin` da bíblia → captura de outro produto). **Contaminação cross-produto** (texto de um produto GENUINAMENTE diferente — outra marca/modelo — vazado em qualquer campo) também é `'wrong-info'` que persiste até re-captura. Mas **atributo capturado errado do PRÓPRIO produto, com ASIN certo, NÃO acende chip nenhum** (nem `wrong-info` nem `review`) — registra em `dadosInconsistentes` e segue; não é problema, é ruído de captura. (Se DEPOIS aplicar fixes na Etapa 9, re-bumpa o lastModified lá; tudo bem.)
+   (Se aplicar fixes na Etapa 9, re-bumpa o `lastModified` lá.)
 5. **Commit + push + dispatch VPS pull** (auditorias `-last.md` são tracked no git; timestampadas são gitignored):
    ```bash
    git add docs/biblias-v2/.audits/<ASIN>-last.md
@@ -88,14 +90,9 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
    `painel-vps-pull.sh` propaga pro painel da VPS via Basic Auth (creds em `.env.painel-skills`). Sem isso, Bárbara não vê o audit no painel até alguém puxar manualmente.
 6. **Reportar no chat**: 3-5 linhas com total de achados por severidade + caminho do relatório. Não cole o relatório inteiro no chat — só o resumo.
 
-7. **Aplicar o óbvio + propor o ambíguo**: separe os achados auto-fixáveis (ver invariante) em dois:
-   - **Óbvio/determinístico** (naming derivável dos dados como `marca` vazia, marca duplicada no nome, espaço duplo, BOM, HTML-strip em campo curado) → **APLICA DIRETO** junto com a Etapa 4.5/9 (backup → Edit → bump `lastModified`), sem perguntar, e marca ✅ CORRIGIDO no relatório.
-   - **Ambíguo/com julgamento** (reescrita de voz-comprador→análise, `decisaoEditorial`, fato de fonte externa, contradição com leitura dupla) → lista numerado com diff `ANTES → DEPOIS` apontando o campo exato e **espera aprovação** (passo 8).
-   Achados report-only (raw, frescor, claim não-verificado) ficam só no relatório. Se não houver nenhum fix, ainda assim rode a Etapa 10 (o push do R2 propaga o carimbo `lastAuditedAt` da Etapa 4.5).
+7. **Aplicar os consertos**: backup → Edit → bump `lastModified`, marcando ✅ CORRIGIDO no relatório com o diff `ANTES → DEPOIS`. Re-audite os campos tocados antes de seguir. Achados report-only ficam só no relatório. Sem conserto nenhum, siga para a Etapa 10 (o push leva o carimbo da 4.5).
 
-8. **Esperar aprovação granular** (só pros fixes AMBÍGUOS do passo 7): "aplica tudo" / "aplica 1,3" / "rejeita 2" / "refaz 1". NÃO aplica esses sem isso. (Os óbvios já foram aplicados no passo 7, não esperam aqui.)
-
-9. **Aplicar (óbvios + aprovados)** (backup → Edit cirúrgico):
+9. **Aplicar** (backup → Edit cirúrgico):
    - Backup: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/$(date +%Y-%m-%d)/<ASIN>-v2-$(date +%H%M%S).json`.
    - Editar os campos curados (óbvios + aprovados) **e o naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (script que lê o JSON, muta os campos, escreve `JSON.stringify(b, null, 2) + '\n'`). NUNCA tocar nos campos brutos.
    - **Bumpar `b.lastModified = new Date().toISOString()`** (ver invariante — sem isso o push é clobberado). Manter `lastAuthor`.
@@ -118,10 +115,7 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
 - `sobreEsteItem` × `doFabricante` × `descricaoProduto` × `specsAmazon` × `conteudoBrutoFornecedor`
 - Exemplos: "120Hz" num bloco e "60Hz" noutro; "4.500 páginas" vs "3.000 páginas"; `identidade.modelo` diferente do nome que aparece dentro de `doFabricante`.
 
-**CURADO × BRUTO** — ⚠️ **esta cópia tinha PERDIDO a cláusula.** O `regras-biblia.md` §4 sempre disse
-*"claim num campo curado que contradiz o bruto"*, e aqui só havia bruto × bruto. Restaurada em
-2026-09-04, depois de a B0FGDJNXPP passar por auditoria com um claim que a própria fonte declarada
-contradizia. Três checagens:
+**CURADO × BRUTO** — três checagens:
 
 **(a) `fonte` é uma AFIRMAÇÃO DE PROCEDÊNCIA — confira-a.** Cada item de `pontosFortes`/`pontosFracos`
 declara de onde veio, e o vocabulário mapeia direto nos brutos:
@@ -136,9 +130,6 @@ opiniões    →  opinioesCompradores
 **Valor que não está no campo que a `fonte` nomeia é 🔴.** A exceção é o item vindo de verificação
 externa (Categoria 2), e aí o registro tem que carregar a URL: sem ela, "fonte: fabricante" num dado
 que o fabricante não declara é claim sem lastro com carimbo de lastro, que é pior que claim solto.
-
-Medido em 2026-09-04: 7885 itens na rede, só **24 sem `fonte`**, e os quatro tokens acima cobrem 5188.
-O campo é confiável o bastante pra virar teste.
 
 ⚠️ **NÃO é claim sem lastro: valor DERIVADO do bruto** por conversão de unidade ou arredondamento
 ("2,7 polegadas (6,9 cm)", "1 g (1000 mg)", "2,92 kg" virando "cerca de 3 kg"). O que a checagem procura é
@@ -158,14 +149,7 @@ eram 5 de 6.
 onde não há `fonte` pra conferir. Sinal barato de que vale olhar: `avisosAoAgente` mencionando
 re-captura, troca de página do fabricante ou variante errada.
 
-⚠️ **Não invente detector mecânico pra (b) e (c) — foi tentado e não fecha.** `lastModified >
-lastAuditedAt` dispara em **158 de 589** bíblias auditadas, com 30 numa janela de 4 minutos (assinatura
-de lote, não de edição). `capturedAt` não se move em edição manual do painel: na B0FGDJNXPP ele
-continuou 28/07 com o bruto trocado em 04/09. E um heurístico de "valor citado ausente do bruto"
-devolveu 165 candidatas das quais as 3 amostradas eram falso positivo de unidade ("2000 W" contra
-`2000 (220V)`). **Quem pega é a leitura**, que você já está fazendo de qualquer jeito. O painel também
-não avisa: por decisão de 2026-06-15 o chip "auditar de novo" é keyado em `lastFilledAt`, e a tooltip
-dele diz literalmente *"Edição manual simples não dispara isso"*.
+Não há detector mecânico confiável para (b) e (c): `lastModified > lastAuditedAt` dispara em lote, `capturedAt` não muda em edição manual e o heurístico de valor ausente erra por unidade. Quem pega é a leitura. O chip "auditar de novo" do painel também não avisa, porque é keyado em `lastFilledAt`.
 
 ### 2. Verificação externa
 Claims numéricos ou categóricos específicos que podem ser checados:
@@ -181,17 +165,15 @@ Claims numéricos ou categóricos específicos que podem ser checados:
 ### 4. Completude crítica
 Campos vazios que comprometem review:
 - `identidade.imagemLocal === null` → imagem pendente. **Resolva no passo 3.5 (auto-download)** em vez de só flaggar: se `imagemAmazon` existe, baixe; se a URL for inválida ou null, flague conforme o passo 3.5. Só sobra como achado se o download não for possível.
-  - **Path canônico desde 2026-05-17**: `docs/biblias-v2/<ASIN>.webp` (gerado pelo `scripts/baixar-imagens.ts` ou pelo botão "Baixar imagem" do painel). NÃO flaggar como problema se o `imagemLocal` aponta pra esse caminho — é o esperado. O fluxo atual é "bíblia central detém a webp; sites copiam dela na hora de criar artigo/página de produto".
-  - **Path legado**: `sites/{site}/public/images/products/<slug>.webp` ainda aparece em bíblias antigas (pré-migração). Aceitar sem flag — funciona, só não é o padrão atual.
+  - `imagemLocal` em `docs/biblias-v2/<ASIN>.webp` (padrão) ou em `sites/{site}/public/images/products/<slug>.webp` (bíblias antigas) está certo; não flague nenhum dos dois.
 - `specsAmazon === null && conteudoBrutoFornecedor === null` → agente não tem ficha técnica pra trabalhar.
 - `opinioesCompradores === null && sentimentoCompradores.length === 0` → review sem voz de comprador.
 - `doFabricanteImagens.length === 0` mas `doFabricante` é longo → provavelmente há imagens de infográfico não cadastradas.
 - **🔴 IMAGEM ANEXADA COM CONTEÚDO AUSENTE DA BÍBLIA (canon 2026-07-26).** Se `conteudoBrutoFabricanteImagens` ou `doFabricanteImagens` tiverem **qualquer item, ABRA e leia cada uma** (mesmo procedimento da etapa 2.5 da `biblia-preencher`: `curl` → `sips -Z 1400` → `Read`). Se a imagem traz **dado factual** (tabela nutricional, dose, ficha técnica) que **não aparece em nenhum campo de texto**, é achado 🟡 e vira `auditFlags` tipo `review`.
   - **Pule só se** `imagensVerificadasEm` existe E a lista de imagens não mudou desde então. Qualquer imagem nova → lê tudo.
-  - **Conflito de alérgeno entre imagem e `specsAmazon` é achado 🔴, e NÃO se escolhe lado** — traz pra decisão humana. Caso real B0F9ZVXXKH: rótulo "NÃO CONTÉM GLÚTEN" vs specsAmazon "Contém: Glúten".
+  - **Conflito entre imagem e `specsAmazon` sem valor único (alérgeno, potência, capacidade, qualquer campo) é achado 🔴, e não se escolhe lado**: traga para decisão humana.
   - ⚠️ **Não confundir com o passo 3.5**, que cuida da FOTO do produto (`imagemAmazon` → `.webp`). Lá a imagem é arquivo a baixar; **aqui é conteúdo a ler**.
-  - **Por que existe:** a regra logo acima só reclamava quando a imagem FALTAVA. Quando ela ESTAVA lá, nenhuma skill mandava abrir — 216 bíblias (40% da base) foram curadas e 123 auditadas sem ninguém ler uma única imagem anexada.
-- **Recado no lugar do conteúdo.** `conteudoBrutoFabricante` curto (< 200 chars) casando com padrão de bilhete (`/est[áa] na imagem|em anexo|ver anexo|texto na imagem/i`) **não é conteúdo do fabricante** — é a editora avisando que o dado está na imagem. Achado 🟡: a bíblia está sem a voz do fabricante apesar do campo parecer preenchido. O detector do painel já trata isso desde 2026-07-26 (`server.ts`, `cbFabEhRecado`).
+- **Recado no lugar do conteúdo.** `conteudoBrutoFabricante` curto (< 200 chars) casando com padrão de bilhete (`/est[áa] na imagem|em anexo|ver anexo|texto na imagem/i`) **não é conteúdo do fabricante** — é a editora avisando que o dado está na imagem. Achado 🟡: a bíblia está sem a voz do fabricante apesar do campo parecer preenchido. O detector do painel já trata isso (`server.ts`, `cbFabEhRecado`).
 
 ### 5. Higiene de dado + naming (NÃO voz editorial)
 
@@ -210,7 +192,6 @@ Flag SÓ nos campos curados (`sentimentoCompradores`, `angulosConversao`, `ponto
   - 🎯 **Escopo por campo — as duas regras NÃO cobrem os mesmos campos:** **(1) cardinalidade vale em TODOS os curados**, inclusive `observacoesAgente`/`dadosInconsistentes` (contagem errada é erro de FATO em qualquer campo). **(2) moldura vale só nos que ALIMENTAM o review** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`) — nos internos a moldura é inofensiva, são recado pro agente e nunca viram texto renderizado. **Não flague moldura em `observacoesAgente`/`dadosInconsistentes`.**
   - ✅ **NÃO flague** (falso-positivo clássico): frequência sem sujeito humano ("qualidade sonora é o tema mais recorrente", "aparece em dois relatos") = a destilação CERTA; `relatos`/`opiniões` como sujeito ("relatos independentes citam X") = o hedge que a régua prescreve; e `pontosFortes[N].fonte = "opiniões, recorrente em 3 relatos"`, que é metadado de procedência e **deve** registrar cardinalidade.
   - **Por que é FATO e não estilo** (a objeção é "o review reescreve mesmo"): a moldura plural **funde claims de contagens diferentes e apaga o número**. Caso real: `"Compradores destacam som honesto e valor justo"` — 1 relato pro primeiro, 2 pro segundo. Fundido, o número some da bíblia e o review a jusante não tem como hedgear certo. É perda factual irreversível — por isso entra aqui, enquanto travessão/superlativo não entram.
-  - **Origem da regra (2):** varredura de 2026-07-30 em 634 bíblias achou a moldura em 390, **251 já auditadas** (78% das afetadas), liderada por `compradores relatam` (177×) — o plural exato do exemplo da regra (1). Havia contradição de fonte: a `biblia-preencher` LIBERAVA o plural com 2+ reviews, então a curadoria produzia e a auditoria absolvia. Os dois lados foram corrigidos na mesma data. Nove auditores Opus independentes erraram igual no mesmo lote: instrução contraditória, não descuido.
 - **Voltagem citada sem bivolt explícito** (FATO — wrong-info, canon 2026-06-28; endurecida 2026-06-29): campo curado menciona voltagem ("110V"/"220V"/"127V"/"vendido em versões 110V e 220V"/"bivolt"/"funciona em qualquer tomada"/"sem transformador") MAS o `specsAmazon`/`descricaoProduto` do ASIN **não** traz "bivolt" (nem faixa contínua "100-240V"/"110-220V") explícito. A régua nova é **não citar voltagem na curadoria** (muda por ASIN, o comprador escolhe a versão no anúncio) — a ÚNICA exceção é o `specsAmazon` dizer "bivolt"/faixa explícito. **Auto-fixável: REMOVER a menção de voltagem do campo curado** (não trocar por "vendido em versões..." — isso ainda é citar voltagem). O erro raiz é ler copy de potência dual-SKU (`"1800W 110V | 2000W 220V"`, `"110/127V e 220V"`) como bivolt — são SKUs separados. **Aparelho de aquecimento de alta potência é voltagem única por design** (air fryer, ferro, secador, chaleira). Exceção de classe (bivolt comum, citar só se a ficha confirmar): impressora e cooktop a GÁS. Caso real: NA341/Midea/Mondial/WAP (air fryers) afirmados bivolt → propagou pra 4 sites (2026-06-28).
 
 Specs ambientais/origem/voz-comprador valem **só nos campos curados** — não nos brutos (`sobreEsteItem`/`doFabricante`/`descricaoProduto`/`opinioesCompradores` são texto colado/cru; preserva como referência).
@@ -234,7 +215,7 @@ Template exato — use blocos idênticos pra o painel parsear visualmente:
 - **Campo:** `<path.no.json>`
 - **Evidência:** "<trecho literal < 15 palavras>" (ou URL externa se for verificação)
 - **Problema:** <descrição em 1-2 frases>
-- **Sugestão:** <o que fazer — se for auto-fixável num campo curado, vira proposta de fix no passo 7 (você aprova); senão fica report-only>
+- **Sugestão:** <o que fazer — se for auto-fixável num campo curado, é aplicado no passo 7; senão fica report-only>
 
 ## 🟡 Avisos (<M>)
 
@@ -263,19 +244,11 @@ Template exato — use blocos idênticos pra o painel parsear visualmente:
 - Se errar na auditoria (ex.: confundiu `specsAmazon` com `sobreEsteItem`), o humano vê no diff do markdown na próxima rodada. Não há vergonha em revisar o próprio relatório.
 
 
-## Régua editorial PT-BR — REFERÊNCIA (não aplicada por este audit)
-
-> ⚠️ **FORA do escopo do audit de bíblia (canon 2026-06-14).** Estas são regras de VOZ aplicadas pelas skills de criação (`artigo-review-criar`/`pagina-produto-criar`) sobre o texto reescrito — NÃO pela bíblia. Mantidas aqui só como referência do que aquelas skills cuidam. **NÃO flague nem conserte concordância/muleta/voz-corporativa/health-YMYL na bíblia** (a bíblia é fato; o review refaz a voz). O audit de bíblia para na categoria 5 (dado limpo + naming + voz-comprador→fato).
-
-### (Régua de VOZ — movida pras skills de criação)
-
-As regras de concordância PT-BR, linguagem artificial, voz consultiva, health-YMYL, voz-eximir-responsabilidade ("declarado pelo fabricante") e chavões por nicho **NÃO são deste audit** — são aplicadas por `artigo-review-criar`/`pagina-produto-criar` sobre o texto reescrito (cada uma tem a régua + auto-check próprios). O audit de bíblia para na categoria 5 (dado limpo + naming + voz-comprador→fato). Removidas daqui pra não induzir conserto de estilo na bíblia (era trabalho dobrado).
-
 ## Exemplo de invocação
 
 Usuário: "audita a bíblia B098YHFT9S"
 Ou: "audita a impressora Epson L3250"
-Ou: "audita todas as bíblias" (iterar sobre `docs/biblias-v2/*.json`)
+Ou: "audita todas as bíblias" → `biblia-auditar-em-massa todas`
 
 Você aceita ASIN direto, nome parcial de produto (fuzzy match pelo `identidade.nome`), ou "todas".
 

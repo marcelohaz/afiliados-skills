@@ -1,6 +1,6 @@
 ---
 name: artigo-intro-escrever
-description: Escreve a introdução do artigo (body markdown pós-frontmatter). Aceita URL do painel OU site/slug. Régua: §1 = pergunta com a keyword em bold nas ~5 primeiras palavras; §final = keywordPlural em bold + '. ✅'; 2-3 parágrafos, 300-800 chars; exatos 2 bolds; tom natural (máx 1 coloquialismo); sem critérios técnicos (função do guide), sem travessão, sem marcas/modelos. ANTI-CLONE intra-site: lê as intros irmãs do site antes de gerar (famílias rotativas de abertura/miolo/CTA, zero sequências ≥6 palavras). Também conserta o title quando está stub, sem contagem (N≥3) ou colidindo com irmão cross-site (pool P1-P4, lead=keyword, ≤60 chars). Backup + commit + push + sync VPS.
+description: Escreve a introdução de um artigo comparativo (o markdown logo depois do frontmatter do .mdx) e corrige o title quando é esboço, está sem a contagem de produtos ou repete o título de um artigo irmão em outro site da rede. Lê as intros dos outros artigos do site antes, para não repetir abertura nem frase. Use quando o artigo precisa de intro nova ou reescrita. Aceita URL do painel ou site/slug. Grava com backup, commit, push e sync da VPS.
 ---
 
 ## Parse de input
@@ -40,10 +40,10 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 - **Toca em até DOIS lugares: o body do .mdx (intro) E a linha `title:` do frontmatter.** O `title:` é reescrito quando está stub/fora do padrão **OU colide com um irmão** da rede (ver "## Régua do título do artigo" → "Divergência cross-site" abaixo). Todo o resto (description, keyword, keywordPlural, listHeading, products, guideContent) fica intacto.
 - **Body é puro markdown.** Verificado: zero artigos do monorepo têm componentes MDX no body — toda a estrutura (TabelaTop, ProductSection, ReviewLayout, etc) é montada pelo `<SlugPage>` via thin-wrapper em `pages/[slug].astro`. Skill nunca insere `<TabelaTop>` ou similar.
 - **2 a 3 parágrafos** (obrigatório). Cada parágrafo separado por linha em branco. 4 parágrafos é EXCESSO — intro vira ensaio.
-- **300 a 800 chars no total** (todo o body somado). Alvo: 500-700 chars. Antes era 300-1500 e sub-agents miravam 900-1400, tornando a intro cansativa — apertado em 2026-05-26 após feedback "muito longa, muito explicativa".
+- **300 a 800 chars no total** (todo o body somado). Alvo: 500-700 chars. Intro mais longa fica cansativa e explicativa; explicar é função do guia.
 - **KEYWORD CEDO (v1.31.0, canon Marcelo 2026-06-10)**: o `**{keyword}**` começa dentro das **primeiras ~5 palavras** do §1. A abertura é um verbo de busca curto ("Procurando a", "Precisa de uma", "Quer saber qual a"); TODO o enriquecimento da pergunta (cenário, dor, benefício) vem DEPOIS da keyword, na mesma frase.
-- **ANTI-CLONE INTRA-SITE (v1.31.0)**: gerar SÓ depois de ler as intros dos outros artigos do site (passo 6.5). Proibido: qualquer sequência de ≥6 palavras igual a uma intro irmã; repetir a família de abertura/arremate/miolo/CTA já usada no site. Incidente-origem: 3 intros idênticas no melhorimpressora (2026-06-10) porque a skill copiava o exemplo canônico.
-- **VOZ NATURAL (canon 2026-08-15, substitui "tom natural v1.31" + "tom conversacional 2026-05-26")**: ver bloco "## Voz natural" abaixo. Em resumo: verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, sem molde de abertura/arremate/CTA, no máximo 1 expressão coloquial leve. A intro não pode soar mais formal que os reviews, nem mais "esperta" que eles.
+- **ANTI-CLONE INTRA-SITE (v1.31.0)**: gerar SÓ depois de ler as intros dos outros artigos do site (passo 6.5). Proibido: qualquer sequência de ≥6 palavras igual a uma intro irmã; repetir a família de abertura/arremate/miolo/CTA já usada no site.
+- **VOZ NATURAL**: ver bloco "## Voz natural" abaixo. Em resumo: verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, sem molde de abertura/arremate/CTA, no máximo 1 expressão coloquial leve. A intro não pode soar mais formal que os reviews, nem mais "esperta" que eles.
 - **NÃO citar instituições científicas** (OMS, FAO, ANVISA, FDA, INMETRO, IFOS). Esse tipo de menção quebra o tom de comparador editorial e vira página de saúde. Se a info importa, ela aparece nos reviews (como feature de produto certificado) ou no guide.
 - **NÃO dar recomendações com número** ("X recomenda N mg/dia"). Números OK quando aparecem nos reviews depois (são features dos produtos comparados). Na intro, números viram recomendação acadêmica e quebram o tom.
 - **NÃO entrar em critérios técnicos detalhados** que pertencem ao `guideContent` H2 "Como escolher". Listar "três fatores que diferenciam premium de entrada" é função do guia, não da intro. Intro fica em PERFIL DE USO e PANORAMA, sem ensinar a escolher.
@@ -62,13 +62,13 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
    - Identifique `niche` em `docs/painel/sites-meta.json` (ex: Pré Treino, Creatinas, Tablets)
    - Read `docs/painel/_data/chavoes-por-nicho.json` — use `_genericos` + bloco do nicho
    - `termos_banidos_absoluto` e tetos **0**: regra DURA. `ingles_max`, `medico_tecnico_max`, `industrial_max`, `indicacao_medica_max`: referência, não limite (não troque a palavra certa pra baixar contagem)
-   - Banidos absolutos sempre: lineup, SKU, ASIN, datasheet, notificado, trade-off, hardcore
+   - Banidos absolutos: `_genericos.termos_banidos_absoluto` do JSON.
    - **⚠ `_sites_aplicaveis` é o gate do bloco de nicho (canon 2026-08-15):** se o slug do site não está na lista do bloco, **o bloco não vale** e sobra só o `_genericos`. Não force pelo `niche`. Reporte como sugestão de incluir o site no JSON, nunca como defeito do texto.
    - **O `_genericos` vale SEMPRE e é o que mais dispara:** `termos_banidos_absoluto`, `chavoes_estruturais_max` (as 4 variantes de "seleção" têm cap **0**) e `industrial_max` (`declarado` 3, `fabricante` 12). Conte ele antes de qualquer bloco de nicho.
 
 1. **Parse args**: detecta URL vs canônico, extrai `site` e `slug`. Valida `[a-z0-9-]+` em ambos.
 
-1.5. **Git pull antes de ler arquivos locais** (CRÍTICO — evita estado stale):
+1.5. **Git pull antes de ler arquivos locais** (evita estado stale):
    ```bash
    bash scripts/git-pull-seguro.sh "skill-artigo-intro-escrever-temp"
    ```
@@ -104,7 +104,7 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
      echo "── $(basename $f)"; awk 'BEGIN{c=0} /^---$/{c++; next} c>=2{print}' "$f"
    done
    ```
-   Anotar de cada irmã: a ABERTURA (primeiras palavras), a família do MIOLO e o CTA do fecho. A intro nova não pode repetir nenhuma dessas famílias nem qualquer sequência de ≥6 palavras. Foi a ausência deste passo que produziu 3 intros idênticas no melhorimpressora.
+   Anotar de cada irmã: a ABERTURA (primeiras palavras), a família do MIOLO e o CTA do fecho. A intro nova não pode repetir nenhuma dessas famílias nem qualquer sequência de ≥6 palavras.
 
 7. **Compor contexto pra geração**:
    - Title + description do artigo
@@ -214,7 +214,7 @@ Componentes:
 
 Reescreve se: (a) o título está **stub/fraco**, OU (b) **colide com um irmão** (mesmo slug/keyword em outro site com título igual/quase-igual — ver "Divergência cross-site"), OU (c) a **contagem N envelheceu**. Detecção:
 - **Stub/fraco (arruma)**: minúsculo, sem ano, sem contagem, ou == keyword cru (ex: "Melhor impressora epson", "Melhor Impressora Custo Benefício").
-- **⚠ "Sem contagem" com N≥3 é SEMPRE stub — gatilho OBJETIVO, não inferência (v1.39.0):** se o lineup tem 3+ produtos e **o número N não aparece no título** (teste: `\bN\b`, a contagem real do lineup — NÃO uma lista de substantivos; ver auto-check #6 e o porquê da mudança na v1.103.0), é stub a corrigir **mesmo que o título esteja bem-formado** (Title Case + ano, ex: "Melhor Tablet para Estudar em 2026") **e mesmo que artigos IRMÃOS do site estejam iguais sem contagem**. Irmão sem contagem com N≥3 é **straggler não-corrigido, NÃO assinatura do site** — NUNCA inferir "padrão" a partir de stubs. Contagem só é dispensável com **N<3** (ver Fallback). Caso real (2026-06-22, escritorioecasa/melhor-tablet-para-estudar, N=8): a intro deixou o título sem contagem inferindo que o cluster "para X" (desenho N=7, trabalho N=7, ambos também stubs) era a assinatura. Era armadilha: o gatilho "sem contagem com N≥3" vence qualquer aparência de consistência.
+- **Sem contagem com N≥3 é sempre stub**: se o lineup tem 3+ produtos e N não aparece no título (teste `\bN\b`, auto-check #6), reescreva, mesmo com título bem formado (Title Case + ano) e mesmo que irmãos do site estejam iguais sem contagem: irmão sem contagem com N≥3 é stub não corrigido, não assinatura. Contagem só é dispensável com N<3 (ver Fallback).
 - **Colide com irmão (arruma p/ divergir)**: título idêntico/quase-igual a um irmão → aplica o padrão de assinatura deste site (pool P1-P4). Mesmo que já esteja "no padrão", se colide, troca.
 - **N mudou (atualiza)**: se o lineup cresceu/encolheu, atualiza o número (a contagem não pode envelhecer).
 - **OK (NÃO toca)**: já no padrão de assinatura do site **com contagem presente** (ou N<3), não colide com irmão, e N certo. "N certo" pressupõe que **a contagem EXISTE** — título sem contagem com N≥3 nunca cai no "OK".
@@ -267,7 +267,7 @@ A fórmula é fixa; o RECHEIO de cada slot RODA entre os artigos do site. **Slot
 - objeção/custo: "...sem pagar por função que você nunca vai usar?"
 - intenção de marca (keyword com marca): "...agora que a marca já está decidida e só falta o modelo?"
 
-❌ **Pergunta SECA proibida como padrão**: "Está em dúvida sobre qual a **{keyword}** em {ano}?" sem enriquecimento — foi este template que clonou 3 intros do melhorimpressora (incidente 2026-06-10).
+❌ **Pergunta SECA proibida como padrão**: "Está em dúvida sobre qual a **{keyword}** em {ano}?" sem enriquecimento.
 
 **Arremate após a pergunta: OPCIONAL, 1 frase curta e literal, sem exclamação obrigatória.** Ex.: "Este comparativo reúne os modelos que valem a pena em {ano}." / "Abaixo estão os modelos que comparamos." Medido em 2026-08-15: 64% das intros da rede fechavam o §1 com "!" e frases-molde ("A gente fez essa conta pra você!" 11×, "Então este comparativo é pra você!" 10×, "Esse comparativo nasceu pra resolver…" 7×) — viraram assinatura. Não use essas nem variações delas.
 
@@ -312,7 +312,7 @@ Fotografar documento com o celular funciona em muitos casos, mas não em todos: 
 Para facilitar sua escolha, reunimos as **melhores impressoras multifuncionais** de 2026, comparando rendimento da tinta, qualidade do scanner e facilidade de uso. ✅
 ```
 
-**Por quê funciona**: keyword na 3ª palavra; o enriquecimento da pergunta ecoa o produto (imprimir/copiar/digitalizar = o 3-em-1); miolo com 3 situações CONCRETAS (RG, contrato, apostila) em frases literais ("faz", "ocupa"), sem exclamação nem CTA-molde. ~600 chars, 3 §, 2 bolds. (Versão revisada em 2026-08-15: a anterior tinha "Então você está no lugar certo!", "até resolve, mas tem hora que não basta", "cobre essas três situações" e "Confira qual faz mais sentido pra sua casa!" — o registro que virou molde na rede.)
+**Por quê funciona**: keyword na 3ª palavra; o enriquecimento da pergunta ecoa o produto (imprimir/copiar/digitalizar = o 3-em-1); miolo com 3 situações CONCRETAS (RG, contrato, apostila) em frases literais ("faz", "ocupa"), sem exclamação nem CTA-molde. ~600 chars, 3 §, 2 bolds.
 
 ### Exemplo B — barata (família "cenário concreto + quebra de objeção")
 
@@ -419,7 +419,7 @@ Carrega TODAS as bíblias dos produtos do lineup pra ENTENDER:
 
 ## Voz editorial
 
-- **Tom de quem testou/analisou**: "a decisão depende de", "quem imprime muito recupera", "o mercado oferece"
+- **Tom de quem analisou os produtos**, sem dizer que testou (a rede não alega teste físico): "a decisão depende de", "quem imprime muito recupera", "o mercado oferece"
 - **Factual, não promocional**: não promete que a pessoa vai encontrar o produto "perfeito". Promete análise/comparativo.
 - **Português brasileiro editorial** — sem gírias, sem anglicismos desnecessários.
 - **NUNCA cite compradores/reviews/avaliações/estrelas/Amazon** como entidade. Padrão de toda a voz editorial do projeto (`02-estilo-editorial.md`).
@@ -438,9 +438,9 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
 7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
-9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
+9. **Também valem:** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria CONTA e reporta, mas desde 2026-09-05 teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta e reporta, mas teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
@@ -453,7 +453,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 | Se não tem, ela é a que resolve. | Se não tem, ela é a melhor opção. |
 | O tanque não se cansa. | O tanque de tinta rende o mesmo até o fim. |
 
-⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela (ou nos exemplos de shortDescription), reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
+⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela, reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
 
 ## Régua editorial PT-BR (v1.19.2, 2026-05-28)
 
@@ -490,11 +490,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 ### Health absolutes YMYL banidos (Google penaliza páginas afiliadas)
 
-- "uso regular é seguro" → "tolerado pela maioria; consulte profissional se tem comorbidade"
-- "alternativa segura" → "alternativa mais leve"
-- "não causa dano" → "sem evidência de impacto em pessoas saudáveis em doses recomendadas"
-- "sem efeitos colaterais" → "efeitos colaterais raros quando reportados"
-- "cientificamente comprovado" / "100% seguro" / "sem riscos" → qualificar
+- A intro não afirma segurança nem ausência de efeito ("uso regular é seguro", "alternativa segura", "não causa dano", "sem efeitos colaterais", "cientificamente comprovado", "100% seguro", "sem riscos"). Se o tema aparecer, descreva o perfil de uso sem prometer segurança. O aviso de consultar profissional mora no guia (ver Invariantes).
 
 ### Voz-eximir-responsabilidade (não use fabricante como muleta)
 
@@ -535,8 +531,8 @@ Por hábito de outras frameworks, IA pode tentar emitir `<TabelaTop products={da
 ### 10. Edit tool com old_string ambíguo
 Se a intro velha for muito curta (ex: `[a escrever: ...]`), o `old_string` é único. Mas se for uma intro velha de 1500 chars, partes dela podem repetir outros trechos do .mdx (raro mas possível). Mitigação: incluir 1-2 linhas de contexto antes (ex: `---\n\n[body]`) no `old_string` pra forçar match no body especificamente.
 
-### 11. Clonar o exemplo da skill (incidente 2026-06-10)
-O maior bug histórico desta skill: o "exemplo canônico" único virou texto-fonte e 3 intros do melhorimpressora saíram idênticas (só a keyword trocada). Exemplo é régua de FORMA. Se a intro gerada compartilha qualquer frase de ≥6 palavras com um exemplo desta skill OU com uma intro irmã do site — reescreva antes de gravar.
+### 11. Copiar exemplo ou intro irmã
+Exemplo é régua de forma. Se a intro compartilha qualquer frase de 6 ou mais palavras com um exemplo desta skill ou com uma intro irmã do site, reescreva antes de gravar.
 
 ### 12. Keyword tarde no §1
 "Cansou de gastar com cartucho e está procurando a **{keyword}**..." enterra a keyword na 8ª palavra. Inverta: abertura curta + keyword + enriquecimento ("Procurando a **{keyword}** para imprimir sem medo da conta de cartucho?").
@@ -546,7 +542,7 @@ O maior bug histórico desta skill: o "exemplo canônico" único virou texto-fon
 
 ## Sincronização painel ↔ skill ↔ prompt canônico
 
-**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.generate_intro` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
+**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.generate_intro` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
 
 
 ## Quando NÃO usar essa skill
@@ -604,10 +600,8 @@ for f in glob.glob(f'sites/{SITE}/src/content/reviews/*.mdx'):
 assert not re.search(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', novo), "duplicação contígua"
 # '\. [a-z]' fora de URL → capitalizar
 
-# 6) TÍTULO: sem contagem com N≥3 é stub (v1.39.0). v1.103.0: o teste é "o Nº DE PRODUTOS aparece
-# no título" (regex antigo r'\d+\s+([Mm]elhores|opções)' era mais estreito que a regra e reprovava
-# 8 formas legítimas + tinha bug de caixa; passavam 258/333, agora 331). Falso-negativo aceito:
-# keyword com o mesmo dígito de N ("Ômega 3", "iPad 11") passa sem contagem — erra pro lado de NÃO mexer.
+# 6) TÍTULO: sem a contagem N com N≥3 é stub. Falso-negativo aceito: keyword com o mesmo dígito de N
+# ("Ômega 3", "iPad 11") passa sem contagem; erra para o lado de não mexer.
 N = len(PRODUCTS)  # produtos do lineup
 if N >= 3 and not re.search(rf'\b{N}\b', TITLE):
     raise AssertionError(f"título sem a contagem N={N} (>=3) = stub; reescreva com a contagem. "
@@ -615,10 +609,6 @@ if N >= 3 and not re.search(rf'\b{N}\b', TITLE):
 ```
 
 Checagem de olho (não-greppável): família de abertura/arremate/miolo/CTA inédita vs as irmãs lidas no passo 6.5 · voz natural (verbo/substantivo no sentido literal, sem sacada, "para", sem molde de arremate/CTA) · nenhuma frase reusada dos Exemplos A-D · 300-800 chars · 2-3 §.
-
-## Limitação intrínseca conhecida
-
-Sem schema Zod programático no output (diferente do painel), validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (3 bolds em vez de 2, char count em 810, etc). Mitigação: contar bolds (`**`) e chars depois de gerar e ajustar antes de aplicar.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

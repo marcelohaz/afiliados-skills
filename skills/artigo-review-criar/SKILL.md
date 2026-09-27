@@ -1,6 +1,6 @@
 ---
 name: artigo-review-criar
-description: Cria o review editorial de UM produto dentro de um artigo comparativo (6 campos: subtitle, shortDescription, pros, cons, specs, fullReview de 4 parágrafos). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) — detecta stubs vazios e pergunta qual preencher 1 por vez — OU args canônicos `site/slug-artigo ASIN`. Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json` (Pré Treino, Creatinas, Tablets, etc). Aplica régua editorial: COBERTURA (percorre pontosFortes/pontosFracos da biblia um a um, o que serve a keyword tem que chegar ao texto, o que fica de fora sai com motivo dito, e o tamanho e consequencia disso; medido: sem essa regra a skill escrevia ~1750 chars tendo 6 ou 16 itens de material, r=-0,12), ANGULO PELA KEYWORD DO ARTIGO (nao pela ordem dos angulosConversao da biblia, que reflete o produto e nao o artigo), todo dado quantitativo com a consequencia pratica (3-7 valores no fullReview, com auto-check), concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal), "Para quem é" varia abertura, claim de keyword em no máximo 2 de cada 3 produtos, Resumo abre pelo veredito e não pelo preço. A ESCRITA É DELEGADA A UM SUB-AGENT ISOLADO que recebe a régua, a bíblia e o bloco do próprio produto, e NÃO vê os reviews dos irmãos (medido: um agente escrevendo 11 em sequência converge na própria forma — 9/11 Resumos abrindo com preço contra mediana 0 na rede). O agente principal faz pull, leituras, backup, write, audit-article, commit, push, dispatch VPS pull.
+description: Cria o review editorial de UM produto dentro de um artigo comparativo (subtitle, shortDescription, pros, cons, specs e fullReview, e os campos de topo quando o artigo ainda é stub). Use quando o pedido for escrever, preencher ou criar o review de um produto num artigo, com a URL do painel (editor-artigo.html?site=X&slug=Y), que lista os stubs vazios, ou com `site/slug-artigo ASIN`. A escrita roda num sub-agent isolado que não vê os reviews dos outros produtos; a skill grava, commita e sincroniza a VPS. Para revisar reviews já escritos, use artigo-reviews-auditar.
 ---
 
 ## Parse de input
@@ -91,13 +91,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 ## Fluxo
 
 0.5. **Carregar chavões do nicho** (régua v1.18.0, expandida v1.19.0):
-   ```bash
-   # Identificar nicho do site
-   bun -e "console.log(require('./docs/painel/sites-meta.json')['$SITE'].niche)"
-   # Ler limites por nicho
-   Read docs/painel/_data/chavoes-por-nicho.json
-   ```
-   Use o bloco `_genericos` + o bloco do nicho específico (ex: `Pré Treino`, `Creatinas`). Durante a geração:
+   Leia `docs/painel/_data/chavoes-por-nicho.json`. Vale sempre o `_genericos`, mais o bloco cujo `_sites_aplicaveis` contém o slug do site (não escolha o bloco pelo `niche` do `sites-meta.json`). Durante a geração:
    - `termos_banidos_absoluto` e tetos **0** → regra DURA, 0 ocorrências.
    - **Todo teto NUMÉRICO é referência, não limite (canon Marcelo 2026-09-05).** Serve pra você notar
      que está martelando a mesma palavra. **NUNCA troque a palavra certa, apague um fato ou reescreva
@@ -109,16 +103,15 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    - `termos_banidos_absoluto` → 0 ocorrências (inclui peers/claim/stack/SKU/ASIN/lineup)
    - **⚠ `_sites_aplicaveis` é o gate (canon 2026-08-15):** site fora da lista do bloco de nicho → **só o `_genericos` vale**. Não force pelo `niche`. E conte o `_genericos` SEMPRE: `chavoes_estruturais_max` tem as 4 variantes de "seleção" em cap **0**, e `industrial_max` tem `declarado` em 3.
    - `ingles_max` (vive nos blocos de NICHO, não em `_genericos`) → referência, não limite (não troque a palavra certa pra baixar contagem)
-   - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0 corrige drift) → calibrar/empilhar/pico-e-queda = 0 QUANDO o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada pra rotina" → "feita pra")
+   - `linguagem_artificial_max` (vive no bloco do NICHO, ex. Pré Treino — NÃO é genérico; v1.32.0 corrige drift) → calibrar/empilhar/pico-e-queda = 0 QUANDO o bloco do nicho listar; em nichos sem o bloco, evite mesmo assim o uso figurado ("calibrada para a rotina" → "feita para a rotina")
    - `corporativo_max` → "diferencial central" cap 2, "posicionamento" cap 3 (v1.19.0)
    - `voz_eximir_responsabilidade` (v1.19.1) → ban "X mg declarados" parentético, "declarado pelo fabricante", "todos/todas/doses declaradas pelo fabricante", "sem mg declarado". Inclui "segundo a [marca]" em spec factual: rendimento/economia/velocidade afirme direto, sem atribuir (atribuição só pra recomendação tipo "a HP recomenda 50-100 págs/mês")
-   - **`voltagem_so_em_specs` (régua dura, canon 2026-06-28; endurecida 2026-06-29)** → **NÃO cite voltagem — nem na spec nem na prosa.** Sem "110V", "220V", "127V", "vendido em versões 110V e 220V", nem "bivolt". A voltagem muda por ASIN (o mesmo modelo tem versão 110 e 220), o comprador escolhe no anúncio, e cravar é assumir risco de erro à toa → **default é omitir** (inclusive não criar a row "Voltagem" no specs). ÚNICA exceção: o `specsAmazon` do ASIN diz "bivolt" (ou faixa contínua "100-240V"/"110-220V") EXPLÍCITO → aí pode afirmar bivolt. NUNCA infira bivolt de copy de potência "1800W 110V | 2000W 220V" / "110/127V e 220V" = SKUs SEPARADOS, não bivolt. **Aparelho de aquecimento de alta potência (air fryer, ferro, secador, chaleira) é voltagem única por design** — nunca cita voltagem. Exceção de classe (bivolt comum, citar só se a ficha confirmar): impressora e cooktop a gás. NÃO conta como "citar voltagem" a dica de SEGURANÇA elétrica genérica do guia (ex: "air fryer acima de 1000W pede tomada de 20A") — é sobre a rede da casa, não claim de voltagem do produto. Caso real: air fryers NA341/Midea/Mondial/WAP afirmados bivolt erradamente (2026-06-28).
+   - **`voltagem_so_em_specs` (régua dura)** → não cite voltagem, nem na prosa nem numa row "Voltagem": o mesmo modelo tem versão 110V e 220V em ASINs diferentes e o comprador escolhe no anúncio. Única exceção: o `specsAmazon` deste ASIN diz "bivolt" ou uma faixa contínua ("100-240V", "110-220V"). Potência por tensão ("1800W 110V | 2000W 220V") são versões separadas, não bivolt. Aquecimento de alta potência (air fryer, ferro, secador, chaleira) é voltagem única: não afirme bivolt. Dica de segurança elétrica do guia (tomada de 20A) não é claim do produto.
    - `health_absolutes_banidos` → "uso regular é seguro", "alternativa segura", "não causa dano" = 0 (YMYL, v1.19.0)
    - `chavoes_estruturais_max` → "ocupa o papel" cap 2, "rotina de emagrecimento" cap 4, "sustenta intensidade" cap 4 (v1.19.0)
    - `concordancia_quebrada_regex` → composiçãos/combinaçãos/"a produto"/"a formigamento"/"no em 20XX" = 0 (v1.19.0)
    - `comparacoes_max.max_valores_numericos_por_frase` (por nicho) → max 2 valores mg/g/R$ por frase (v1.19.0)
-   - `medico_tecnico_max` (por nicho) → variar léxico após atingir limite
-   - `industrial_max` → variar com sinônimos PT-BR
+   - `medico_tecnico_max` (por nicho) e `industrial_max` → referência, como todo teto numérico: encurte ou omita a frase repetida, nunca troque a palavra por sinônimo
    - `indicacao_medica_max` (por nicho) → não repetir advertência médica em N produtos
 
    Se nicho não listado: usa só `_genericos` (limites menos restritivos).
@@ -139,7 +132,7 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 4. **Read bíblia**: `Read docs/biblias-v2/{ASIN}.json`. Se não existir, abortar.
 
-5. ~~Read página individual~~ **REMOVIDO (canon 2026-08-13)**: não leia a página individual. O ângulo do review vem do BADGE + posição no comparativo, não de "fugir" do texto da página. Ver invariante "Ângulo comparativo por natureza".
+5. Não leia a página individual: o ângulo do review vem do badge e da posição no comparativo (invariante "Ângulo comparativo por natureza").
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts`. Pode ser `''` (construção, links crus) ou preenchida.
 
@@ -160,14 +153,9 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
      conferência de "o mais X deste comparativo" precisam — e cabe em ~11 linhas por produto. **Nunca o
      `fullReview`, `pros` ou `cons` deles.**
 
-   **O que o sub-agent NÃO recebe:** os reviews dos outros produtos. É o ponto da régua. Medido em
-   2026-09-04 (`compraguia/melhor-monitor-para-trabalho`): um agente escrevendo os 11 em sequência, na mesma
-   conversa, evitou toda sequência de 6 palavras e convergiu **na própria forma** — 9 de 11 Resumos abrindo com
-   "Por cerca de R$ X, o [produto] é..." (a rede tem mediana 0 em 341 artigos), 6 de 11 fechando com "quem
-   precisa de Y encontra em outros", 4 títulos de pró repetidos em ≥4 produtos. O 1b da auditoria nasceu de 11
-   sub-agents cegos convergindo na bíblia; o modo sequencial produz o defeito oposto e nenhum check lexical o
-   vê. Sub-agent que não vê os irmãos não copia a forma deles. O que ainda passar, o critério 29 da
-   `artigo-reviews-auditar` pega.
+   **O que o sub-agent NÃO recebe:** os reviews dos outros produtos. É o ponto da régua: um agente que escreve
+   os N em sequência, vendo os anteriores, converge na própria forma (ex.: Resumos abrindo todos com "Por cerca
+   de R$ X"), e nenhum check lexical vê isso. O que ainda passar, o critério 29 da `artigo-reviews-auditar` pega.
 
    **REGRA ZERO no sub-agent: nenhum git** (add/commit/push/pull). Ele lê, escreve os campos, valida (passo 9)
    e devolve `{subtitle, shortDescription, specs, fullReview, pros, cons, [title, excerpt, keywordPlural,
@@ -175,9 +163,8 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    repetido', pontosFracos: '...'}}`. O agente principal grava (11), roda o `audit-article` filtrado (12),
    commita e reporta a conta de cobertura.
 
-   ⚠ **Se VOCÊ está lendo isto de dentro de um sub-agent** (a `artigo-clonar-em-massa` manda os dela lerem esta
-   SKILL.md inteira), **o 7.5 já aconteceu: escreva inline.** Sub-agent do Agent tool não tem a ferramenta Agent
-   nem a Skill tool — não há como despachar outro, e não há por quê: um nível de isolamento basta.
+   Se você está lendo isto de dentro de um sub-agent (o do 7.5 ou um da `artigo-clonar-em-massa`), o 7.5 já
+   aconteceu: escreva inline e não despache outro sub-agent nem chame a Skill tool. Um nível de isolamento basta.
 
    Sub-agent que morrer (HTTP 429, timeout) → refaz inline no mesmo turno, como nas em-massa.
 
@@ -212,9 +199,9 @@ dos produtos.
 | Padrão | Exemplo |
 |---|---|
 | **Perfil + benefício** | "Para quem treina à noite e busca disposição sem cafeína..." |
-| **Contexto comparativo** | "Entre as opções sem cafeína da seleção, este produto se destaca..." |
+| **Contexto comparativo** | "Entre as opções sem cafeína analisadas, este produto se destaca..." |
 | **Conexão funcional** | "Combina melhor com quem busca pump intenso e foco mental..." |
-| **Proposta direta** | "A proposta aqui é atender quem precisa de dose alta de creatina..." |
+| **Perfil direto** | "Serve para quem precisa de dose alta de creatina..." |
 | **Diferencial-âncora** | "A fórmula não tem aditivos artificiais, e isso decide para quem..." (NÃO "o grande ponto deste produto é": virou molde) |
 | **Cenário concreto** | "Se você imprime poucas páginas por mês e quer custo baixo de entrada..." |
 | **Adjetivo posicional + perfil** | "Vegano e com sabor agradável, serve para quem..." |
@@ -263,7 +250,17 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 - **shortDescription** (50-250 chars): para quem é / o que faz de melhor em linguagem literal, depois 2-3 dados, fecho de fato. Sem molde ("Ideal pra quem… Você ganha…"). **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
 
-9. **Validar mentalmente** antes de devolver (é o sub-agent do 7.5 quem faz este passo):
+9. **Validar antes de devolver** (é o sub-agent do 7.5 quem faz este passo). Tamanho e contagem de valores se medem com script, não a olho: grave os campos num JSON no scratchpad e rode
+   ```bash
+   python3 - campos.json <<'EOF'
+   import json, re, sys
+   c = json.load(open(sys.argv[1])); puro = lambda s: re.sub(r'<[^>]+>', '', s)
+   print('shortDescription', len(c['shortDescription']))
+   for k in ('pros', 'cons'): print(k, [len(puro(x)) for x in c[k]])
+   NUM = r'\d+[.,]?\d*\s*(?:Hz|ms|cd/m²|nits|:1|W|kg|mm|cm|GB|MB|ppm|páginas|polegadas|°|graus|%|bits|mg|g|R\$)'
+   print('valores no fullReview', len(re.findall(NUM, puro(c['fullReview']))))
+   EOF
+   ```
    - **Tamanhos** (hard caps — v1.16.0):
      - `shortDescription` ≤ 250 chars (1ª frase diz para quem é / o que faz, literal; não é ficha técnica nem molde)
      - cada item de `pros` ≤ 180 chars (alvo 80-130)
@@ -292,9 +289,8 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 10. **Backup**: `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-prod-{ASIN}.mdx`. Pattern paralelo ao do painel pra aparecer no card "Histórico de versões".
 
-11. **Write `.mdx`** (agente principal, com os campos que o sub-agent devolveu): usa parseYaml + stringifyYaml lib pra reconstruir, OU editar cirurgicamente o trecho do produto-alvo. Cuidado pra:
+11. **Gravar no `.mdx`** (agente principal, com os campos que o sub-agent devolveu): `Edit` cirúrgico no bloco do produto-alvo, nunca parseYaml/stringifyYaml (o re-stringify tira o `fullReview` do block scalar `|` e bagunça o HTML). Cuidado para:
     - Preservar produtos não-alvo intactos (não tocar)
-    - Preservar `fullReview` block scalar (`|`) — re-parsear+stringificar pode bagunçar HTML multi-linha. Recomendo edição cirúrgica via Edit tool quando possível.
     - Atualizar campos top-level só se foram detectados como stub
 
 12. **Git add + commit + push**:
@@ -338,7 +334,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 ### subtitle (10-150 chars) — HÍBRIDO keyword-first (formato-alvo desde 2026-09-01)
 
-O subtitle é o **heading do card** do produto no artigo (slot de peso SEO). Até 2026-09-01 a criação escrevia um ângulo livre e a `artigo-reviews-auditar` (critério 22) reformatava depois; isso só fechava no pipeline de clone, que roda as duas, e produto adicionado sozinho ficava num formato diferente dos vizinhos. Agora a criação **já escreve no formato-alvo** e a auditora confere o conjunto.
+O subtitle é o **heading do card** do produto no artigo (slot de peso SEO). A criação escreve no formato-alvo abaixo, e a `artigo-reviews-auditar` (critério 22) confere o conjunto.
 
 **Stub SEM subtitle** → escreva **LEAD keyword-first + gancho, numa frase que flui, sem dois-pontos**:
 - **LEAD** = a keyword do artigo (ou pedaço dela) + qualificador curto, capitalizado como título: "Impressora Tanque de Tinta em Geral", "Tablet Custo Benefício", "Creatina Monohidratada Barata e Boa". O slot "em Geral" **sempre leva "Melhor"** ("Melhor Air Fryer em Geral…"). Gênero pelo núcleo da keyword (impressora → "Boa e Barata"; tablet → "Bom e Barato").
@@ -433,24 +429,7 @@ do artigo? Se serve, ele tem que chegar ao texto — no `fullReview` se decide a
       pontosFortes  8  →  6 no texto · 1 fora do recorte (jogo) · 1 repetido
       pontosFracos  5  →  4 no texto · 1 fora do recorte
 
-⚠️ **Por que esta regra existe, medido em 2026-09-04 sobre 689 reviews de Eletrônicos com bíblia no disco:**
-
-      material da bíblia      n     tamanho mediano do review
-      9 a 11 itens          390             1794
-      12 a 14               274             1737
-      15 ou mais             25             1701
-      correlação r = -0,12
-
-A skill escrevia **o mesmo tamanho tendo 6 ou 16 itens de material**, e bíblia mais rica produzia review
-ligeiramente MENOR. Causa: existia faixa de tamanho (800-3000, larga demais pra guiar) e **nenhuma regra de
-cobertura**, então todo review convergia pra ~1750 chars independente do produto. Caso-origem: um review
-aprovado na voz cobria 5 de 8 `pontosFortes`, e dois dos que faltavam eram material legítimo de trabalho
-(contraste de 1500:1 e moldura sem bordas em três lados).
-
-**NÃO existe piso de tamanho nesta skill, de propósito.** Piso vira meta e meta convida a encher linguiça.
-Cubra o material e o tamanho sai certo. Se quiser um sinal de sanidade depois de escrever, a distribuição
-real do nicho Eletrônicos é p50 1766, p75 1963, p95 2235, p99 2403, máximo 2608 — texto muito abaixo do p50
-com bíblia farta é sintoma de cobertura curta, não de concisão.
+**Por quê:** sem esta regra, todo review saía com ~1750 caracteres tendo 6 ou 16 itens de material. Não existe piso de tamanho, de propósito: piso vira meta e meta convida a encher linguiça. Texto muito abaixo da mediana do nicho (Eletrônicos: ~1770 caracteres) com bíblia farta é sintoma de cobertura curta.
 
 ⚠️ **Um `<p>` nunca passa de 800 chars** — o `audit-article.ts` avisa (`legibilidade`) acima disso. Cobrir
 mais material significa **mais parágrafos**, não parágrafo maior. O "Por que gostamos" já pode ocupar 2 `<p>`
@@ -469,7 +448,7 @@ Eletrônicos, p90 **8**, e só **12%** passam de 7. O teto é a prática da rede
 
 **Banidas no output editorial** (régua v1.16.0 + v1.17.2 + v1.17.3, canon 2026-05-28):
 
-**🚨 JARGÃO TÉCNICO/INTERNO ABSOLUTAMENTE PROIBIDO** (régua v1.17.3 — gap descoberto via melhorpretreino vazou "SKU avaliado" + "ASIN aqui só vem em..."):
+**Jargão técnico ou interno não entra no texto público** (o leitor não sabe o que é SKU ou ASIN):
 - ❌ `SKU` — termo de dev/estoque que ninguém entende. Use "a versão", "este modelo", "esta apresentação"
 - ❌ `ASIN` — identificador Amazon interno. Use "o produto avaliado", "a versão analisada", "este item"
 - ❌ `UPC`, `EAN`, `GTIN` — códigos de barras, jargão técnico. Drop ou usar "código do produto" se relevante
@@ -499,7 +478,7 @@ Substitua:
 | "todos os 9 outros desta seleção" | "todos os outros analisados" |
 | "vantagem vs o Adaptogen Panic do lineup" | "vantagem vs o Adaptogen Panic" |
 
-**Quota dura**: máximo **1 menção** a "comparativo"/"seleção"/"aqui"/"analisados" **por bullet ou parágrafo**. Repetir = drop.
+**Quota dura**: máximo **1 menção** a "comparativo"/"aqui"/"analisados" **por bullet ou parágrafo** ("seleção" tem teto 0). Repetir = drop.
 
 ### pros (3-8 itens, cada item 60-180 chars, alvo 80-130)
 `<strong>Título</strong>: explicação com dado concreto`. Sempre dado verificável.
@@ -528,17 +507,8 @@ valor evasivo** ("não informado", aproximação inventada) só para a coluna n�
 
 **Dois casos caem aqui. A saída é a mesma (sem row), a armadilha é oposta:**
 
-- **VETO — o dado existe e a bíblia proíbe citá-lo.** Medido 4×: Peso no `melhoraspirador` (14/08,
-  flag `peso-divergente`, 8,86 × 1,75 × 1,62 kg) e no EOS ECL300M (18,5 kg na ficha da Amazon contra
-  10 kg no fabricante, com medidas idênticas nas duas), Ruído no Mondial CL-03 ("1 decibel" na ficha,
-  impossível) e no Ventisol CLIN35 PRO (a decisão veta afirmar silêncio e não há dB para ancorar).
-- **LACUNA — não há dado em campo nenhum.** Medido 2×: Ruído no `melhoraspirador` e Timer no Ponente
-  CLIP20. A row também não existe, mas o erro a evitar é o inverso do veto: **lacuna não é ausência**.
-  Não escreva "não tem timer" nem "sem controle remoto" — silêncio de ficha não prova que o produto
-  não tem, e várias bíblias dizem isso com todas as letras ("não afirmar nem que tem nem que não tem").
-
-Nas 6 a inferência certa foi a mesma e custou deliberação nova cada vez, porque esta seção mandava
-"alinhar com `specLabels`" e a Armadilha 4 mandava seguir a bíblia, sem dizer quem vence.
+- **VETO: o dado existe e a bíblia proíbe citá-lo** (ex.: peso que diverge entre ficha e fabricante, ruído de "1 decibel" na ficha).
+- **LACUNA: não há dado em campo nenhum** (ex.: timer, ruído sem dB). A row também não existe, mas o erro a evitar é o inverso do veto: silêncio de ficha não prova ausência. Não escreva "não tem timer" nem "sem controle remoto".
 
 ## Voz editorial
 
@@ -563,9 +533,9 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
 7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
-9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
+9. **Também valem:** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria CONTA e reporta, mas desde 2026-09-05 teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta e reporta, mas teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
@@ -585,11 +555,9 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 Quando o stub já vem com `subtitle` (e/ou `badge`) preenchido pelo editor humano (modal "+ Adicionar produto" do painel), isso NÃO é placeholder: **é a direção editorial** — "normalmente é o ângulo que queremos que você aborde o produto" (Marcelo).
 
 1. **Ângulo VINCULANTE**: o review inteiro aborda o produto por esse ângulo — o "Para quem é" deriva dele (reforça a régua v1.20.1, que já manda derivar o claim do subtitle), os pros priorizam o que o sustenta.
-2. **Texto MELHORÁVEL**: você tem liberdade de polir o subtitle (concisão, clareza, régua 10-150 chars, title case) — mas o SENTIDO não muda. Trocar "tanque pra alto volume" por "multifuncional compacta" = violação; polir "boa pra muito volume" → "Tanque de alto volume pra rotina pesada" = ok.
+2. **Texto MELHORÁVEL**: você tem liberdade de polir o subtitle (concisão, clareza, régua 10-150 chars, title case) — mas o SENTIDO não muda. Trocar "tanque pra alto volume" por "multifuncional compacta" = violação; polir "boa pra muito volume" → "Tanque de alto volume para rotina pesada" = ok.
 3. **Subtitle vazio** = comportamento atual (criar do zero a partir da bíblia + badge).
 4. **NUNCA descartar silenciosamente** o ângulo humano. Se a bíblia CONTRADIZ o ângulo (ex: subtitle diz "a mais rápida" e a bíblia mostra que não é), NÃO grave nada conflitante: pare e pergunte ao usuário.
-
-Histórico: até v1.33 a skill regenerava o subtitle sem ler o existente (~80% dos subtitles humanos sobrescritos; os ~20% "mantidos" eram convergência por acaso). O badge sempre teve esse tratamento (var + hint editorial) — esta régua espelha pro subtitle.
 
 ## Operação de destilação bíblia → .mdx (CRÍTICO)
 
@@ -688,13 +656,10 @@ A divergência entre página e review vem da **natureza** dos dois textos, não 
 
 | Página individual (autônoma) | Produto no artigo (comparativo) |
 |---|---|
-| "A L3250 é uma multifuncional pensada para uso doméstico" | "Aqui, a L3250 cobre o perfil doméstico" |
+| "A L3250 é uma multifuncional pensada para uso doméstico" | "Aqui, a L3250 é a opção para uso doméstico" |
 | "O diferencial central é o sistema EcoTank" | "Comparada às outras impressoras analisadas, a L3250 destaca-se pelo sistema EcoTank" |
 
 ## Armadilhas recorrentes
-
-### 1. ~~Repetir frase exata da página individual~~ (armadilha desativada, canon 2026-08-13)
-Não há mais checagem contra a página individual — ela nem é lida. Convergência factual residual é aceita; o que segue proibido é copiar verbatim da BÍBLIA sem destilar (categoria E).
 
 ### 2. HTML proibido por hábito
 `<ul>` é tentador pra listar features. Use parágrafos.
@@ -739,9 +704,6 @@ Régua: voz-citação do fabricante OK SÓ quando atende AS DUAS condições:
 ### 5. Atualizar campos top-level quando não-stub
 Se o artigo já tem `title`, `description`, `excerpt` populados, NÃO sobrescreva (preserva trabalho do user). Só preenche se estão vazios.
 
-### 6. Block scalar `|` no fullReview
-Se reusar a abordagem yaml.parseYaml + stringify, fullReview pode mudar de `|` pra string quoted, bagunçando HTML. Recomendado: edição cirúrgica com Edit tool no trecho do produto-alvo, preservando o resto do arquivo intacto.
-
 ### 7. Listagem exaustiva de peers num único bullet (régua v1.16.0)
 
 **Armadilha clássica em pros/cons de preço/rendimento**: o modelo lista TODOS os outros produtos do comparativo num bullet só, virando uma mini-tabela em texto.
@@ -755,7 +717,7 @@ Se reusar a abordagem yaml.parseYaml + stringify, fullReview pode mudar de `|` p
 > "<strong>Preço mais acessível</strong>: cerca de R$ 40, o mais barato deste comparativo."
 
 ✓ **Variante com 1-2 peers concretos** (também OK):
-> "<strong>Preço bem abaixo da média</strong>: R$ 40, contra R$ 110 do mais caro analisado."
+> "<strong>Preço bem abaixo da média</strong>: cerca de R$ 40, contra cerca de R$ 110 do mais caro analisado."
 
 A lista exaustiva diz "olha quanto cada um custa" — função da tabela. O bullet diz "este é barato" — função do bullet.
 
@@ -786,9 +748,9 @@ cons[i]: max 180 chars texto puro (cada item, descontando markup)
 
 **Por que texto puro**: o HTML é estrutura (template de `<strong>Título</strong>: explicação`), não conteúdo. O leitor lê o texto, não o markup. Cota visual = palavras renderizadas, não bytes do arquivo.
 
-**Como contar mentalmente**: olha o bullet sem `<strong>...</strong>` e sem `<a href="...">...</a>` (mas mantendo o texto entre as tags). Se o resultado passa de 180 chars = reescreve.
+**Como contar**: o script do passo 9 já desconta o markup. Se o resultado passa de 180 chars = reescreve.
 
-Mecânica: depois de gerar o review completo, antes do Edit tool, faz 1 passada de validação. Se algum item passa, **reescreve aquele item específico** (não o review inteiro). Custa 1 round-trip extra de modelo, mas evita gerar o problema do `melhorpretreino` (média bullets 175 chars vs canon 65).
+Mecânica: depois de gerar o review completo, antes do Edit tool, faz 1 passada de validação. Se algum item passa, **reescreve aquele item específico** (não o review inteiro).
 
 **Por que importa**: bullets longos viram parágrafos. Parágrafos viram wall-of-text. Wall-of-text quebra escanabilidade — usuário não lê, vai pro próximo produto, pula a decisão.
 
@@ -806,7 +768,7 @@ Mecânica: depois de gerar o review completo, antes do Edit tool, faz 1 passada 
 | `Pra a maioria/primeira/melhor` | `Para a maioria/primeira/melhor` |
 | `as produtos`, `os fórmulas`, `as ingredientes` | gênero certo |
 
-Regex de referência (se quiser rodar): `\b(composição|combinação|porção|opção|posição)s\b` · `\b(a|na|da|esta|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto|atleta)\b` · `\b(o|no|do|este|neste|esse) (fórmula|dose|porção|composição|combinação|tolerância)\b` · `\bPra a \w+`.
+Regex de referência (rode junto do script do passo 9): `\b(composição|combinação|porção|opção|posição)s\b` · `\b(a|na|da|esta|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto|atleta)\b` · `\b(o|no|do|este|neste|esse) (fórmula|dose|porção|composição|combinação|tolerância)\b` · `\bPra a \w+`.
 
 ### 11. Voz consultiva, não corporativa (régua v1.19.0, ChatGPT-Bárbara)
 
@@ -844,7 +806,7 @@ Regex de referência (se quiser rodar): `\b(composição|combinação|porção|o
 **Substituições**:
 | ❌ Absoluto | ✓ Qualificado |
 |---|---|
-| "Uso regular é seguro" | "Tolerado em uso regular pela maioria; consulte um profissional se tem comorbidade" |
+| "Uso regular é seguro" | "Bem tolerado em uso regular pela maioria das pessoas saudáveis" |
 | "Alternativa segura ao X" | "Alternativa mais leve ao X" |
 | "Não causa dano renal" | "Sem evidência de impacto renal em pessoas saudáveis em doses recomendadas" |
 | "Sem efeitos colaterais" | "Efeitos colaterais raros e leves quando reportados" |
@@ -858,10 +820,8 @@ Regex de referência (se quiser rodar): `\b(composição|combinação|porção|o
 
 O encaminhamento genérico a profissional ("consulte/converse/alinhe a dose com médico ou nutricionista") **NÃO entra em todo review** — vira ladainha (caso real: 8 de 10 produtos + guia, ~14×/artigo; o próprio texto se entrega com "como sempre…", "como qualquer suplemento…"). Diferença vs régua 12: a 12 é sobre NÃO usar absolutos de segurança; esta é sobre NÃO REPETIR o encaminhamento.
 
-- O aviso GERAL fica no **guia** (1×, responsabilidade da `artigo-guia-escrever`).
-- No corpo do artigo: no máximo no **1º produto** da lista, e só se sair natural.
-- Nos demais produtos: só quando aquele produto tem motivo **distinto dos outros** (cafeína muito acima, anticoagulante/interação, contraindicação específica, restrição de gestante/lactante no rótulo). Aí é fato útil — escreva com o gancho concreto, não o bordão.
-- **NUNCA** a mesma frase carimbada produto após produto. Teto prático: ~5 por artigo (a `artigo-auditar` flagra acima disso).
+- O aviso geral entra uma vez por artigo, no **guia** (`artigo-guia-escrever`). No review não escreva o aviso genérico: o `ymyl-avisos.py` conta o artigo inteiro e mantém só o do guia.
+- Motivo **distinto** deste produto (cafeína muito acima, interação, contraindicação específica, restrição de gestante/lactante no rótulo) é fato de produto, não aviso: escreva com o gancho concreto, nunca como bordão.
 - Restrição factual específica do produto (ex: "o fabricante não indica pra gestantes", alérgeno) continua valendo onde for real — não é disclaimer genérico.
 
 ### 13b. Máximo 2 valores numéricos por frase (régua v1.19.0, canon 2026-05-28)
@@ -869,7 +829,7 @@ O encaminhamento genérico a profissional ("consulte/converse/alinhe a dose com 
 Frases comparativas viram tabela em prosa quando listam 3+ valores em mg/g/R$. **Limite duro: 2 valores por frase** em comparações cross-produto; mais que isso → quebre em 2 frases ou use categoria ("entre os mais altos"). Auto-check: por frase, conte `\d+[\.,]?\d*\s*(mg|g|R\$)`; >2 → reescreva.
 
 > ❌ "R$ 130 fica abaixo só do Essential Nutrition Beta Action (R$ 225) e acima do Dux Pre Workout (R$ 110), Vitafor V-Fort (R$ 95), Darkness Évora XT e Night Train (R$ 90 cada)..." (8 preços = tabela em prosa)
-> ✓ "Preço médio R$ 130, entre os 3 mais caros analisados. Abaixo só do Essential Nutrition Beta Action (R$ 225)."
+> ✓ "Custa cerca de R$ 130, entre os 3 mais caros analisados. Abaixo só do Essential Nutrition Beta Action, de cerca de R$ 225."
 
 **Exceção canônica**: 1 parágrafo dedicado a comparar doses entre 3 produtos pode usar 3 valores SE houver gancho narrativo claro. Vale 1x por review.
 
@@ -877,59 +837,19 @@ Frases comparativas viram tabela em prosa quando listam 3+ valores em mg/g/R$. *
 
 Substituições mecânicas causam (caso real melhorpretreino `a72e7d9`): **14a** duplicação contígua (`sem empilhar suplementos sem empilhar suplementos`; regex `([a-zA-ZÀ-ÿ\s]{8,40})\1`) · **14b** bullet começando com minúscula dentro de `<strong>` (`<strong>aminoácidos…`) · **14c** minúscula após ponto em texto editorial (`(maior dose). pra emagrecer`; ignorar URLs e listas numeradas). Rodar em shortDescription, fullReview, pros, cons, specs.value antes de gravar; achou → corrija.
 
-### 15. Voz-eximir-responsabilidade (régua v1.19.1, canon 2026-05-28)
+### 15. Qualificador de procedência ("declarado", "segundo o fabricante")
 
-**Bug-class**: "declarado pelo fabricante", "X mg declarados", "todas declaradas" viram muleta epistêmica — o site se eximindo de afirmar diretamente. **91 ocorrências combinadas** nos 2 artigos pré-treino. Soa como se a redação não confiasse nos próprios dados.
+Número ou fato concreto dispensa qualificador de procedência: sem "declarado/informado/detalhado/especificado" depois do valor, sem "declarado pelo fabricante", sem "segundo a [marca]" em spec. Se o dado está na ficha, já é do fabricante, e repetir isso soa como a redação não confiando nos próprios dados. Teste: tire o qualificador; se a frase continua verdadeira, ele era muleta.
 
-**Princípio**: se o dado está na ficha técnica do produto, é por definição declarado pelo fabricante. Repetir "declarado" é redundância pura — e transfere responsabilidade desnecessariamente. Quando o número é fato verificável, afirme direto.
+O qualificador fica em dois casos: quando descreve ausência de dado ("o rótulo não informa a dose em mg") e quando é recomendação do fabricante que calibra o leitor ("a HP recomenda 50 a 100 páginas por mês", Armadilha 4).
 
-**3 sub-padrões proibidos** (regex no JSON `voz_eximir_responsabilidade`):
-
-**15a) "X mg declarados" parentético** (redundância 100%):
 | ❌ Antes | ✓ Depois |
 |---|---|
 | "dose mais alta de cafeína (400 mg declarados)" | "dose mais alta de cafeína (400 mg)" |
-| "valina (550 mg) declarados, reforço pra recuperação" | "valina (550 mg), reforço pra recuperação" |
-| "óxido nítrico declarada pelo fabricante, empata com Dux (2000 mg)" | "óxido nítrico de 2000 mg, empata com Dux" |
+| "A fórmula contém glúten declarado pelo fabricante" | "Contém glúten" |
+| "doses todas declaradas pelo fabricante" | "rótulo com a dose de cada ativo em mg" |
 
-**15b) "declarado pelo fabricante" sobrando** (transfere responsabilidade):
-| ❌ Antes | ✓ Depois |
-|---|---|
-| "restrição etária declarada pelo fabricante é 19 anos" | "restrição etária 19 anos" (ou drop, é regulação ANVISA) |
-| "doses todas declaradas pelo fabricante" | "doses transparentes" / "fórmula totalmente declarada" |
-| "todos declarados pelo fabricante" | "todos com mg específico" / drop |
-
-**15c) Alérgeno com "declarado"** (regulação obrigatória, redundância):
-| ❌ Antes | ✓ Depois |
-|---|---|
-| "A fórmula contém glúten declarado pelo fabricante" | "Contém glúten" / "Tem glúten na fórmula" |
-| "Pode conter lactose conforme declaração" | "Pode conter traços de lactose" |
-| "Sem mg declarada de creatina" | "Sem creatina específica na fórmula" / "Creatina embutida sem dose declarada" (se for o caso) |
-
-**Exceção CANÔNICA** (não flag):
-- ✅ "rende até 4.500 páginas em preto" — spec de fabricante (rendimento) afirmado direto; dropar "segundo a Epson" (muleta repetitiva, igual "declarado pelo fabricante")
-
-**Régua mental antes de gravar**: se a frase tem `\d+ mg declarad` ou `declarad\w+ pelo fabricante` ou `(todas|todos|doses) declarad`, drop "declarad*" e veja se a frase ainda faz sentido. Se sim, era redundância — drop sempre.
-
-### 16. Qualificadores de procedência redundantes (régua v1.19.2, canon 2026-05-29)
-
-**Princípio**: quando um valor numérico concreto já está citado, qualificadores como "declarado", "informado", "detalhado", "especificado" são redundância pura — soam burocráticos e transferem responsabilidade desnecessariamente.
-
-**Sub-padrões proibidos**:
-
-| ❌ Antes | ✓ Depois |
-|---|---|
-| "1 g de leucina declarados" | "1 g de leucina" |
-| "400 mg de cafeína declarados" | "400 mg de cafeína" |
-| "aminoácidos essenciais declarados (1 g de leucina...)" | "aminoácidos essenciais (1 g de leucina...)" |
-| "doses totalmente declaradas em mg" | "doses em mg" |
-| "todos declarados em mg pelo fabricante" | "todos com mg específicas" |
-| "transparência das doses" como elogio vago | citar as doses reais |
-| "fórmula com doses detalhadas" | "fórmula com 9 ativos em mg específicos" |
-
-**Exceção legítima**: quando descrevendo AUSÊNCIA de informação — "mg não consta no rótulo", "fabricante não detalha as mg". Nesses casos o qualificador informa algo útil (que a info não existe). "não declarado" / "não informado" são OK quando descrevem falta de dado real.
-
-**Auto-check**: grep por `declarad`, `informado`, `detalhado`, `especificado` após número concreto (ex: `\d+\s*(?:mg|g|µg|ml)\s+(?:declarad|informad|detalhad|especificad)`). Se achar — drop o qualificador e releia a frase. Se ainda faz sentido, era redundância.
+Os padrões vivem no JSON (`voz_eximir_responsabilidade`). Antes de gravar, busque `\d+\s*(?:mg|g|µg|ml)\s+(?:declarad|informad|detalhad|especificad)|declarad\w+ pelo fabricante|(?:todas|todos|doses) declarad`.
 
 ## Invocação
 

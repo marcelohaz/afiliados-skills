@@ -5,15 +5,11 @@ description: Índice COMPLETO das 27 skills do marketplace afiliados-skills — 
 
 # Mapa das skills editoriais
 
-**Regra nº 1:** quando o pedido casa com uma skill, SEMPRE invocar a Skill tool
-antes de qualquer outra ação — **inclusive quando o user usa slash-command**
-(o SKILL.md carrega inline e há tentação de executar manualmente; não execute).
-Regra nº 2: NUNCA improvisar curadoria/auditoria sem carregar a SKILL.md —
-cada uma tem centenas de linhas de armadilhas documentadas.
+**Regra nº 1:** quando o pedido casa com uma skill, invoque a Skill tool antes de qualquer outra ação. Se o usuário usou slash-command, a SKILL.md já veio carregada: siga-a etapa por etapa como está escrita, sem trocar etapa por execução de memória.
+Regra nº 2: curadoria e auditoria só com a SKILL.md correspondente carregada; cada uma documenta armadilhas que o improviso repete.
 
-**Namespace:** `Skill(skill="afiliados-skills:<nome>", args="...")` — nunca o
-namespace `{hash}:*` (cache pinned de uma máquina; fragmenta versão entre
-Marcelo e Bárbara). **Frescor:** trabalhando NO repo, a fonte da verdade é
+**Namespace:** prefira a cópia do repo quando ela aparece na lista de skills (`Projects/ProjetoAfiliados:<nome>` ou `<nome>`, conforme a pasta em que a sessão abriu); `afiliados-skills:<nome>` é o cache do plugin, que fica atrás do repo até o `claude plugin update`. Nunca `{hash}:*` (cache fixo de uma máquina; fragmenta versão entre Marcelo e Bárbara). O gate de invocação do `clone-log.ts` aceita os três nomes.
+**Frescor:** trabalhando NO repo, a fonte da verdade é
 `.claude/skills/{nome}/SKILL.md` (regra completa no CLAUDE.md, seção
 "IA editorial"). Fallback pra "Unknown skill": `Read` do arquivo do repo.
 
@@ -91,5 +87,5 @@ Skills locais do repo (fora do marketplace): `backup-monorepo`,
 Decisão Marcelo 2026-05-16: IA editorial roda no Claude Code (assinatura) em
 vez dos botões "✦" do painel (API key). Economiza a `ANTHROPIC_API_KEY` e
 mantém paridade com os prompts canônicos (`docs/painel/_data/agent-prompts.json`).
-Modelo: **Opus 5 (ou o Opus mais novo disponível) — NUNCA Sonnet/Haiku.**
+Modelo: **o Opus mais novo disponível — nunca Sonnet/Haiku.**
 Contexto completo: memória `afiliados.fluxo.preencher-auditar-via-claude-code.md`.

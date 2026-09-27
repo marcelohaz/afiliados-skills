@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-auditar
-description: Audita página individual de produto (read-only para julgamento; aplica direto só o mecânico — travessão, `;`, concordância —, régua comum das auditoras), cruzando os 6 campos editoriais com a bíblia + diretrizes + tag de afiliado. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. 26 categorias (claim-vs-bible, tag-affiliate, tone-comprador, travessão, superlativo, html-inválido com 3 sub-checks, link-externo não-Amazon, tamanho-fora-de-faixa, redundância-com-artigo, voz-citação ficha-técnica, voz-comprador implícita, termos técnico-industriais, jargão-técnico-vazado, chavões-por-nicho, capitalização/duplicação, concordância PT-BR, health-absolutes-YMYL, voz-eximir-responsabilidade, fullReview-prefixo-e-ancoras, duplicata-cross-site, naturalidade (palavra fora do sentido, frase-sacada, tiques com teto), voltagem-citada, peso-por-fonte, descontinuado-sem-banner, avisos-humanos-ignorados). Gera relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`.
+description: Audita a página individual de produto de um site contra a bíblia, a régua editorial e a tag de afiliado, e grava o relatório em `docs/biblias-v2/.audits/products/<site>-<slug>-last.md`. Use quando o pedido é auditar, revisar ou conferir uma página de produto. Aceita URL do painel (editor-produto.html?site=X&slug=Y) ou `site/slug`. Julgamento é só relatório; o mecânico (travessão, `;`, concordância) é aplicado direto.
 ---
 
 ## Parse de input
@@ -22,13 +22,6 @@ de um lote — hoje `pagina-produto-criar-em-massa --audit` e
 `git pull` (1.5), pular a camada mecânica (6.7), pular a guarda (19b), pular o
 commit/push (9) — a mãe faz os quatro — e **habilitar** o conserto de fato que
 passa no TESTE DA FRASE NOVA, que fora de lote é read-only.
-
-⚠ **Genérica de propósito, não uma lista de nomes de mãe** (canon 2026-08-29).
-Até então as 5 ressalvas nomeavam só a `criar-em-massa`; quando nasceu a segunda
-mãe, o sub-agent dela ficaria entre duas ordens opostas em todos os 5 pontos —
-que é exatamente o defeito já medido: **4 ambiguidades num lote de 10**
-(cozinhaideal, 21/08) e **22 reincidências em `6.7`** no skill-log. Mãe nova NÃO
-deve acrescentar o próprio nome aqui: basta passar `EM_MASSA=yes` no prompt.
 
 # Auditar página individual de produto
 
@@ -53,16 +46,13 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    ```bash
    bash scripts/git-pull-seguro.sh "skill-pagina-produto-auditar-temp"
    ```
-   Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Se pull falhar (rede offline, conflito), seguir mesmo assim.
+   O painel da VPS commita o que o usuário cria na UI, mas nem sempre empurra na hora, então o Mac pode estar atrás. Se o script avisar com ⛔ que o remote tem commit que você não tem, o disco está velho: não audite nem conserte essa cópia; puxe de novo ou pare e diga.
 
    ⚠ **Rodando como sub-agent de uma skill em-massa (`EM_MASSA=yes` no prompt),
    PULE este passo e NÃO registre desvio** (mesma ressalva do 6.7 e do 19b). A
    mãe proíbe git nos sub-agents porque N agentes paralelos dando `stash`/`pull`
    corrompem a árvore, e ela já puxou antes do pré-flight, então não há estado
-   stale a corrigir. Sem esta linha o sub-agent fica entre duas ordens opostas e
-   registra ambiguidade: aconteceu **4 vezes num único lote de 10** (cozinhaideal,
-   2026-08-21), com um dos quatro usando `--alvo` diferente e escapando do
-   detector de reincidência.
+   stale a corrigir.
 
 2. **Read .mdx**: `Read sites/{site}/src/content/products/{slug}.mdx`. Se 404, abortar com mensagem clara.
 
@@ -98,11 +88,6 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    no julgamento. Se desconfiar de um achado mecânico específico, confira aquele
    campo à mão em vez de re-rodar tudo.
 
-   Sem esta ressalva o sub-agent ficava entre duas ordens opostas e registrava
-   desvio por obedecer a mãe: **22 reincidências em `6.7`** no `skill-log`, o
-   ponto mais reincidente do log (canon 2026-08-20). Desvio é pra apontar
-   contradição real — esta virou barulho previsível.
-
    Os findings retornados são **autoritativos** — inclua TODOS no relatório com a severidade que o script deu (`error`/`warn`), NÃO re-julgue tamanho/fence/`;`/travessão de cabeça. Se o script erra por ausência de `bun`/lib (raro), caia no check manual das mesmas categorias. **Escopo do script: só o mecânico.** Ele NÃO cobre `tag-affiliate` (a tag pode ser injetada no build — verificável só no HTML renderizado, não no `.mdx`), nem julgamento (claim-vs-bible, naturalidade, redundância, voz-comprador) — isso continua com você nos passos abaixo.
 
 7. **Rodar as categorias de JULGAMENTO** (abaixo) — as que o script NÃO cobre: claim-vs-bible, tag-affiliate, tone/voz-comprador, superlativo, redundância, naturalidade, chavões-contexto, etc. As categorias puramente mecânicas (tamanho, travessão, `;`, html-invalido, fullReview-prefixo) já vieram do passo 6.7 — não duplicar.
@@ -128,7 +113,7 @@ Você é o auditor da página individual de produto. O usuário passa `site/slug
    da `auditar-em-massa`), separado do commit dos `.mdx` consertados. Commitar aqui é a race condition que a REGRA ZERO da
    mãe existe pra evitar.
 
-10. **Reportar no chat**: 3-5 linhas com total de findings por severidade + path do relatório. Não cole o relatório inteiro no chat.
+10. **Reportar no chat**: total de findings por severidade, o que foi corrigido e o path do relatório; o relatório inteiro fica no arquivo.
 
 ## As categorias de check
 
@@ -162,7 +147,6 @@ Presença de `—` (U+2014) ou `–` (U+2013) em qualquer campo. Proibido por PA
 
 **Permitido** (NÃO flagar):
 - ✓ **A keyword**: "melhor {produto} para {uso}" quando faz sentido — a keyword da rede é "melhor/melhores + algo".
-- ✓ **Escopado**: "o mais completo deste comparativo", "o mais barato da lista" (dado de comparação contra o lineup).
 - ✓ **Ancorado em fato**: "a maior tela daqui, de 14,6 polegadas".
 - ✓ Qualificadores simples (diretriz editorial #2 da bíblia: "review honesto mas inclinado ao positivo pra aumentar conversão"): "excelente", "ótimo"
 - ✓ "muito bom"
@@ -186,14 +170,14 @@ Use `superlativas qualificadas` quando houver dado de comparação na bíblia:
 ### 7. `link-externo-nao-amazon`
 Links em `fullReview` que NÃO apontam pra `amazon.com.br/dp/...`. Página individual não deve ter links externos pra outras lojas/sites.
 
-### 8. `tamanho-fora-de-faixa` (régua v1.16.0 — antes era só `conteudo-curto`)
+### 8. `tamanho-fora-de-faixa`
 
 Campo fora dos limites editoriais — pode estar **curto demais** (vazio/incompleto) ou **longo demais** (regressão de escanabilidade, similar ao caso `melhorpretreino`).
 
 **Curto demais** (severidade: depende do campo):
 - `subtitle` ausente ou < 10 chars
-- `shortDescription` ausente ou < 50 chars (era 40 antes da v1.16.0)
-- `fullReview` ausente ou < 300 chars **texto puro** (🔴 incompleto); 300-800 chars (🟡 abaixo do alvo — os 4 parágrafos rotulados + 3 links não cabem em <800; alvo 800-3000, paridade com a criação)
+- `shortDescription` ausente ou < 50 chars
+- `fullReview` < 300 chars **texto puro** (🔴 incompleto); 300-800 chars (🟡 abaixo do alvo: os 4 parágrafos rotulados e os 3 links não cabem em menos de 800; alvo 800-3000, paridade com a criação). Campo ausente não entra aqui: é a 19b `texto-no-lugar-errado`.
 - `pros` < 3 itens
 - `cons` ausente ou 0 itens
 - `specs` < 3 pares
@@ -217,7 +201,7 @@ texto. Ao reportar, cite o número em texto puro.
   - "[Tipo] brasileiro/a da [marca]..." (ex: "Impressora multifuncional da Epson...")
   - "[Tipo] com X mg de Y..." / "[Tipo] com [spec técnica]..."
 - **Padrões OK na 1ª frase**: para quem serve ou o que faz de melhor, dito de forma literal ("Impressora com tanque de tinta para casa e escritório pequeno", "Creatina pura para uso contínuo").
-- **Também flagrar (canon 2026-08-15, ver 20c/20e)**: molde "Ideal pra quem…", "Feito pra quem…", "Você ganha…", "Destaque para…" — eram "padrões OK" até 2026-08-15 e viraram assinatura da rede (18% e 35% das páginas).
+- **Também flagrar (ver 20c/20e)**: molde "Ideal pra quem…", "Feito pra quem…", "Você ganha…", "Destaque para…": viraram assinatura da rede (18% e 35% das páginas).
 - Fix: 1ª frase literal (para quem é / o que faz), técnico na 2ª, fecho de fato. Ver seção shortDescription em `pagina-produto-criar`.
 
 **Como contar pros/cons sem HTML**: olhe o bullet sem `<strong>...</strong>` e sem `<a href="...">...</a>` mantendo só o texto interno. Se passa de 180 = flag.
@@ -253,7 +237,6 @@ Voz-citação OK SÓ quando atende AS DUAS condições:
 2. **(b)** adiciona valor editorial ao leitor (calibra expectativa, sinaliza honestidade, faz crítica útil)
 
 **✓ Exemplos editorial OK** (não flagar, ou flagar como info):
-- "rende até 4.500 páginas em preto, segundo a Epson" *(agora FLAG: atribuir spec de fabricante é muleta; afirmar direto)*
 - "número de marketing 33 ppm, mas a velocidade ISO é mais realista" *(crítica útil)*
 - "a HP recomenda volume de 50 a 100 páginas mensais" *(claim só-fabricante)*
 
@@ -261,6 +244,7 @@ Voz-citação OK SÓ quando atende AS DUAS condições:
 - "alérgenos da Amazon confirmam ausência de glúten" → reformula pra "sem glúten"
 - "atributos de material declaram ausência de contaminantes" → "livre de contaminantes"
 - "apontada pelo fabricante como mais absorvível" → "considerada mais absorvível"
+- "rende até 4.500 páginas em preto, segundo a Epson" → "rende até 4.500 páginas em preto" (spec factual vai direto)
 
 Reportar no relatório com sugestão de reformulação destilada. Humano decide se aceita.
 
@@ -304,7 +288,7 @@ Termos técnico-industriais proibidos pela régua editorial (canonizada 2026-05-
 **Caso real 2026-05-26**: `essential-nutrition-beta-action` cons[3] usou "considerar o risco de contaminação cruzada na linha de produção". Audit pegou — sugerido fix:
 
 - ❌ "Risco de contaminação cruzada na linha de produção"
-- ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
+- ✅ "Pode conter traços de leite. Quem tem alergia grave deve ler o rótulo antes do uso"
 
 Linguagem editorial em vez de técnica. Aviso é crítico porque quebra a voz, não é um qualificador a debater.
 
@@ -337,22 +321,14 @@ Aplica limites de `_genericos` + bloco do nicho específico (`Pré Treino`, `Cre
 Teto numérico vira linha de relatório ("filtro apareceu 73 vezes"), útil quando o texto ficou mesmo
 repetitivo. **Não bloqueia, não reprova, e NUNCA justifica trocar a palavra certa por outra.**
 
-**Por quê, medido no skill-log em 05/09/2026:** 43 das 448 notas de desvio da rede (10%) são deste
-arquivo — 36 sobre teto numérico e **zero** sobre banido absoluto. Dois defeitos. (a) O teto cai sobre
-a palavra que É o produto: `cápsula` numa cápsula, `litros` numa geladeira, `proteína` num artigo de
-proteína, `filtro` num aspirador. (b) É a única régua desta família **sem script** que conte, então
-palavra-vs-substring, nome do produto, superfície e divisor por página nunca tiveram resposta — dois
-auditores do MESMO lote deram vereditos opostos sobre a mesma palavra. Dano consumado: um agente trocou
-"impede calcular" por "não permite calcular" porque o teto de `pede` casava dentro de `impede`; outro
-reescreveu 27 valores de spec pra baixar `porção` de 69 pra 39. E o teto não mostrou efeito: o único
-site de aspirador sob o bloco tem 11,4 ocorrências por mil palavras contra 12,5 do irmão fora dele.
+**Por quê:** o teto cai sobre a palavra que é o produto (`cápsula` numa cápsula, `filtro` num aspirador) e já levou agentes a trocar a palavra certa e reescrever specs para baixar a conta, sem efeito medível na repetição.
 
 **Regra de ouro:** repetir a palavra certa é normal. Se o único jeito de baixar a contagem é usar uma
 palavra pior, apagar um fato ou reescrever uma spec, **não baixe** — registre e siga.
 
 
 Fix: encurtar/omitir a frase repetida + destilação cirúrgica. NÃO "variação léxica" por sinônimo figurado (é o defeito do 20c).
-**Teto por página ≈ 1/10 do teto por artigo (2026-08-28).** Continua valendo como ordem de grandeza do número que você reporta. ⚠ Desde 05/09 **essa conta não decide mais nada**: o teto é informativo, então divisor, palavra-vs-substring e superfície deixaram de inverter veredito. Era a ambiguidade mais registrada do skill-log neste critério, e some por desenho, não por definição melhor. Os **banidos absolutos** seguem **0** em qualquer superfície. Detalhe original: Os tetos do JSON são POR ARTIGO (medidos no p90 de artigos comparativos); esta skill audita UMA página individual. A conversão está nos próprios `_doc` do JSON (Eletrônicos e Suplementos): "numa página individual o equivalente é ~1/10 do valor". Regra: `teto_pagina = max(1, round(teto_artigo/10))` — exceto os **banidos absolutos**, que continuam **0** em qualquer superfície. Era a ambiguidade mais registrada do skill-log neste critério (3 notas em 17-20/08: sem o divisor, cada auditor inventava um).
+**Número reportado por página:** `teto_pagina = max(1, round(teto_artigo/10))` (a conversão está no `_doc` do JSON), exceto `_genericos.naturalidade_max`, que usa /2 (ver 20e). Banidos absolutos seguem 0 em qualquer superfície.
 
 **⚠ `_sites_aplicaveis` é o GATE do bloco de nicho, e o `_genericos` é obrigatório (canon 2026-08-15).**
 
@@ -405,7 +381,7 @@ Detecta bugs de substituição mecânica que vazam pro output:
 - `sem efeitos colaterais`
 - `cientificamente comprovado` / `clinicamente comprovado` (sem citar estudo)
 
-**Fix proposto**: qualificar sempre — "Tolerado pela maioria; consulte um profissional se tem comorbidade" em vez de "uso regular é seguro".
+**Fix proposto**: apagar o absoluto; se a bíblia traz o fato por trás (dose, restrição, advertência do rótulo), afirmar o fato no lugar.
 
 ### 17. `voz-eximir-responsabilidade` (régua v1.19.1, severidade: 🔴 Crítico)
 
@@ -563,7 +539,7 @@ Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já 
   cliente? Fix: sujeito concreto + verbo literal, "para". Repetir a palavra exata
   NÃO é defeito. Verbo inventado/gíria ("se reconserta", "no batente") continua
   aqui. Máximo 1 coloquialismo leve por página.
-- **20e — tiques com teto por PÁGINA** (🟡, vale em todo nicho): tetos = **metade** dos de
+- **20e — tiques com teto por PÁGINA** (🔵 info, vale em todo nicho; teto numérico só informa, ver critério 13): tetos = **metade** dos de
   `_genericos.naturalidade_max` do `chavoes-por-nicho.json` (regra escrita no `_doc` da chave:
   "página de produto: metade"), pela fórmula **`teto_pagina = max(1, floor(teto_artigo/2))`**
   (ex.: resolve 3 → floor(1,5) = 1; daqui 2 → 1; **de verdade 1 → floor(0,5) = 0 → max(1,0) = 1**), e
@@ -579,12 +555,7 @@ Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já 
   `naturalidade_max` é a **única** do JSON inteiro que declara divisor próprio
   ("página de produto: metade"); onde o `_doc` não declara, vale o /10 do 13.
 
-  São escopos diferentes, não réguas concorrentes — e errar isso muda o veredito por
-  ordem de grandeza. Medido em 2026-08-29 na chave `Creatinas.medico_tecnico_max.monohidratada`
-  (teto 30 por artigo): dois auditores varreram a MESMA rede e acharam **1** e **270**
-  páginas acima do teto, porque um aplicou /2 (teto 15) e o outro /10 (teto 3). O certo
-  ali é **/10**. Antes de converter, olhe o NOME da chave, não o bloco:
-  `_genericos.naturalidade_max` → /2; **qualquer outra chave, em qualquer bloco** → /10.
+  Antes de converter, olhe o NOME da chave, não o bloco: `_genericos.naturalidade_max` → /2; **qualquer outra chave, em qualquer bloco** → /10.
 
   ⚠ **`max(1, ...)` não chega a zero de propósito.** Teto 0 é função do
   `_genericos.naturalidade_banidos`, que é lista separada. Deixar um tique de
@@ -594,7 +565,7 @@ Sub-checks QUALITATIVOS de tom natural — complementam o critério 13 (que já 
   "reprografia" → "cópia e digitalização" · "aquisição" → "compra".
 
 **LIBERADAS (NÃO flagrar — falso-positivo já cometido e corrigido 1x)**:
-- **Elipse de categoria com adjetivo real**: "a barata da lista", "a doméstica",
+- **Elipse de categoria com adjetivo real**: "a barata", "a doméstica",
   "a laser" são português natural (teste: o leitor tropeça NO contexto? não).
 - "calibrada/calibrado" só é banida se o bloco do NICHO listar (hoje: Pré Treino).
   Não é regra genérica.
@@ -716,7 +687,7 @@ editorial**, e é isso que precisa de olho humano.
 ⚠️ **Warn de JULGAMENTO nunca aplica** (frase parecida com a página irmã, coloquialismo acima do
 teto, redundância entre bullet e parágrafo: só relatório). **Warn MECÂNICO aplica direto** — travessão,
 `;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI` (régua comum das auditoras,
-`docs/PADROES.md`, canon 2026-08-15; antes esta skill era a única que deixava até o mecânico só no relatório).
+`docs/PADROES.md`).
 
 ### Quando a raiz é a BÍBLIA, não a página
 

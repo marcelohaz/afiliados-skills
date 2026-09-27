@@ -18,10 +18,6 @@ description: >-
   conta se resolve pela TAG do site, não pelo dono editorial.
 - **`--dias=N`** → janela do GSC (default 28).
 
-## Modelo
-
-Opus 5 (ou o Opus mais novo disponível). Nunca Sonnet/Haiku.
-
 ## O que a skill NÃO faz, declarado
 
 **Não lê a conta da Amazon.** Exige login. A lista vem colada pelo humano, nas
@@ -64,9 +60,7 @@ ordem:
    faixa mais alta, e 8% em eletrônicos. Mas ticket domina: R$40 a 13% dá
    R$5,20 e R$1.025 a 8% dá R$82. Ticket alto sozinho também não basta — só
    define o teto do ganho.
-6. **Genérico com muitas páginas** costuma render (`analistadeprodutos` 690
-   cliques, `compraguia` 217), mas não por ser genérico: `guiamelhores` é
-   genérico e fez zero.
+6. **Ser genérico não é critério.** Site genérico com muitas páginas costuma ir bem nos itens 2 e 3, mas quem decide são cliques e posição, não o tipo: há genérico com zero clique.
 
 **Regra de conta, sempre:** site cuja tag pertence a OUTRA conta vai na lista
 DELA. Declarar na sua gasta sua vaga com comissão que entra na conta alheia.
@@ -113,9 +107,8 @@ para site que ninguém mediu.
 Conta pela **tag** (`config.ts` → `amazon-ids.json`). Dono pelo
 `sites-meta.json`, que é o que a coluna Responsável do `sites.html` mostra.
 
-⚠️ **Se a tag não constar no espelho, não invente.** Em 19/08, 10 das 50 tags
-em uso não estavam no `amazon-ids.json` (parado em 24/07) porque os sites
-nasceram depois. Isso cegou 20% da rede. Nesse caso: reportar como
+⚠️ **Se a tag não constar no espelho, não invente.** O `docs/painel/amazon-ids.json` é preenchido à mão
+e não tem os sites mais novos que ele. Nesse caso: reportar como
 "conta indeterminada", cair no `sites-meta` para dizer de QUEM é o site, e
 avisar que o espelho está velho.
 
@@ -141,27 +134,22 @@ O endpoint preserva `status`/`nota` de quem continua, faz backup em
 Ele devolve `removidos[]` com a anotação de quem saiu — **mostrar antes de
 descartar**: anotação humana não se reconstrói por medição.
 
-⚠️ **Se o humano NÃO colar a lista final, dizer com todas as letras que o
-espelho NÃO foi atualizado**, e desde quando está parado. Silêncio aqui recria
-o problema que a Etapa 6 existe pra resolver: em 19/08 o espelho estava 25 dias
-atrasado e eu apresentei "30 sites não declarados" como medição quando era
-inferência sobre dado velho.
+⚠️ **Se o humano NÃO colar a lista final, diga com todas as letras que o
+espelho NÃO foi atualizado**, e desde quando está parado. Sem isso, a próxima
+execução apresenta inferência sobre dado velho como se fosse medição.
 
 E conferir se a lista final bate com a recomendação. Aplicação parcial ou
 diferente é informação, não ruído.
 
-## Armadilhas (todas com caso real de 2026-08-19)
+## Armadilhas
 
 1. **Home não representa o site.** Site de listagem não tem link na home; eles
-   vivem nos artigos. Julguei 5 sites pela home e errei os 5 — `amelhorpanela`
-   tinha 68 links, `whiskyideal` 32, `melhorshampoo` 45.
+   vivem nos artigos (`amelhorpanela`: 68 links nos artigos). Julgue pelos artigos.
 2. **O caminho do sitemap muda por plataforma.** Astro usa
    `sitemap-artigos.xml`; WordPress usa `sitemap_index.xml` (Yoast). Usar o do
    WordPress num Astro deu 12 falsos "sem link" seguidos.
 3. **Rótulo de painel externo não descreve realidade** (ver Etapa 2).
 4. **`cfAccount: nenhum` significa fora da Cloudflare**, não conta divergente.
-   Contei 25 "divergências de conta" que eram ausência de zona; o número real
-   era zero.
 5. **Dono editorial ≠ conta.** São eixos diferentes e divergem por desenho: 24
    dos 92 domínios têm responsável compartilhado, que o `cfAccount` sequer
    consegue representar.

@@ -1,6 +1,6 @@
 ---
 name: linkagem-auditar
-description: Audita E MELHORA a linkagem interna do SITE INTEIRO (cross-artigo), propor→aprovar. Roda os núcleos determinísticos (scripts/audit-linkagem.ts + audit-links.ts) + camada de julgamento LLM (placement contextual, links novos pra órfãos/sublinkados). Quantidade: 2 mín / ~3 ideal / 4 máx peers distintos por artigo; HUB (homeReviewSlug ou pillar:true) isento do teto. Conserta: link quebrado 404, /{homeReviewSlug}/→/, âncora≠keyword, âncora de produto sem marca, peer/home na Conclusão, excesso >4. Confere também SLUG × HISTÓRICO DO GSC (`scripts/audit-slugs.ts`): o artigo está na URL que o Google conhece, medindo os DOIS lados nos domínios da linhagem — renomear slug quebra link interno, então mora aqui. contentLocked-aware (rerroteia a fonte). Artigo PORTADO do WordPress (`portadoDe`): com a autorização do Marcelo na execução, edita os travados só no link e nas palavras coladas nele, com a trava ligada; âncora no plural vai para o `keywordPlural`; artigo sem guia recebe link no `fullReview`. ARTIGO QUE JÁ RANKEIA (clique em 28 dias, `rankeando[]` do audit-slugs): só conserto de defeito e 1 link novo com aprovação, o resto vai para o relatório; no site que recebeu portados, os links dos artigos antigos para os portados vêm 3 a 4 semanas depois do port. Link para outro site da rede (`link-rede`) é defeito. Aceita site OU URL do painel. Fecha com commit + push + painel-vps-pull + marcador .audits/linkagem/{site}-last.md.
+description: "Audita e melhora a linkagem interna de um site inteiro: roda os scripts de grafo, validade e slug × histórico do GSC, julga o placement, propõe links novos para órfãos e sublinkados, aplica direto o conserto mecânico e pede aprovação para o julgamento. Use quando o pedido for auditar, consertar ou melhorar os links internos de um site (slug do site ou URL da página de linkagem do painel). Não é auditoria de um artigo só (artigo-auditar) nem escrita de guia (artigo-guia-escrever). Fecha com commit, push e painel-vps-pull."
 ---
 
 ## Parse de input
@@ -170,21 +170,9 @@ No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o 
    `propriedadesSemAcesso`: propriedade sem permissão soma zero, então o achado daquele
    site pode estar incompleto e o relatório diz isso.
 
-   ⚠ **`inconclusivo:true` + exit 2 (canon 2026-09-12).** Até aqui a guarda cobria só
-   credencial ausente, e faltava o caso de ENTRADA vazia: no `melhoremcasa` a linhagem
-   saiu com um domínio só (o novo, sem histórico), as duas janelas vieram zeradas e o
-   relatório imprimiu **"✅ toda slug do site é a que tem o histórico"** sem ter medido
-   nada. Aprovação sem medição é pior que erro — ela encerra a investigação. Agora sai
-   `INCONCLUSIVO` com motivo e **exit 2**, que NÃO é falha do passo: leia o `motivo`,
-   diga no relatório que esta classe não foi verificada, e siga.
+   **`inconclusivo:true` + exit 2** não é falha do passo e não é aprovação: a medição não aconteceu (ex.: linhagem com um domínio só, sem histórico nas duas janelas). Leia o `motivo`, diga no relatório que esta classe não foi verificada, e siga.
 
-   **Regra `orfa-mesma-busca` (disputas), canon 2026-09-12.** O casamento antigo exigia
-   que a órfã fosse EXATAMENTE uma das três formas de keyword do artigo. Quando o clone
-   copia keyword e slug da mesma fonte, as duas ficam coerentes entre si e nada liga o
-   artigo ao passado do domínio de DESTINO — o caso mais comum, e o que deixava o aviso
-   mudo. A regra nova liga pela CONSULTA real do Search Console (`dimensions:
-   ['page','query']`), então a guarda 3 (nunca casar por semelhança de palavra) continua
-   de pé: o elo é o termo que a pessoa digitou, não inferência de sinônimo.
+   **Regra `orfa-mesma-busca` (disputas).** Liga a órfã ao artigo pela consulta real do Search Console (`dimensions: ['page','query']`), nunca por semelhança de palavra.
 
    **Disputa é FATO, não conselho.** Ela diz "esta URL histórica e este artigo recebem a
    mesma busca", com as consultas e os números dos dois lados. As três saídas — mover a
@@ -193,18 +181,6 @@ No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o 
    leia a fração com o denominador junto: ela é sobre as impressões com CONSULTA
    IDENTIFICADA, que no caso-origem eram 144 de 2.142 da página (o GSC anonimiza termo
    raro). "50%" ali é metade da parte identificada, não metade da página.
-
-   As duas guardas da regra, as duas calibradas contra medição — se mexer nelas, meça de
-   novo nos mesmos sites:
-   - **Fração mínima (1%).** Sem ela saem 5 achados no `compraguia`, todos cauda: 859 de
-     272.852 impressões (0,3%). Uma órfã grande sempre tem ALGUMA busca que contém a
-     keyword de um artigo do site.
-   - **Direção.** A slug órfã não pode ter token de conteúdo fora da forma do artigo. Sem
-     ela, o piso de fração acusava `/melhor-air-fryer-custo-beneficio/` contra
-     `/melhor-air-fryer/` com 29,7% — o par exato que a guarda 3 existe pra nunca fundir.
-     Subtópico é **artigo a escrever**, não slug a corrigir, e por definição tem
-     sobreposição alta com o tópico pai. Validado em 8 sites: 1 achado no total, zero
-     falso positivo.
 
    **Todo achado vai por PROPOR→APROVAR, nunca auto-fix.** Mexer em URL pública errado
    custa o tráfego do artigo. E a decisão tem julgamentos que o script não faz sozinho
@@ -246,16 +222,9 @@ No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o 
    (seção "Artigos a recuperar" do painel), não slug a corrigir. Reporte a contagem e as
    maiores, e siga.
 
-   ⚠ **Incidente que gerou este passo (2026-09-04):** movi 8 artigos pra "slug histórica"
-   lendo só o `mapa-artigos-orfaos.json`. Quatro estavam invertidos — num deles o artigo
-   saiu de uma URL com 275.770 impressões (51.085 nos últimos 28 dias) pra outra com 6. O
-   mapa lista só URLs que NÃO existem em disco, então a slug forte nunca aparece nele,
-   justamente por já ser o artigo. Ler ausência na lista como ausência de histórico é o
-   erro que o `audit-slugs.ts` existe pra tornar impossível: ele mede os dois lados.
-
 5. **Camada de julgamento LLM** (o valor que script não dá). O JSON do `audit-linkagem.ts` traz `lockedArticles[]` (fontes travadas) e `pillarArticles[]` (hubs isentos do teto) — use os dois. Read os `.mdx` dos artigos com links peer/home + os com FAQ/seções relevantes. Avalie:
    - **Placement genuinamente contextual?** Para cada link peer/home existente, o parágrafo onde ele está fala MESMO do tema do destino? "Fora da Conclusão" é necessário mas não suficiente. Sinalize os fracos com spot melhor. **Régua de spot (canon Marcelo): o link cai na MELHOR posição do artigo pro tema** — ex: link pro "melhor impressora para fotos" entra no parágrafo/H3 que fala de fotografia, não num lugar genérico.
-   - **REMOVER link que não faz sentido ali (canon Marcelo 2026-07-31).** Até 2026-07-31 a skill só sabia **consertar** (404/âncora/home) e **adicionar** — não havia NENHUM gatilho que produzisse "esse link não cabe aqui, tira". Consequência real: na 1ª passada do compraguia entreguei "0 erros · 0 avisos" com três links tablet→impressora vivos, porque nenhum check os questionava; só foram removidos quando o Marcelo apontou. Agora: link cujo parágrafo **não trata do tema do destino** é candidato a REMOÇÃO (não só a mover), **preservando a prosa** — tira o `<a>` e reescreve a frase pra ela continuar fazendo sentido sem o link.
+   - **REMOVER link que não faz sentido ali (decisão do Marcelo).** Link cujo parágrafo **não trata do tema do destino** é candidato a REMOÇÃO (não só a mover), **preservando a prosa**: tira o `<a>` e reescreve a frase para ela continuar fazendo sentido sem o link.
      - **⚠ GUARDA DE GRAFO, obrigatória antes de propor remoção:** remover `A→B` derruba `inboundPeers[B]` de N pra N-1. Confira que **N-1 ≥ 2**; se não, proponha o link substituto (de preferência intra-cluster) **junto** com a remoção, no mesmo lote. Sem isso a remoção cria órfão/sublinkado e a régua E é violada pelo próprio fix. Caso real (compraguia 2026-07-31): removi 3 links e repus 1 intra-cluster pra não derrubar o inbound do destino.
      - Remoção é **julgamento** → propor→aprovar, nunca aplicar direto.
    - **Oportunidades de links NOVOS.** Há FAQ/H3/seção que toca no tema de um peer ainda não-linkado (ou pouco-linkado), onde um link cairia natural? Liste só as genuinamente naturais — NUNCA force link decorativo. Para cada: artigo origem, peer destino, **spot exato** (cite a frase âncora), **âncora sugerida** (= keyword singular do destino), e o **Edit proposto** (frase antes → depois).
@@ -278,13 +247,13 @@ No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o 
    `Write` em `docs/biblias-v2/.audits/linkagem/{site}-last.md`: título (`# Auditoria de linkagem: {site}`), contagens (`- Erros: N · Avisos: M · Infos: K · Oportunidades: O`), a mesma linha "Não medido" do relatório (quem abrir o marcador depois precisa saber se o "0 erros" foi medido), lista curta dos tipos disparados (ou "nenhum"). **NÃO** invente timestamp (a fonte de tempo é o commit git).
    Depois do passo 12, atualize o marcador com o estado final e, se algum artigo ficou **órfão de propósito**, registre-o nestas linhas fixas, com os slugs separados por vírgula: `- Exceções justificadas: slug-a, slug-b (motivo curto)` para a exceção do "encaminhamento útil", e `- Segundo tempo a partir de AAAA-MM-DD: slug-c` para o que fica para a segunda leva de links. O painel lê só essas duas linhas: órfão que não está nelas acende "Linkagem com pendências" no site, e o segundo tempo volta a acender na data.
 
-8. **Aplicar o óbvio + esperar aprovação só do julgamento** (canon 2026-07-24): os fixes **determinísticos** (link-quebrado, link-home-errado, anchor-nao-keyword, anchor-produto-sem-nome + reconciliação de concordância, `anchor-frase-quebrada` de level=error) **aplicam direto** no passo 10 sem esperar, marcados ✅ CORRIGIDO. Só os de **julgamento** (link NOVO, mover peer-link-na-conclusao, linkagem-excesso) esperam aprovação granular: "aplica tudo" / "aplica 1,3" / "aplica canon" (por tema) / "rejeita 2" / "refaz 1". Se não houver nenhum de julgamento, pula a espera e vai pro build/commit. **Artigo de `rankeando[]` segue a seção "Artigo que já rankeia"**: dos determinísticos, só os do item 1 dela aplicam direto; os outros ficam no relatório.
+8. **Aplicar o óbvio + esperar aprovação do julgamento**: aplica direto no passo 10, marcado ✅ CORRIGIDO, só o que o Invariante "APLICA O ÓBVIO" e o passo 4 classificam como determinístico (link-quebrado, link-home-errado, link-rede, anchor-nao-keyword, anchor-produto-sem-nome com a reconciliação de concordância, `anchor-frase-quebrada` de level=error). Todo o resto espera aprovação granular ("aplica tudo" / "aplica 1,3" / "aplica canon" / "rejeita 2" / "refaz 1"), inclusive remoção de link, `anchor-frase-quebrada` de level=warn, proposta de `pillar: true` e os achados do `audit-slugs.ts`. Sem nada de julgamento, pula a espera e vai para o build/commit. **Artigo de `rankeando[]` segue a seção "Artigo que já rankeia"**: dos determinísticos, só os do item 1 dela aplicam direto.
 
 9. **Backup** antes de aplicar (1 por artigo tocado):
    `docs/painel/.painel-backups/{YYYY-MM-DD}/article-{site}-{slug}-{HHMMSS}-guide.mdx` (via helper `readGuideContent` do painel, mesmo formato dos outros). Portado sem guia, com edição no `fullReview`: cópia do `.mdx` inteiro em `article-{site}-{slug}-{HHMMSS}.mdx`.
 
 10. **Aplicar os óbvios + os aprovados** via `Edit` cirúrgico no `guideContent` do `.mdx` (ou no `fullReview`, no portado sem guia; preservar indent 2 espaços do block scalar; um trecho por vez). Regras:
-    - **anchor-nao-keyword**: trocar SÓ o texto entre `<a>...</a>` pela keyword (qualificadores ficam FORA do `<a>`). **⚠ RECONCILIAR a concordância do artigo/preposição que vem ANTES do `<a>` (canon 2026-06-23):** se a âncora nova muda NÚMERO ou GÊNERO em relação à antiga, o artigo/contração que a rege precisa acompanhar. Caso real: âncora `melhores impressoras de tanque de tinta` (plural) virou `melhor impressora tanque de tinta` (singular) mas o "no guia **das**" ficou → "no guia das melhor impressora" (quebrado). Ajustes típicos: `das→da`, `dos→do`, `nas→na`, `nos→no`, `aos→ao`, `pelas→pela`, `essas→essa`, `umas→uma`. **Reler a FRASE INTEIRA do `<a>` tocado (não só o trecho da âncora) antes de salvar.** Quatro casos que a troca cria, medidos nos portados (22 e 24/09/2026): (a) **"melhor" já antes do link** ("sobre o melhor <a>robô aspirador com mapeamento</a>"): ele sai, porque a âncora nova já começa com "melhor"; (b) **"em" ou "qual" antes do link** ("comparar alternativas em <a>celular até 1300 reais</a>", "saber qual <a>robô…</a> combina"): a âncora antiga fechava a frase e a keyword não; é julgamento ("no guia de…", "qual o…"), então não aplique direto, proponha; (c) **âncora que já estava no plural, no portado:** vai para o `keywordPlural` (ver "Portados do WordPress", item 3); (d) **âncora que era um substantivo comum no meio da frase**: com "melhor", a frase continua gramatical e o sentido muda, e o script não acusa. No compraguia (24/09/2026), "quem utiliza o notebook para trabalho" virou "quem utiliza o melhor notebook para trabalho", e "um modem ou um roteador wifi tradicional" virou "o melhor roteador Wi-Fi tradicional"; as duas foram desfeitas na revisão. Leia a frase como leitor: se ela passou a dizer outra coisa, é julgamento. Proponha a troca da palavra colada ("quem procura o…") ou deixe a âncora do texto e anote no relatório. O script acusa (a) como error e (b) como warn ao rodar de novo no passo 12; (d) só aparece na leitura.
+    - **anchor-nao-keyword**: trocar SÓ o texto entre `<a>...</a>` pela keyword (qualificadores ficam FORA do `<a>`). **⚠ RECONCILIAR a concordância do artigo/preposição que vem ANTES do `<a>` (canon 2026-06-23):** se a âncora nova muda NÚMERO ou GÊNERO em relação à antiga, o artigo/contração que a rege precisa acompanhar. Caso real: âncora `melhores impressoras de tanque de tinta` (plural) virou `melhor impressora tanque de tinta` (singular) mas o "no guia **das**" ficou → "no guia das melhor impressora" (quebrado). Ajustes típicos: `das→da`, `dos→do`, `nas→na`, `nos→no`, `aos→ao`, `pelas→pela`, `essas→essa`, `umas→uma`. **Depois de cada troca, releia a frase inteira como leitor.** Artigo, preposição, número e gênero antes do `<a>` têm que fechar com a âncora nova, e nenhuma palavra pode ficar duplicada ("o melhor <a>melhor robô…</a>": tire o de fora). Se a troca exige mexer em algo além da palavra colada ("em <a>…</a>", "qual <a>…</a>"), ou se a frase passou a dizer outra coisa ("quem utiliza o notebook para trabalho" virando "quem utiliza o melhor notebook para trabalho"), é julgamento: proponha, não aplique. No portado, âncora que já estava no plural vai para o `keywordPlural` ("Portados do WordPress", item 3).
     - **anchor-produto-sem-nome**: trocar o texto pelo nome completo do produto (com marca). **Mesma reconciliação de concordância do item acima** (ex: âncora que era plural genérico vira nome próprio singular → ajustar artigo antes).
     - **anchor-frase-quebrada (error)**: NÃO toca na âncora (ela já está certa = keyword). Troca o **artigo indefinido que vem ANTES** pelo definido, **contraindo** a preposição anterior: `um`→`o`, `uma`→`a`, `a um`→`ao`, `a uma`→`à`, `de um`→`do`, `em um`→`no`. Se havia qualificador (`um bom melhor whey` → `o melhor whey`), ele sai junto (era redundante com o superlativo). **Artigo no número errado** ("das melhor impressora", "o melhores roteadores"): acertar o artigo (`das`→`da`, `o`→`os`); no portado cuja âncora era plural, usar o `keywordPlural` e manter o artigo do texto. **"melhor" repetido** ("o melhor <a>melhor robô…</a>"): tirar o de fora. ⚠ **Reler a frase inteira depois**, incluindo o gênero do artigo — o gênero NÃO é validado pelo script (ver 11.5) e é você quem confere contra o núcleo real da keyword.
     - **anchor-frase-quebrada (warn)**: é julgamento, espera aprovação. `na/no` que não retoma nada → nomear o destino (`no guia de {keyword}`) ou usar o plural. `em` que não retoma nada → nomear o destino (o plural não resolve: "em melhores celulares" também não fecha). `qual` + superlativo → pôr o artigo (`qual o melhor robô…`, conferindo o gênero). `qualquer` + superlativo → reescrever a frase.
@@ -297,13 +266,11 @@ No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o 
 
 11. **Build** (gate): `pnpm --filter {site} build`. Se Zod/Astro falhar, reverter do backup e reportar.
 
-11.5. **Concordância artigo↔âncora: quem confere é o script (desde 22/09/2026), no passo 12.** Um conserto de âncora pode passar verde no `anchor-nao-keyword` e deixar "no guia **das** melhor impressora". O `audit-linkagem.ts` emite `anchor-frase-quebrada` para: artigo no número errado antes de âncora com "melhor"/"melhores" ("das melhor", "os melhor", "o melhores", inclusive com negrito dentro do link), "melhor" repetido fora do link, e "em"/"qual" + superlativo. O grep que ficava aqui pegou 1 de 7 casos de teste (não via "os/as" nem o negrito do WordPress).
-
-    **Âncora sem "melhor"** ("impressora barata", "celular até 1000 reais"): o script tira o número da keyword do destino (âncora igual à keyword = singular), mas só quando a 1ª palavra dela não termina em "s". Sem esse recorte deu 11 falsos em 11 na rede: "creatinas" é keyword sem "melhor" que já é plural, e "das creatinas" está certo ("micro-ondas" e "tênis" são o mesmo caso). Então "das impressora barata" é pego, e keyword como "creatinas" fica para a releitura do passo 10.
+11.5. **Concordância artigo↔âncora.** O `audit-linkagem.ts` do passo 12 acusa artigo no número errado antes da âncora ("das melhor", "o melhores", inclusive com negrito dentro do link), "melhor" repetido fora do link e "em"/"qual" + superlativo. Keyword sem "melhor" que já é plural ("creatinas", "micro-ondas") ele não confere: fica para a sua releitura do passo 10.
 
     **Concordância de GÊNERO (`o melhor impressora`, `a melhor tablet`) fica FORA do determinístico — de propósito (canon 2026-07-31).** Tentei derivar o gênero do `title` do destino ("as N melhores" = feminino) e **medi 17% de acerto**: os títulos da rede usam `As 11 Melhores Whey Protein` e `As N Melhores Ômega 3` concordando com substantivo ELÍPTICO ("as melhores [opções]"), não com o núcleo da keyword. Resultado: `o melhor whey protein` e `o melhor ômega 3`, que estão **CORRETOS**, vinham como erro. Como esta skill aplica fix determinístico **sem aprovação**, um check assim viraria edição errada automática. Então: gênero é **julgamento** — ao reler a frase inteira do `<a>` tocado (passo 10), confira o artigo com o núcleo REAL da keyword, não com o título.
 
-12. **Re-rodar `bun scripts/audit-linkagem.ts {site}`** pós-fix pra confirmar que os findings aprovados sumiram e nada regrediu (cada artigo 2-4 peers — hub isento; 0 `linkagem-excesso`; 0 órfãos e idealmente 0 sublinkados; 0 na Conclusão; 0 broken/home-errado).
+12. **Re-rodar `bun scripts/audit-linkagem.ts {site}`** pós-fix para confirmar que os achados aplicados sumiram e nada regrediu (0 broken, 0 home-errado, 0 peer na Conclusão entre os aplicados). O que ficou de fora de propósito continua aparecendo e vai para o relatório com o motivo: exceção justificada ao piso de 2, artigo de `rankeando[]`, destino sem keyword, fonte travada ou proposta rejeitada.
 
 13. **Git add + commit (`--no-verify`) + push + VPS pull**:
     ```bash

@@ -1,6 +1,6 @@
 ---
 name: preencher-institucionais
-description: Escreve as DUAS páginas institucionais EDITORIAIS de um site por nicho — /sobre/ (voz do site/marca) E /author/ (voz da pessoa, 1ª pessoa) — mantendo-as DISTINTAS (sem duplicação) e com a mesma voz. Aceita `site` (slug) OU URL do painel. Molde de ouro melhoromega3. E-E-A-T fundamentado (autor/critérios do config+niche, nunca inventado); metodologia VAGA (avaliamos/analisamos, sem alegar teste físico nem expor pesquisa de mesa); disclosure Amazon + YMYL (saúde); anti-clone cross-site (personas reusadas) e cross-página (sobre≠autor). Alinha config.author.bio; cria a página /author/ se faltar. NÃO faz contato/termos/privacidade (template+config). Backup + commit + push + sync VPS. (Substitui a antiga preencher-sobre.)
+description: Escreve as duas páginas institucionais editoriais de um site, /sobre/ (voz do site) e /author/ (voz da pessoa, em 1ª pessoa), distintas entre si e sem clonar as de outros sites da rede. Use quando pedirem para escrever, refazer ou revisar o Sobre ou a página de autor de um site (`site` ou URL do painel), inclusive depois de um port de WordPress. Não faz contato, termos nem privacidade (template + config).
 ---
 
 # Escrever as páginas institucionais EDITORIAIS (/sobre/ + /author/) por nicho
@@ -14,57 +14,34 @@ Molde de ouro: **melhoromega3** (sobre + autor). Skill-only (sem botão no paine
 
 ## Por que UMA skill pras DUAS
 
-/sobre/ e /author/ **compartilham a identidade do autor** e hoje **duplicam
-conteúdo** (ambas tinham "Como avaliamos os produtos" + "Independência
-editorial"). Duas fontes separadas geram inconsistência (uma diz "analisamos",
-a outra "testamos") e conteúdo duplicado (ruim pra SEO). Uma skill só:
+/sobre/ e /author/ **compartilham a identidade do autor**. Escritas separadas, divergem (uma diz "analisamos", a outra "testamos") e repetem seções, o que é ruim para SEO. Uma skill só:
 1. mantém a MESMA voz nas duas;
 2. dá PAPÉIS DISTINTOS (site vs pessoa) → mata a duplicação;
 3. centraliza a persona (nome/credencial/bio).
 
 ## Parse de input
 
-- Slug: `impressoraideal` — OU URL do painel `site-impressoraideal.html` → extrai slug. Valida `[a-z0-9-]+`.
+- Slug: `impressoracustobeneficio` — OU URL do painel `site-impressoracustobeneficio.html` → extrai slug. Valida `[a-z0-9-]+`.
 
 ## Pré-requisitos
 
 - `sites/{site}/src/config.ts` com bloco `author` (name, role, href, bio) + `contactEmail`.
 - `sites-meta.json[{site}].niche`.
 - `sites/{site}/src/content/pages/sobre.html` existe (stub OK).
-- `/author/{slug}.html`: se NÃO existir, a skill CRIA (alguns scaffolds antigos podem não ter a página de autor).
+- `/author/{slug}.html`: se não existir, a skill cria.
 
 ## Invariantes
 
 - **Faz as DUAS páginas** (sobre + autor) numa execução, com papéis distintos.
-  **Exceção: site criado pelo port do WordPress** (cenários B e C da `site-portar-wordpress`:
-  TODO artigo tem `portadoDe:` no frontmatter). O /sobre/ fica com o texto do WordPress,
-  adaptado só no que o port manda mudar (marca e domínio novos, sem alegar teste, sem
-  travessão, com o escopo que o site tem), conforme a Fase 3 dela. Nesse caso a skill faz
-  **só a /author/**, que o WordPress não tem e o scaffold deixa com texto de template. Os
-  gates (6-gramas contra a rede, sobre↔autor, voz natural) valem igual. Duas execuções
-  saíram da régua por isso antes de ela existir (melhoresparacasa 20/09, melhortech 21/09/2026).
-  **A exceção só vale para Sobre do WordPress que tem conteúdo:** diz quem escreve, como o site
-  avalia e tem o aviso de afiliado (as seções "Quem está por trás", "Como avaliamos" e
-  "Independência editorial" da estrutura abaixo, com qualquer título). Sem elas, faça as DUAS
-  páginas. O Sobre não tem histórico de busca a proteger (o do analistadeprodutos teve 16 cliques
-  de janeiro a maio de 2026), então vale o mesmo argumento das descrições de categoria portadas:
-  reescrever não arrisca nada. Caso que gerou a régua (25/09/2026): o do melhoreseletro tinha
-  470 caracteres de saudação ("Olá! Bem-vindo(a)… Esperamos que goste") e descrevia o site como
-  de "ferramentas manuais", com celulares, aspiradores e climatização no ar. Os 5 sites criados
-  pelo port tinham Sobre de 470 a 1.390 caracteres.
-  **Herdeiro NÃO é exceção** (cenário A: site Astro que já existia e recebeu artigos
-  portados, ou seja, tem pelo menos 1 artigo SEM `portadoDe`). O /sobre/ dele é nosso, nunca
-  foi do WordPress, e ficou com o escopo de antes do port: faça as DUAS páginas, com o
-  escopo novo. Casos: compraguia (24/09) e cozinhaideal (25/09/2026). O Sobre do cozinhaideal
-  ainda descrevia "eletroportáteis" com 20 categorias que incluem fogão, geladeira e lava-louças.
-  Conta rápida: `grep -L '^portadoDe:' sites/{site}/src/content/reviews/*.mdx | wc -l`
-  (0 = criado pelo port; 1 ou mais = herdeiro).
+  **Única exceção:** site criado pelo port do WordPress (cenários B e C da `site-portar-wordpress`: todo artigo tem `portadoDe:`) **cujo Sobre do WordPress diz quem escreve, como o site avalia e tem o aviso de afiliado** (as seções "Quem está por trás", "Como avaliamos" e "Independência editorial" da estrutura abaixo, com qualquer título). Aí o /sobre/ fica com o texto do WordPress, adaptado só no que a Fase 3 da `site-portar-wordpress` manda (marca e domínio novos, sem alegar teste, sem travessão, com o escopo que o site tem), e a skill faz só a /author/, que o WordPress não tem. Os gates (6 palavras contra a rede, sobre↔autor, voz natural) valem igual.
+  Fora disso, as duas páginas: Sobre do WordPress sem essas seções (o Sobre não tem histórico de busca a proteger, então reescrever não arrisca nada) e herdeiro (cenário A: site Astro que já existia e recebeu portados), cujo /sobre/ é nosso e ficou com o escopo de antes do port.
+  Conta rápida: `grep -L '^portadoDe:' sites/{site}/src/content/reviews/*.mdx | wc -l` (0 = criado pelo port; 1 ou mais = herdeiro).
 - **NÃO inventa** credencial/empresa/processo. Autor/critérios/e-mail do config + niche.
 - **Metodologia VAGA**: dá impressão de análise real SEM (a) alegar teste físico ["testamos/laboratório/bancada/presencial/medimos"] NEM (b) expor pesquisa de mesa ["partimos das especificações", "lendo a ficha linha por linha", "cruzamos com opiniões de compradores"]. Use "avaliamos a fundo", "indo além da ficha técnica", "comparamos os modelos lado a lado", "o que faz diferença no dia a dia" (até 25/09/2026 a lista trazia "comparamos os modelos de verdade", que a "Voz natural" abaixo proíbe: "de verdade" é muleta). Enquadramento anti-spec OK ("não de repetir a ficha que o fabricante divulga", "nunca de uma planilha decorada de specs").
 - **Disclosure Amazon** obrigatória no /sobre/ (Independência editorial).
 - **YMYL** (nicho saúde): disclaimer obrigatório — /sobre/ tem "Um lembrete importante"; /author/ embute no "Meu compromisso".
 - **DISTINÇÃO sobre↔autor**: a /author/ NÃO repete "Independência editorial" nem "Como avaliamos os produtos" do /sobre/. /sobre/ = o que o SITE faz; /author/ = quem a PESSOA é + como ELA trabalha (1ª pessoa).
-- **ANTI-CLONE cross-site = só VOZ, nunca cobertura**: personas são reusadas (Eduardo ×9, Gustavo ×16 — medido 15/08) E sites do mesmo nicho cobrem OS MESMOS tópicos (SERP-monopoly — ex: "melhor impressora sublimática" e "plotter de recorte" vão estar em TODOS os sites de impressora). Logo é PROIBIDO diferenciar por "este site cobre X, o outro Y" — todos cobrem tudo. A diferenciação é 100% redação/ângulo/tom. Antes de gerar, LER as /sobre/ e /author/ das sites-irmãs da MESMA persona e variar a prosa (zero sequência ≥6 palavras igual). Risco máximo: mesma persona + mesmo nicho (3 creatinas do Eduardo; impressoraideal+melhorimpressora do Gustavo).
+- **ANTI-CLONE cross-site = só VOZ, nunca cobertura**: personas são reusadas em vários sites (o passo 3 lista as irmãs) E sites do mesmo nicho cobrem OS MESMOS tópicos (SERP-monopoly — ex: "melhor impressora sublimática" e "plotter de recorte" vão estar em TODOS os sites de impressora). Logo é PROIBIDO diferenciar por "este site cobre X, o outro Y" — todos cobrem tudo. A diferenciação é 100% redação/ângulo/tom. Antes de gerar, LER as /sobre/ e /author/ das sites-irmãs da MESMA persona e variar a prosa (zero sequência ≥6 palavras igual). Risco máximo: mesma persona + mesmo nicho (as creatinas do Eduardo; impressoracustobeneficio + melhorimpressora do Gustavo).
 - **VOZ NATURAL (canon 2026-07-05 + bloco transversal 2026-08-15)**: o tom especialista→amigo é cumprido com **simplicidade**, não com metáfora/personificação/hipérbole. Tem que soar como PESSOA REAL explicando, não prosa literária. Ver seção **"Voz natural"** abaixo — mesma família da régua de "Voz humana" da `artigo-review-criar` (antropomorfismo=0, máx 1 coloquialismo leve).
 - **`contentLocked: false`** nas duas. PT-BR editorial, tom especialista→amigo, sem travessão. **NÃO faz deploy.**
 
@@ -137,9 +114,9 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
 7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
-9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
+9. **Também valem:** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria CONTA e reporta, mas desde 2026-09-05 teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta e reporta, mas teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
@@ -184,21 +161,16 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 1. **Duplicar sobre↔autor** (caso real: 12 sites tinham "Como avaliamos os produtos"+"Independência" iguais nas duas) — autor é PESSOA/1ª pessoa, sobre é SITE. Papéis distintos.
 2. **Alegar teste físico** — proibido explícito.
 3. **Expor método de mesa** (caso real impressoraideal 2026-06-12) — "lendo as especificações linha por linha", "cruzamos com opiniões" fazem parecer que não houve análise. Evaluativo-vago + anti-spec framing.
-4. **Footprint cross-persona** — Eduardo ×9 (3 creatinas mesmo nicho), Gustavo ×16 (medido 15/08) (2 impressoras). Sites da mesma persona+nicho com autor/sobre colados = footprint. As bios já são variadas por site; estender a variação pra sobre+autor. LER as irmãs antes. **RODAR o check de 6-gramas TAMBÉM cross-site** (novo site vs cada irmã da mesma persona) — caso real melhorimpressora vs impressoraideal 06-12: escaparam "e para quem cada um compensa" (critério) e "mercado brasileiro, como Epson e HP" (intro), só o check pegou. PODEM repetir (não são footprint): o **nome "Programa de Associados da Amazon Brasil"** (citação obrigatória) e a **credencial real do autor** ("redator especialista em home office" — é fato, mesma pessoa). NÃO podem: prosa do disclosure (varie "comissão sobre as compras..."), critérios, missão, intro.
+4. **Footprint cross-persona** — a mesma persona assina vários sites, às vezes do mesmo nicho. Sites da mesma persona+nicho com autor/sobre colados = footprint. As bios já são variadas por site; estender a variação pra sobre+autor. LER as irmãs antes. **RODAR o check de 6-gramas TAMBÉM cross-site** (novo site vs cada irmã da mesma persona) — caso real melhorimpressora vs impressoracustobeneficio 06-12: escaparam "e para quem cada um compensa" (critério) e "mercado brasileiro, como Epson e HP" (intro), só o check pegou. PODEM repetir (não são footprint): o **nome "Programa de Associados da Amazon Brasil"** (citação obrigatória) e a **credencial real do autor** ("redator especialista em home office" — é fato, mesma pessoa). NÃO podem: prosa do disclosure (varie "comissão sobre as compras..."), critérios, missão, intro.
 5. **Inventar credencial** — usar role/bio reais do config; honesto se não for especialista do nicho.
 6. **Esquecer YMYL** em saúde (sobre "Um lembrete importante" + autor "Meu compromisso").
-7. **/author/ inexistente** — criar o dir + arquivo (melhoraspirador, melhorcozinha).
+7. **/author/ inexistente** — criar o dir + arquivo.
 8. **HTML fora da allowlist** / travessão.
 9. **Voz de personagem / prosa literária** (caso real tabletparatrabalho 2026-07-05) — a /author/ saiu com "só parece firme na vitrine", "o aparelho encara e-mail", "como se isso resolvesse a sua vida", "garimpou tudo antes de você abrir a carteira". Rejeitada. Voz natural = frase direta e concreta (ver seção "Voz natural"). Risco maior na 1ª pessoa da /author/.
 
 ## Exemplo de invocação
 
-- `Skill(skill="preencher-institucionais", args="impressoraideal")`
-
-## Disciplina de release
-
-Nasce no project repo. Marketplace só após validar num run real (sobre+autor de
-1 site). Substitui a `preencher-sobre` (que era só metade).
+- `Skill(skill="preencher-institucionais", args="impressoracustobeneficio")`
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

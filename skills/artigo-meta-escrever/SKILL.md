@@ -1,6 +1,6 @@
 ---
 name: artigo-meta-escrever
-description: Escreve a meta description SEO de um artigo (campo `description` no frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. 120-160 chars, single-line, sem travessão, sem aspas internas. Substitui só a linha `description: "..."` do frontmatter — todo o resto fica intacto. Backup + commit + push + sync VPS.
+description: "Escreve a meta description SEO de um artigo (campo `description` no frontmatter do .mdx). Aceita URL do painel (editor-artigo.html?site=X&slug=Y) OU args canônicos site/slug. 120-160 chars, single-line, sem travessão, sem aspas internas. Substitui só a linha `description: \"...\"` do frontmatter — todo o resto fica intacto. Backup + commit + push + sync VPS."
 ---
 
 ## Parse de input
@@ -31,7 +31,7 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 ## Invariantes
 
 - **Nunca toque em nenhum outro campo do .mdx.** Só a linha `description: "..."` do frontmatter. Title, listHeading, intro, products, guideContent — tudo intacto.
-- **120 a 160 chars** (alvo 125-155). Google trunca em ~155, toleramos 160. Abaixo de 120 o `scripts/audit-article.ts` (`RULES.metaDescMin`) avisa "muito curta" no relatório e no painel: até 2026-09-01 esta skill dizia 50 e os próprios exemplos tinham 114-116 chars, então toda meta escrita pela régua saía com aviso. O `isArticleComplete` (≥50) é só o gate estrutural, não o alvo. Hard limit.
+- **120 a 160 chars** (alvo 125-155). Google trunca em ~155, toleramos 160. Abaixo de 120 o `scripts/audit-article.ts` (`RULES.metaDescMin`) avisa "muito curta" no relatório e no painel; o `isArticleComplete` (≥50) é só o gate estrutural, não o alvo.
 - **1 a 2 sentenças completas** (pergunta + resposta é o padrão dos exemplos bons) — sem reticências, sem cortes meio do pensamento.
 - **Keyword principal nos primeiros 60 chars.** Extrai do `title` (H1) ou do campo `keyword` se existir no frontmatter. Ex: title "Melhor Impressora Custo Benefício:" → keyword "melhor impressora custo benefício" → primeiros 60 chars da description devem incluir isso.
 - **Linguagem direta, factual.** Sem superlativos sem evidência ("a melhor opção", "incomparável", "imbatível").
@@ -59,15 +59,9 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
    - `description` — atual (pode estar vazia ou populada)
    - `keyword` — opcional; se ausente, derive de `title.split(':')[0].toLowerCase().trim()`
    - `products[]` — extrair nomes e ASINs pra contexto
+   - `contentLocked` — se `true`, ver "Quando NÃO usar essa skill"
 
-4. **Extrair snippet da intro** (~600 chars do body após o `---` de fechamento):
-   - Pega o body markdown
-   - Strip de componentes MDX (linhas começando com `<` ou `{`)
-   - Strip de headings (`^#{1,6}\s+`)
-   - Strip de emphasis (`**`, `*`)
-   - Normaliza whitespace
-   - Trunca a 600 chars
-   - Se body estiver com o placeholder `[a escrever: ...]`, considerar intro vazia (snippet = "")
+4. **Ler a intro** (body após o `---` de fechamento) para saber o ângulo do artigo. Se for o placeholder `[a escrever: ...]`, trate como intro vazia.
 
 5. **Validar `description` é editável**: se a linha `description: "..."` não existe no frontmatter, abortar com:
    > "Campo `description` ausente no frontmatter de {slug}.mdx. Adicione manualmente uma linha `description: \"\"` no frontmatter antes de rodar a skill."
@@ -79,13 +73,15 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 
 7. **Gerar a nova description** seguindo as regras editoriais (ver seção "Régua de geração" abaixo). Use o contexto coletado: title, description atual (referência do que mudar), lista de produtos, snippet do intro, instrução opcional (se detectada no passo 6).
 
-8. **Validar mentalmente** antes de salvar:
-   - Tamanho dentro de 120-160 chars
-   - Sem travessão `—` nem `–`
-   - Sem aspa dupla interna `"` (escapa pra `\"` ou parafraseia)
-   - Sem `\n` ou quebras de linha
-   - Keyword aparece nos primeiros 60 chars
-   - 1 a 2 sentenças completas terminando em `.`
+8. **Validar com ferramenta, não de cabeça**, antes de salvar:
+   ```bash
+   python3 - <<'EOF'
+   s = r'''<nova description>'''
+   print(len(s), [c for c in ['"', ';', '—', '–', '\n'] if c in s])
+   print(s[:60])
+   EOF
+   ```
+   Tamanho 120-160, lista vazia, keyword dentro dos 60 primeiros caracteres (2ª linha), 1 a 2 sentenças completas terminando em `.`.
 
 9. **Backup** ANTES de sobrescrever (paridade com pattern do painel):
    ```bash
@@ -126,7 +122,7 @@ O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` c
 
 ## Régua de geração
 
-Segue o template canônico (`rewrite_meta_description`):
+Resumo das convenções (as Invariantes acima valem igual):
 
 ```
 ## Tarefa
@@ -217,7 +213,7 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 ### Health absolutes YMYL banidos (Google penaliza páginas afiliadas)
 
-- "uso regular é seguro" → "tolerado pela maioria; consulte profissional se tem comorbidade"
+- "uso regular é seguro" → "tolerado pela maioria. Consulte um profissional se tem comorbidade"
 - "alternativa segura" → "alternativa mais leve"
 - "não causa dano" → "sem evidência de impacto em pessoas saudáveis em doses recomendadas"
 - "sem efeitos colaterais" → "efeitos colaterais raros quando reportados"
@@ -255,12 +251,11 @@ O user precisa saber se ficou perto do limite (problemático em 155-160). Sempre
 
 ## Quando NÃO usar essa skill
 
-- **Artigo travado** (`contentLocked: true`): o servidor do painel recusaria save em /article/... endpoints (HTTP 423). Pra esta skill, o problema é o painel da VPS rejeitar o git pull resultante (não — git pull não passa pelo lock). Mas editorialmente: se o artigo está travado, há razão (SEO estável). Pergunta se realmente quer mudar antes de prosseguir.
-- **Description já está perfeita**: rodar a skill 5x em 5 minutos não melhora muito (é determinístico-ish). Avalie primeiro com leitura humana.
+- **Artigo travado** (`contentLocked: true` no frontmatter, lido no passo 3): pare e avise. Só siga com o sim explícito do usuário, destravando antes de editar (botão Destravar do painel ou `contentLocked: false`), como manda o CLAUDE.md.
 
-## Sincronização painel ↔ skill ↔ prompt canônico
+## Listas e tetos
 
-**Fonte da verdade é ESTA `SKILL.md`** (canon 2026-08-15, ver "Régua comum das auditoras" em `docs/PADROES.md`). O `docs/painel/_data/agent-prompts.json` → `ops.rewrite_meta_description` é **espelho** usado pelos botões do painel (pode defasar; ao mudar régua aqui, refletir lá no mesmo commit quando a mudança afeta o output). Os endpoints legados `generate-*/rewrite-*/create` do painel foram removidos em 2026-05-27; `agent-config.html` virou `editorial.html`. Listas, regex e tetos vivem em `chavoes-por-nicho.json` — cite a chave, não copie a tabela.
+Listas, regex e tetos vivem em `docs/painel/_data/chavoes-por-nicho.json`: cite a chave, não copie a tabela.
 
 
 ## Exemplo de invocação
@@ -276,10 +271,6 @@ Exemplos válidos com instrução inline:
 - "escreve meta description do X mencionando que é guia 2026"
 
 Args canônico que invoco: `Skill(skill="artigo-meta-escrever", args="melhorimpressora/melhor-impressora-custo-beneficio")` (instrução não vai pro args — ela vive no contexto do prompt natural do user)
-
-## Limitação intrínseca conhecida
-
-Sem schema Zod programático no output (diferente do painel), a validação fica editorial — eu (modelo) sigo as regras. ~3% de chance de algum campo ficar levemente fora do limite editorial (ex: 162 chars em vez de 160). Mitigação: contar chars depois de gerar e ajustar antes de aplicar.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

@@ -1,6 +1,6 @@
 ---
 name: pagina-produto-criar
-description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) da página individual de produto a partir da bíblia. Aceita URL do painel (editor-produto.html?site=X&slug=Y) OU args canônicos `site/slug`. Stub precisa existir (criado no painel via "+ Nova página de produto"). Carrega chavões nicho-específicos de `docs/painel/_data/chavoes-por-nicho.json`. Aplica régua editorial: concordância PT-BR, ban "declarado pelo fabricante" como muleta, health absolutes YMYL, hard caps de tamanho (shortDescription ≤250, pros/cons ≤180 texto puro), shortDescription literal (para quem é + dados, sem molde), voz natural (verbo e substantivo no sentido do dicionário, sem frase-sacada, "para" no texto público, repetir a palavra certa é normal). Cria backup, commit, push, dispatch VPS pull.
+description: Cria os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview) de uma página individual de produto a partir da bíblia v2, com a régua editorial da rede. Use quando o pedido é preencher ou reescrever a página de produto de um site. Aceita URL do painel (editor-produto.html?site=X&slug=Y) ou `site/slug`. O stub precisa existir (painel → "+ Nova página de produto"). Faz backup, commit, push e sync da VPS.
 ---
 
 ## Parse de input
@@ -39,7 +39,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 - **Sem superlativos absolutos** sem evidência ("o melhor", "o único", "incomparável").
 - **Voz analítica.** NUNCA cite compradores/reviews/avaliações/estrelas (proibido pela voz editorial). Reescreva insights do `sentimentoCompradores` da bíblia como observação analítica direta.
 
-- **DESTILAÇÃO CATEGORIA D (operação OBRIGATÓRIA pra cada claim da bíblia)**.
+- **Destilação categoria D, em cada claim da bíblia.**
   Bíblia frequentemente traz claim com voz-comprador IMPLÍCITA dentro de
   `pontosFortes` / `pontosFracos`. Exemplos reais que sub-agents do Opus
   já caíram em armadilha (caso 2026-05-26, batch melhorpretreino):
@@ -58,7 +58,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
 - **Termos técnico-industriais proibidos** (régua específica do projeto): "contaminação cruzada", "linha de produção compartilhada" (sem contexto editorial). Não agregam ao leitor final; soam como ficha técnica. Para alérgenos, usar linguagem editorial:
   - ❌ "Risco de contaminação cruzada na linha de produção"
-  - ✅ "Pode conter traços de leite — alérgicos severos devem ler a rotulagem antes do uso"
+  - ✅ "Pode conter traços de leite. Quem tem alergia grave deve ler o rótulo antes do uso"
 - **HTML allowlist no `fullReview`.** Permitido: `<p>`, `<strong>`, `<em>`, `<a>`. **Proibido**: `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<table>`, `<img>`, `<script>`, `<iframe>`, `<style>`.
 
 - **CAMPOS TEXTO-PURO — sem HTML inline.** A allowlist HTML acima é EXCLUSIVA do `fullReview`. Os demais campos editoriais são texto puro renderizado por Astro com `{var}` (escape automático XSS):
@@ -115,7 +115,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
    **Chave-mestra do site (CLAUDE.md):** antes de escrever em `sites/{site}/src/content/**`, `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"` — `True` → PARE e avise (o site está com edição travada; destravar no painel → Proteção). Sem isso o `pre-push` barra no fim, depois de todo o trabalho.
 
-   Painel VPS commita+pusha automaticamente quando user cria/edita conteúdo na UI; Mac local pode estar 5-30s atrás. Sem este pull, skill pode ler estado stale e abortar com falso "X não existe localmente". Caso real Bárbara 2026-05-24: ela criou site melhoromega3 + stub vitafor-omegafor-plus pelo painel VPS; sub-agent rodou git fetch (sem novidades), assumiu que site não existia. Pull antes evita esse falso-negativo.
+   O painel da VPS commita o que o usuário cria na UI, mas nem sempre empurra na hora, então o Mac pode estar atrás. Sem este pull a skill lê estado velho e aborta com falso "X não existe localmente".
 
 2. **Read .mdx atual**: `Read sites/{site}/src/content/products/{slug}.mdx`. Se 404, abortar com mensagem do pré-requisito.
 
@@ -155,7 +155,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
     - **Frontmatter**: preserva todos os campos base existentes (asin, name, image, imageAlt, category, categorySlug, publishDate, contentLocked se existir). **Adiciona** os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview).
     - **Body**: remove o marker de stub (`{/* STUB GERADO POR ... [TODO: preencher] */}`). Body fica vazio ou com 1 linha em branco.
 
-      🚨 **O TEXTO VAI NO CAMPO `fullReview:` DO FRONTMATTER, NUNCA NO CORPO DO `.mdx`.** Corpo de página de produto **não renderiza**: o `SlugPage` só monta `<Content />` quando `type === 'review'`. Escrever a resenha no corpo produz uma página que vai pro ar **sem resenha nenhuma**, e nada reclama — build passa, painel não acusa, a página abre bonita e vazia. **Caso real 2026-08-14:** 7 páginas em 3 sites ficaram **meses** assim; o texto existia, completo e bom, no lugar que ninguém lê. Foram consertadas MOVENDO o texto pro campo (não regerando — o texto já era original por site). Na mesma varredura apareceu a variante: `guiaesportivo/vitafor-vita-d3-2000ui-gotas` com a resenha NOVA no campo e 2.222 chars da resenha VELHA esquecidos no corpo, resíduo de uma reescrita que gravou no frontmatter e não limpou o corpo. **Ao reescrever uma página que já existe, apague o corpo — não basta preencher o campo.**
+      **O texto vai no campo `fullReview:` do frontmatter, nunca no corpo do `.mdx`.** Corpo de página de produto não renderiza (o `SlugPage` só monta `<Content />` quando `type === 'review'`): resenha no corpo vira página no ar sem resenha, com build e painel sem acusar. Ao reescrever uma página que já existe, apague o corpo; não basta preencher o campo.
 
     - **AUTO-CHECK DE CORPO E CAMPO (OBRIGATÓRIO pós-Write, canon 2026-08-14)**:
       ```bash
@@ -170,7 +170,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
       bun scripts/audit-editorial.ts {site}/{slug} --json
       ```
       Cobre 100% dos checks contáveis/estruturais: tamanho texto-puro (shortDescription ≤250, pros/cons ≤180), fence, travessão, `;` em prosa (entity+url-aware, exclui specs.value), HTML em campo texto-puro, 4 rótulos do fullReview, termos banidos absolutos. **É AUTORITATIVO** — se ele apontar `error`, conserte SÓ o campo apontado e re-rode (máx 2×). **Por quê:** LLM erra ~1/3 desses (medido: 6 de 19 shortDescriptions >250 vivas passaram batido na auditoria). Este passo substitui o "eyeball" dos hard caps de tamanho/`;`/travessão — não confie na sua contagem, confie no script. Se `bun`/lib faltar (raro), caia nos auto-checks manuais das mesmas categorias. **Escopo: só o mecânico** — ele NÃO cobre tag-affiliate (tag pode ser injetada no build) nem julgamento (claim-vs-bible etc.), que seguem sendo seus nos passos da régua.
-      **⚠ Modo batch:** se você é um sub-agent da `pagina-produto-criar-em-massa` (REGRA ZERO), **PULE este passo** — a skill-mãe roda **este mesmo script**, 1× por slug, no commit-lote (passo 9 dela). Rodar aqui = N spawns paralelos redundantes. ⚠ Até 2026-07-31 esta nota dizia que a mãe rodava "a guarda equivalente": era falso, a `pagina-produto-guardas` não cobre travessão, `;` nem HTML em texto-puro, e o batch sem `--audit` ficava sem esses três. Corrigido na mãe.
+      **⚠ Modo batch:** se você é um sub-agent da `pagina-produto-criar-em-massa` (REGRA ZERO), **PULE este passo** — a skill-mãe roda **este mesmo script**, 1× por slug, no commit-lote (passo 9 dela). Rodar aqui = N spawns paralelos redundantes.
 
     Use YAML válido. Strings com aspas duplas (escape `\"` interno). Arrays multi-linha:
     ```yaml
@@ -238,7 +238,7 @@ resto da página não existisse. Algum número promete mais do que a bíblia sus
 Título **descritivo editorial** curto, **sem redundância com o nome do produto**. Aparece como meta-info abaixo do H1. É frase de venda/posicionamento, NÃO dump de specs técnicos.
 
 Exemplos bons (descritivos, editoriais):
-- Para "Epson EcoTank L3250": `"Multifuncional EcoTank com Wi-Fi, ideal para casa e home office"`
+- Para "Epson EcoTank L3250": `"Multifuncional com tanque de tinta e Wi-Fi para casa e home office"`
 - Para "Kärcher VCL 2": `"Aspirador vertical 2 em 1 com filtro HEPA"`
 
 Exemplos ruins:
@@ -323,19 +323,7 @@ specs:
 `pros` e `cons`, que já diziam isso. Não conte `<p>`, `<strong>` nem as três URLs
 da Amazon com `?tag=...&linkCode=ogi&th=1&psc=1`.
 
-Isto era ambíguo até 2026-08-06 e a ambiguidade custava caro. Medido na rede:
-**o markup come 23% a 27% do campo**, e 8 páginas estouravam os 3.000 sem ter
-2.600 chars de texto em nenhuma delas. Pior, o aperto caía justo em quem tinha
-o que dizer: o p99 dos nichos complexos ficava colado em 2.998 — sub-agents
-parando na linha — enquanto o mesmo p99 em texto puro era ~2.380.
-
-```
-                      p99 bruto   p99 texto puro
-Eletrônicos              2.998           2.383
-Caixas de Som            2.998           2.358
-Impressoras              2.974           2.330
-Creatinas                2.385           1.816   ← nunca chega perto
-```
+O markup ocupa 23% a 27% do campo; por isso a conta é em texto puro.
 
 **A faixa não força ninguém a encher.** Produto simples para onde o conteúdo
 acaba: creatina fica em 1.816 no p99, com o mesmo teto que monitor usa até o
@@ -399,7 +387,7 @@ fiel: sem `<strong>` no source = sem negrito na tela.
 
 **Densidade de números**: 5-7 dados quantitativos da bíblia ao longo dos 4 parágrafos. Sem injetar números só por densidade.
 
-## Restrições específicas da página individual (CRÍTICO)
+## Restrições específicas da página individual
 
 O fullReview e os pros/cons **NÃO PODEM** ter:
 
@@ -429,9 +417,9 @@ O fullReview e os pros/cons **NÃO PODEM** ter:
 
 A razão: leitor pode ter chegado direto via Google sem passar por nenhum artigo. **Texto se sustenta sozinho.**
 
-## Voz editorial (CRÍTICO)
+## Voz editorial
 
-Os reviews têm voz de **quem testou/analisou** o produto. Tom: "nós identificamos / a impressora entrega / o produto tem".
+Os reviews têm voz de **quem analisou** o produto, sem alegar teste físico. Tom: "a impressora imprime / o produto tem / custa".
 
 **NUNCA** cite **compradores, opiniões, avaliações, reviews, estrelas, posicionamento Amazon**. Frases proibidas:
 - ❌ "Compradores recorrentemente citam..."
@@ -461,9 +449,9 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 6. **Frase de até ~30 palavras.** ", então" e ", o que" no máximo 1 por parágrafo.
 7. **Fecho de parágrafo = frase curta de fato ou recomendação direta** ("é a melhor opção para casa pequena"), sem rótulo de público engatado ("é a escolha de quem", "faz sentido para quem", "é o que resolve").
 8. **Ênfase só com dado.** Sem "de verdade", "bastante", "com folga", "de sobra", "justamente", "honesto/a" como muleta.
-9. **Continuam valendo (v1.32):** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
+9. **Também valem:** rótulo de categoria só se existe no varejo (teste-da-Amazon: "máquina de trabalho"→"impressora de escritório", "preço de custo-benefício"→"preço justo"); elipse de categoria LIBERADA ("a barata", "a laser", "as de tanque"); sem meta-SEO (não comente a busca do leitor); sem jargão financeiro/burocrático ("desembolso"→"preço"); sem atribuição elíptica ("conta da Epson"→número direto); sem antropomorfismo ("não se cansa", "no batente"); no máximo 1 expressão coloquial leve, e só se for a forma mais direta.
 
-10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria CONTA e reporta, mas desde 2026-09-05 teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
+10. **Teto mecânico da mesma régua**: `docs/painel/_data/chavoes-por-nicho.json` → `_genericos.naturalidade_max` (daqui 2, pede 3, resolve 3, entrega 3, de verdade 1, trunfo/fôlego 1…) e `naturalidade_banidos` (0). A auditoria conta e reporta, mas teto numérico **não reprova**: use como sinal de que você está martelando a mesma palavra, nunca como motivo pra trocar a palavra certa por outra (`naturalidade_banidos` e tetos **0** seguem duros). Ver `_meta.regra_de_ouro` do JSON.
 
 **Antes de gravar, releia cada parágrafo: "uma pessoa escreveria assim?"** O trecho que soa esperto, simplifique.
 
@@ -482,7 +470,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 
 - `pontosFortes` / `pontosFracos`: base dos pros/cons. NÃO invente. **DESTILE ao copiar** — ver "Operação de destilação" abaixo.
 - `angulosConversao`: ângulos editoriais = **matéria-prima, NÃO texto pronto**. Use o `tema` pra estruturar parágrafos do `fullReview` ("para quem é", "por que gostamos") e as `frases` como **fonte do FATO**, nunca como fraseado a colar. **DESTILE o registro** — ver categoria E em "Operação de destilação". As frases de ângulo são escritas em registro de venda e frequentemente vêm coloquiais ("no tempo do café passar", "sem precisar ficar de olho", "fininho"); colar verbatim importa a gíria direto pra página. A bíblia é fonte de **fato**, não de **voz**.
-- `sentimentoCompradores`: insights — **REESCREVA** como observação editorial, NÃO cite compradores. Ex: "compradores citam custo-benefício" → "O custo-benefício se destaca por {dado da bíblia}".
+- `sentimentoCompradores`: insights — **REESCREVA** como observação editorial, NÃO cite compradores. Ex: "compradores citam custo-benefício" → o dado que sustenta isso ("custa cerca de R$ X e rende Y páginas por kit").
 - `dicasAcionaveis`: incorpore se fizer sentido no `fullReview` ou como item em `cons` (quando for limitação contextual).
 - `dadosInconsistentes` + `decisaoEditorial`: SE existir, **RESPEITE**. A decisão editorial diz qual valor usar e qual ignorar.
 - `observacoesAgente`: notas internas pra você. Leia.
@@ -499,9 +487,9 @@ Quando o stub já vem com `subtitle` (e/ou `badge`) preenchido pelo editor human
 3. **Subtitle vazio** = comportamento atual (criar do zero a partir da bíblia + badge).
 4. **NUNCA descartar silenciosamente** o ângulo humano. Se a bíblia CONTRADIZ o ângulo (ex: subtitle diz "a mais rápida" e a bíblia mostra que não é), NÃO grave nada conflitante: pare e pergunte ao usuário.
 
-Histórico: até v1.33 a skill regenerava o subtitle sem ler o existente (~80% dos subtitles humanos sobrescritos; os ~20% "mantidos" eram convergência por acaso). O badge sempre teve esse tratamento (var + hint editorial) — esta régua espelha pro subtitle.
+Sem esta regra, ~80% dos subtitles escritos pelo editor eram sobrescritos.
 
-## Operação de destilação bíblia → .mdx (CRÍTICO)
+## Operação de destilação bíblia → .mdx
 
 A bíblia carrega claims COM marcadores de procedência (`fonte: "specs"`, "conforme declarado pelo fabricante", "confirmado nos alérgenos"). É correto e útil internamente — rastreabilidade evita invenção. **O .mdx público é destilado**: droppa marcadores que viraram ruído burocrático.
 
@@ -560,7 +548,7 @@ Se a página individual repete o `fullReview` do artigo, o SEO penaliza. Antes d
 
 ### 2. HTML proibido por hábito
 
-Eu (modelo) tenho hábito de usar `<ul>` pra listas. **Não use** em `fullReview`. Forme bullets com parágrafos curtos, ou junte numa frase com vírgulas.
+O `fullReview` não aceita `<ul>`/`<li>`: enumeração vira frase com vírgulas ou parágrafos curtos.
 
 Errado:
 ```html
@@ -574,11 +562,11 @@ Certo:
 
 ### 3. Tag em config vazio mas IA gera link com tag
 
-Se `affiliateTag === ''`, sua `amazonUrl` é crua (`https://www.amazon.com.br/dp/{ASIN}`). Não invente uma tag genérica tipo "amzn20" ou copie de outro site — link sai cru e ponto. Quando o site for live, script futuro vai injetar a tag real.
+Se `affiliateTag === ''`, sua `amazonUrl` é crua (`https://www.amazon.com.br/dp/{ASIN}`). Não invente uma tag genérica tipo "amzn20" nem copie a de outro site: link cru é correto, porque o build injeta a tag do config (`injectAffiliateTag`) quando o site tiver uma.
 
 ### 4. Voz comprador escapando
 
-Especialmente fácil de cair em `pros`. Frase como "Compradores destacam a velocidade" precisa virar "A velocidade de até 10 ppm em preto se destaca no uso diário".
+Especialmente fácil de cair em `pros`. Frase como "Compradores destacam a velocidade" precisa virar "Imprime até 10 ppm em preto".
 
 ### 5. Inventar specs
 
@@ -590,7 +578,7 @@ Página individual é sobre o produto **sozinho**. Comparações vão no artigo.
 
 ### 7. Voz de citação ("segundo X", "alérgenos confirmam", "atributos declaram") — viola diretrizes #1, #5 e #6
 
-**Armadilha mais comum e fácil de cair.** Quando os dados da bíblia vêm de várias fontes (specsAmazon, doFabricante, conteudoBrutoFabricante), o modelo tende a citar a fonte pra justificar o claim: "segundo a Epson", "alérgenos da Amazon confirmam", "atributos de material declaram".
+Quando os dados da bíblia vêm de várias fontes (specsAmazon, doFabricante, conteudoBrutoFabricante), citar a fonte para justificar o claim faz o texto parecer leitura de planilha: "segundo a Epson", "alérgenos da Amazon confirmam", "atributos de material declaram".
 
 **A diretriz #5 da bíblia proíbe isso explicitamente**: *"Proibido dizer 'na ficha técnica', 'segundo as especificações' ou variantes: o review não pode parecer leitura de planilha."*
 A #6 reforça: *"Integre os dados no texto como quem conhece o produto: não cite specs em bloco, costure no raciocínio."*
@@ -692,11 +680,8 @@ Regex de referência (se quiser rodar): `\b(composição|combinação|porção|o
 **Bug-class** (ChatGPT ponto 7): absolutos de segurança/saúde violam diretrizes YMYL do Google.
 
 **Banidos absolutos** (limite 0):
-- "uso regular é seguro" → "Tolerado em uso regular pela maioria; consulte um profissional"
+- "uso regular é seguro", "não causa dano", "totalmente seguro" / "100% seguro" / "sem riscos", "sem efeitos colaterais" → apague o absoluto. Se a bíblia traz o fato por trás (dose, restrição, advertência do rótulo), diga o fato; se não traz, não escreva nada no lugar.
 - "alternativa segura" → "alternativa mais leve"
-- "não causa dano" → "Sem evidência de impacto em pessoas saudáveis em doses recomendadas"
-- "totalmente seguro" / "100% seguro" / "sem riscos" → reescrever qualificando
-- "sem efeitos colaterais" → "Efeitos colaterais raros e leves quando reportados"
 - "cientificamente comprovado" / "clinicamente comprovado" (sem citar estudo)
 
 ### Voz-eximir-responsabilidade (régua v1.19.1, canon 2026-05-28)
@@ -737,12 +722,6 @@ Termos corporativos quebram voz especialista→amigo. Caps no JSON:
 
 Substituições mecânicas causam (caso real melhorpretreino `a72e7d9`): **14a** duplicação contígua (`sem empilhar suplementos sem empilhar suplementos`; regex `([a-zA-ZÀ-ÿ\s]{8,40})\1`) · **14b** bullet começando com minúscula dentro de `<strong>` (`<strong>aminoácidos…`) · **14c** minúscula após ponto em texto editorial (`(maior dose). pra emagrecer`; ignorar URLs e listas numeradas). Rodar em shortDescription, fullReview, pros, cons, specs.value antes de gravar; achou → corrija.
 
-
-## Limitação intrínseca conhecida
-
-Sem schema Zod programático no output (diferente do painel), a validação fica editorial — eu (modelo) sigo as regras. ~5% de chance de algum campo ficar levemente fora do limite editorial (subtitle de 9 chars, fullReview de 780 chars, etc).
-
-Mitigação: depois de gerar, conferir tamanhos antes de salvar. Se algum estiver no limite, expandir/encurtar com cuidado.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

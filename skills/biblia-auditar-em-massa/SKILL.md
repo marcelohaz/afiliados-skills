@@ -1,6 +1,6 @@
 ---
 name: biblia-auditar-em-massa
-description: Audita E CORRIGE VÁRIAS bíblias v2 de uma vez, cada uma ISOLADA (zero contaminação cruzada, sem passada comparativa). Escopo = FATO + DADO LIMPO + NAMING (bíblia é fonte de fato, nunca renderizada; voz editorial é do review). AUTO-APLICA conserto de direção conhecida (lixo de dado, voz-comprador→analítica, contradição com a própria decisaoEditorial, fonte atribuída errada, dadosInconsistentes que descreve conflito já extinto porque o bruto foi re-capturado), cada um com re-auditoria automática e reversão do backup se não convergir em ≤3. REPORT-ONLY pro indeterminável (frescor, verificação externa, naming ambíguo). NÃO mexe em voz editorial. Roda como 2ª etapa do preencher-em-massa --audit OU sozinha. Sub-agents paralelos (≤10). Sync R2 nas 2 pontas. Botão '🔍 Auditar bíblias' do produtos.html copia o comando.
+description: Audita e corrige VÁRIAS bíblias v2 de uma vez, cada uma num sub-agent isolado, com a régua da biblia-auditar; conserto de direção conhecida é aplicado e re-auditado, o indeterminável vira flag. Use para um lote (lista de ASINs, todas, pendentes, filtro por subcategoria), como etapa --audit da biblia-preencher-em-massa, ou pelo comando que o botão Auditar bíblias do produtos.html copia.
 ---
 
 ## Parse de input
@@ -20,19 +20,19 @@ Args no `$ARGUMENTS`:
 
 - **É** o auditor-corretor em massa: roda em N bíblias **já preenchidas**, cada uma isolada, **conserta o que tem solução conhecida**, e lista só o que precisa de você.
 - **NÃO** delega o conserto pra outra skill. A `biblia-auditar` individual vira **fallback** pra mexer numa bíblia só — não é etapa obrigatória depois desta.
-- **NÃO é a IA do painel** (botão "✨ Auditar"). Roda na assinatura (Claude Code), Opus 5 (ou o Opus mais novo).
+- **NÃO é a IA do painel** (botão "✨ Auditar"). Roda na assinatura (Claude Code).
 
 ## Garantia de qualidade (= skill individual)
 
-A `biblia-auditar` individual é propor→aprovar: o sub-agent redige o conserto, você aprova. Esta skill **redige o mesmo conserto (mesma régua, mesmo modelo)** e, no lugar da sua aprovação manual, põe **uma re-auditoria automática + backup**:
+A `biblia-auditar` individual aplica e re-audita numa bíblia só; esta faz o mesmo em lote, com um sub-agent isolado por bíblia.
 
 | | Individual (`biblia-auditar`) | Em massa (esta) |
 |---|---|---|
 | Quem redige o conserto | sub-agent Opus, régua canônica | **mesmo** sub-agent, mesma régua |
 | Texto do conserto | idêntico | **idêntico** |
-| Trava antes de "ficar" | você aprova | **re-auditoria automática** (desfaz se piorar) + backup + diff no relatório (você revê depois) |
+| Trava antes de "ficar" | re-auditoria dos campos tocados + backup | **re-auditoria automática** (desfaz se piorar) + backup + diff no relatório (você revê depois) |
 
-O texto sai igual; a fiscalização vira **automática (re-audit) + pós-fato (relatório/git)**. Caveat honesto: o caso raro de um conserto sutilmente ruim passar é pego no relatório/backup, não num gate antes. Quem quer paridade 100% literal usa `--report-only` (não aplica, só lista pra aprovar 1-a-1 na individual).
+O texto sai igual; a fiscalização vira **automática (re-audit) + pós-fato (relatório/git)**. Caveat honesto: o caso raro de um conserto sutilmente ruim passar é pego no relatório/backup, não num gate antes. Quem quer paridade 100% literal usa `--report-only` (lista sem aplicar).
 
 ## Classificação de cada achado (3 grupos — decide o destino)
 
@@ -42,7 +42,7 @@ O texto sai igual; a fiscalização vira **automática (re-audit) + pós-fato (r
 
 ## Modelo
 
-Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` no Agent tool. NUNCA Sonnet/Haiku.
+Sub-agents com `model: opus` no Agent tool; o alias resolve para o Opus mais novo da conta, sem número de versão a manter. Motivo: é trabalho editorial e de fato, e a régua do projeto é sempre Opus (Sonnet e Haiku ficam fora).
 
 ## ⚠️ Playbook anti-contaminação (o coração desta skill)
 
@@ -61,7 +61,7 @@ Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` n
 - **Toca CAMPOS CURADOS** (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`) **+ naming em `identidade` (`nome`/`marca`) quando o fix é óbvio** (derivável dos dados da própria bíblia, ex.: `marca` vazia e o `nome`/`specsAmazon` dizem "Philco"). **NUNCA edita BRUTOS** (`sobreEsteItem`/`doFabricante`/`descricaoProduto`/`specsAmazon`/`conteudoBrutoFabricante`), **nem `avisosAoAgente`** (canal do HUMANO, intocável como bruto: leia antes de julgar, achado nele é report-only), nem `lastAuthor`.
 - **`lastAuditedAt` carimbado via `new Date().toISOString()` em TODAS as bíblias auditadas** (com ou sem fix) — é o que faz o painel parar de marcar "auditar de novo" (compara `lastFilledAt > lastAuditedAt`; regra Marcelo 2026-06-15). Ver Etapa 3.6.
 - **`lastModified` bumpado via `new Date().toISOString()`** sempre que gravar a bíblia (todo conserto E todo carimbo de auditoria → toda bíblia do lote). NUNCA hand-roll (timezone). NUNCA toca `lastAuthor`.
-- **`auditFlags` gravado junto do `lastAuditedAt`** (Etapa 3.6): avisos semânticos `{type,label}` pro chip do painel (`'wrong-info'`/`'off-niche'`/`'review'`) — vêm dos `report_C` que sobraram. ⚠ **Desde 2026-08-25 o chip acende SÓ para `'wrong-info'`/`'off-niche'`** — `'review'` é nota de auditoria: fica legível no relatório `-last.md` e no editor ("ver relatório de auditoria"), não pinta a coluna Observações e não tira a bíblia de "Prontos para clonar". **Grave `'review'` exatamente como antes** (o tipo continua válido e é o registro do achado); só não o dose achando que polui o painel. **Esvaziar (`[]`) quando limpo** é obrigatório (chip preso = bug). É o que surfaça contaminação cross-produto que o detector mecânico não pega.
+- **`auditFlags` gravado junto do `lastAuditedAt`** (Etapa 3.6; vêm dos `report_C` que sobraram): avisos semânticos `{type,label}` report-only. `'wrong-info'` e `'off-niche'` acendem o chip na coluna Observações; `'review'` é nota de auditoria (fica no relatório `-last.md` e no editor, não pinta a coluna nem tira a bíblia de "Prontos para clonar"), e é gravada sempre que o achado couber. É o que surfaça contaminação cross-produto que o detector mecânico não pega. Esvaziar (`[]`) quando limpo é obrigatório: chip preso é bug.
 - **NUNCA compartilha contexto entre bíblias** nem faz passada comparativa.
 - **Só audita PREENCHIDA** (coreDone). Pendente → pula ("preencha primeiro"). Contaminada-hard → exclui (corrigir à mão na individual). Sem-dados-brutos → exclui.
 - **Sync R2**: pull no começo; push no fim SEMPRE (toda bíblia auditada leva carimbo `lastAuditedAt` + `auditFlags`, mesmo read-only — Etapa 5).
@@ -82,7 +82,7 @@ Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` n
    fez 58 consertos em vez de zero.
 0.3. **Carregar cada bíblia** (`docs/biblias-v2/<ASIN>.json`). Ausente → pular + listar.
 0.4. **Classificar**: Pendente (não coreDone) → **PULA** ("preencha primeiro"). Contaminada-hard (`check-contamination.ts` com `cross-brand-mention`) → **EXCLUI** (corrigir à mão na individual). Sem-dados-brutos → **EXCLUI**. Preenchida + não-hard-contaminada → **ENTRA**.
-0.5. **Mostrar plano e seguir direto** (tabela ENTRA/PULA/EXCLUI + nº no lote + estimativa), **sem pedir `S/N`**. As skills de bíblia são full-auto (canon Marcelo 2026-09-13) e o pré-flight 0.1-0.4 é a barreira. Isto vale em dobro quando esta skill é chamada por outra (`preencher-em-massa --audit`): uma pergunta aqui encerra o turno e trava o lote de quem chamou no meio. (O 12d da `pagina-produto-criar-em-massa` e o 4.5 da `pagina-produto-auditar-em-massa` NÃO chamam mais esta skill sozinhos: só reportam a fila e perguntam, canon 2026-09-24.)
+0.5. **Mostrar plano e seguir direto** (tabela ENTRA/PULA/EXCLUI + nº no lote + estimativa), **sem pedir `S/N`**. As skills de bíblia são full-auto (canon Marcelo 2026-09-13) e o pré-flight 0.1-0.4 é a barreira. Isto vale em dobro quando esta skill é chamada por outra (`preencher-em-massa --audit`): uma pergunta aqui encerra o turno e trava o lote de quem chamou no meio. (As skills de página em massa não chamam esta skill: reportam a fila e perguntam.)
 
 ### Etapa 1 — Camada MECÂNICA grupo (A) (grep determinístico, sem IA)
 
@@ -97,7 +97,7 @@ Scan determinístico nos campos curados. **Só LIXO DE DADO + NAMING** (não voz
 
 ⛔ **FORA do escopo da bíblia (NÃO scaneia, NÃO conserta — é do review/página):** travessão, muleta "declarado pelo fabricante", superlativo/claim absoluto, concordância PT-BR. Essas regras de VOZ são aplicadas pelas skills de criação sobre o texto reescrito (régua + auto-check próprios). Enforçar aqui é trabalho dobrado.
 
-**Escopo de campos:** voz-comprador (grupo B) vale só nos campos que ALIMENTAM o review (`sentimentoCompradores`/`angulosConversao`/`pontosFortes`/`pontosFracos`/`dicasAcionaveis`). NÃO nos internos (`dadosInconsistentes`/`observacoesAgente`) — `EAN`/`ASIN`/`specsAmazon`/`127V` ali é legítimo. **HTML-strip vale em todos.**
+**Escopo de campos:** a moldura de voz-comprador vale só nos campos que alimentam o review (`sentimentoCompradores`/`angulosConversao`/`pontosFortes`/`pontosFracos`/`dicasAcionaveis`); a cardinalidade (1 relato não vira consenso) vale em todos os curados, inclusive `dadosInconsistentes`/`observacoesAgente`, onde `EAN`/`ASIN`/`specsAmazon`/`127V` são legítimos. HTML-strip vale em todos.
 
 ### Etapa 2 — Camada LLM: achar + redigir conserto (sub-agents ISOLADOS)
 
@@ -122,12 +122,12 @@ Pra cada bíblia com fix (A) confirmado ou (B) retornado:
 - ⛔ **A mãe APLICA texto de auditor; não redige item novo.** Quando redigiu (B08S1HB8G9, 27/08), caiu no mesmo viés que a régua bloqueia nos preenchedores — justificou com julgamento de plausibilidade em vez do lastro registrado, e o re-auditor reprovou. Falta texto? Re-dispara o redator isolado.
 - **Remoção de claim exige varredura do MESMO claim em TODOS os campos.** Flag e ponto fraco nascem juntos do mesmo erro de leitura: em B09NLK7CJK a contradição removida do pontoFraco seguia viva em `dadosInconsistentes`, e só o ciclo 2 pegou.
 3.1. **Trava de ASIN**: `json.asin == pedido`? Não → descarta + re-dispara isolado.
-3.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`. ⚠️ **O nome é EXATAMENTE esse — não invente sufixo** (`-preaudit`, `-audit`, `-voz`, `-stamp`…). O painel só lista o que casa o regex de `docs/painel/_lib/handlers/backups.ts` (`{ASIN}-v2-{6 dígitos}` + uma allowlist curta de sufixos), então backup com sufixo improvisado **existe no disco mas some da UI de restore** — o usuário não consegue desfazer. Medição 2026-07-30: 210 de 459 backups de bíblia estavam invisíveis, acumulados por sufixos ad-hoc de vários runs. `HHMMSS` é 6 dígitos: nada de epoch nem de `aud170950`.
+3.2. **Backup**: `cp docs/biblias-v2/<ASIN>.json docs/painel/.painel-backups/<dia>/<ASIN>-v2-<HHMMSS>.json`, exatamente esse nome (`HHMMSS` com 6 dígitos, sem sufixo). A UI de restore só lista o que casa o regex de `docs/painel/_lib/handlers/backups.ts`; backup com sufixo improvisado existe no disco e some do restore.
 3.3. **Aplicar (A)** (deleção/formato + naming óbvio em `identidade.nome`/`identidade.marca`, ex.: preencher marca vazia derivável) **+ (B)** (substituir `antes`→`depois` no campo curado exato). NUNCA tocar brutos. NUNCA aplicar (C).
 3.4. **Bumpar `lastModified = new Date().toISOString()`**. Manter `lastAuthor`. Write `JSON.stringify(b,null,2)+'\n'`.
 3.4.1. **GUARDA DE SCHEMA pós-write (OBRIGATÓRIA, canon 2026-07-30).** Guarde **em memória**, antes de escrever, um mapa `campo → tipo` de cada campo curado (e, dentro de `angulosConversao`, o tipo de cada `frases` e de cada item dela). Depois do write, recarregue o arquivo e compare: nenhum array pode ter virado string, nenhum objeto pode ter virado escalar, nenhum item de `frases` pode deixar de ser string. ⚠️ **O baseline é esse snapshot em memória, NÃO o backup da 3.2** — numa reaplicação a 3.2 gera um backup novo, já do estado corrompido, e a comparação passaria em falso.
    - **Divergiu?** Restaure aquele campo do backup **pré-fix** (o mais antigo da rodada, não o recém-criado), **conserte a resolução de caminho no seu aplicador** e só então reaplique. Reaplicar com o mesmo aplicador quebrado é loop.
-   - **Por que existe:** o `campo` do fix vem como caminho aninhado (`angulosConversao[0].frases[2]`, `sentimentoCompradores[3].resumo`). Um aplicador que resolve só os dois primeiros tokens pega a LISTA `frases`, faz `str(lista)` e grava o **repr da linguagem** por cima do array. O JSON continua válido, o texto novo até aparece lá dentro, e o schema morre em silêncio. Caso real 2026-07-30: 9 arrays corrompidos em 6 bíblias num único lote. **Resolva o caminho inteiro até a folha e só edite se a folha for string.**
+   - **Por que existe:** o `campo` do fix vem como caminho aninhado (`angulosConversao[0].frases[2]`). Aplicador que resolve só os primeiros tokens grava o repr da lista por cima do array: o JSON segue válido e o schema morre em silêncio. Resolva o caminho inteiro até a folha e só edite se a folha for string.
    - Este check é mecânico e determinístico: **não delegue à re-auditoria da 3.5.** Lá dependeu de os auditores repararem, e reparar não é garantia.
 
 ### Etapa 3.5 — RE-AUDITORIA (a trava no lugar da aprovação humana)
@@ -153,9 +153,7 @@ Pra **cada** bíblia auditada (consertada ou não), no MESMO write: backup (se a
   - ⚠️ **Antes de acender `off-niche`, confira se a taxonomia oferece destino** (`docs/painel/taxonomia-biblias.json`). Se o tipo real do produto não existe como subcategoria, o chip não tem como ser resolvido e vira chip preso, que é o bug que esta seção quer evitar. Nesse caso **não acenda**: reporte a lacuna de taxonomia no relatório consolidado, como decisão humana. Caso real 2026-07-30: 4 repetidores de Wi-Fi classificados como `roteadores`, sem `repetidores` na taxonomia — 4 chips insolúveis evitados.
 - Write `JSON.stringify(b,null,2)+'\n'`.
 
-⚠ `auditFlags` é o que faz o chip ⚠/🧭 aparecer no painel (o 🔍 de `review` deixou de acender em 25/08 — segue gravado e legível) (server lê `d.auditFlags`; `_pages/biblias.ts` renderiza). NUNCA inventar flag sem evidência. **`specsAmazon`: wrong-info SÓ por ASIN divergente** (ASIN dentro da ficha ≠ `asin` da bíblia). **Contaminação cross-produto** (texto de um produto GENUINAMENTE diferente — outra marca/modelo — vazado em qualquer campo) também é `'wrong-info'` até re-captura. Mas **atributo capturado errado do PRÓPRIO produto, com ASIN certo, NÃO acende chip nenhum** (nem `wrong-info` nem `review`) — registra em `dadosInconsistentes` e segue; é ruído de captura, não problema.
-
-ℹ️ **Stale agora é por `lastFilledAt`, não por mtime** (regra 2026-06-15): `biblia-status.ts` marca stale quando `lastFilledAt > lastAuditedAt` (re-preenchida depois da auditoria), não comparando mtime do `.md` com `lastModified`. Então a antiga preocupação de "ordem do report vs lastModified" não vale mais — o carimbo `lastAuditedAt` no JSON é a fonte.
+⚠ `auditFlags` é o que faz o chip ⚠/🧭 aparecer no painel (server lê `d.auditFlags`; `_pages/biblias.ts` renderiza). NUNCA inventar flag sem evidência.
 
 ### Etapa 4 — Relatório (por bíblia + consolidado)
 
@@ -197,10 +195,6 @@ Pra **cada** bíblia auditada (consertada ou não), no MESMO write: backup (se a
 - Tocar campos brutos, `avisosAoAgente` ou `lastAuthor`.
 - Comparar/compartilhar contexto entre bíblias.
 - Auditar bíblia pendente (pula) ou contaminada-hard (exclui).
-
-## Disciplina de release
-
-Nasce no project repo. Vai pro marketplace DEPOIS de validada num run real. Padrão: fazer + validar → release (ver `feedback_skill_regua_release_junto`).
 
 ## Invocação
 

@@ -1,11 +1,11 @@
 ---
 name: site-migrar-dominio
-description: Migra um site inteiro da rede de um domínio para outro, com 301 catch-all path-preserving no domínio antigo. Cobre as 5 fases (preparação no repo → zona/DNS → deploy no domínio novo → 301 no antigo → GSC), com gate entre a 3 e a 4 (o domínio novo TEM que servir antes da placa subir). Opcionalmente renomeia a pasta do site quando a identidade muda junto. Aceita `{site} {dominio-novo}` OU `{site} {dominio-novo} --sem-rename`. Trata as armadilhas medidas em casos reais: regras path-específicas com caminho relativo viram cadeia de 2 saltos, artigo `contentLocked` escapa da troca em massa de tag, pre-commit bloqueia migração (bypass documentado), rename orfana o prefixo do R2 e exige `pnpm install` na VPS, e a affiliateTag NUNCA pode ser inventada. NÃO registra domínio, NÃO aponta NS (passo humano no Registro.br) e NÃO decide o domínio de destino.
+description: Troca o domínio de um site Astro da rede que já está no ar, com 301 catch-all que preserva o caminho no domínio antigo, e renomeia a pasta quando a identidade muda junto. Use quando o Marcelo pedir para mudar o domínio de um site (`{site} {dominio-novo}` ou `{site} {dominio-novo} --sem-rename`). Não é consolidação de dois sites nem port de WordPress (site-portar-wordpress). Não registra domínio, não aponta NS e não escolhe o domínio de destino.
 ---
 
 ## Parse de input
 
-- `{site} {dominio-novo}` (ex.: `escritoriocasa guiamelhor.com.br`, caso real de 08/08 — a pasta hoje é `oguiacompra`) → migra o site pro domínio novo, COM rename da pasta
+- `{site} {dominio-novo}` (ex.: `escritoriocasa guiamelhor.com.br`, caso de 08/08/2026; a pasta virou `guiamelhor`) → migra o site pro domínio novo, COM rename da pasta
 - `{site} {dominio-novo} --sem-rename` → só troca o domínio, mantém o slug da pasta
 - URL do painel (`site-{slug}.html`) também resolve o slug
 
@@ -81,15 +81,9 @@ Nada muda no ar. O site antigo segue servindo normal.
 | 1.6 | renomear a chave do site **preservando a ordem** | `docs/painel/sites-meta.json` |
 | 1.7 | `git mv` dos marcadores `{antigo}-*` → `{novo}-*` | `docs/biblias-v2/.audits/*/` |
 | 1.8 | `pnpm install --lockfile-only` e conferir 0 ocorrências do nome antigo | `pnpm-lock.yaml` |
-| 1.9 | atualizar `TEMPLATE_KNOWN_DIVERGENCES` e `KNOWN_DIVERGENCES` **se o slug estiver lá** | `server.ts` · `template-diff.ts` |
+| 1.9 | trocar o slug nas divergências **se ele estiver lá** | `docs/painel/_lib/template-divergences.ts` (`MANUAL_DIVERGENCES`) · `scripts/sync-template.ts` (`KNOWN_DIVERGENCES`) |
 
-**O handle do Facebook MUDA** e segue o slug: `facebook.com/{slug-novo}`. Medido em 2026-08-09: **45 dos
-49 sites** da rede usam `facebook.com/{slug}`, e **3 das 4 exceções são resíduo de rename** que ninguém
-corrigiu (`oguiacompra`→escritoriocasa, `impressoracustobeneficio`→impressoraideal, e este caso antes do
-conserto). O caso de referência manteve o handle antigo, mas isso foi **esquecimento, não decisão** —
-canon Marcelo 2026-08-09: *"os facebooks de rodapé são gerados automaticamente, faça como se fosse um
-site novo"*. O handle aparece no rodapé de TODAS as páginas, então deixar o antigo faz cada página da
-marca nova apontar pra marca velha.
+**O handle do Facebook muda e segue o slug:** `facebook.com/{slug-novo}`, como num site novo (Marcelo, 09/08/2026: *"os facebooks de rodapé são gerados automaticamente, faça como se fosse um site novo"*). É a convenção da rede, e o handle aparece no rodapé de todas as páginas: deixar o antigo faz cada página da marca nova apontar para a marca velha.
 
 **O que NÃO muda:** o nome do autor e credenciais reais da persona.
 
@@ -122,9 +116,7 @@ git show HEAD:sites/{novo}/src/config.ts | grep -E 'domain:|affiliateTag:'   # v
 
 **⚠ Grepe as DUAS formas: o domínio E a marca com espaço.** `tabletideal` e `Tablet Ideal` são
 strings diferentes, e a segunda sobrevive ao `sed` do domínio porque vive na PROSA (bio do autor,
-página /sobre/, hero, descrição de categoria). Caso real 2026-08-13: `/author/gustavo-alves/` foi
-pro ar dizendo *"redator por trás do Tablet Ideal"* e **passou por duas varreduras** que só grepavam
-o domínio (achado da Bárbara, depois de já ter reportado a migração como concluída).
+página /sobre/, hero, descrição de categoria). Já foi ao ar assim depois de duas varreduras só pelo domínio.
 
 **Use `grep` case-SENSITIVE no Title Case da marca, nunca `-i`.** Marca de rede afiliada costuma ser
 feita de palavras comuns, então `-i` casa com português legítimo e afoga o achado real em ruído:
@@ -144,9 +136,7 @@ E edição.** `git mv` já deixa o rename staged; o `sed`/`Edit` que vem depois 
 `git commit` sem `add` novo leva só a metade. Nada quebra na hora — o que está no ar continua certo,
 porque o deploy saiu da árvore de trabalho — mas o HEAD fica com **pasta nova + config velho**, e o
 próximo build pelo painel (ou por qualquer outra máquina) ressuscita a **tag de afiliado antiga**.
-Reincidência medida: `guiamelhorcompra`→`escritoriocasa` (2026-08) e `tabletideal`→`omelhortablet`
-(2026-08-13, pego pela própria Bárbara *depois* de reportar a migração como concluída). Ver
-armadilhas 10-12 e [[afiliados.projeto.transferir-guiamelhorcompra-para-escritoriocasa]].
+Aconteceu duas vezes na rede, e as duas foram reportadas como concluídas antes da conferência. Ver armadilhas 10-12.
 
 ## Fase 2 — zona e DNS do domínio novo
 
@@ -356,7 +346,7 @@ Ver invariantes. Sonda HTTP + Registro.br.
 Trocar só o domínio **não quebra nada** — o domínio não é derivado em runtime, vive no `config.ts`, e
 todo o SEO deriva de `siteConfig.siteUrl` ([[afiliados.convencao.slug-por-tld-multidominio]]). O rename
 serve quando a IDENTIDADE muda junto e o slug passaria a mentir. Ele custa: prefixo órfão no R2,
-`pnpm install` na VPS, dir órfão no disco e as duas listas `KNOWN_DIVERGENCES`
+`pnpm install` na VPS, dir órfão no disco e as listas de divergência (`template-divergences.ts` e `sync-template.ts`)
 ([[afiliados.armadilha.rename-site-quebra-known-divergences]]). Pergunte antes de assumir.
 
 ### 8. Podar o prefixo antigo do R2 antes da Fase 4
@@ -398,8 +388,8 @@ HEAD, não a árvore) — sem isso o relatório afirma o que não foi medido.
 ## Exemplo de invocação
 
 ```
-Skill(skill="afiliados-skills:site-migrar-dominio", args="escritoriocasa guiamelhor.com.br")
-Skill(skill="afiliados-skills:site-migrar-dominio", args="melhorguia melhortech.com.br --sem-rename")
+Skill(skill="afiliados-skills:site-migrar-dominio", args="{site} {dominio-novo}")
+Skill(skill="afiliados-skills:site-migrar-dominio", args="{site} {dominio-novo} --sem-rename")
 ```
 
 ## Registrar desvio de execução (obrigatório quando houver)

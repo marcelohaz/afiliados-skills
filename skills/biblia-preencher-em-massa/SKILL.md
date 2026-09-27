@@ -1,6 +1,6 @@
 ---
 name: biblia-preencher-em-massa
-description: Preenche a curadoria (7 campos) de VÁRIAS bíblias v2 de uma vez, em PARALELO via sub-agents (até 10 simultâneos), cada um isolado na sua bíblia (zero contaminação cruzada). Aceita lista de ASINs OU "todas as pendentes". Exclui contaminadas e sem-dados-brutos do lote. Cada sub-agent LÊ as imagens anexadas (conteudoBrutoFabricanteImagens/doFabricanteImagens) como fonte factual antes de curar. Flag --enriquecer = modo backfill que NUNCA sobrescreve curadoria existente, só acrescenta (obrigatório em bíblia já curada). Sync R2 nas 2 pontas, bump lastModified, backup. Botão roxo "✨ Preencher bíblias" do produtos.html copia o comando pra cá.
+description: Preenche a curadoria (7 campos) de VÁRIAS bíblias v2 de uma vez, em PARALELO via sub-agents (até 10 simultâneos), cada um isolado na sua bíblia (zero contaminação cruzada). Aceita lista de ASINs OU "todas as pendentes". Exclui contaminadas e sem-dados-brutos do lote. Cada sub-agent LÊ as imagens anexadas (conteudoBrutoFabricanteImagens/doFabricanteImagens) como fonte factual antes de curar. Flag --enriquecer = modo backfill para bíblia já curada, que acrescenta e corrige sem perder a curadoria existente (obrigatório nesse caso). Sync R2 nas 2 pontas, bump lastModified, backup. Botão roxo "✨ Preencher bíblias" do produtos.html copia o comando pra cá.
 ---
 
 ## Parse de input
@@ -10,9 +10,10 @@ Args no `$ARGUMENTS`:
 - **`todas` / `todas as pendentes`**: varre `docs/biblias-v2/*.json`, pega as `pend` preenchíveis (ver Etapa 0.4).
 - **Filtro** (opcional): `niche=Panela Elétrica` ou `sub=panela-eletrica` → restringe o "todas" àquela subcategoria.
 - **`RETOMAR=yes`** (opcional): invocação nascida do heartbeat; re-arme, re-rode a Etapa 0 (idempotente) e dispare só o que falta (ver Invariantes → Turno vivo).
-- **`--enriquecer`** (opcional, mas **OBRIGATÓRIO pro backfill das 216**): liga o modo enriquecer da `biblia-preencher` em TODOS os sub-agents. **Nesse modo nenhum campo curado existente é sobrescrito — só se ACRESCENTA.**
+- **`--enriquecer`** (opcional; obrigatório quando o alvo já tem curadoria): liga o modo enriquecer da `biblia-preencher` em todos os sub-agents. Nesse modo nada da curadoria existente se perde (ver Reconciliação da `biblia-preencher`).
+- **Ordem do backfill de imagens:** por rendimento e custo medidos (cozinha rende mais itens por bíblia e concentra a maior parte das imagens), nunca por sensibilidade do nicho. A bíblia captura fato; aviso ao leitor é decisão da página/review.
 
-> ⚠️ **PERIGO — leia antes de rodar batch em bíblia já curada.** O fluxo normal desta skill **REESCREVE os 7 campos**. As **216 bíblias com imagem anexada já têm curadoria escrita** (foi feita sem ler as imagens, que é o motivo do backfill existir). Rodar o batch nelas **sem `--enriquecer` destrói curadoria boa em massa.** A Etapa 0.4 filtra "pendentes" justamente pra não pegar essas — mas se o alvo vier por lista explícita de ASINs, esse filtro não protege. **Regra: alvo que já tem curadoria ⇒ `--enriquecer` obrigatório.** Com a flag, o prompt do sub-agent manda seguir a seção "Modo `--enriquecer`" da `biblia-preencher` (acrescenta fato ausente, manda contradição pra `dadosInconsistentes` sem reescrever, marketing pra `angulosConversao`, e carimba `imagensVerificadasEm` mesmo quando não achou nada).
+> ⚠️ **PERIGO — leia antes de rodar batch em bíblia já curada.** O fluxo normal desta skill **REESCREVE os 7 campos**. As **bíblias com imagem anexada já têm curadoria escrita** (foi feita sem ler as imagens, que é o motivo do backfill existir). Rodar o batch nelas **sem `--enriquecer` destrói curadoria boa em massa.** A Etapa 0.4 filtra "pendentes" justamente pra não pegar essas — mas se o alvo vier por lista explícita de ASINs, esse filtro não protege. **Regra: alvo que já tem curadoria ⇒ `--enriquecer` obrigatório.** Com a flag, o prompt do sub-agent manda seguir a seção "Modo `--enriquecer`" da `biblia-preencher` (acrescenta fato ausente; corrige o claim que o rótulo desmente com valor definido, movendo o texto anterior para `dadosInconsistentes`; só registra a contradição sem valor único; marketing vai para `angulosConversao`; carimba `imagensVerificadasEm` mesmo sem achado).
 
 # Preencher curadoria de bíblias em massa (paralelo via sub-agents)
 
@@ -20,7 +21,7 @@ Args no `$ARGUMENTS`:
 
 ## Modelo
 
-Opus 5 (ou o Opus mais novo disponível). Sub-agents fixados com `model: opus` no Agent tool. NUNCA Sonnet/Haiku (régua do projeto: skills sempre Opus).
+Sub-agents com `model: opus` no Agent tool; o alias resolve para o Opus mais novo da conta, sem número de versão a manter. Motivo: é trabalho editorial e de fato, e a régua do projeto é sempre Opus (Sonnet e Haiku ficam fora).
 
 ## ⚠️ Playbook anti-contaminação (o coração desta skill)
 
@@ -31,7 +32,7 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 3. **Trava de ASIN.** O sub-agent devolve o `asin` no JSON. A skill-mãe **confere `asin_retornado == asin_pedido` ANTES de gravar**. Mismatch → descarta aquele resultado, re-dispara (pega qualquer mix-up A→B).
 4. **Exclusão na entrada (Etapa 0.4):** bíblia **contaminada** (`contaminado: true` no painel = `check-contamination.ts` com hard issue tipo `cross-brand-mention`) **NÃO entra no lote** — preencher com info de outro produto propaga o erro. Vai pra lista "corrigir à mão antes" (a singular `biblia-preencher` tem o tratamento por-campo + revisão humana). Idem bíblia **sem dados brutos** (nada pra destilar).
 5. **Post-check de leak por bíblia (Etapa 2.5):** a curadoria gravada não pode citar **nome/marca/modelo de OUTRO produto do lote**. Se vazar → flag no relatório + não grava aquele (re-dispara isolado).
-6. **Gate opcional `--audit`:** encadeia a `biblia-auditar-em-massa` no lote (camada mecânica auto-conserta resíduo de régua: voz-comprador, travessão, `<strong>` vazado; camada de julgamento vira flag pro humano). É o fluxo "preencheu → audita automático".
+6. **Gate opcional `--audit`:** encadeia a `biblia-auditar-em-massa` no lote (auto-conserta lixo de dado, naming e voz-comprador; o indeterminável vira flag para o humano). É o fluxo "preencheu → audita automático".
 
 ## Invariantes
 
@@ -40,7 +41,7 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 - **`lastModified` E `lastFilledAt` bumpados via `new Date().toISOString()`** ao gravar (UTC real); NUNCA `lastAuthor`, NUNCA hand-roll via getHours/pad (armadilha de timezone). Sem o bump do `lastModified`, o pull do R2 CLOBBERA o edit. O `lastFilledAt` é o carimbo de re-preenchimento (painel marca "auditar de novo" via `lastFilledAt > lastAuditedAt`; regra Marcelo 2026-06-15).
 - **Sync R2 nas 2 pontas**: pull no começo (as bíblias cruas podem estar SÓ no R2 — caso real: lote de panela elétrica criado no painel, ausente no Mac local), push no fim (uma vez, batch).
 - **Idempotente**: pula bíblia já preenchida (coreDone) — re-rodar o lote não retrabalha.
-- **Full-auto, sem checkpoint humano** (igual aos outros em-massa, canon 24/07 e 15/08): o pré-flight (Etapa 0) é a barreira; passou → imprime o plano como notificação e **dispara na MESMA mensagem** (não pergunta S/N — era a única em-massa que ainda perguntava). Cap de segurança: lote > 30 bíblias ou custo estimado incomum → aí sim confirma antes.
+- **Full-auto, sem checkpoint humano** (igual aos outros em-massa, canon 24/07 e 15/08): o pré-flight (Etapa 0) é a barreira; passou → imprime o plano como notificação e **dispara na MESMA mensagem** (sem perguntar S/N). Cap de segurança: lote > 30 bíblias ou custo estimado incomum → aí sim confirma antes.
 - **Turno vivo (canon 15/08)**: sub-agents em primeiro plano (`run_in_background: false`, N `Agent()` no mesmo bloco); heartbeat `ScheduleWakeup(1800, prompt="/biblia-preencher-em-massa {os MESMOS args} RETOMAR=yes")` como passo 0.0; ao acordar re-arme, re-rode a Etapa 0 (é idempotente: coreDone/já carimbada pula) e dispare só o que falta; `ScheduleWakeup(stop:true)` antes do relatório final e no aborto; sub-agent morto → refaz inline no mesmo turno; nunca "te aviso quando voltar".
 - **NÃO faz deploy** (bíblia não é deployada; ela sincroniza R2).
 - **Cap de paralelismo: 10 sub-agents** simultâneos. Acima → levas (10 + 10 + ...).
@@ -61,11 +62,11 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 0.3. **Carregar cada bíblia** (`docs/biblias-v2/<ASIN>.json`). Ausente local (mesmo após sync) → pular + listar.
 
 0.4. **Classificar cada uma** (decide quem entra no lote):
-   - **Já preenchida** (`angulosConversao` + `pontosFortes` + `pontosFracos` todos não-vazios = coreDone) → **PULA** (idempotência) — **EXCETO no modo `--enriquecer`**, cujo alvo são justamente as coreDone: aí a chave é `imagensVerificadasEm` — **ausente → ENTRA; presente → PULA** (a lista de imagens não tem timestamp próprio; se você sabe que ela mudou depois do carimbo, passe os ASINs explicitamente pra forçar). Sem esta regra o lote enriquecer não processa ninguém (bug até 15/08).
+   - **Já preenchida** (`angulosConversao` + `pontosFortes` + `pontosFracos` todos não-vazios = coreDone) → **PULA** (idempotência) — **EXCETO no modo `--enriquecer`**, cujo alvo são justamente as coreDone: aí a chave é `imagensVerificadasEm` — **ausente → ENTRA; presente → PULA** (a lista de imagens não tem timestamp próprio; se você sabe que ela mudou depois do carimbo, passe os ASINs explicitamente pra forçar).
    - **Sem dados brutos** (todos vazios: `sobreEsteItem`/`doFabricante`/`specsAmazon`/`opinioesCompradores`/`descricaoProduto`) → **EXCLUI** + lista "sem matéria-prima, capturar antes".
    - **Contaminada** — roda `bun scripts/check-contamination.ts <ASIN>`; se `hasContamination: true` com hard issue (`cross-brand-mention`) → **EXCLUI** + lista "informações erradas, corrigir à mão (biblia-preencher individual)".
 
-   **Comportamento real hoje:** os três tipos PODEM ser `hard` e excluir, com TRÊS saídas condicionais:
+   **Como o detector classifica:** os três tipos PODEM ser `hard` e excluir, com TRÊS saídas condicionais:
    - **`cross-brand-mention` vira soft quando a marca alheia NÃO domina o campo** (canon 2026-08-27): menção isolada — fornecedor ("Fornecedor: Britânia" na página da Philco), compatibilidade ("compatível com cápsula Nespresso"), citação bibliográfica — com os sinais do próprio produto aparecendo igual ou mais no mesmo campo. O `check-contamination.ts` FILTRA os soft (`hasContamination: false`), então não exclui do lote e o campo é usado normalmente.
    - **`brand-mismatch` vira soft** se `identidade.confirmadoPelaEditora === true` (canon 2026-07-26). É a saída projetada pra co-branding e submarca. Casos reais: Tapo é linha da TP-Link (o próprio `urlFabricante` é `tp-link.com/br/.../tapo`), Multi Saúde é do grupo Multilaser (`urlFabricante` é `multilaser.com.br`). **Confirme pela evidência dentro da bíblia, não por conhecimento de mundo.** Não há UI pro campo — hoje é edição manual.
    - **`asin-mismatch` vira soft** quando o modelo bate e não há ambiguidade de voltagem (`irmaoBenigno`): é relistagem, não produto trocado. Com voltagens conflitantes ou modelo diferente, continua hard e pede recaptura.
@@ -75,13 +76,13 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 
 0.5. **Imprimir o plano** (tabela ASIN, nome, ENTRA/PULA/EXCLUI + motivo, nº no lote, estimativa ~1-3 min/leva) **e disparar na mesma mensagem** — sem `S/N` (canon 24/07: o pré-flight é a barreira). Defina `RUN` = `<scratchpad>/biblia-lote-{YYYYMMDD-HHMM}` e crie `RUN/payloads/` e `RUN/antes/`.
 
-0.6. **Snapshots `-antes.json` (OBRIGATÓRIO — sem eles o aplicador REPROVA tudo).** Pra cada ASIN que ENTRA: `cp docs/biblias-v2/{ASIN}.json RUN/antes/{ASIN}-antes.json`. O `biblia-aplicar.ts` exige o snapshot pra guarda de não-perda e de ASIN (`sem snapshot -antes.json` = REPROVADA, e reprovada não é gravada). Até 15/08 este passo não existia na skill.
+0.6. **Snapshots `-antes.json` (OBRIGATÓRIO — sem eles o aplicador REPROVA tudo).** Pra cada ASIN que ENTRA: `cp docs/biblias-v2/{ASIN}.json RUN/antes/{ASIN}-antes.json`. O `biblia-aplicar.ts` exige o snapshot pra guarda de não-perda e de ASIN (`sem snapshot -antes.json` = REPROVADA, e reprovada não é gravada).
 
 ### Etapa 1 — Geração (sub-agents paralelos, ISOLADOS)
 
 N sub-agents Opus, levas de ≤10. Cada sub-agent (Agent tool, `model: opus`, conversa fresh):
 - **Input + régua (FONTE ÚNICA, não resumo)**: cole no prompt SÓ os DADOS (o ASIN + o conteúdo bruto daquela bíblia / JSON). A **régua dos 7 campos NÃO é colada** — o prompt manda o sub-agent **LER `.claude/skills/biblia-preencher/SKILL.md` à risca** (estrutura de cada campo + invariantes PT-BR + armadilhas + destilação) **+ `docs/painel/_data/chavoes-por-nicho.json`** (`_genericos` + bloco do nicho) e aplicar essa régua VIVA. Resumo inline de régua = proibido (evita drift; sub-agent não invoca Skill tool, então LÊ o arquivo — mesma fonte única da `pagina-produto-criar-em-massa` e da clone).
-- **⚠ IMAGENS ANEXADAS: passar as URLs no prompt (canon 2026-07-26).** A etapa 2.5 da individual manda **ler** `conteudoBrutoFabricanteImagens` e `doFabricanteImagens` antes de gerar qualquer campo. Isso só funciona no batch se o sub-agent tiver como abrir: **cole as URLs das imagens no prompt** (elas estão no JSON que você já cola, mas explicite que ele DEVE baixá-las) e diga que ele pode `curl` + `sips -Z 1400` + `Read`. Sem isso o sub-agent gera a curadoria só com os campos de texto — exatamente o buraco que gerou 216 bíblias curadas sem ninguém abrir uma imagem. **Se a bíblia tem `imagensVerificadasEm` e a lista de imagens não mudou, avise no prompt que já foram lidas** (evita rebaixar 731 imagens a cada batch).
+- **⚠ IMAGENS ANEXADAS: passar as URLs no prompt (canon 2026-07-26).** A etapa 2.5 da individual manda **ler** `conteudoBrutoFabricanteImagens` e `doFabricanteImagens` antes de gerar qualquer campo. Isso só funciona no batch se o sub-agent tiver como abrir: **cole as URLs das imagens no prompt** (elas estão no JSON que você já cola, mas explicite que ele DEVE baixá-las) e diga que ele pode `curl` + `sips -Z 1400` + `Read`. Sem isso o sub-agent gera a curadoria só com os campos de texto — exatamente o buraco que gerou bíblias curadas sem ninguém abrir uma imagem. **Se a bíblia tem `imagensVerificadasEm` e a lista de imagens não mudou, avise no prompt que já foram lidas** (evita rebaixar as mesmas imagens a cada batch).
 - **PROSA DE PREÇO: dê a forma canônica no prompt** — `"Preço médio em torno de R$ X"`, nunca "snapshot", "captura" ou "bíblia" (jargão interno vazou em 3 lotes seguidos até 27/08; dar a forma pronta zerou o vazamento no lote seguinte). Vale pra qualquer campo curado que cite preço.
 - **⚠ IMAGEM MORTA OU VAZIA (canon 2026-08-27, 3 casos em 2 lotes):** URL 404, ou viva mas placeholder (hexágono do Magento, byte-idêntica entre si) → o sub-agent registra a leitura em `observacoesAgente` (com o HTTP/motivo), grava o payload em `RUN/payloads-semimg/{ASIN}.json` — NÃO em `payloads/` — e a mãe roda o aplicador desse diretório **SEM `--imagens`**: carimbar `imagensVerificadasEm` afirmaria que as imagens anexadas foram lidas. Se o agente achou a galeria viva no site do fabricante, pode ler e usar, mas o carimbo continua de fora até as URLs do campo serem trocadas no editor. Bíblia sem NENHUMA URL anexada vai em `payloads/` normal e o aplicador CARIMBA mesmo com `imagensLidas` vazio (verdade vácua — sem o carimbo ela re-entraria em todo lote `--enriquecer`, que keia em `imagensVerificadasEm` ausente; eram 461 nesse estado em 27/08). O caso proibido é um só: URL anexada E nada lido.
 - **Tarefa**: gerar os 7 campos de curadoria (`sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`, `dadosInconsistentes`, `observacoesAgente`) + (se houver ruído) o `conteudoBrutoFabricante` limpo. Destilar SÓ dos dados daquela bíblia, sem inventar, sem copiar verbatim.
@@ -102,7 +103,7 @@ N sub-agents Opus, levas de ≤10. Cada sub-agent (Agent tool, `model: opus`, co
 ### Etapa 2 — Escrita (skill-mãe, SERIAL, chaveada por ASIN)
 
 Pra cada JSON retornado:
-2.1–2.3 e 2.5 **são feitas PELO SCRIPT da 2.4**, não à mão. Ele faz trava de ASIN (dupla), backup no padrão canônico, merge dos 7 campos, bump de `lastModified`/`lastFilledAt` sem tocar `lastAuthor`, e o write. Estão descritas aqui só para você saber o que ele garante — **não as reexecute por fora**, senão você grava duas vezes e o backup da segunda já é do estado novo.
+Trava de ASIN, backup no padrão canônico, merge dos 7 campos, bump de `lastModified`/`lastFilledAt` (sem tocar `lastAuthor`), write e leak-check são feitos pelo script da 2.4. Não os reexecute por fora: uma segunda gravação faz o backup já sair do estado novo.
 
 2.4. **RODAR O APLICADOR VERSIONADO — não reimplementar as guardas (canon 2026-07-30).**
 
@@ -113,7 +114,7 @@ Pra cada JSON retornado:
 
    O script faz backup, aplica, carimba e roda TODAS as travas. Exit 1 se alguma bíblia reprovar, e **reprovada não é gravada**. Rode `--dry-run` antes em lote grande.
 
-   ⛔ **NÃO reescreva essas guardas inline.** Elas viviam como snippet aqui pra ser redigitado a cada execução, e em 2026-07-30 o orquestrador as reimplementou 5 vezes num dia e **errou 4**: comparou `angulosConversao` por hash do objeto (acrescentar frase lia como perda), comparou o `nome` inteiro no leak-check (reprovou 3 de 5 por "biotina"/"vitamina"), comparou contra `JSON.stringify` (aspas internas viram `\"` e o substring falha), e só preservou o que o agente declarava. **A régua aqui estava certa nas 4 vezes; o erro foi a reimplementação.** Guarda que precisa ser redigitada não é trava.
+   ⛔ **Não reescreva essas guardas inline.** Guarda redigitada a cada execução volta com bug (o histórico está no cabeçalho do `biblia-aplicar.ts`): a régua pode estar certa e a reimplementação errada.
 
    O que o script garante, e por quê:
 
@@ -133,9 +134,9 @@ Pra cada JSON retornado:
 
 2.6. **Reler do R2 ~60s depois do push.** `enviado` **não é prova** (ver guarda (a)). Confirme que `imagensVerificadasEm` está lá de verdade. Se a reversão atingir sempre o MESMO conjunto de bíblias, é invalidez de schema, não concorrência — não saia acusando escritor concorrente, e note que `lastAuthor` é campo de CONTEÚDO (os scripts de sync nunca o tocam), então ele não identifica quem fez o upload.
 
-### Etapa 2.5 — Post-check de leak (auto)
+### Etapa 2.5 — Leak reprovado pelo aplicador
 
-Pra cada bíblia gravada: a curadoria (todos os 7 campos serializados) não pode conter `identidade.nome`/`marca`/`modelo` de **outra bíblia do lote**. Se contiver → flag "⚠ possível leak de <outro ASIN>", reverte do backup, re-dispara aquele isolado (máx 2x). Não-convergiu → deixa o backup e flag no relatório (não esconde).
+Bíblia reprovada por leak (marca+modelo de outro ASIN do lote) não foi gravada: re-dispare aquele sub-agent isolado (máx. 2x). Não convergiu → fica fora e sai no relatório com o ASIN alheio.
 
 ### Etapa 3 — Sync R2 push (uma vez, batch)
 
@@ -168,7 +169,7 @@ Default sem `--audit`: não audita (mas é o passo recomendado). A delegação r
 2. **Clobber do lastModified**: bump via `toISOString()` (UTC real). Sem isso o `--push` vira `recebido` e o edit some. NUNCA hand-roll timestamp (timezone bug 2-3h no futuro).
 3. **Contaminação na ENTRADA**: o guard nº4 exclui hard-contaminadas; o resto é isolamento puro. NÃO tente "comparar" bíblias pra divergir — criação escreve livre (ver `afiliados.regras.criacao-escreve-livre-dedup-no-audit`).
 4. **Race de escrita**: sub-agent NUNCA grava; só a skill-mãe (serial). Senão 2 sub-agents podem tocar o mesmo arquivo / o sync no meio.
-5. **Régua residual**: mesmo isolado, sub-agent vaza voz-comprador/travessão às vezes — o `--audit` (ou `biblia-auditar` depois) é o gate.
+5. **Régua residual**: mesmo isolado, o sub-agent às vezes deixa voz-comprador ou HTML na curadoria; o `--audit` (ou a `biblia-auditar` depois) é o gate. Travessão e o resto da voz final são do review/página, não da auditoria de bíblia.
 
 ## Limites de segurança (NUNCA faz)
 

@@ -1,6 +1,6 @@
 ---
 name: leilao-garimpar
-description: Analisa a lista "processo de liberação" do Registro.br pra garimpar domínios afiliado de PRODUTO FÍSICO. Roda o pipeline oficial do painel (leilao-afiliados-processor) E as passadas complementares (scripts/leilao-afiliados-passadas.ts) que pegam o que o funil estrito deixa escapar — exact-match-cru (produto=domínio), prefixo melhor/top, decomposição produto+spec/marca+produto/plural-de-composto. Cruza com domains.json (já meus), catálogo garimpo (já é kw) e blocklist (deletados). Cura por margem/intenção (mantém alto-ticket; corta bebê/esporte/commodity/serviço/infoproduto/falso-positivo) e entrega shortlist em tiers com exact-cru no topo. READ-ONLY: registro é decisão do Marcelo. Mantém histórico curado por período. Termina ATUALIZANDO a seção Aprendizados. Input: caminho do .txt (Marcelo baixa e manda).
+description: "Analisa a lista \"processo de liberação\" do Registro.br e devolve a shortlist de domínios bons para site afiliado de produto físico, mais o alerta de domínios nossos que estão sendo liberados. Use quando o Marcelo mandar a lista do leilão ou pedir o garimpo do leilão (sem arquivo, a skill baixa a lista). Só recomenda: registro e compra são do Marcelo. Não é o garimpo de keywords (garimpo-afiliados-loader)."
 ---
 
 # Garimpo da lista de leilão afiliado (processo de liberação Registro.br)
@@ -21,7 +21,7 @@ Garimpo (`garimpo-afiliados-loader`) = você define keyword, sistema checa via W
 
 ## Fase 2 — Pipeline oficial (sempre primeiro)
 ```bash
-cd /Users/marcelo/Documents/Claude/Projects/ProjetoAfiliados
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
 bun -e "import { processarLeilaoAfiliadosTexto } from './docs/painel/_lib/leilao-afiliados-processor.ts';
 const raw = Buffer.from(await Bun.file('<CAMINHO>').arrayBuffer()).toString('latin1');
 const { snap, outPath } = await processarLeilaoAfiliadosTexto(raw, { fonte: 'upload' });
@@ -75,6 +75,11 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
   3. 🟡 **Tier 2** — produto+qualificador / marca+produto / ticket médio / domínio fraco.
   4. ⚪ **Descartados com motivo** (mostrar pra provar que conferiu).
 - **Convergência**: quando ampliar dicionário/passadas não traz nada novo = poço seco, pode fechar. Sinalizar isso.
+- **Falso-positivo tem forma fixa: `{produto}{qualificador-vazio}`** (celularcerto, geladeiracerta, mesaspremium, dronedigital, alarmesmart, fonteoficial). Se o par produto+adjetivo não é como alguém digita no Google, corta. Casar na regex não basta: confira se o par existe no mundo (`climatizadorultrasonico` casa, mas climatizador é evaporativo).
+- **Beleza/saúde consumível ou cosmético** (perfume, maquiagem, batom, sérum, protetor solar) fica fora: ROI baixo para comprar domínio novo (Marcelo, 23/07/2026). Devices de grooming ficam. Vale só para o garimpo, não para sites de beleza que já existem.
+- **Cortes recorrentes:** conteúdo (`receitasairfryer`), usados (`notebookusados`), B2B (`tabletindustrial`), prefixo não brasileiro (`reviewcadeiras`).
+- **Onde o recall falha:** o exact-cru convergiu (varredura independente de 208 produtos em 09/2026 não achou nada novo). O que escapa é (a) a família `^(o|a|os|as)?(melhor|melhores|top)` com produto fora do dicionário, filtrando serviço e cidade por regex, e (b) `^produto+qualificador$` com lista fechada de qualificadores que formam termo real (eletrica, digital, inteligente, gamer, portatil, wifi, inox, vertical, embutir, externa, ip, kamado, passagem). `contains produto` sozinho é quase todo substring falsa.
+- **Blocklist vence a memória:** o que o helper pulou por blocklist fica fora, mesmo que pareça bom.
 
 ## Fase 6 — Output
 - Shortlist em tiers (tabela: domínio · produto · flag). **Lembrete**: são domínios **expirando na janela do header** — entram pra registro quando liberados, não estão livres agora.
@@ -94,49 +99,9 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 
 ---
 
-## Aprendizados (apêndice vivo — ATUALIZAR a cada run)
+## Aprendizados
 
-> Ao final de CADA run: anexar o que escapou, termo/padrão novo, produto a adicionar no `PRODUTOS_EXTRA`, e decisão do Marcelo que vire regra.
-
-**v1 — 2026-06-11 (lista 10-17/06, 112.691 dom → 19 oficiais + 29 complementares)**
-- **Gap estrutural do processador**: "exact" só casa contra o CATÁLOGO (512 kw), não contra `PRODUTOS_EXTRA` — por isso `webcam.com.br` (estava em PRODUTOS_EXTRA) NÃO foi pego pelo oficial. A Passada exact-cru cobre. Fix possível no processador (exact também olhar prodSet) é arriscado (floda produto-qualif na aba) → manter a passada como rede.
-- **Marcelo valoriza muito o exact-match-cru** (produto=domínio limpo, sem "melhor"): webcam, mousegamer, camerawifi, celularxiaomi. É o tier de topo.
-- Produtos adicionados ao `PRODUTOS_EXTRA` neste run: magnesio, colageno, copotermico, cafeteiraespresso, headphone(s), perfume, armario, aquecedor(agas/eletrico), fonteatx, smartwatch, relogiointeligente, nobreak, mesagamer, poltrona, videoporteiro, scanner, irrigadororal, frigobar, lavalouca, circulador, caixadesombluetooth.
-- Falsos-positivos recorrentes: `fonteoficial`/`fontepremium` (fonte=origem), `celularprofissional`/`mouseautomatico`/`controleindustrial` (não-termo). Barrar sempre.
-- A sweep de marca veio quase toda ruído (ninja*=infoproduto, stanley*/arno*/bosch* não são a marca) — marca+produto rende pouco; foco em exact-cru + prefixo + produto+spec.
-
-**v1.1 — 2026-06-11 (QA pós-build + amostragem ampla pra filtragem humana)**
-- **Bug do teto de SLD**: o helper cortava em 24 chars, e `asmelhoresgarrafastermicas` (26) escapava. Corrigido pra 40 — domínio de leilão JÁ EXISTE (é válido por definição); o processador oficial não tem teto máx, só mín 4. Lição: não inventar teto máximo de SLD pra leilão.
-- **Cross-ref de blocklist pegou um erro MEU**: recomendei à mão `melhorperfumefeminino`/`masculino`, mas estão na blocklist (faxina beleza-saúde de 2026-05-08). O helper corretamente pulou. **A curadoria manual não tem a memória que o cross-ref tem — sempre confiar na blocklist.** Removidos do histórico.
-- **RESOLVIDO — política beleza-saúde (Marcelo 2026-07-23)**: beleza-saúde **CONSUMÍVEL/cosmético** (perfume, perfumefeminino, perfumemasculino, maquiagem, batom, rímel, sérum, protetor solar) é **OUT do garimpo** — nicho de ROI baixo pra ADQUIRIR domínio novo. Removidos do `PRODUTOS_EXTRA` (o dicionário que faz o garimpo surfaçar candidatos), então não aparecem mais na shortlist. **Devices de grooming high-ticket ficam** (chapinha/secador/modelador/babyliss/depilador/barbeador/aparador — Fase 5 já mandava MANTER). ⚠️ **A regra é escopada só ao GARIMPO**: não afeta domínios/sites de beleza que o Marcelo já tem — esses se trabalham normal (conteúdo/páginas/etc.).
-- **Amostragem ampla** (controle de recall humano): gerar TSV com `alta` (recomendados) + `revisar` (melhor/melhores/os-as-melhores X fora do dict, com flag `[blocklist]`) e o Marcelo filtra. Net amplo demais (`qual`/`guia`/`comprar`/`top`/sufixo) = 95% ruído (colisão "qualidade", "guia de cidade", nome de empresa) — ficar no **melhor-family**. Restam baixo-valor não-pegos: make/amaciante (consumível), applewatchstore (sufixo "store" no JUNK).
-
-**v2 — 2026-09-07 (lista 09-16/09, 125.453 dom → 16 oficiais + 23 do helper = 29 únicos)**
-- **O achado da run não foi a shortlist: 8 domínios NOSSOS estavam sendo liberados** e o helper os
-  escondia como "já-meus". Virou a Fase 4.1 acima. Repetir SEMPRE.
-- **O exact-cru convergiu — o buraco mudou de lugar.** Montei um vocabulário independente de 208
-  produtos de alto ticket e varri a lista crua: achou 3, os 3 **já pegos** pelo funil. Poço seco nessa
-  camada. O que escapa hoje é (a) **família melhor/top com produto fora do dicionário** e (b)
-  **composto produto+qualificador que é termo de busca real**. Nas próximas runs, gastar o esforço aí.
-- **Como varrer (a) e (b) sem afogar em ruído:** para (a), extrair TODA a família
-  `^(o|a|os|as)?(melhor|melhores|top)` e filtrar serviço/cidade por regex — deu 307 → 254 legíveis a
-  olho. Para (b), casar `^produto+qualificador$` com uma lista FECHADA de qualificadores que formam
-  termo real (eletrica, digital, inteligente, gamer, portatil, wifi, inox, vertical, embutir, externa,
-  ip, kamado, passagem, ultrassonico…). O `contains produto` cru dá 750 e é quase todo substring
-  falsa (`serralheria`, `himalaia`, `ripado`, `perfume` em nome de loja) — não usar sozinho.
-- **Escaparam e eram bons:** `cameraip` (o melhor da run), `geladeirabrastemp`, `aquecedordepassagem`,
-  `churrasqueirakamado`, `melhorespatinetes`, `melhorsuplemento`/`omelhorsuplemento`.
-- Adicionados ao `PRODUTOS_EXTRA`: patinete, suplemento, churrasqueira, churrasqueirakamado, cameraip,
-  aquecedordepassagem, lavadoraderoupas, estante.
-- **A família de falso-positivo tem forma fixa: `{produto}{qualificador-vazio}`.** Confirmados nesta
-  run: celularcerto, geladeiracerta, mesaspremium, celularturbo, dronedigital, serradigital,
-  smartproteina, alarmesmart, estanteinteligente — mais os já conhecidos celularprofissional e
-  fonteoficial. Se o par produto+adjetivo não é como alguém digita no Google, corta.
-- Cortes por regra que se repetiram: conteúdo (`receitasairfryer`), usados (`notebookusados`,
-  `cadeiraderodasusada`), B2B (`tabletindustrial`), prefixo não-brasileiro (`reviewcadeiras`).
-- **Termo que não existe passa pelo casamento morfológico:** `climatizadorultrasonico` casa produto +
-  qualificador válido, mas climatizador é evaporativo — ultrassônico é umidificador. Conferir se o par
-  existe no mundo, não só na regex.
+Ao fim de cada run, o que mudar a curadoria vira regra na Fase 5 ou produto no `PRODUTOS_EXTRA`; o registro da run vai na mensagem do commit, não nesta skill.
 
 ## Registrar desvio de execução (obrigatório quando houver)
 

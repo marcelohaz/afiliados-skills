@@ -1,6 +1,6 @@
 ---
 name: categoria-descricao-criar-em-massa
-description: Escreve descrições de VÁRIAS categorias de uma vez, agrupando por categorySlug (não por site). A régua viva é a categoria-descricao-escrever — não reimplementa nada. Só escreve em categoria com ≥1 artigo FINALIZADO (o texto ancora nos artigos; sem artigo prometeria o que não existe) — as demais viram fila de artigos no relatório. Grupos correm em paralelo; DENTRO do grupo é sequencial e cada item recebe o texto dos anteriores (senão saem N descrições irmãs duplicadas). Sub-agents devolvem HTML como DADO e não tocam em arquivo; a mãe grava 1x por site (config.ts é compartilhado), 1 commit. Aceita --site X. Pré-flight: bun scripts/categoria-desc-alvos.ts.
+description: Escreve a descrição de VÁRIAS categorias ainda sem descrição, na rede ou num site (--site), com a régua da categoria-descricao-escrever. Só categoria com ao menos 1 artigo finalizado; as outras saem como fila de artigos no relatório. Não reescreve descrição existente e não faz deploy.
 ---
 
 ## Parse de input
@@ -53,7 +53,7 @@ bun scripts/categoria-desc-alvos.ts --json
 
 Devolve `{ total, grupos: [{categorySlug, alvos, irmasExistentes}], pulados }`.
 
-O script usa o `loadSite` REAL do painel pra decidir "artigo finalizado". **Não reimplementar por regex** — tentei e deu 0 alvos onde havia 31 (2026-07-31).
+O script usa o `loadSite` REAL do painel pra decidir "artigo finalizado". **Não reimplementar por regex.**
 
 Se `total === 0`, encerra dizendo que não há o que fazer e imprime os `pulados`.
 
@@ -71,7 +71,7 @@ O prompt de cada sub-agent leva **só os deltas** — a régua vem da skill indi
 2. Alvo: `{site}` / `{categorySlug}` ("{categoryName}").
 3. **Não escreva em arquivo nenhum. Não rode git.** Devolva só o HTML.
 4. Contexto de leitura: `sites/{site}/src/config.ts` (nome do site, voz), e os `.mdx` de `content/reviews/` cujo `categorySlug` bate — são os artigos que o §2 tem que refletir.
-4.5. **Se o nicho do site for saúde/suplemento, incluir SEMPRE a nota YMYL no prompt** (não improvisar por categoria): sem absoluto de saúde ("seguro", "sem efeitos colaterais", "cientificamente comprovado", "emagrece", "garantido"), e o §3 fecha sugerindo orientação profissional sem prometer resultado. A régua individual já cobre, mas na 1ª execução real eu escrevi a nota só em 3 dos 7 prompts e o resultado saiu **inconsistente dentro do mesmo site**: 4 categorias com ressalva, 2 sem, todas de suplemento. Nenhuma estava errada, mas régua desigual num site inteiro é defeito. **A nota é do NICHO, não da categoria.** Categoria de equipamento (bicicletas, esteiras) dentro de site de suplemento NÃO leva ressalva de saúde.
+4.5. Passe o nicho do site (`sites-meta.json`) no prompt. A régua de saúde é a da skill individual ("Health absolutes YMYL banidos"), igual para todas as categorias de suplemento do site; categoria de equipamento em site de suplemento segue sem ressalva de saúde.
 5. **Anti-clone — divergir de TODAS estas** (colar o HTML inteiro de cada):
    - irmãs já existentes no disco (`irmasExistentes` do pré-flight)
    - **as que os itens anteriores DESTE grupo acabaram de gerar** (colar o HTML)
@@ -122,7 +122,7 @@ bun scripts/categoria-desc-aplicar.ts <resultados.json>         # grava
 
 Formato: `[{ "site": "...", "categorySlug": "...", "html": "<p>…</p>" }]`
 
-O aplicador faz, por conta própria: **o gate mecânico da Etapa 3** (é o último ponto antes do disco, então roda de novo aqui), **backup** por site, encadeia `writeCategoryDescription` em memória e grava **1x por site**, e um **sanity pós-transformação** — se alguma descrição antiga sumiu ou alguma nova não entrou, aquele site é pulado inteiro em vez de gravar pela metade.
+O aplicador refaz os checks de forma do gate (slug, backtick, `${`, tamanho, parágrafos, tags, travessão, comentário, placeholder), faz backup por site, encadeia `writeCategoryDescription` em memória com 1 gravação por site e roda o sanity pós-transformação. A sobreposição de 6+ palavras não está no script: fica com a mãe nas Etapas 3 e 3.5.
 
 Item reprovado não derruba os outros: sai no relatório e o resto grava. Exit 1 se algum site falhou.
 
@@ -140,12 +140,7 @@ bash scripts/painel-vps-pull.sh
 
 Build falhou → reverte aquele site do backup e reporta. `--no-verify` porque o pre-commit bloqueia edição direta de conteúdo.
 
-⚠ **O glob `sites/*/src/config.ts` era defeito duplo (corrigido 2026-09-02).**
-Ele estagia o `config.ts` de **todo** site que estiver sujo, inclusive de site que
-este lote nunca tocou — e o `git commit` nu ainda levava o índice inteiro por
-cima disso. Duas janelas do Claude Code compartilham disco, `.git` e índice, e o
-painel da VPS também escreve `config.ts`: qualquer um dos dois entrava no commit
-sem aparecer. Lista explícita + `--only -- <paths>` fecha os dois buracos.
+⚠ **Lista explícita, nunca o glob `sites/*/src/config.ts`, e `--only -- <paths>`.** Duas janelas do Claude Code e o painel da VPS compartilham disco, `.git` e índice: o glob estagia `config.ts` de site que o lote não tocou, e o commit nu leva o índice inteiro.
 
 ⚠ **Push rejeitado com outra sessão escrevendo: não resolva por stash** (o stash
 é global e varre o trabalho em voo alheio). `git fetch origin && git merge

@@ -1,6 +1,6 @@
 ---
 name: artigo-lineup-montar
-description: Escolhe QUAIS produtos entram num artigo comparativo, em que ORDEM e com que PAPEL; com --aplicar cria o artigo no painel e devolve a URL do editor. Aceita `site "keyword"` (artigo que ainda NÃO existe) ou `site/slug-do-artigo` (completar um existente). NÃO escreve conteúdo nem badge, e recriar artigo JÁ PUBLICADO é da artigo-clonar-em-massa, não desta. Antes de abrir produto nenhum, DUAS consultas cegas a sub-agents isolados (a pergunta é só a keyword pelada, no singular e no plural) viram rubrica pré-registrada; depois lê a página INTEIRA de cada um e só abre a bíblia dos sobreviventes. Ordena o top-3 por PAPEL (1º melhor geral pelo critério mestre da rubrica, 2º custo-benefício, 3º bom e barato), segmenta por CLASSE e se audita.
+description: Escolhe quais produtos entram num artigo comparativo, em que ordem e com que papel; com --aplicar cria o artigo no painel e devolve a URL do editor. Aceita `site "keyword"` (artigo novo) ou `site/slug-do-artigo` (completar um existente com produtos que faltam). Use antes do "+ Criar artigo" do painel ou quando pedirem para montar, revisar ou completar o lineup. Não escreve review, intro, guia nem badge; recriar artigo já publicado é da artigo-clonar-em-massa.
 ---
 
 ## Parse de input
@@ -17,8 +17,6 @@ Detecção: se tem `/` seguido de kebab-case → artigo existente. Senão → ke
 
 ⚠️ **Artigo que já existe é da `artigo-clonar-em-massa`, não desta skill** (canon Marcelo 2026-08-02). O modo `site/slug-do-artigo` daqui serve pra **completar** um artigo com produtos que faltam, nunca pra re-derivar o lineup de um artigo publicado. Recriar artigo existente é o trabalho da skill de clonar.
 
-⚠️ **As 4 execuções de 2026-08-02 foram todas re-derivações de artigo publicado** (`melhor caixa de som jbl`, `melhor air fryer 12 litros`, `melhor impressora custo benefício`, `melhor impressora tanque de tinta`). Serviram pra calibrar a régua contra um resultado humano conhecido, e foi assim que vários defeitos apareceram — mas **não são o uso pretendido**. Não conclua daqui que comparar-se com o artigo publicado faz parte do fluxo: num artigo novo não há com o que comparar.
-
 **NÃO escreve nada.** Nem review, nem intro, nem guia. Isso é da `artigo-review-criar` e família.
 
 **NÃO põe badge.** O badge é atribuído na criação/auditoria do review, que tem visão do conjunto escrito.
@@ -30,7 +28,7 @@ Detecção: se tem `/` seguido de kebab-case → artigo existente. Senão → ke
 - **Produto sem página ENTRA marcado, e o gate é na Etapa 8** (canon Marcelo 2026-09-04). O universo natural é a lista de páginas do site, mas bíblia relevante sem página **atravessa o pipeline** com `⛔ SEM PÁGINA` visível, em vez de barrar na 2b. Motivo: a ausência de página só tem consequência na CRIAÇÃO — sem página o produto não recebe link interno hub-and-spoke e o guia cai pro `/dp/` da Amazon —, então bloquear antes de montar cobra uma rodada inteira sem saber se aquele produto sequer entra no lineup. Medido em 04/09/2026 (`compraguia`, `melhor monitor para trabalho`): a bíblia sem página entrou em 5º por venda e **não era ela que decidia o artigo** — os achados reais foram a posição 1 e dois buracos de cobertura, que só apareceram com o lineup montado.
 - **Classificar tipo pela tabela `specs` da PÁGINA, nunca por regex no nome.** O campo `Tipo` responde direto. Ver Armadilha 1 — errei duas vezes no mesmo dia e a página tinha a resposta nas duas.
 - **Página é fonte principal, bíblia é apoio.** Fato e classificação saem da página; vendas, marca, disponibilidade e `pontosFracos` saem da bíblia, porque a página não tem os três primeiros e **pode perder o quarto**.
-- **`comprasMesPassado = 0` ORDENA, não elimina** (corrigido 2026-08-02). Não é "vendeu zero": é "a Amazon não exibe o widget", threshold estimado em **>50/mês** ([[afiliados.semantica.compras-mes-passado-0]]). É **ausência de sinal**, não sinal negativo — e a régua tratava como corte duro na linha seguinte à que citava essa memória. Agora o `0` manda o produto pro **fim da fila**, e quem corta é o teto de tamanho.
+- **`comprasMesPassado = 0` ordena, não elimina.** Não é "vendeu zero": é "a Amazon não exibe o widget", threshold estimado em **>50/mês** ([[afiliados.semantica.compras-mes-passado-0]]). Ausência de sinal não é sinal negativo: o `0` manda o produto pro **fim da fila**, e quem corta é o teto de tamanho.
 - **Todo item do relatório carrega o ASIN**; o **nome** sai LIDO do `.mdx` (nunca de memória) e o **preço** sai de `snapshot.precoBRL` da bíblia (dado datado; o `schemaPrice` da página é arredondamento editorial) — se divergirem >20%, reporte os dois. Ver Armadilha 4 e a regra de preço na Etapa 4.
 - **Não faz deploy, não escreve `.mdx` de review.** Com `--aplicar` ela só chama os endpoints do painel, que são os mesmos dos botões da UI.
 - **Terminologia:** "lineup" é jargão técnico interno (o `products[]` do frontmatter). No texto editorial dos `.mdx` a palavra é BANIDA — a `artigo-reviews-auditar` flagra como crítico. Aqui é a régua descrevendo a si mesma, igual nos nomes de critério.
@@ -54,22 +52,7 @@ Mais nada. Nenhuma lista de perguntas, nenhum formato de resposta, nenhuma exig�
 instrução que acompanha é a que preserva o isolamento: *"Responda de memória. Não use ferramentas,
 não leia arquivos, não busque na internet."*
 
-⚠️ **NÃO ENGENHEIRE O PROMPT — foi o defeito da 5ª execução, e ele contamina tudo que vem depois.**
-Em 11/09/2026, rodando `melhor climatizador de ar`, o executor escreveu ~40 linhas de instrução
-estruturada e **exigiu** que a resposta elegesse *"o critério MESTRE, o número que sozinho mais
-separa um produto bom de um ruim"*. A LLM obedeceu. Medido, a MESMA keyword pelas duas formas de
-perguntar:
-
-```
-prompt engenheirado   "sala 20-30 m² pede 1.800 a 3.200 m³/h"
-keyword pelada (A)    "portátil doméstico fica na faixa de 400 a 1.200 m³/h"
-keyword pelada (B)    "doméstico costuma ficar em 400 a 1.500 m³/h"
-```
-
-**A faixa doméstica saiu 2 a 3 vezes inflada**, e foi só isso que pôs em #1 um aparelho de
-4.000 m³/h que pela rubrica pelada é de uso comercial. Prompt longo não consulta a LLM: ele
-**escreve a rubrica e manda ela preencher as lacunas**. Quem responde deixa de ser a memória do
-modelo e passa a ser você com passos extras — e aí a Etapa 1 perde a propriedade inteira.
+**Não engenheire o prompt.** Instrução estruturada, formato de resposta ou exigência (por exemplo, "eleja o critério mestre") fazem a resposta preencher a rubrica que você escreveu, e a Etapa 1 perde o valor. Medido na mesma keyword: com prompt engenheirado a faixa doméstica de climatizador saiu "1.800 a 3.200 m³/h"; pela keyword pelada, "400 a 1.200" (A) e "400 a 1.500" (B). A inflação de 2 a 3 vezes pôs em #1 um aparelho de uso comercial.
 
 **Por que DUAS, e não uma.** Singular e plural são intenções de busca diferentes e devolvem coisas
 diferentes. Medido na mesma execução: a singular fechou **pedindo cidade e tamanho do cômodo** pra
@@ -100,8 +83,6 @@ nunca pauta a ser exigida:
 
 A resposta vira **RUBRICA**, registrada no relatório final. É contra ela que a Etapa 3 julga cada página.
 
-⚠️ **Não peça "critérios em ordem de peso".** A pergunta 1 pedia isso até 2026-08-01 e **nenhuma etapa consumia o ranking**: a Etapa 3 usa a rubrica como binário, e na Etapa 5 quem ordena é venda, preço e papel. Pedir peso e ignorá-lo é gastar a consulta com o que não tem destino. (Hoje isto é histórico: a pergunta não pede nada.)
-
 **Onde cada metade é consumida:**
 
 | metade | quem usa | com que autoridade |
@@ -111,13 +92,7 @@ A resposta vira **RUBRICA**, registrada no relatório final. É contra ela que a
 | **formatos que convivem** | **passo 4 — a régua de CLASSES** | **define o que NÃO pode ser ranqueado no mesmo eixo.** Não corta ninguém (ver o canon do PartyBox na Etapa 3) — manda segmentar |
 | perfis · armadilhas | relatório da Etapa 7, e insumo pra `artigo-guia-escrever` | informativo |
 
-⚠️ **Os de qualidade ORDENAM o top-3 (canon Marcelo 2026-09-11).** Até aqui esta linha dizia
-*"os de qualidade não ordenam o lineup hoje. Ordenar por eles exige resolver o conflito com os
-71% da posição-1-mais-vendida"*. **O conflito era aparente.** Os 71% são a taxa em que a posição 1
-publicada **coincide** com o mais vendido — e a própria skill escreve isso na Etapa 3
-(`melhor escolha ≠ mais vendido` → **coincidem** em 71%). Coincidir não é ser critério: eles
-coincidem porque o melhor tende a vender mais, não porque venda escolhe o melhor. Dissolvido o
-conflito, o critério de qualidade da rubrica passa a ser o que decide o top-3 (ver passo 3).
+**Os de qualidade ORDENAM o top-3** (decisão do Marcelo). Os 71% em que a posição 1 publicada coincide com o mais vendido (Etapa 3) descrevem coincidência, não critério: o melhor tende a vender mais, e não o contrário.
 
 ⚠️ **SALVAGUARDA — a rubrica diz QUAL número, o arquivo dá O NÚMERO.** Ordenar pela rubrica não
 a torna autoridade (ver o aviso logo abaixo, que continua valendo integralmente). A divisão é a
@@ -159,7 +134,7 @@ Caso real: as duas citaram Britânia, Mondial e Philco pra faixa doméstica, e *
 
 **Voltar limpo é resultado válido.** Check que sempre acha algo é check mal calibrado.
 
-**Aproveitamento duplo:** a rubrica alimenta o H2 obrigatório "Como escolher {keyword}" que a `artigo-guia-escrever` vai ter que produzir depois. ⚠ Isso NÃO quer dizer que a pergunta daqui seja "como escolher" — ela é a keyword pelada (ver o topo da etapa); o H2 é o DESTINO da resposta, não a forma da pergunta. Confundir os dois foi o que produziu o prompt engenheirado de 11/09.
+**Aproveitamento duplo:** a rubrica alimenta o H2 obrigatório "Como escolher {keyword}" que a `artigo-guia-escrever` vai ter que produzir depois. ⚠ Isso NÃO quer dizer que a pergunta daqui seja "como escolher" — ela é a keyword pelada (ver o topo da etapa); o H2 é o DESTINO da resposta, não a forma da pergunta.
 
 ### Etapa 2 — universo e pré-flight, nesta ordem interna
 
@@ -171,7 +146,7 @@ grep -L 'categorySlug:' sites/{site}/src/content/products/*.mdx                 
 
 Essa direção é obrigatória e foi aprendida errando: na 3ª execução o escopo bíblia-first devolveu **13 de 23** produtos, porque exige adivinhar um filtro de busca. A lista de páginas é conjunto fechado e não depende de palpite.
 
-⚠️ Um universo menor **não parece errado, parece um catálogo pequeno**. Por isso o erro é silencioso e por isso a direção importa.
+Um universo menor **não parece errado, parece um catálogo pequeno**. Por isso o erro é silencioso e por isso a direção importa.
 
 ⚠️ **`categorySlug` VAZIO é o buraco do buraco — cheque SEMPRE.** A regra acima nasceu pra matar o universo silencioso e **tem a mesma falha** quando o site não preencheu categoria. Medido no oguiacompra (2026-08-02):
 
@@ -205,12 +180,6 @@ Aqui a única fonte é a bíblia, então você está no **2º degrau da escada d
 universo com `⛔ SEM PÁGINA`, é julgado na Etapa 3 pela bíblia, disputa posição normalmente,
 e carrega o marcador até a tabela final. **Quem decide é a Etapa 8**, que não cria artigo
 com produto sem página.
-
-⚠️ **A régua anterior mandava PARAR aqui**, e o motivo era real: em 01/08/2026 montei 9,
-o Marcelo criou 2 páginas e o lineup teve que ser refeito com 13. O que mudou é a leitura
-do custo — refazer o lineup é barato perto de **bloquear sem saber se o produto entra**.
-Em 04/09 o bloqueio teria custado uma rodada por um produto que ficou em 5º e não mudou
-nenhuma conclusão do relatório.
 
 ⚠️ **O marcador não é decoração — ele muda o que o usuário decide.** Ao ver a posição, o
 preço e a venda do produto sem página, ele sabe se vale criar a página ou se é mais barato
@@ -247,7 +216,7 @@ melhorairfryer/air-fryers         23 produtos   176 KB
 
 Sete categorias empatam em 34-35 produtos e nenhuma passa de **176 KB**. "Ler todas as páginas da categoria" soa ilimitado e não é: o pior caso da rede cabe com folga, então **não invente amostragem** — ler parte do universo reintroduz exatamente o erro silencioso que a 2a existe pra evitar. Se um dia aparecer categoria muito maior, o corte se decide medindo, não no susto.
 
-⚠️ **Leia `pros`/`cons` pra JULGAR, nunca como placar comparativo.** Cada página foi escrita por um sub-agent isolado, um produto por vez, então "6 prós contra 2 contras" mede o texto e não o produto.
+**Leia `pros`/`cons` para julgar, não como placar comparativo.** Cada página foi escrita por um sub-agent isolado, um produto por vez, então "6 prós contra 2 contras" mede o texto e não o produto.
 
 ⚠️ **Modo artigo existente** (`site/slug-do-artigo`): o universo continua sendo a categoria, mas leia também o `products[]` do artigo. Quem já está lá **não é candidato**, é contexto — e o teste de LEAD da Etapa 5 tem que contar os qualificadores já tomados por eles, senão o produto novo repete um lead que já existe no artigo.
 
@@ -344,7 +313,7 @@ O que sustenta é a página **qualificar o formato**, que é o que decide a cate
 
 O campo bruto entrega só o número. Sem a qualificação eu teria tratado como iguais produtos que a consulta cega identificou como coisas fisicamente diferentes vendidas sob o mesmo rótulo. **É a qualificação que decide, não a contagem** — se for citar a medição, cite as duas metades.
 
-**Aderência à keyword é informativa, ainda NÃO ordena.** Quando a keyword tem número, o valor útil costuma divergir do nominal — nos 8 finalistas de "12 litros" o cesto real ia de 3,5 L a 5 L. **Reporte a divergência numa coluna**, não a use pra reordenar: quem ordena o top-3 é o critério mestre da rubrica (passo 3), e esta observação tem **uma** execução. Nesta mesma sessão inventei três regras de observação única e as três morreram na medição (`melhor escolha ≠ mais vendido` → coincidem em 71% · `artigo de 4 produtos é raso` → 42 existem, todos de recorte estreito · `escada decrescente é padrão` → 27%). Medir antes de promover.
+**Aderência à keyword é informativa e não ordena.** Quando a keyword tem número, o valor útil costuma divergir do nominal (nos finalistas de "12 litros" o cesto real ia de 3,5 L a 5 L). Reporte a divergência numa coluna; quem ordena o top-3 é o critério mestre da rubrica (passo 3).
 
 ### Etapa 4 — bíblia dos sobreviventes
 
@@ -367,7 +336,7 @@ Philco PFR2200P   bíblia: 3 pontosFracos, um deles ferrugem interna
 
 Na Britânia BFR2100P a mesma queixa sobreviveu à passagem. Não é regra, é risco — a página é escrita pra convencer, então o negativo é o primeiro a cair. Pra decidir posição 1 e pro aviso de qualidade, leia `pontosFracos` na bíblia.
 
-⚠️ **PREÇO: a página e a bíblia divergem, e a régua não elegia uma fonte.** O invariante manda ler preço do `.mdx`, e esta tabela manda buscar `precoBRL` na bíblia — as duas coisas ao mesmo tempo. Medido no oguiacompra (2026-08-02):
+**Preço: a página e a bíblia divergem.** Medido no oguiacompra:
 
 ```
 Epson EcoTank L8050    página R$ 1.499   bíblia R$ 4.000    63%
@@ -623,12 +592,6 @@ porque o melhor tende a vender mais. **Quando o mais vendido NÃO for o melhor p
 o melhor fica em #1** e a divergência entra como nota no relatório ("o mais vendido é X, ficou
 em #N porque Y vence no eixo Z").
 
-⚠️ **Esta seção dizia "o mais vendido entre os viáveis" até 2026-09-11, e produzia erro.** Caso
-real (`melhorclimatizador`, `melhor climatizador de ar`): dois produtos empataram em 500/mês e o
-desempate caiu no preço, colocando em #1 um aparelho de **370 m³/h** — contra 4.000 m³/h de outro
-candidato **R$ 95 mais barato** —, justamente no eixo que a rubrica daquela execução chamava de
-*"o número mestre"*. Ordenar por venda escolheu o pior produto no critério da própria categoria.
-
 ⚠️ **`comprasMesPassado` é degrau, não número.** A Amazon publica faixa, então `1000` pode ser
 1.000 ou 9.000 e empate é comum. Empate em venda **não precisa de desempate**: venda não estava
 escolhendo. Vá para o critério mestre, que é quem decide, e **registre o empate** no relatório.
@@ -658,11 +621,7 @@ tinha sido ordenado por venda e preço. A sequência é a lógica de SELEÇÃO; 
 formato do texto. **Tem nuance, não é regra dura** — um catálogo pode não ter os três papéis
 distintos, e aí você reporta em vez de forçar.
 
-⚠️ **NÃO RANQUEIE ENTRE CLASSES — a Etapa 1 já te disse quais são.** A pergunta 2 da rubrica
-("quais formatos convivem sob esse rótulo") existe pra ser CONSUMIDA aqui, e em 11/09/2026 ela foi
-lida e ignorada: a rubrica separava `pessoal/mesa 100-400 m³/h` de `gabinete médio 1.500-5.000`, e
-o executor ordenou os dois grupos num eixo só. Aparelho de mesa perde sempre nessa conta, e perder
-**não é ser pior, é ser outra máquina**. A prova mecânica estava na eficiência:
+**Não ranqueie entre classes.** Os formatos que a rubrica diz conviverem sob o rótulo (item 2 do que a resposta costuma trazer, Etapa 1) são consumidos aqui. Se a rubrica separa `pessoal/mesa 100-400 m³/h` de `gabinete médio 1.500-5.000`, ordenar os dois grupos num eixo só faz o de mesa perder sempre, e perder **não é ser pior, é ser outra máquina**. A prova mecânica é a eficiência:
 
 ```
 de piso/torre    30,0 · 30,8 · 30,8 · 35,0 m³/h por watt
@@ -886,7 +845,7 @@ passo 3. Auditor sem régua audita por gosto.
 4  sobrou par de gêmeo / sucessão / rebadge não resolvido?
    prefixo de ASIN compartilhado · specs iguais em ≥4 dimensões · mesmo defeito.
 
-5  a restrição de sucessão do passo 2 chegou no passo 5?
+5  a restrição de sucessão do passo 1 chegou no passo 5?
    havendo par de geração, a mais nova está acima?
 
 6  algum problema reportado SOME se desfizer uma exclusão?
@@ -975,7 +934,7 @@ Colunas obrigatórias, nesta ordem:
 
 Mais os **avisos** (não travas):
 - **Concentração de marca**, com a proporção dela no catálogo pra comparar. ⚠️ **Isento quando a keyword nomeia a marca** — `melhor-impressora-epson` tem 9/9 Epson por design. O risco real não é parecer patrocinado, é o artigo derivar pra "melhor {categoria} {marca}" em vez da keyword alvo (canon Marcelo).
-- **Reuso intra-site**: em quantos artigos do site o produto já aparece. A `artigo-clonar-em-massa` avisa que 3-4 esgota o espaço de ângulos honestos, mas o oguiacompra tem produto em 7 de 19 artigos — então informe, não bloqueie.
+- **Reuso intra-site**: em quantos artigos do site o produto já aparece. Informe, não bloqueie: sobreposição residual entre artigos é aceita na rede, e o oguiacompra tem produto em 7 de 19 artigos.
 - **Sobreposição com artigo EXISTENTE do site** — o número já saiu na Etapa 2b; **aqui entra a consequência editorial**. Diferente do reuso, que conta por produto: a pergunta é *quanto deste lineup já é um artigo que existe*. Nenhum contador por produto mostra isso, e é o sinal de canibalização. Caso real (melhorairfryer, 2026-08-01): o recorte "12 litros" saiu com **7 dos 8 produtos já no `melhor-air-fryer-oven`** — inevitável no nicho, porque uma air fryer de 12 litros É uma air fryer oven. Não trava: avisa que a separação vai ter que vir do ângulo editorial, não do lineup.
 - **Cobertura de subtipo** — obrigatório quando a rubrica listou subtipos. Diga quais o lineup cobre, quais ficaram de fora e **quem carregava cada um dos que saíram**. Formato:
 
@@ -1034,7 +993,7 @@ o guia cai pro `/dp/` da Amazon — dano que só existe depois do artigo criado.
 artigo com o produto dentro e a página faltando é o pior dos três estados, porque o defeito
 nasce publicado.
 
-Mesmos endpoints dos botões do painel — `site-detail.js:3239` e `editor-artigo.html:4167`. O resultado é indistinguível de ter feito na mão.
+Mesmos endpoints dos botões do painel (`make-reviews-stub` chamado em `docs/painel/site-detail.js`, `add-products-stub` em `docs/painel/editor-artigo.js`). O resultado é indistinguível de ter feito na mão.
 
 ```bash
 # host + auth: os mesmos do scripts/painel-vps-pull.sh — PAINEL_URL (default https://painel.melhorserum.com.br)
@@ -1063,26 +1022,18 @@ curl -sS -H "Authorization: Basic $AUTH_B64" -H 'content-type: application/json'
 
 ```
 title          ed?.title || capitalize(keyword)   → "Melhor Caixa De Som Jbl", sem número, caixa errada
-keywordPlural  ed?.keywordPlural || keyword       → grava o SINGULAR no campo do plural
+keywordPlural  ed?.keywordPlural || (keyword já no plural ? keyword : '')  → VAZIO com keyword singular
 ```
 
 - **`title`**: proponha um no padrão-assinatura do site (lead = campo `keyword`, número N obrigatório, ≤60 chars, tag do site) e **destaque no relatório que precisa ser colado no editor**. Em site sem artigo nenhum não há padrão pra inferir, e a escolha define a assinatura dali em diante ([[afiliados.seo.titulos-artigo-3-padroes-anti-dup]]).
-- **`keywordPlural`**: proponha o plural correto e **destaque igual**. Ele alimenta o H2 `Comparativo técnico {dos|das} {keywordPlural}` (`packages/ui/src/utils/review-data.ts`), que com o singular renderiza *"Comparativo técnico dos melhor climatizador de ar"* — errado em número **e** em gênero, porque o `getArtigoPlural` acha o substantivo-núcleo removendo `"melhores "` e, sem isso, toma `"melhor"` como núcleo e escolhe masculino.
-
-⚠️ **Este segundo aviso faltava até 2026-09-11, e a omissão tem consequência medida.** A skill
-documentava o `title` com precisão e não citava `keywordPlural` uma única vez em 1.190 linhas — então
-quem executa avisa sobre um e cala sobre o outro, que é exatamente o que aconteceu no
-`melhorclimatizador`. Dois artigos da rede estão **no ar** nesse estado (`melhoressuplementos`:
-`melhor-creatina-monohidratada` e `melhor-creatina-para-ganhar-massa-muscular`).
+- **`keywordPlural`**: proponha o plural correto e **destaque igual**. Ele alimenta o H2 `Comparativo técnico {dos|das} {keywordPlural}` (`packages/ui/src/utils/review-data.ts`); com o singular no campo, o H2 sai errado em número e gênero (*"Comparativo técnico dos melhor climatizador de ar"*).
 
 ⚠️ **Não é defeito desta skill mandar o valor errado — ela não tem canal.** O endpoint não aceita
 `keywordPlural`, e o `frontmatterEditorial` do builder é omitido de propósito no `server.ts`. O que a
 skill pode fazer é **avisar**, e é isso que os dois itens acima cobram. Se um dia o endpoint passar a
 aceitar o campo, mande-o e apague este aviso.
 
-**Diga a consequência, não só o campo.** Desde 2026-09-11 o builder emite `keywordPlural` VAZIO quando
-a keyword é singular (antes gravava o singular), e vazio é o sentinela que as guardas downstream
-esperam. Isso torna o aviso acionável, porque o pipeline **para** em vez de errar calado:
+**Diga a consequência, não só o campo.** Com a keyword no singular o builder grava `keywordPlural` vazio, que é o sentinela que as guardas downstream esperam: o pipeline **para** em vez de errar calado:
 
 ```
 artigo-intro-escrever   keywordPlural ausente → ABORTA e pede pro usuário preencher
@@ -1090,21 +1041,20 @@ audit-article.ts        keywordPlural ausente → warn "sinaliza pra adicionar"
 o site (review-data)    keywordPlural ausente → H2 genérico "Comparativo técnico dos produtos"
 ```
 
-Antes as três guardas existiam e **nenhuma disparava**, porque o campo vinha preenchido com o valor
-errado. Então o relatório não pede um favor: sem o plural, a intro não roda.
+O relatório não pede um favor: sem o plural, a intro não roda.
 
 Barreiras que vêm de graça do endpoint: **423** em site com edição travada, **409** se o `.mdx` já existir, e o `gateRequiresOkBibles` barrando produto sem bíblia pronta.
 
 ## O subtítulo sugerido é vinculante na prática
 
-A `artigo-review-criar` trata subtitle vindo do stub como **direção editorial**, não placeholder (v1.34.0):
+A `artigo-review-criar` trata subtitle vindo do stub como **direção editorial**, não placeholder:
 
 > **Ângulo VINCULANTE**: o review inteiro aborda o produto por esse ângulo. **Texto MELHORÁVEL**: liberdade de polir, mas o SENTIDO não muda.
 
 **O papel chega no texto, e a linha do tempo é o que garante isso:**
 
 ```
-CRIAÇÃO  artigo-review-criar v1.34   subtitle do stub = ângulo VINCULANTE
+CRIAÇÃO  artigo-review-criar         subtitle do stub = ângulo VINCULANTE
                                      badge só entra se o subtitle vier vazio (item 3)
               ↓  review escrito, ângulo já cumprido
 AUDIT    crit. 22                    normaliza o subtitle pro keyword-first,
@@ -1113,7 +1063,7 @@ AUDIT    crit. 22                    normaliza o subtitle pro keyword-first,
 
 Então "Custo Benefício" no subtitle faz o review inteiro argumentar custo-benefício, porque a criação lê antes de o audit existir.
 
-⚠️ **Não se assuste com a linha 599 do crit. 22**, que diz *"o ângulo que guia o REVIEW é o `badge`, não o subtitle"*. Ela contradiz a `artigo-review-criar:454` na letra, mas é justificativa mal escrita pra um comportamento correto: quando o audit roda, o review já existe, então mexer no subtitle ali é edição de SEO no heading do card, não redirecionamento editorial. Em 2026-08-01 essa linha me fez levantar um alarme falso de que o papel do lineup não chegaria no review.
+O crit. 22 da `artigo-reviews-auditar` diz *"o ângulo que guia o REVIEW é o `badge`, não o subtitle"*, o que parece contradizer o "ângulo vinculante" da `artigo-review-criar`. Não contradiz: quando o audit roda o review já existe, e mexer no subtitle ali é edição de SEO no heading do card, não redirecionamento editorial.
 
 Duas consequências práticas:
 
@@ -1174,34 +1124,9 @@ E o mais importante: **validar contando o array do YAML, nunca por grep de campo
 ### 5. Montar a tabela de memória
 Abreviei "JBL PartyBox Encore Essential 2 Mic" pra "Encore Essential 2 Mic" no relatório e o Marcelo pegou. Os itens 7 e 9 do lineup eram `B0FL2QF7YJ` e `B0GT6LW2VN` — mesmo modelo com e sem microfone, nomes que diferem por uma palavra, ASINs sem nada em comum. **Sem o ASIN, uma abreviação troca um pelo outro e ninguém percebe.**
 
-## Régua ainda NÃO exercitada
+## Buraco conhecido, sem regra
 
-Três execuções reais até aqui, todas em 2026-08-01: `melhor caixa de som JBL` (melhordosom, marca única, site sem artigo) e `melhor air fryer 12 litros` (melhorairfryer, duas passadas).
-
-**Já exercitadas depois da v1:**
-- **Teto de reuso intra-site** — o melhorairfryer tinha 2 artigos, e o cruzamento devolveu 7 de 8 produtos já usados. Foi o que fez nascer o aviso de sobreposição.
-- **Rebadge cross-marca** — nasceu do par Britânia/Philco na 3ª execução.
-
-**Exercitado na 4ª execução** (`melhor caixa de som jbl`, melhordosom, 2026-08-02 — o pipeline de 7 etapas rodando inteiro pela 1ª vez):
-- **Rubrica × catálogo** — o choque aconteceu e a rubrica **perdeu**, três vezes. Foi o que produziu a regra "quem elimina é a página".
-- **Universo pelo `categorySlug`** — funcionou melhor que o previsto: excluiu os 6 fones do site sem regra nenhuma, resolvendo estruturalmente a Armadilha 1.
-- **Posição 1 com dois critérios em conflito** — reportei "mais vendida × não é extremo de preço" como buraco da régua, e era **artefato do meu corte indevido**: readmitida a `PartyBox Ultimate` a R$ 7.000, a `Boombox 4` a R$ 2.400 saiu da borda e os dois critérios voltaram a concordar. Lição: antes de declarar conflito de régua, cheque se o conflito não vem de uma exclusão sua.
-
-**Ainda sem teste:**
-- **Aviso de concentração de marca** — nas quatro execuções o caso foi brand-keyword (isento) ou catálogo já diverso.
-- **Cobertura multi-tipo** — nenhum dos casos exigiu um representante por tipo com link pro spoke.
-- **Pré-registro de verdade** — na 4ª execução eu **já conhecia o catálogo** (era re-run da mesma keyword), então a propriedade central da Etapa 1 não foi testada. Ela vale pro sub-agent, que é isolado; não valeu pra mim.
-- **Sucessão que ordena sem eliminar** — a regra nova (`Go 5 acima, Go 4 fica`) nasceu nesta execução mas não foi rodada por ela.
-
-O caso que exercita os que faltam é o **`melhor aspirador de pó` do melhoraspirador**: 35 produtos, 5 tipos (vertical, robô, pó e água, carro, sem fio), 7 artigos planejados dividindo o mesmo catálogo.
-
-## Buracos conhecidos, sem regra
-
-Declarados de propósito — hoje são resolvidos por julgamento e reportados, o que é ruim de escala mas não produz erro silencioso.
-
-- ~~Tamanho não tem critério de decisão~~ — resolvido em 02/08: **TETO 11, PISO 4** (Etapa 4) + cobertura de tipos; abaixo de 4 o recorte não sustenta artigo.
-- **Catálogo pobre não tem tratamento.** Escada de preço quebrada é reportada, mas nada diz se o lineup sai assim ou se aquilo é sinal de garimpar mais produto antes.
-- **Rubrica × catálogo** (acima).
+**Catálogo pobre.** Escada de preço quebrada é reportada, mas nada diz se o lineup sai assim ou se é sinal de garimpar mais produto antes. Diga qual das duas você recomenda e por quê.
 
 ## Exemplo de invocação
 
