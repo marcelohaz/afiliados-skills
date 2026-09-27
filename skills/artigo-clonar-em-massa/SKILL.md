@@ -257,8 +257,13 @@ PASSO 2 — Inputs deste produto:
   na escolha (dose, formato, alérgeno, custo por dia). O tema orienta o ângulo; não é frase
   para repetir: escreva sobre o recorte com palavras suas, diferentes em cada campo.
 - bíblia (conteúdo de docs/biblias-v2/{ASIN}.json) — ÚNICA fonte, não leia mais nada
+- specLabels do artigo (os rótulos da tabela comparativa, na ordem, tirados do frontmatter do
+  fonte): specs[] usa exatamente esses rótulos, nessa ordem. Rótulo sem dado na bíblia fica fora
+  do array, sem valor inventado.
 
 DELTAS DO CLONE (adições à régua da skill):
+- arquivo temporário (script, rascunho, JSON intermediário) vai em `{scratchpad}/{ASIN}/`, nunca
+  na raiz do scratchpad: os workers da leva rodam ao mesmo tempo e dividem essa pasta.
 - biblia-only: a ÚNICA fonte factual é a bíblia. NUNCA citar nem ver o artigo fonte. NÃO leia
   a página individual do produto nem outros artigos do site — anti-dup de prosa foi cortado por
   medição (canon 2026-08-13, ver Etapa 1.3); sobreposição residual com irmãos é aceita.
@@ -276,6 +281,8 @@ fullReview). A skill-mãe monta o .mdx — NUNCA edite .mdx nem rode git.
 ```
 
 ⚠️ **O recorte da keyword vai por TEMA, nunca por frase pronta (26/09/2026).** Frase pronta no prompt vira frase copiada: no clone `produtosanalisados/melhor-creatina-para-mulher` o prompt descrevia o público como "mulher que quer começar ou manter creatina", e essa frase saiu literal em 10 campos dos 10 produtos; a Etapa 1.4 limpou, mas gastou uma rodada. Escreva no prompt o tema e o efeito na escolha ("recorte: mulheres; muda a atenção a formato (goma, pó sem sabor), porção e alérgenos"), sem uma frase sobre o público que o sub-agent possa copiar.
+
+⚠️ **Pasta temporária por ASIN e specLabels no prompt (27/09/2026).** No clone `produtosanalisados/melhor-multivitaminico` os 10 workers gravaram `campos.json` e `gen.py` na raiz do mesmo scratchpad: o Dux saiu com o texto do Centrum e o Supera com o do Vitafor, e cada um teve de ser refeito e conferido à mão. No mesmo clone o prompt não levava os specLabels, e cada worker inventou os próprios rótulos de tabela; a mãe redistribuiu os valores nos 7 rótulos do fonte na montagem. As duas linhas do PASSO 2 e dos DELTAS acima fecham os dois casos.
 
 ⚠️ **Se a mãe optar por deixar CADA worker persistir o próprio JSON** (variante legítima: fecha o
 buraco de 2.5, onde uma queda antes do último retorno joga fora a leva inteira), o caminho é
@@ -299,7 +306,7 @@ Badge **e `rating`** seguem o ASIN (cada produto mantém seu badge e sua nota ed
 
 ## Montagem do .mdx (Etapa 1 fim)
 
-Assembler determinístico (Python: json.dumps para campos single-line — subtitle/shortDescription/specs; **block scalar `|` para fullReview e guideContent**). Frontmatter: title (SEMPRE no padrão-assinatura do destino — ver regra `TITLE=`; passou o HARD GATE de padrão + divergência cross-site; NUNCA o literal do `TITLE=`/fonte), description (placeholder até a meta), keyword, keywordPlural, listHeading, category, categorySlug (sem acento), homeReviewSlug (se HOME), **publishDate (OBRIGATÓRIO — o schema Zod exige; sem ele o build falha com `publishDate: Invalid date`)**, **featuredImage (og:image/hero do artigo — use uma imagem que EXISTE no destino, ex.: a `image` do 1º produto; sem isso vira 404 social/hero, caso real escritorioecasa sublimatica 2026-06-17)**, + products[] na ordem final (base do fonte + 6 campos gerados). guideContent vazio nesse momento (Etapa 2 preenche via skill).
+Assembler determinístico (Python: json.dumps para campos single-line — subtitle/shortDescription/specs; **block scalar `|` para fullReview e guideContent**). Frontmatter: title (SEMPRE no padrão-assinatura do destino — ver regra `TITLE=`; passou o HARD GATE de padrão + divergência cross-site; NUNCA o literal do `TITLE=`/fonte), description (placeholder até a meta), keyword, keywordPlural, listHeading, specLabels (os do fonte, na ordem passada aos workers no PASSO 2), category, categorySlug (sem acento), homeReviewSlug (se HOME), **publishDate (OBRIGATÓRIO — o schema Zod exige; sem ele o build falha com `publishDate: Invalid date`)**, **featuredImage (og:image/hero do artigo — use uma imagem que EXISTE no destino, ex.: a `image` do 1º produto; sem isso vira 404 social/hero, caso real escritorioecasa sublimatica 2026-06-17)**, + products[] na ordem final (base do fonte + 6 campos gerados). guideContent vazio nesse momento (Etapa 2 preenche via skill).
 
 **⚠️ ORDEM DOS CAMPOS DO PRODUTO — `name` PRIMEIRO (HARD GATE).** Cada item de `products[]` DEVE começar por `- name:` (depois asin, image, ...). O parser do painel (`docs/painel/_lib/loaders.ts`) conta produtos com a regex `^\s*-\s*name:` — se o 1º campo for `asin` (`- asin:`), o painel conta **0 produtos** e mostra `PRODUTOS —` + `STATUS Vazio` mesmo com o artigo perfeito (Astro ignora ordem de campo YAML, então buildava normal e nada parecia errado). Caso real escritoriocasa/melhor-impressora-epson 2026-06-17. Convenção da rede toda = `name` 1º.
 
