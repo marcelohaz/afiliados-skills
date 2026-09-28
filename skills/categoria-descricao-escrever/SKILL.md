@@ -109,6 +109,12 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
    ```
    Tamanho 100-2000, 2 a 3 `<p>`, lista de tags vazia, nenhum caractere proibido, `False` no fim.
 
+   Depois, a Régua ANTI-CLONE, também com ferramenta. Grave o HTML novo num arquivo do scratchpad e rode:
+   ```bash
+   bun scripts/categoria-desc-sobreposicao.ts {site} {categorySlug} <arquivo.html>
+   ```
+   Ele compara com as outras categorias do mesmo site e com as dos sites do mesmo nicho (suplemento conta como um nicho só) e sai 1 se achar 6 palavras seguidas iguais. Reescreva o trecho e rode de novo até sair 0. Ler as irmãs antes de escrever não basta: em 28/09/2026 a descrição de air-fryers do cozinhaideal saiu com "peças que vão à lava-louças", igual à de liquidificador do mesmo site, e a rede tinha mais 5 pares assim.
+
 10. **Backup** ANTES de sobrescrever (paridade com handler `category-desc.ts:139-147`):
     ```bash
     # raiz do repo — o cwd do Bash reseta pra ~/Documents/Claude em sessão continuada; sem isto o mkdir cria a árvore LÁ (medido 03/09/26)

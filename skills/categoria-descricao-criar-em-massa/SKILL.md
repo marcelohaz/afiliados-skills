@@ -87,7 +87,7 @@ Reprova e manda o sub-agent refazer (máx 3 tentativas):
 - 100-2000 chars · 2-3 `<p>` · zero tag de bloco fora da allowlist
 - **zero backtick** e **zero `${`** — o helper joga exceção, e `${` dentro do template literal é interpolação JS que corrompe o `config.ts`
 - sem travessão, sem `<!--`, sem `[TODO`
-- **zero sequência de ≥6 palavras** igual a qualquer irmã (existente ou gerada no grupo)
+- **zero sequência de ≥6 palavras** igual a qualquer irmã (existente ou gerada no grupo). Contra as que já estão no disco, com ferramenta: `bun scripts/categoria-desc-sobreposicao.ts {site} {categorySlug} <item.html>` (outras categorias do site e sites do mesmo nicho; sai 1 se achar). As geradas no grupo ainda não estão no disco: essas a mãe compara pelo HTML que tem na mão.
 
 Não convergiu em 3 → registra no relatório e segue. Nunca grava item reprovado.
 
@@ -122,13 +122,17 @@ bun scripts/categoria-desc-aplicar.ts <resultados.json>         # grava
 
 Formato: `[{ "site": "...", "categorySlug": "...", "html": "<p>…</p>" }]`
 
-O aplicador refaz os checks de forma do gate (slug, backtick, `${`, tamanho, parágrafos, tags, travessão, comentário, placeholder), faz backup por site, encadeia `writeCategoryDescription` em memória com 1 gravação por site e roda o sanity pós-transformação. A sobreposição de 6+ palavras não está no script: fica com a mãe nas Etapas 3 e 3.5.
+O aplicador refaz os checks de forma do gate (slug, backtick, `${`, tamanho, parágrafos, tags, travessão, comentário, placeholder), faz backup por site, encadeia `writeCategoryDescription` em memória com 1 gravação por site e roda o sanity pós-transformação. A sobreposição de 6+ palavras não está no aplicador: fica com a mãe nas Etapas 3 e 3.5, e com o controle depois de gravar (Etapa 5).
 
 Item reprovado não derruba os outros: sai no relatório e o resto grava. Exit 1 se algum site falhou.
 
 ### Etapa 5 — validar e commitar
 
 ```bash
+# controle anti-clone depois de gravar: agora TODAS as descrições do lote estão no disco,
+# então o script cruza cada uma com as do mesmo site e do mesmo nicho, inclusive as do lote.
+# Saiu 1 → regerar o item, gravar de novo e repetir antes do commit.
+bun scripts/categoria-desc-sobreposicao.ts {site} {categorySlug}   # por item gravado
 pnpm --filter {site} build     # por site tocado; Zod + template literal do config
 # ⚠ lista EXPLÍCITA dos sites que ESTE lote tocou — nunca o glob sites/*/
 git add sites/{site-1}/src/config.ts sites/{site-2}/src/config.ts ...
