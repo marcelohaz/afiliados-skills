@@ -103,6 +103,7 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
    - **card × texto** (`scripts/lib/card-texto.ts`): o texto do produto, ou o guia, linka com o nome do produto um ASIN diferente do card. É o erro mais comum: no WordPress o autor copiava o card do produto vizinho e esquecia de trocar o ASIN, e o texto ficava com o certo. A dica diz o provável (card errado, texto errado ou dois ASINs com o mesmo nome);
    - `--amazon` lê título e estoque dos dois ASINs pelo curl. Funciona no Mac; a Amazon bloqueia a VPS, e a PA-API foi desligada.
    - **título × lista**: o número do título ("as 11 melhores") não bate com a quantidade de produtos. Ver o parágrafo depois da tabela.
+   - **sobras do WordPress que aparecem na página** (29/09/2026): código no lugar do caractere ("&bull;" em vez de •, "8&Prime;" em vez de 8″) no nome, subtítulo, descrição curta, alt da foto ou selo, que o site mostra como texto; negrito que não fecha ("<h2>Título</strong><strong></h2>" deixa o resto do artigo em negrito); parágrafo só com um ponto. O `wp-portar` já faz as três limpezas ao converter (`scripts/lib/html-portado.ts`). Em artigo portado antes disso, `bun scripts/port-limpar-texto.ts {site}` mostra e `--gravar` conserta, com backup e conferindo que nenhum outro campo mudou; em artigo já publicado, só com o sim do Marcelo, como diz o invariante do texto do WordPress. Em 29/09/2026 eram 22 artigos (17 no produtosanalisados), todos consertados.
 
    O `wp-portar` já avisa o card × texto na conversão. Decida cada achado pelo título na Amazon:
 
