@@ -102,6 +102,7 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
    - **marca** do nome contra a página ou a bíblia do mesmo ASIN, e **ASIN repetido** no artigo;
    - **card × texto** (`scripts/lib/card-texto.ts`): o texto do produto, ou o guia, linka com o nome do produto um ASIN diferente do card. É o erro mais comum: no WordPress o autor copiava o card do produto vizinho e esquecia de trocar o ASIN, e o texto ficava com o certo. A dica diz o provável (card errado, texto errado ou dois ASINs com o mesmo nome);
    - `--amazon` lê título e estoque dos dois ASINs pelo curl. Funciona no Mac; a Amazon bloqueia a VPS, e a PA-API foi desligada.
+   - **título × lista**: o número do título ("as 11 melhores") não bate com a quantidade de produtos. Ver o parágrafo depois da tabela.
 
    O `wp-portar` já avisa o card × texto na conversão. Decida cada achado pelo título na Amazon:
 
@@ -115,6 +116,8 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
    | variante (cor, memória, voltagem), modelo vizinho à venda com o do nome esgotado, ou os dois esgotados | não mexer; registrar em `docs/port-wordpress/card-texto-conferidos.tsv` com o veredito |
    | produto listado duas vezes (o título diz N e a lista tem N+1) | tirar a repetição |
 | o mesmo produto duas vezes com o título já contando os dois (outra cor, ou outro nome para o mesmo anúncio) | tirar a repetição e acertar o número no título e na descrição. O `port-dados-produto` acusa ASIN repetido sem opção de conferido, então não há outro jeito de sair 0 (produtosanalisados, 27/09/2026: JBL Quantum 50 no fone com fio, Everlast Climber 3 no tênis para crossfit) |
+
+   **Título × lista** (29/09/2026): antes de mexer, abra o post do WordPress (export ou Arquivo) e conte os cards. Se o conversor perdeu card, traga o card. Se o próprio WordPress já listava menos do que o título dizia, acerte o número no título e na descrição, como no produto repetido: é dado errado com destino óbvio, e vai no commit e no relatório. A trena a laser do melhoreseletro (título 11, lista 9) e a estação de musculação do produtosanalisados (6 e 5) foram ao ar assim. Depois de publicado, a mesma diferença deixa laranja o número da coluna Produtos do painel.
 
    **Produto que saiu de linha: link para o sucessor, sem aviso** (Marcelo, 24/09/2026; era a prática dele no WordPress, e vale para qualquer artigo, não só no port):
    - **Só o link muda.** O `asin` do card vai para o sucessor (gera os 7 links do card) e todo link do texto que ia ao original vai também. Nome, review, foto (a do original, que combina com o nome) e texto ficam. Sem foto do original em lugar nenhum, a do sucessor.

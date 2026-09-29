@@ -330,7 +330,7 @@ Audit do campo `title` do frontmatter.
 - **Não tem placeholder** (`[TITLE TODO`, `Title aqui`, etc).
 - **Não termina com travessão**.
 - **Contagem de produtos no padrão canônico** (v1.35.0, caso real melhor-impressora-hp 2026-06-10): o padrão da rede é `{Keyword}: os/as {N} melhores em {ano}` (mesma régua do passo 8.5 da `artigo-intro-escrever`; fallback sem contagem só pra lineup com N<3). Com `products.length >= 3`, dois sub-checks:
-  - `title-contagem-stale`: title TEM contagem (`os/as \d+ melhores`) mas o número ≠ `products.length` → warn "lineup mudou e o title não acompanhou" (ex: "as 4 melhores" com 7 produtos).
+  - `title-contagem-stale`: title TEM contagem (`os/as \d+ melhores`) mas o número ≠ `products.length` → warn "lineup mudou e o title não acompanhou" (ex: "as 4 melhores" com 7 produtos). Desde 29/09/2026 o `audit-article.ts` do passo 6 emite isto sozinho (regra `titulo`, "O título diz N; a lista tem M"), com a mesma leitura do número que pinta de laranja a coluna Produtos do painel: entra verbatim, não recontar.
   - `title-sem-contagem`: title NÃO tem contagem nenhuma → warn sugerindo o padrão canônico com o N atual. Caso real que escapou: "Melhor Impressora HP: as melhores de 2026" com 7 produtos (o batch de intros v1.31 não aplicou a régua do título e a auditoria não tinha este check — Marcelo pegou no olho).
   - **Exceção**: title em formato experimental deliberado (ex: "(Atualizado 2026)" do experimento anti-rewrite ml/epson) → não flag se registrado como decisão; na dúvida, flag como warn e o user decide.
 
