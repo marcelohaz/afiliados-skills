@@ -121,6 +121,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
    bun scripts/clone-log.ts init {target} {slug-DECIDIDA-NA-0a} --source={source-site}/{slug-do-fonte}
    ```
    O `init` é **idempotente**: se o log já existe com alguma etapa `[x]`, ele NÃO sobrescreve (avisa e mantém — é retomada). Recomeçar do zero de propósito exige `--force`.
+   `init` com erro "não serve de fonte de clonagem" = fonte recuperada do WordPress (passo 3): é **aborto de pré-flight**, não falha a repetir. Relatório curto dizendo que o assunto se escreve do zero, e `ScheduleWakeup(stop:true)` se você armou o heartbeat (com `FILA=yes`, não; a fila marca o item e segue).
    A partir daqui, **feche cada etapa com `check`** assim que ela terminar (não no fim, de memória):
    ```bash
    bun scripts/clone-log.ts check {target} {slug} <etapa> "<o que foi feito, com números>"
