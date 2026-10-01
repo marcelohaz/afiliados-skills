@@ -96,7 +96,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 7. **Analisar cross-produto percorrendo os 31 critérios** (seção abaixo). Para cada um, decida `✓ pass` / `⚠ flag` / `n/a` e anote 1 linha: isso vira a Checklist de cobertura do relatório. Os que não aparecem em grep de defeito:
    - **22 `subtitle-keyword-first`**: leia os N subtitles e avalie CADA um (lead keyword-first? gancho? ≤13 palavras? sem dois-pontos? lead distinto dos outros?). A `artigo-review-criar` escreve no formato híbrido (lead keyword-first + gancho); aqui você confere o conjunto (leads distintos, ≤13 palavras, sem dois-pontos) e normaliza o que veio fora do formato (produto antigo, edição manual).
    - **23 `badge-ausente`**: confira se TODO produto tem `badge`. Faltando → propor `newBadge`.
-   - **24 `voltagem-citada`**: nenhum produto cita 110V/127V/220V nem tem row "Voltagem"; "bivolt" só com o `specsAmazon` do ASIN confirmando.
+   - **24 `voltagem-citada`**: nenhum produto cita 110V/127V/220V nem tem row "Voltagem"; "bivolt" só com o `specsAmazon`, a `descricaoProduto` ou o `sobreEsteItem` do ASIN confirmando.
    - **25 `ymyl-aviso-repetido`**: rode o `ymyl-avisos.py` e pode o excedente da fatia dos reviews.
    - **26 `peso-por-fonte`**: pró central/subtitle/shortDescription cuja única origem é o `specsAmazon` → mover pra tabela.
    Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
@@ -749,7 +749,7 @@ TODO produto do `products[]` precisa do campo `badge` (etiqueta do card). Conven
 
 ### 24. `voltagem-citada` (canon 2026-06-29, critério desde 2026-09-01, severidade: 🔴 Crítico)
 
-Mesma régua dura da `artigo-review-criar` (Filtros editoriais) e da `pagina-produto-auditar` critério 21, conferida aqui porque até 2026-09-01 nenhuma auditora olhava: **nenhum produto do artigo cita 110V/127V/220V** (prosa ou spec) nem tem row "Voltagem"; **"bivolt" só com o `specsAmazon` do próprio ASIN** dizendo bivolt / 100-240V / 110-220V (fabricante, bruto e campo curado não bastam; aquecimento de alta potência é voltagem única por design). 110/127/220 → conserto determinístico (apagar a menção/row); bivolt sem lastro → reescrever o pró/spec. Confira produto a produto: é o mesmo erro que se repete em lote (caso-origem: air fryers, 2026-06-28).
+Mesma régua dura da `artigo-review-criar` (Filtros editoriais) e da `pagina-produto-auditar` critério 21, conferida aqui porque até 2026-09-01 nenhuma auditora olhava: **nenhum produto do artigo cita 110V/127V/220V** (prosa ou spec) nem tem row "Voltagem"; **"bivolt" só com o `specsAmazon`, a `descricaoProduto` ou o `sobreEsteItem` do próprio ASIN** dizendo bivolt / 100-240V / 110-220V (fabricante, bruto e campo curado não bastam; aquecimento de alta potência é voltagem única por design). 110/127/220 → conserto determinístico (apagar a menção/row); bivolt sem lastro → reescrever o pró/spec. Confira produto a produto: é o mesmo erro que se repete em lote (caso-origem: air fryers, 2026-06-28).
 
 ### 28. `cobertura-da-biblia` (critério desde 2026-09-04, severidade: 🟡 Médio)
 
@@ -817,7 +817,7 @@ abertura ou título é julgamento: propor→aprovar.
 
 ## Filtros de severidade
 
-- **Crítico** (sempre propor mudança): **voltagem-citada** (bivolt sem lastro no specsAmazon → reescrever o pró/spec), buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag DIFERENTE da do config), html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0), **badge-ausente** (23, canon 2026-06-22 — todo produto leva etiqueta, alinha com o gate da `artigo-auditar`)
+- **Crítico** (sempre propor mudança): **voltagem-citada** (bivolt sem lastro no specsAmazon, na descricaoProduto ou no sobreEsteItem → reescrever o pró/spec), buyer-reference explícita, voz-comprador-implicita, termos-tecnico-industriais, html-texto-puro (todos sub-checks), claim-vs-lineup-fato errado, links-incorretos (tag DIFERENTE da do config), html-invalido, **tamanho-escannavel** (12a/12b/12c — cards viram parágrafos), **redundancy 2b "lineup"** (banida), **health-absolutes-ymyl** (18, v1.19.0 — YMYL), **voz-eximir-responsabilidade** (19a-g, v1.19.1 — muleta "declarado"), **naturalidade 21a/21b/21e** (rótulo inventado, meta-SEO, gramática que trava — v1.32.0), **badge-ausente** (23, canon 2026-06-22 — todo produto leva etiqueta, alinha com o gate da `artigo-auditar`)
 - **Mecânico (aplica direto, sem esperar)**: travessão, `;`, concordância PT-BR (15), capitalização/duplicação (14), `AFFILIATE_TAG_AQUI`, apagar a cópia excedente do 1b quando o fato já está no mesmo produto, apagar menção ou row de 110/127/220V (24). Lista única: invariantes e passo 9 apontam para cá.
 - **Médio** (propor mudança): **peso-por-fonte** (claim só do specsAmazon como pró central/subtitle/shortDescription → mover pra tabela), tone-clone óbvio, **repeticao-intra-artigo 1b (FIX: ≥4 ocorrências / abertura em ≥4 / fecho de preço >50%; apagar cópia é óbvio, reescrever é julgamento — com as 5 salvaguardas)**, **molde-de-forma 29 (título em ≥4 / Resumo abrindo com preço >50% / claim de keyword >2/3; o script conta, o conserto é julgamento)**, redundancy 2a de conceito, quality vago, incoherence, voz-citacao-ficha-tecnica burocrática, **template-para-quem-e** (16, v1.19.0), **numeros-em-excesso** (17, v1.19.0), **naturalidade 21c/21d** (palavra fora do sentido/verbo-curinga, jargão financeiro, 21c vira Crítico com ≥3 no mesmo review), **subtitle-keyword-first** (22, v1.56.0 — normaliza subtitle pro híbrido fluindo: lead keyword-first + gancho, sem dois-pontos, ≤13 palavras, cross-produto)
 - **Info** (mencionar mas não obrigatório aplicar): parágrafo no limite de tamanho, posição de link sub-ótima, tetos numéricos do JSON (13, 21f)
@@ -861,7 +861,7 @@ Apresentar em chat após análise:
 | 21 | naturalidade | ✓/⚠/n.a. | ... |
 | 22 | **subtitle-keyword-first** (NORMALIZAÇÃO — avaliar CADA subtitle) | ✓/⚠/n.a. | ... |
 | 23 | **badge-ausente** (NORMALIZAÇÃO — conferir badge em TODOS) | ✓/⚠/n.a. | ... |
-| 24 | **voltagem-citada** (110/127/220V, row Voltagem, bivolt sem specsAmazon) | ✓/⚠/n.a. | ... |
+| 24 | **voltagem-citada** (110/127/220V, row Voltagem, bivolt sem lastro nos 3 campos do anúncio) | ✓/⚠/n.a. | ... |
 | 25 | ymyl-aviso-repetido (script `ymyl-avisos.py`) | ✓/⚠/n.a. | ... |
 | 26 | peso-por-fonte (claim só do specsAmazon como pró central) | ✓/⚠/n.a. | ... |
 | 27 | **angulo-fora-da-keyword** (uso DESENVOLVIDO fora da intenção da keyword) | ✓/⚠/n.a. | ... |

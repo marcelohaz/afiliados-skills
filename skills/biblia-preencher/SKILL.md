@@ -399,10 +399,10 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 **NÃO mencione voltagem na curadoria — nem "110V", nem "220V", nem "127V", nem "vendido em versões 110V e 220V", nem "bivolt".** A voltagem muda por ASIN (o mesmo modelo costuma ter versão 110V e versão 220V, ASINs diferentes na Amazon), então cravar voltagem é assumir risco de erro pra ganhar quase nada — o comprador escolhe a versão no próprio anúncio. **Silêncio é o default.**
 
-- **ÚNICA exceção: o `specsAmazon` do ASIN diz "bivolt" (ou "100-240V"/"110-220V" como faixa contínua) EXPLÍCITO.** Aí — e só aí — pode registrar "bivolt". Sem essa palavra/faixa na ficha, voltagem não entra na curadoria.
+- **ÚNICA exceção: o `specsAmazon`, a `descricaoProduto` ou o `sobreEsteItem` do ASIN dizem "bivolt" (ou "100-240V"/"110-220V" como faixa contínua) EXPLÍCITO** (os três descrevem aquele anúncio; decisão do Marcelo, 02/09/2026). Aí, e só aí, pode registrar "bivolt". Sem essa palavra ou faixa num deles, voltagem não entra na curadoria; `doFabricante` e `conteudoBrutoFabricante` descrevem a linha do fabricante e não bastam.
 - **NUNCA infira bivolt de copy de POTÊNCIA** tipo `"1800W 110V | 2000W 220V"` ou `"110/127V e 220V"`. Isso são **SKUs SEPARADOS** (cada um voltagem única), **não** um aparelho bivolt. Esse foi o erro real (NA341/Midea/Mondial/WAP, 2026-06-28): copy dual-SKU virou "bivolt" → propagou pra 4 sites.
 - **Aparelho de aquecimento de alta potência é voltagem ÚNICA por design** (resistência feita pra uma tensão): air fryer, ferro de passar, secador de cabelo, chaleira, aquecedor, chuveiro. Nesses, voltagem nunca entra (não é bivolt e muda por SKU).
-- Exceção de classe (onde bivolt é comum e a ficha costuma confirmar): impressora (100-240V) e cooktop a GÁS (ignição eletrônica bivolt). Mesmo aí, só cite se o `specsAmazon` trouxer bivolt/faixa explícito.
+- Exceção de classe (onde bivolt é comum e a ficha costuma confirmar): impressora (100-240V) e cooktop a GÁS (ignição eletrônica bivolt). Mesmo aí, só cite se um dos três campos do anúncio trouxer bivolt/faixa explícito.
 
 ### Chavões por nicho (carregar `docs/painel/_data/chavoes-por-nicho.json`)
 
