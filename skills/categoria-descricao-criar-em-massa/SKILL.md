@@ -117,6 +117,8 @@ micro-ondas × liquidificador   mesma ideia de abertura: os litros da caixa não
 
 Num site sem descrição, cada sub-agent foge das irmãs cross-site e cai no fecho mais à mão, que é resumir o guia do próprio artigo. Ao pedir a reescrita, **dê a cada item um movimento de fecho diferente**, como dica de instalação, cuidado de uso, contraste entre dois tipos ou omitir o §3. Mande também uma lista curta de frases a evitar, tiradas das colisões ("Antes de comprar, confira", "costumam bastar"). Sem isso, a reescrita converge num fecho novo igual em todos.
 
+**Reescrita traz fato novo: confira contra o artigo antes de gravar.** Para fugir da colisão, o sub-agent troca a frase por outra com outro fato, e esse fato ninguém conferiu. No melhorcozinha, a lava-louças reescrita saiu com "a maioria é de embutir, uma é de instalação livre". O artigo diz de embutir para 3 das 9 máquinas e não fala em instalação livre. Ninguém viu antes da publicação. Para cada item reescrito, leia as contagens e os recursos citados nos produtos do `.mdx` (nome, `badge`, `shortDescription`) antes da Etapa 4.
+
 Colidiu → regerar **um** dos dois, passando as OUTRAS do site como material anti-clone explícito (além das irmãs cross-site). Repetir até zerar. A régua individual já manda divergir de "(a) outras categorias do mesmo site" — o que faltava era a mãe **ter o material**, que só existe depois da geração. No fecho repetido, a reescrita é só do §3, e o sub-agent que gerou o item pode fazê-la sem recomeçar (SendMessage).
 
 Sequenciar o site inteiro resolveria na origem, mas custa o paralelismo todo. Gerar em paralelo e consertar a colisão é mais barato e converge: nas 2 ocorrências reais, uma regeração resolveu cada.
