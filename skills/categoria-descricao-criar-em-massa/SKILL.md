@@ -105,9 +105,19 @@ bcaa × pre-treino          8 palavras iguais: "o que realmente muda de um pote 
 Então, DEPOIS de gerar e ANTES de escrever, cruzar **todos os itens do mesmo site entre si**:
 
 - zero sequência de ≥6 palavras compartilhada
-- famílias de abertura §1 distintas entre todas
+- famílias de abertura §1 distintas entre todas, olhando também a IDEIA da abertura e não só as palavras
+- famílias de fecho §3 variadas: o mesmo movimento de fecho em mais de 1/3 dos itens do site é colisão
 
-Colidiu → regerar **um** dos dois, passando as OUTRAS do site como material anti-clone explícito (além das irmãs cross-site). Repetir até zerar. A régua individual já manda divergir de "(a) outras categorias do mesmo site" — o que faltava era a mãe **ter o material**, que só existe depois da geração.
+As duas últimas foram achadas na 2ª execução real (melhorcozinha, 12 categorias, 02/10/2026), que passou limpa nos 6-gramas contra a rede. O cruzamento entre as 12 achou:
+
+```
+micro-ondas × liquidificador   mesma ideia de abertura: os litros da caixa não são o volume útil
+10 dos 12 fechos               "O guia do comparativo explica…" (descrever o guia do artigo)
+```
+
+Num site sem descrição, cada sub-agent foge das irmãs cross-site e cai no fecho mais à mão, que é resumir o guia do próprio artigo. Ao pedir a reescrita, **dê a cada item um movimento de fecho diferente**, como dica de instalação, cuidado de uso, contraste entre dois tipos ou omitir o §3. Mande também uma lista curta de frases a evitar, tiradas das colisões ("Antes de comprar, confira", "costumam bastar"). Sem isso, a reescrita converge num fecho novo igual em todos.
+
+Colidiu → regerar **um** dos dois, passando as OUTRAS do site como material anti-clone explícito (além das irmãs cross-site). Repetir até zerar. A régua individual já manda divergir de "(a) outras categorias do mesmo site" — o que faltava era a mãe **ter o material**, que só existe depois da geração. No fecho repetido, a reescrita é só do §3, e o sub-agent que gerou o item pode fazê-la sem recomeçar (SendMessage).
 
 Sequenciar o site inteiro resolveria na origem, mas custa o paralelismo todo. Gerar em paralelo e consertar a colisão é mais barato e converge: nas 2 ocorrências reais, uma regeração resolveu cada.
 
