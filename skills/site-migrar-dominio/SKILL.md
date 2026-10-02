@@ -82,6 +82,13 @@ Nada muda no ar. O site antigo segue servindo normal.
 | 1.7 | `git mv` dos marcadores `{antigo}-*` → `{novo}-*` | `docs/biblias-v2/.audits/*/` |
 | 1.8 | `pnpm install --lockfile-only` e conferir 0 ocorrências do nome antigo | `pnpm-lock.yaml` |
 | 1.9 | trocar o slug nas divergências **se ele estiver lá** | `docs/painel/_lib/template-divergences.ts` (`MANUAL_DIVERGENCES`) · `scripts/sync-template.ts` (`KNOWN_DIVERGENCES`) |
+| 1.10 | renomear a chave do site (sem ela, o painel mostra "nunca foi ao ar" um site que está no ar) | `docs/painel/_data/deploy-state.json` |
+| 1.11 | trocar o slug em `_sites_aplicaveis` do nicho (é o GATE do bloco de chavões do nicho nas skills editoriais) | `docs/painel/_data/chavoes-por-nicho.json` |
+| 1.12 | renomear a chave do site (guarda a linhagem medida) | `docs/painel/_data/slugs-historicas.json` |
+| 1.13 | apagar `{antigo}.json` (cache gitignored), no Mac e na VPS | `docs/painel/.audit-cache/` |
+
+**Ache os resíduos medindo, não pela tabela:** `git grep -l '{antigo}' -- ':!sites/{novo}' ':!docs/biblias-v2/.audits'`.
+Os itens 1.10 a 1.13 ficaram de fora em 07/09/2026 (melhoremcasa, consertados depois no `59eed15f1`) e de novo em 02/10/2026 (melhorespretreinos). Os snapshots gerados por cron (`cf-accounts`, `domains-status`, `gsc-snapshot-*`, `ahrefs-*`, `linhagens`, `orfaos-dominios-cache`) se refazem sozinhos: não mexa.
 
 **O handle do Facebook muda e segue o slug:** `facebook.com/{slug-novo}`, como num site novo (Marcelo, 09/08/2026: *"os facebooks de rodapé são gerados automaticamente, faça como se fosse um site novo"*). É a convenção da rede, e o handle aparece no rodapé de todas as páginas: deixar o antigo faz cada página da marca nova apontar para a marca velha.
 
@@ -98,6 +105,11 @@ pnpm install && pnpm --filter {novo} build
 grep -o 'rel="canonical" href="[^"]*"' sites/{novo}/dist/index.html | head -1   # domínio NOVO
 grep -rl '{dominio-antigo}' sites/{novo}/dist | wc -l                           # tem que ser 0
 ```
+
+⚠ **Tag com o domínio dentro.** Quando a `affiliateTag` contém o domínio antigo (`melhorpretreino.com-20`)
+e fica por regra, o grep acima nunca dá 0 (495 ocorrências no caso real). Meça o domínio **fora da
+tag**: `grep -rlE 'melhorpretreino\.com([^-]|$)' sites/{novo}/dist` (com o ponto escapado: sem o `\`,
+`melhorpretreino.com` casa também o slug `melhorpretreino-com`).
 
 **Commit:** o pre-commit **vai bloquear** (vê `.mdx` de `reviews/` staged, mesmo sendo rename puro). O
 próprio hook documenta o bypass pra este caso — `git commit --no-verify`, "migrações grandes". Deixe
@@ -125,6 +137,12 @@ positivos** — todos em *"a impressora ideal para você"*, que é a frase, não
 as mesmas 8 migrações dão **0**. Se a marca antiga for genérica demais pra separar por caixa
 (ex.: "Melhor Guia"), grepe e classifique os hits à mão em vez de confiar na contagem.
 
+**A marca pode quebrar linha no HTML** (página do autor, 02/10/2026: "Melhor" no fim de uma linha e
+"Pré-Treino" na seguinte). `grep` e `git grep` leem linha a linha e não acham. Troque com uma regex
+que aceita a quebra (em Python, `re.sub(r'Melhor(\s+)Pré-Treino', ...)`) e, no gate pós-commit,
+procure também a primeira palavra da marca sozinha no fim da linha:
+`git grep -n 'Melhor$' HEAD -- sites/{novo}/src/content/pages` (tem que ser vazio).
+
 **Variante medida em 07/09/2026 — o `git add` que aborta inteiro:** `git add sites/{novo} sites/{antigo}`
 com o caminho ANTIGO (já renomeado, logo inexistente) falha com *"pathspec did not match"* e **não
 adiciona NADA** — nem o caminho válido. Com `2>/dev/null` o erro some e o commit sai com
@@ -144,6 +162,13 @@ Aconteceu duas vezes na rede, e as duas foram reportadas como concluídas antes 
 2. **Criar a zona ANTES de pedir o NS.** A Cloudflare atribui o par de nameservers **por zona**, então
    ele só existe depois que a zona existe: `bun scripts/cf-create-zone.ts {slug}` cria e imprime o par
    (+ CNAME `@`/`www` proxied, Always HTTPS, SSL full, MX/SPF/DKIM). A ordem inversa não é executável.
+   **Site na conta CF da Bárbara:** o Mac só tem o token do Marcelo, e o script rodado nele cria a
+   zona na conta errada (ou recusa). Crie pelo painel da VPS, que escolhe a conta pelo dono do site:
+   `bun scripts/painel-api.ts POST /site/{slug}/dns-setup` e leia o resultado com
+   `bun scripts/painel-api.ts GET /job/{id} --completo`. Chame **uma vez**: o painel recusa job
+   duplicado só enquanto o primeiro roda. Depois confira que existe uma zona só.
+   Em seguida, `cfAccount` do domínio novo em `docs/painel/domains.json` (`nenhum` → `marcelo`/`barbara`),
+   como no `8929236b3`.
 3. **Apontar o NS** — passo HUMANO no Registro.br. **Entregue o script de nameserver pronto, colado
    inteiro no chat** (skill `registro-br-ns`), nunca só o par: o Marcelo não roda terminal e não muda
    NS domínio a domínio na mão.
@@ -311,9 +336,13 @@ servir na hora. As Fases 1 a 3 não precisam ser desfeitas: o domínio novo apen
 com `astro: not found`:
 
 ```bash
-ssh melhorserum-painel@91.108.125.248
+ssh -i ~/.ssh/painel_vps_ed25519 root@91.108.125.248
+sudo -iu melhorserum-painel
 cd ~/afiliados && pnpm install --frozen-lockfile
 rm -rf sites/{antigo}       # o órfão gitignored bloqueia recriar o slug depois
+rm -f docs/painel/.audit-cache/{antigo}.json
+# scripts/deploy-log.jsonl (gitignored, só na máquina que publicou): trocar "site" e "siteSlug"
+# {antigo} → {novo} nas linhas do site, com cópia antes; o "domain" de cada linha fica (é o histórico)
 ```
 
 Ver [[afiliados.armadilha.rename-site-vps-pnpm-install]].
