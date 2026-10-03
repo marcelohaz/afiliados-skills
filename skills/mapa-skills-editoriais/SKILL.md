@@ -81,6 +81,8 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 
 Skills locais do repo (fora do marketplace): `backup-monorepo`,
 `painel-launchagent`, `site-criar-workflow` — procedimento de máquina, não editorial.
+E `ahrefs-backlinks` (backlinks por endereço no Ahrefs grátis, para onde cada link
+chega hoje e o conserto dos que caem na home; usa o Ahrefs logado no Chrome do Marcelo).
 
 ## Por que via Skill tool e não os botões do painel
 
