@@ -133,7 +133,20 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
      - seminovo nunca ("Seminovo", "Renovado" e "Recondicionado" são a mesma coisa na Amazon), conferido na página, porque o título lido vem cortado.
      O mesmo modelo só em loja de terceiro e com preço alto indica que saiu de linha.
      Na 1ª passada dos 6 primeiros ports, três propostas saíram erradas e só a revisão pegou: o "mesmo modelo" do Moto G75 era seminovo, e o POCO C75 e o S24 FE iam para a versão de 128 GB, com o texto dizendo 256 GB.
-   - **Escopo no port:** os que saíram da Amazon e os que o WordPress já tinha trocado. Os indisponíveis seguem a regra de 02/10/2026 (decisão do Marcelo), que vale para qualquer artigo, portado ou não:
+   - **No port, antes de publicar** (Marcelo, 03/10/2026: *"fazer uma verificação de links amazon e já aplicar as mudanças desde a primeira vez. E como o artigo ainda não vai estar rankeando, pode até fazer algumas mudanças mais bruscas"*):
+     1. Leia na Amazon todos os produtos dos artigos portados (`disponibilidade-amazon.ts lista`, o laço do cabeçalho dele no navegador do app, `importar` e `relatorio`).
+     2. Aplique as trocas no mesmo port, antes do deploy. A ordem é a de sempre (mesmo modelo, sucessor, parecido), e a escolha do anúncio segue "Qual anúncio".
+     3. Página inexistente e "Não disponível" trocam já, na 1ª leitura: o artigo ainda não rankeia, e se o original voltar fica o substituto.
+     4. Só com outras lojas fica, porque ainda dá para comprar.
+     5. Sem mesmo modelo, sucessor nem parecido, pode trocar o produto do card por outro da mesma marca e do mesmo papel no artigo, ajustando o nome, a foto, a ficha e as frases do review que citam dados do produto antigo. **Não reescreva o review do zero.**
+     6. Dado errado no texto, com destino óbvio, também se corrige no port: o card "iPhone 17 Pro Max" do melhortech tinha o nome trocado e a ficha do 16 Pro Max.
+     7. Cada troca entra sozinha em `docs/port-wordpress/disponibilidade/trocas.jsonl`, que a página "Trocas de link" do painel mostra.
+   - **Artigo que já está no ar** (Marcelo, 03/10/2026: *"cuidado para não fazer alterações bruscas nos artigos que já estão no ar e rankeando bem"*; *"página de categoria pode mudar, o problema são os artigos"*):
+     - a troca de link pode sempre;
+     - mudança sutil no texto (um dado errado numa frase, erro de digitação, a palavra colada num link) entra numa lista, artigo por artigo, e só é aplicada com o sim dele;
+     - mudança brusca só com decisão dele, medindo antes os cliques no Search Console: reescrever o review, trocar o produto do card com texto novo, incluir, tirar ou reordenar produtos, mudar título, introdução, guia, descrição ou endereço;
+     - antes de cada deploy, compare com o deploy anterior do site e diga o que mais vai junto. Código compartilhado que muda artigo pede o sim antes; página de categoria pode ir.
+     Os indisponíveis seguem a regra de 02/10/2026:
      - "Não disponível. Não temos previsão…" só troca se a 2ª leitura, 7 dias ou mais depois da 1ª, der o mesmo resultado (a Amazon usa a mesma frase para produto que saiu de linha e para falta longa de estoque);
      - à venda só por outros vendedores (sem botão de compra, às vezes "Preço mais alto do que o habitual") fica, porque ainda dá para comprar;
      - sem o mesmo modelo em outro anúncio e sem sucessor da mesma linha, vale um **modelo parecido da mesma marca e do mesmo tipo** (Marcelo, 03/10/2026: link quebrado é pior). Ele precisa ter a ficha e o preço que o texto do card descreve, não pode já estar no artigo, e não pode ser o substituto planejado de outro card dele, senão dois cards levam ao mesmo produto. A troca é do tipo `parecido`, com `sucessorDe` e motivo "parecido: …". Outra marca não entra só pelo link. Sem nenhum desses, o produto fica, com o motivo em `docs/port-wordpress/disponibilidade/sem-substituto.json`, e vai para a lista do Marcelo (trocar o card é reescrita). Em 03/10/2026: Galaxy M55 → A37, Moto G75 → G77, escova Philco PEC04V → PER02 e Elgin Start Fry → Facilita Fry. O Galaxy M15 ficou porque o parecido, o A16 5G, só aparecia recondicionado, e o Xiaomi 14T ficou porque o único parecido vai substituir o Note 14 Pro dos mesmos artigos.
