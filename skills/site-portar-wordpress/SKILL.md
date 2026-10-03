@@ -135,7 +135,7 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
      Na 1ª passada dos 6 primeiros ports, três propostas saíram erradas e só a revisão pegou: o "mesmo modelo" do Moto G75 era seminovo, e o POCO C75 e o S24 FE iam para a versão de 128 GB, com o texto dizendo 256 GB.
    - **No port, antes de publicar** (Marcelo, 03/10/2026: *"fazer uma verificação de links amazon e já aplicar as mudanças desde a primeira vez. E como o artigo ainda não vai estar rankeando, pode até fazer algumas mudanças mais bruscas"*):
      1. Leia na Amazon todos os produtos dos artigos portados (`disponibilidade-amazon.ts lista`, o laço do cabeçalho dele no navegador do app, `importar` e `relatorio`).
-     2. Aplique as trocas no mesmo port, antes do deploy. A ordem é a de sempre (mesmo modelo, sucessor, parecido), e a escolha do anúncio segue "Qual anúncio".
+     2. Aplique as trocas no mesmo port, antes do deploy. A ordem é a de sempre (mesmo modelo, sucessor, parecido), e a escolha do anúncio segue "Qual anúncio". Entram também os cards em que o WordPress já tinha trocado o produto: confira se era sucessor de verdade (ver "Sucessor de verdade").
      3. Página inexistente e "Não disponível" trocam já, na 1ª leitura: o artigo ainda não rankeia, e se o original voltar fica o substituto.
      4. Só com outras lojas fica, porque ainda dá para comprar.
      5. Sem mesmo modelo, sucessor nem parecido, pode trocar o produto do card por outro da mesma marca e do mesmo papel no artigo, ajustando o nome, a foto, a ficha e as frases do review que citam dados do produto antigo. **Não reescreva o review do zero.**
