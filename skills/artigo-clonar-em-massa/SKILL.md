@@ -32,8 +32,8 @@ Slug do artigo destino: a que a Etapa 0a decidir (a do fonte, salvo slug histór
 
 É o **orquestrador full-auto** de clone de artigo. Análogo de `pagina-produto-criar-em-massa`, mas pra artigo inteiro.
 
-- **Reusa** as skills-peça (`artigo-review-criar` régua, `artigo-intro-escrever`, `artigo-guia-escrever`, `artigo-meta-escrever`, `artigo-reviews-auditar`, `artigo-auditar`) — NÃO reimplementa régua editorial (evita drift; paridade com `agent-prompts.json`). **Princípio único (v1.54.0): a clone APONTA pra régua, nunca a RE-ESCREVE.** Guide/intro/meta/audits são INVOCADOS via Skill tool (loop principal, sequencial). Os reviews (Etapa 1.1) são N sub-agents PARALELOS e sub-agent não chama Skill tool → cada um LÊ `artigo-review-criar/SKILL.md` direto. Resumo inline de régua = proibido (era a fonte do drift: subtitle desatualizado, voz-comprador vazada, "Para quem é" repetitivo).
-- **Conteúdo 100% do ZERO** a partir das bíblias. O artigo fonte serve SÓ de molde: nº de produtos, lineup, badges, keyword/keywordPlural/listHeading, e a estrutura de H2/H3 do guide. Em `biblia-only` os sub-agents NÃO veem o texto do fonte (sem leakage).
+- **Reusa** as skills-peça (`artigo-review-criar` régua, `artigo-intro-escrever`, `artigo-guia-escrever`, `artigo-meta-escrever`, `artigo-reviews-auditar`, `artigo-auditar`) — NÃO reimplementa régua editorial (evita drift; paridade com `agent-prompts.json`). **Princípio único (v1.54.0): a clone APONTA pra régua, nunca a RE-ESCREVE.** Intro/meta/audits são INVOCADOS via Skill tool (loop principal, sequencial). Os reviews (Etapa 1.1) e o guia (Etapa 2.1) são escritos por sub-agents, e sub-agent não chama Skill tool → cada um LÊ a SKILL.md da skill-peça direto (`artigo-review-criar`, `artigo-guia-escrever`). Resumo inline de régua = proibido (era a fonte do drift: subtitle desatualizado, voz-comprador vazada, "Para quem é" repetitivo).
+- **Conteúdo 100% do ZERO** a partir das bíblias. O artigo fonte serve SÓ de molde: nº de produtos, lineup, badges, keyword/keywordPlural/listHeading, e a estrutura de H2/H3 do guide. Em `biblia-only` os sub-agents NÃO veem o texto do fonte (sem leakage); o do guia recebe do fonte só a lista de títulos H2/H3.
 - **NÃO é a IA do painel.** Roda na assinatura (Claude Code), no Opus. (A op `clone-article` do painel usa API key e está fora do fluxo.)
 
 ## Modelo
@@ -129,9 +129,22 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 1. Git pull no repo de trabalho (evita estado stale; painel/Bárbara commitam em paralelo).
 2. Parse args. Valida `targetSite`/`sourceSite` (`[a-z0-9-]+`).
 3. **Fonte recuperada do WordPress (`portadoDe:` no frontmatter) → ABORTA** (Marcelo, 29/09/2026: "os recuperados não podem ser fonte de clonagem"). O texto veio do WordPress sem revisão, e o clone herdaria dele a lista de produtos, os selos, a palavra-chave e a estrutura do guia. O `clone-log.ts init` do passo 0b já recusa com exit 1, e o painel não recomenda mais esses artigos. Assunto que só existe como recuperado se escreve do zero (`artigo-lineup-montar` + skills de escrita), não se clona. Reescrito do zero, o artigo perde o `portadoDe` e volta a servir.
-   Lê o `.mdx` fonte → extrai: produtos (ASIN, name, image, imageAlt, badge, **rating**, schemaPrice, store), keyword, keywordPlural, listHeading, category, e a estrutura de H2/H3 do `guideContent`. **`rating` é a nota editorial do fonte e DEVE ser preservada — o clone biblia-only NÃO regenera nota, e sem ela o artigo/página perde a fonte de estrela (caso real escritoriocasa 2026-06-11: clones saíram com 0 rating).**
+   Lê o `.mdx` fonte → extrai: produtos (ASIN, name, image, imageAlt, badge, **rating**, schemaPrice, store), keyword, keywordPlural, listHeading, category, e a estrutura de H2/H3 do `guideContent`. A estrutura sai deste comando, que imprime só os títulos; a saída dele, colada como está, é tudo o que o sub-agent do guia recebe do fonte (Etapa 2.1):
+
+   ```bash
+   python3 - {source} {slug-do-fonte} <<'EOF'
+   import re, sys, yaml
+   s, l = sys.argv[1:3]
+   t = open(f'sites/{s}/src/content/reviews/{l}.mdx').read()
+   fm = yaml.safe_load(re.match(r'^---\n(.*?)\n---', t, re.S).group(1)) or {}
+   for m in re.finditer(r'<(h[23])[^>]*>(.*?)</\1>', fm.get('guideContent') or '', re.S):
+       print(('  ' if m.group(1) == 'h3' else '') + re.sub(r'<[^>]+>', '', m.group(2)).strip())
+   EOF
+   ```
+
+   **`rating` é a nota editorial do fonte e DEVE ser preservada — o clone biblia-only NÃO regenera nota, e sem ela o artigo/página perde a fonte de estrela (caso real escritoriocasa 2026-06-11: clones saíram com 0 rating).**
 4. Valida bíblias de TODOS os ASINs: existem em `docs/biblias-v2/{ASIN}.json` + `pontosFortes` não-vazio + `angulosConversao` não-vazio. Falta qualquer → ABORTA listando.
-4b. **Valida a análise de concorrentes da keyword EXATA** (`docs/painel/_data/competitor-analyses/{slugify(keyword)}.md`). A `artigo-guia-escrever` (Cenário C) **para e pede** ao usuário se ela não existir — e ela só é invocada na Etapa 2, depois de ~10 sub-agents Opus pagos.
+4b. **Valida a análise de concorrentes da keyword EXATA** (`docs/painel/_data/competitor-analyses/{slugify(keyword)}.md`). A `artigo-guia-escrever` (Cenário C) **para e pede** ao usuário se ela não existir, e a régua dela só entra na Etapa 2, depois de ~10 sub-agents Opus pagos. Por isso a decisão é tomada aqui, e o prompt do sub-agent do guia leva o resultado.
 
     ⚠ **NÃO ABORTE se o artigo FONTE tem guia completo** (canon Marcelo 2026-08-20). Em clone a análise **já foi feita**: o artigo fonte só existe porque alguém colou os concorrentes daquela keyword na criação dele, e o "Como escolher" dele É o resultado disso. Concluir "a análise não foi feita" a partir da ausência do arquivo é **inferência falsa** — o que houve foi o repo perder o arquivo, não o insumo faltar. Duas causas medidas: a `artigo-guia-escrever` não confirmava a gravação (7 keywords do cluster de creatina sumiram assim) e o `competitor-sources/**` ficou fora das EXCEPTIONS do guard até 20/08, revertendo as gravações de quem não pusha pela conta do Marcelo.
 
@@ -160,10 +173,13 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 5. **1.4 Audit cross-produto** (`artigo-reviews-auditar` com `PIPELINE=yes` nos args, **inline via Skill tool, no turno — nunca como sub-agent em background**; foi aqui que o clone de 23/07 parou). `PIPELINE=yes` diz à auditora: aplica óbvio E julgamento (auto-fix, máx 3 rodadas), não espera aprovação, não encerra o turno: tone-clone, redundância, incoerência, claim-vs-lineup, buyer-refs, etc. → AUTO-APLICA as correções propostas → re-audita (máx 3x). Não-convergido → flag no relatório.
 
 ### Etapa 2 — Guide (gerar + auditar + auto-fix)
-1. **2.1 INVOCAR DE VERDADE** `artigo-guia-escrever` **via Skill tool** (`Skill(skill="afiliados-skills:artigo-guia-escrever", args="{target}/{slug} PIPELINE=yes")` — o `PIPELINE=yes` diz à skill que a análise de concorrentes já foi checada no pré-flight 4b e que ela não pode parar para perguntar), passando a estrutura de H2/H3 do guide do fonte como **mapa de tópicos** (referência estrutural, NÃO copia frases). Prosa do zero.
-   - **⚠️ INVOCAR ≠ INLINE (régua v1.54.0).** "Invoca" significa CHAMAR a Skill tool, NÃO escrever um sub-agent/Python que re-implementa o guia. A skill viva já carrega a régua COMPLETA dela (health-YMYL, voz-eximir, Amazon-zero nas seções educativas, âncora=keyword + slug REAL + home via `/`, FAQ H2 literal "Perguntas Frequentes", densidade de negrito, chavões por nicho). Re-implementar inline = re-introduzir o drift que esta skill existe pra evitar. Incidente real 2026-06-24: o clone inlinou guide/intro/meta e perdeu o anti-clone intra-site da intro + checks YMYL do guide.
+1. **2.1 O guia é escrito por UM sub-agent que não vê o fonte** (Marcelo, 04/10/2026). Ele LÊ a `artigo-guia-escrever/SKILL.md` inteira e aplica a régua dela, como os sub-agents de review fazem com a `artigo-review-criar`; o prompt está em "## Prompt do sub-agent do guia (Etapa 2.1)". Um sub-agent, em primeiro plano (`run_in_background: false`). Do fonte ele recebe SÓ a lista de títulos H2/H3 (saída do comando da Etapa 0, passo 3), como mapa de tópicos. Nunca o texto do guia nem o caminho do `.mdx` do fonte.
+   - **Por que sub-agent, e não a Skill tool no loop principal:** o loop principal leu o `.mdx` do fonte inteiro na Etapa 0 (lineup, selos, notas). Com o guia do fonte no contexto, ele reproduzia frases dele. Medido em 03/10/2026 nos 1.700 pares de artigos com a mesma keyword na rede: 18 pares com 20% ou mais do guia igual, todos clones, de junho a setembro (o maior, 70%, entre os "melhor tablet para trabalho" do melhortablet e do melhorestablets). No clone das pastas de amendoim do produtosanalisados (17/08), o guia nasceu com 23 frases idênticas à fonte. A Etapa 5 trocou uma ou duas palavras em cada uma, e ficaram 37 frases quase idênticas, que o comparador mostra sem barrar. Os reviews, escritos por sub-agents que nunca viram o fonte, ficaram de 1% a 23% iguais, quase só ficha de produto. Com o guia no mesmo modelo dos reviews, o isolamento vem da construção.
+   - **O gate de invocação confere** que o sub-agent do guia existiu e que, no histórico dele, nenhuma ferramenta abriu o `.mdx` do fonte (ver "GATE DE INVOCAÇÃO"). Por isso o `verify-output` precisa do `--source=site/slug`.
+   - **Não é o "inline" que a régua v1.54.0 proíbe.** Proibido é resumir ou reimplementar a régua no prompt. O sub-agent lê a SKILL.md viva inteira, e o que ela muda passa a valer no clone seguinte.
    - **OBRIGATÓRIO: passar uma TABELA CANÔNICA de specs por marca/produto** (cafeína/dose, glúten, ativos-chave, preço) extraída das bíblias, e instruir "use SÓ esta tabela pras seções de marca/cafeína". **Caso real: sem a tabela o sub-agent FEZ BRAND-SWAP** (descreveu o Dux com specs do True Source: 200mg/L-teanina; e o 3VS como "contém glúten" quando é sem glúten). Auto-check pós-geração: nenhuma spec de uma marca aparece em outra; produto X "para iniciantes" não é o de maior cafeína.
-2. **2.2 Confirmar que a skill rodou** (NÃO re-listar a régua dela): a `artigo-guia-escrever` já aplicou + auto-validou a régua completa dela ao gravar. Aqui o gate só confirma o ESSENCIAL ESTRUTURAL que a clone tem que garantir: (a) `guideContent` não-vazio e gravado, (b) 5 H2 obrigatórios presentes, (c) **2-5 links internos hub-and-spoke** resolvendo pras páginas reais do destino (caso real: regen ZEROU os links por ler "opcional"). Os demais critérios editoriais (YMYL, voz, âncoras, FAQ literal, negrito, chavões) são responsabilidade da skill invocada — se ela rodou de verdade, já passaram. Se a clone tiver inlinado em vez de invocar, RE-INVOQUE a skill. Algum essencial falhar → re-rodar a skill ou auto-fix dirigido → re-valida (máx 3x).
+2. **2.1b Gravar (loop principal).** O sub-agent grava o HTML em `docs/biblias-v2/.audits/clone-runs/rev/{target}-{slug}/guide.html` (o diretório dos reviews, gitignored, que sobrevive a uma queda do turno) e devolve o relatório do passo 16 da `artigo-guia-escrever`. O loop principal faz o backup e grava o `guideContent` no `.mdx` como mandam os passos 12 e 13 dela (block scalar `|`). Não há commit aqui: o do artigo inteiro é na Etapa 6. Numa retomada com o `guide.html` já gravado, reuse-o em vez de chamar o sub-agent de novo, e só marque `clone-log check {target} {slug} 2` depois de o guia estar no `.mdx`.
+3. **2.2 Confirmar o essencial estrutural** (NÃO re-listar a régua): (a) `guideContent` não-vazio e gravado, igual ao `guide.html`; (b) 5 H2 obrigatórios presentes; (c) **2-5 links internos hub-and-spoke** resolvendo pras páginas reais do destino (caso real: regen ZEROU os links por ler "opcional"); (d) o relatório do sub-agent traz a validação do passo 11 da skill de guia sem pendência. Os demais critérios editoriais (YMYL, voz, âncoras, FAQ literal, negrito, chavões) são da régua que o sub-agent aplicou. Algum essencial falhar → devolver ao mesmo sub-agent (SendMessage) ou chamar outro com o mesmo prompt mais o defeito a corrigir → re-valida (máx 3x). A correção nunca é feita no loop principal, que viu o fonte.
 
 ### Etapa 3 — Intro + Meta (gerar + auditar + auto-fix)
 1. **3.1 INVOCAR DE VERDADE** `artigo-intro-escrever` + `artigo-meta-escrever` **via Skill tool** (`Skill(skill="afiliados-skills:artigo-intro-escrever", ...)` e idem meta), NÃO inline.
@@ -193,7 +209,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
    - **Near-dup ≥0.8 e overlap de n-grama em geral (canon 2026-08-13): NÃO reescrever.** Medido na rede: 30 pares de irmãos publicados têm 8-grama mediana 0,5%/máx 1,6% sem ninguém reescrever near-dup — o overlap baixo vem da variação estrutural. O comparador continua IMPRIMINDO near-dup pra revisão humana, mas ele não dispara reescrita. O que dispara reescrita é **frase exata** fora dos H2-slot, que é exatamente o que o `verify-output` bloqueia.
 2. **5.2** Sobrou **frase exata** fora das classes isentas (exatas > 0)? Corrija, escolhendo o meio pelo tamanho do trecho:
    - **Fragmento isolado** (heading, título de bullet, frase curta) → **conserte inline** com substituição determinística. Medido em 3 clones (2026-07-30): 2 de 2 achados reais eram fragmento, e um `replace` resolveu. Disparar sub-agent pra isso é desperdício.
-   - **Prosa corrida** (parágrafo, bloco) → aí sim sub-agent reescreve SÓ aquele trecho, sem mudar fato.
+   - **Prosa corrida** (parágrafo, bloco) → aí sim sub-agent reescreve SÓ aquele trecho, sem mudar fato. **No guia, esse sub-agent também não vê o fonte:** recebe o parágrafo inteiro do destino, a bíblia dos produtos citados e a régua da skill de guia, e reescreve o parágrafo com outras palavras, nunca só a frase repetida. Trocar uma ou duas palavras foi o que deixou 37 frases quase idênticas no clone das pastas de amendoim (17/08).
    → **5.3 re-scan** → loop até limpo OU máx 3 rodadas. Sobra → flag no relatório.
    - Nota honesta: frases factuais rígidas (contraindicação/dose/alérgeno) convergem por serem boilerplate de indústria; o foco da reescrita é o conteúdo AUTORAL (subtitles, prosa), não bula que aparece igual no mundo todo.
 3. **5.4 RE-GATE mecânico dos campos reescritos (OBRIGATÓRIO, régua v1.54.0):** a reescrita anti-dup é o ponto de MAIOR risco de re-introduzir defeito mecânico (concordância PT-BR quebrada, capitalização errada, travessão/`;` que voltou, voz-comprador que vazou na nova frase, rótulo canônico do fullReview alterado). Após CADA rodada de reescrita que tocou um campo, re-rodar o **gate mecânico da Etapa 1.2** SÓ nos campos mexidos (travessão=0, `;`=0 entity-aware, links Amazon 2-3 tag-aware, texto-puro, 4 parágrafos com rótulos LITERAIS, voz-comprador lista ampla, concordância/capitalização). Falhou → corrigir antes de fechar o loop. NÃO fechar a Etapa 5 com campo reescrito que regrediu no gate 1.2.
@@ -297,6 +313,49 @@ inteiro (`rev/{target}-{slug}/*.json`) em vez do dicionário do contexto, e o re
 
 Se o sub-agent não tiver acesso de leitura à `artigo-review-criar/SKILL.md` (ambiente VPS-only raro), a skill-mãe lê o arquivo e COLA o conteúdo dela no prompt — nunca cair num resumo de memória.
 
+## Prompt do sub-agent do guia (Etapa 2.1) — sem o fonte
+
+Mesmo princípio do prompt de review: o sub-agent LÊ a régua viva e a skill-mãe só acrescenta os deltas do clone. A diferença é o isolamento do fonte.
+
+```
+Você vai escrever o guia "Como escolher" (guideContent) do artigo {target}/{slug}, que é um clone.
+
+PASSO 1 — LEIA a régua canônica (NÃO improvise, NÃO use resumo de memória):
+- Read `.claude/skills/artigo-guia-escrever/SKILL.md` INTEIRA e siga os passos 1 a 11 dela
+  (ler o artigo, as bíblias, os artigos do site para os links, a análise de concorrentes,
+  gerar o HTML e validar com script). Onde este prompt e a SKILL.md divergirem, a SKILL.md
+  ganha, exceto nos DELTAS DO CLONE abaixo.
+
+PASSO 2 — Inputs:
+- artigo: sites/{target}/src/content/reviews/{slug}.mdx (produtos e reviews já escritos,
+  guideContent vazio)
+- análise de concorrentes: docs/painel/_data/competitor-analyses/{keyword-slug}.md (e
+  docs/painel/_data/competitor-sources/{keyword-slug}/, se existir)
+- títulos do guia de um artigo da rede com esta keyword, só como mapa de assuntos a cobrir:
+  {saída do comando da Etapa 0, passo 3, colada como está}
+- tabela canônica de specs por produto: {tabela tirada das bíblias}
+- bíblias: docs/biblias-v2/{ASIN}.json dos produtos do artigo
+
+DELTAS DO CLONE:
+- NÃO abra nenhum artigo desta keyword em outro site (nem por busca ou curinga em sites/).
+  Os títulos acima são tudo o que você recebe dele: assuntos para cobrir, não frases. Escreva
+  a prosa do zero a partir das bíblias e da análise. O clone-log confere no seu histórico que
+  nenhum desses arquivos foi aberto.
+- Os 5 H2 base saem do template da skill; coincidir com outro site é esperado.
+- O pré-flight do clone já conferiu a análise de concorrentes. Se ela não existir, NÃO pare no
+  Cenário C (passo 3.1 da skill) nem peça textos ao usuário: use a lista de títulos acima como
+  mapa de assuntos e siga.
+- NÃO faça os passos 12 a 16 (backup, Edit no .mdx, commit, push, VPS). Grave o HTML final em
+  docs/biblias-v2/.audits/clone-runs/rev/{target}-{slug}/guide.html e devolva o relatório do
+  passo 16: tamanho, H2 na ordem, links internos e o resultado da validação do passo 11.
+- arquivo temporário vai em {scratchpad}/guia-{target}-{slug}/.
+- NUNCA edite .mdx nem rode git.
+```
+
+O caminho e o nome do site de origem não entram no prompt: o sub-agent não tem por que saber onde está o fonte.
+
+Ensaio de 04/10/2026, antes de a regra valer: o guia do `melhortablet/melhor-tablet-para-trabalho`, refeito por este prompt a partir de uma cópia do artigo sem o guia antigo, saiu de 0,3% a 1,9% igual a cada um dos 9 outros guias da keyword na rede (o antigo tinha 70% em comum com o do melhorestablets). O comparador achou só os H2 base iguais no guia, e o gate reprovou um sub-agent de controle que abriu o fonte.
+
 ## Shuffle determinístico (Etapa 1.0)
 
 ```
@@ -336,7 +395,7 @@ O `clone-log.ts` grava **como a skill foi executada**, não o conteúdo produzid
 | **Desvios** e **Sugestões** (`note`) | o agente | é o dado que só ele tem: passo pulado, **passo inventado**, ferramenta trocada, régua ambígua. |
 | **Verificação mecânica** | o `verify-output` | única parte que não passa pelo julgamento do agente: sai de ler o `.mdx`, de rodar o `compare-cross-site.py` e do **gate de invocação** (abaixo). |
 
-**⛔ GATE DE INVOCAÇÃO (v1.102.0) — executar à mão o que a skill faria NÃO passa.** O `verify-output` confere no **transcript da sessão** se `artigo-reviews-auditar` (1.4), `artigo-guia-escrever` (2), `artigo-intro-escrever` + `artigo-meta-escrever` (3) e `artigo-auditar` (4) foram de fato invocadas via Skill tool, **com os args deste artigo e depois do `init` desta run**. Faltando qualquer uma: exit 1, sem commit.
+**⛔ GATE DE INVOCAÇÃO (v1.102.0) — executar à mão o que a skill faria NÃO passa.** O `verify-output` confere no **transcript da sessão** se `artigo-reviews-auditar` (1.4), `artigo-intro-escrever` + `artigo-meta-escrever` (3) e `artigo-auditar` (4) foram de fato invocadas via Skill tool, **com os args deste artigo e depois do `init` desta run**. Na Etapa 2 (desde 04/10/2026), confere que houve um sub-agent cujo prompt cita a `artigo-guia-escrever/SKILL.md` e este `{target}/{slug}`, e que no histórico desse sub-agent nenhuma ferramenta abriu o `.mdx` do fonte. O histórico dele fica em `<sessão>/subagents/`, ligado pela chamada que o criou. Run com `init` anterior a 04/10 ainda passa com a invocação antiga da skill. Faltando qualquer um: exit 1, sem commit.
 
 Por que existe: em 14/08 as etapas 1.4/3.1/4.1 foram rodadas como script inline (um deles adaptado com `sed` do clone anterior) e marcadas de boa-fé no log. Custo medido ao re-rodar as skills de verdade: **7 defeitos que a passagem inline não pegou, 2 deles INTRODUZIDOS por ela** — a auditoria inline cobriu 32 de 38 categorias, faltando justamente `claim-vs-bible` e `decisao-editorial-violada`. Nenhum checkbox distingue "rodei a skill" de "fiz o que eu achei que a skill faz"; o transcript distingue, porque quem escreve nele é o harness. A janela por `init` é o que impede as invocações do clone anterior de satisfazerem este (foi exatamente o par HP → fotos).
 
