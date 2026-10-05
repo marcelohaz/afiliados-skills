@@ -122,6 +122,21 @@ Afirmação em qualquer campo (subtitle, shortDescription, pros, cons, specs, fu
 
 Exemplo flag: `fullReview` diz "velocidade de 12 ppm" mas bíblia diz "10 ppm".
 
+**1b. Número no `subtitle` ou na `shortDescription` sem a condição que a bíblia exige** (🔴 Crítico, fato).
+A régua da criação manda a condição viajar com o número **em todo campo, inclusive os curtos**, e
+cortar o número quando ela não cabe (`pagina-produto-criar`, "número curto carrega o qualificador").
+Leia os dois campos **isolados**, como se o resto da página não existisse: eles circulam sozinhos,
+no card e no snippet do Google. **"O `fullReview` ou os contras já dizem a condição" não absolve o
+campo curto** — é exatamente o desenho do defeito que a criação descreve (o corpo qualifica certo,
+o campo curto derruba a condição).
+Conserto (passa no teste da frase nova): **RESTAURAR** a condição com palavras da bíblia ou da
+própria página, se o campo continuar dentro do limite; senão **APAGAR** o número (ou a frase dele).
+Caso real 2026-10-05 (`melhoresparacasa/intelbras-twibi-force-ax-1500-2-unidades`): a
+`decisaoEditorial` pedia "duas portas Gigabit por módulo, deixando claro que uma delas é a de
+entrada", a `shortDescription` dizia só "Cada um tem duas portas Gigabit." e o auditor marcou
+"opcional, não é erro de fato" porque o `cons[1]` explicava. Restaurar passava de 250 caracteres;
+o conserto era apagar a frase.
+
 ### 2. `tag-affiliate`
 Links Amazon no `fullReview` com tag **diferente** da do config (canon 2026-08-15):
 - URL crua `/dp/{ASIN}` = OK (o build injeta `siteConfig.affiliateTag` — `injectAffiliateTag`, ver passo 6.7 acima).
@@ -592,6 +607,21 @@ Se `avisosAoAgente`/`observacoesAgente` da bíblia dizem que o produto **saiu de
 
 `avisosAoAgente` e `observacoesAgente` são o único canal em que o humano manda na página. Leia os dois e confira instrução por instrução ("não citar sabor", "usar o nome X", "não afirmar Y"): cada uma não respeitada é um flag com a instrução literal como `evidence`. Instrução que a bíblia contradiz em outro campo dela mesma → o alvo é a bíblia (reporta, não toca na página). Sem avisos = `n/a`.
 
+### 25. `paragrafo-longo` (critério desde 2026-10-05, severidade: 🟡 Aviso)
+
+A criação limita o parágrafo do `fullReview` a ~5-6 frases e, quando o "Por que gostamos" passa
+disso, manda dividi-lo em dois: primeiro as features-chave, depois as specs gerais (peso, medidas,
+conectividade, garantia). Conte as frases de cada `<p>`.
+- **"Por que gostamos" com 7 frases ou mais** → conserto que passa no teste da frase nova:
+  **DIVIDIR** em dois `<p>` na fronteira entre features e specs gerais, sem trocar nenhuma palavra.
+  A segunda metade fica sem rótulo; é a forma que a `pagina-produto-guardas` aceita
+  (`COM_SPLIT`). Nunca crie um 6º parágrafo nem divida outro rótulo.
+- **Outro parágrafo com 7 frases ou mais** → só relatório (a criação não autoriza dividir).
+Medido em 2026-10-05: 150 de 4.704 páginas da rede (3%) têm parágrafo de 7 frases ou mais, 119
+no "Por que gostamos". Caso que trouxe o critério: `melhorcadeiradeescritorio/anima-anm312-p`,
+7 frases no "Por que gostamos", passou pela auditoria em massa sem registro porque não havia
+critério.
+
 ## Filtros editoriais — flag se aparecer nos campos curados
 
 Também sinalizar (severidade `aviso`):
@@ -637,8 +667,8 @@ Template exato — use blocos idênticos pro painel parsear visualmente:
 
 ## Classificação de severidade
 
-- **🔴 Crítico**: claim factualmente errado vs bíblia, tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4), **tamanho-fora-de-faixa LONGO demais** (régua v1.16.0 — shortDescription >250, pros/cons >180 texto puro; cards viram parágrafos), **fullReview-prefixo-e-ancoras** (régua v1.20.3 — 18a prefixo sem negrito, 18b âncora-CTA em vez do nome, 18c nome do produto não linkado).
-- **🟡 Aviso**: superlativo sem evidência, conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content, voz-citação ficha-técnica burocrática.
+- **🔴 Crítico**: claim factualmente errado vs bíblia (inclui número em `subtitle`/`shortDescription` sem a condição que a bíblia exige, critério 1b), tag affiliate violada, HTML proibido (inclui sub-checks 6a/6b/6c), tone-comprador EXPLÍCITO, voz-comprador-implicita (categoria D, régua v1.11.4), termos-tecnico-industriais (régua v1.11.4), **tamanho-fora-de-faixa LONGO demais** (régua v1.16.0 — shortDescription >250, pros/cons >180 texto puro; cards viram parágrafos), **fullReview-prefixo-e-ancoras** (régua v1.20.3 — 18a prefixo sem negrito, 18b âncora-CTA em vez do nome, 18c nome do produto não linkado).
+- **🟡 Aviso**: superlativo sem evidência, parágrafo com 7 frases ou mais (critério 25), conteúdo curto em campo opcional, specs ambientais sem ângulo, suspeita de duplicate content, voz-citação ficha-técnica burocrática.
 - **🔵 Info**: nota que vale registrar mas não exige ação (ex: "subtitle no limite mínimo de 10 chars, considere expandir").
 - **Chavões (critério 13), explícito porque foi a dúvida mais registrada do skill-log:** `termos_banidos_absoluto` e teto **0** → 🔴 Crítico. **Teto NUMÉRICO ultrapassado → 🔵 Info**, nunca 🔴 nem 🟡 (canon 2026-09-05). O cabeçalho do 13 e esta tabela dizem a MESMA coisa desde v1.21.0 — antes o cabeçalho dizia 🔴 e esta lista não citava chavões, e 10 notas do skill-log nasceram desse silêncio.
 
@@ -657,13 +687,17 @@ A linha não é "erro vs aviso" — é uma pergunta única, e ela é verificáve
 Se sim, **aplique**. Se não, **reporte com o fix sugerido**. O critério de saída: depois do
 conserto, toda palavra que sobrou vem da bíblia ou já estava na página. **Zero prosa inventada.**
 
-**As três formas que passam:**
+**As formas que passam:**
 
 ```
 APAGAR       a página afirma X, X aparece 0× na bíblia,
              e a frase continua de pé sem X
 SUBSTITUIR   a página diz "A", a bíblia diz "B" para o mesmo referente
 RESTAURAR    a bíblia diz "número + condição" e a página tem só o número
+             (num campo curto em que a condição não cabe no limite: APAGAR o número,
+             critério 1b; a régua da criação manda cortar o número, nunca a condição)
+DIVIDIR      "Por que gostamos" com 7 frases ou mais vira 2 parágrafos, sem trocar
+             palavra (critério 25)
 ```
 
 Medido nos 4 batches de 2026-08-06 (23 achados factuais), a linha separou 9 de 14:
@@ -685,7 +719,8 @@ Os cinco da direita são exatamente aqueles em que a redação do substituto foi
 editorial**, e é isso que precisa de olho humano.
 
 ⚠️ **Warn de JULGAMENTO nunca aplica** (frase parecida com a página irmã, coloquialismo acima do
-teto, redundância entre bullet e parágrafo: só relatório). **Warn MECÂNICO aplica direto** — travessão,
+teto, redundância entre bullet e parágrafo: só relatório). O `paragrafo-longo` do "Por que gostamos" (critério 25)
+não é julgamento: dividir não troca palavra, e aplica como fato. **Warn MECÂNICO aplica direto** — travessão,
 `;`, concordância PT-BR, capitalização/duplicação, `AFFILIATE_TAG_AQUI` (régua comum das auditoras,
 `docs/PADROES.md`).
 

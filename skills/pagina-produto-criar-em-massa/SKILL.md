@@ -414,7 +414,7 @@ Detecção:
 
    Por que existem, com o caso que originou cada uma:
    - **Fence** — 1 de 6 saiu sem o `---` de fechamento (Bárbara, `melhoressuplementos/flora-nativa-b12`, 2026-06-15): o block scalar do `fullReview` correu até o EOF, o build quebrou com `asin: Required / name: Required`, e **passou silencioso porque o sub-agent reportou `ok:true`**. É o auto-check do sub-agent que não basta.
-   - **Parágrafos** — o padrão é sempre 5 `<p>` com 4 rotulados, o órfão no "Por que gostamos". Medido 2026-07-26: 93 de 2.681 páginas (3,5%).
+   - **Parágrafos** — a guarda aceita duas formas: os 4 rotulados, ou 5 `<p>` com o "Por que gostamos" dividido em dois (a metade de trás sem rótulo), que é a divisão que a `pagina-produto-criar` manda fazer quando o parágrafo passa de 5-6 frases. Reprova qualquer outra sequência. A medição de 2026-07-26 (93 de 2.681 páginas, 3,5%) misturava as duas coisas.
    - **Tamanho** — o sub-agent conta caractere de cabeça e **erra ~14% das vezes**: 3 de 22 páginas com `shortDescription` em 256-264 chars apesar do cap 250 na régua, pego só pelo `--audit`.
 
    ⚠️ **A guarda impede defeito NOVO, não limpa o antigo.** Re-medido em 2026-07-30: **93 → 74**, com `cozinhaideal` em 24 nas duas contagens e `melhoraspirador-com` em 9 nas duas. O que foi medido em 26/07 seguiu no ar. É exatamente o buraco que o modo `--rede` fecha — sem varredura, medir não conserta.
@@ -423,7 +423,7 @@ Detecção:
 
    ⚠️ **Reprovação não é sinal de conteúdo ruim até ser investigada.** Reprovar bloqueia o commit, então falso positivo custa retrabalho e nunca dado corrompido. Se a guarda estiver errada, conserte o script.
 
-   **Conserto por tipo:** parágrafo órfão → fundir no "Por que gostamos" (determinístico, mais barato que re-disparar). Tamanho → re-disparar o sub-agent isolado pedindo só aquele campo (máx 2 tentativas), depois trim mecânico da última frase. Fence 1 → anexar `\n---\n` e reconferir; 0 ou >2 → re-disparar.
+   **Conserto por tipo:** parágrafo fora das duas formas → fundir no rótulo anterior (determinístico, mais barato que re-disparar). ⚠ Nunca funda a divisão autorizada do "Por que gostamos": a guarda não a reprova, e fundir de volta já produziu um "Por que gostamos" de 989 caracteres (melhorcaixadesom, 2026-08-06). Tamanho → re-disparar o sub-agent isolado pedindo só aquele campo (máx 2 tentativas), depois trim mecânico da última frase. Fence 1 → anexar `\n---\n` e reconferir; 0 ou >2 → re-disparar.
 
    **Varredura da rede** (o snippet só via o lote da vez, e é assim que defeito escapa e fica):
    ```bash
