@@ -87,7 +87,7 @@ Reprova e manda o sub-agent refazer (máx 3 tentativas):
 - 100-2000 chars · 2-3 `<p>` · zero tag de bloco fora da allowlist
 - **zero backtick** e **zero `${`** — o helper joga exceção, e `${` dentro do template literal é interpolação JS que corrompe o `config.ts`
 - sem travessão, sem `<!--`, sem `[TODO`
-- **zero sequência de ≥6 palavras** igual a qualquer irmã (existente ou gerada no grupo). Contra as que já estão no disco, com ferramenta: `bun scripts/categoria-desc-sobreposicao.ts {site} {categorySlug} <item.html>` (outras categorias do site e sites do mesmo nicho; sai 1 se achar). As geradas no grupo ainda não estão no disco: essas a mãe compara pelo HTML que tem na mão.
+- **zero sequência de ≥6 palavras** igual a qualquer irmã (existente ou gerada no grupo). Contra as que já estão no disco, com ferramenta: `bun scripts/categoria-desc-sobreposicao.ts {site} {categorySlug} <item.html>` (outras categorias do site, sites do mesmo nicho e a mesma categoria nos outros sites da rede; sai 1 se achar). As geradas no grupo ainda não estão no disco: essas a mãe compara pelo HTML que tem na mão.
 
 Não convergiu em 3 → registra no relatório e segue. Nunca grava item reprovado.
 
@@ -142,7 +142,8 @@ Item reprovado não derruba os outros: sai no relatório e o resto grava. Exit 1
 
 ```bash
 # controle anti-clone depois de gravar: agora TODAS as descrições do lote estão no disco,
-# então o script cruza cada uma com as do mesmo site e do mesmo nicho, inclusive as do lote.
+# então o script cruza cada uma com as do mesmo site, do mesmo nicho e da mesma categoria
+# nos outros sites, inclusive as do lote.
 # Saiu 1 → regerar o item, gravar de novo e repetir antes do commit.
 bun scripts/categoria-desc-sobreposicao.ts {site} {categorySlug}   # por item gravado
 pnpm --filter {site} build     # por site tocado; Zod + template literal do config
