@@ -733,8 +733,9 @@ PASSO 1 — LEIA a régua canônica e EXECUTE À RISCA (não improvise, não use
   **banner de descontinuado** (setar `descontinuado:{asin,nome}` no frontmatter se a bíblia sinalizar),
   atribuição-elíptica/voz-citação = muleta (spec factual vai direto), tom natural (rótulo real),
   sem travessão, sem `;`, campos texto-puro, health-YMYL, âncora = NOME do produto (nunca CTA).
-- Read `docs/painel/_data/chavoes-por-nicho.json` → use `_genericos` + bloco do `{{site}}.niche`
-  (de `docs/painel/sites-meta.json`): banidos absolutos são regra DURA, teto numérico é referência (canon 2026-09-05).
+- Read `docs/painel/_data/chavoes-por-nicho.json` → use `_genericos` + o bloco cujo `_sites_aplicaveis`
+  contém `{{site}}` (nenhum bloco lista o site → só `_genericos`; não escolha o bloco pelo `niche` do
+  `sites-meta.json`, canon 2026-08-15): banidos absolutos são regra DURA, teto numérico é referência (canon 2026-09-05).
 
 Inputs deste produto (já resolvidos pela skill-mãe — NÃO faça parse de args nem git pull):
 - Site: {{site}} · Slug: {{slug}} · ASIN: {{asin}} · AffiliateTag: {{tag}} (pode ser '')
