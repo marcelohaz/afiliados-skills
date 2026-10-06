@@ -113,7 +113,7 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
    ```bash
    bun scripts/categoria-desc-sobreposicao.ts {site} {categorySlug} <arquivo.html>
    ```
-   Ele compara com as outras categorias do mesmo site e com as dos sites do mesmo nicho (suplemento conta como um nicho só) e sai 1 se achar 6 palavras seguidas iguais. Reescreva o trecho e rode de novo até sair 0. Ler as irmãs antes de escrever não basta: em 28/09/2026 a descrição de air-fryers do cozinhaideal saiu com "peças que vão à lava-louças", igual à de liquidificador do mesmo site, e a rede tinha mais 5 pares assim.
+   Ele compara com as outras categorias do mesmo site, com as dos sites do mesmo nicho (suplemento conta como um nicho só) e com a mesma categoria nos outros sites da rede, e sai 1 se achar 6 palavras seguidas iguais. A última comparação entrou em 06/10/2026: a de monitores do melhoresmonitores repetia uma frase da de monitores do compraguia, que é de outro nicho. Reescreva o trecho e rode de novo até sair 0. Ler as irmãs antes de escrever não basta: em 28/09/2026 a descrição de air-fryers do cozinhaideal saiu com "peças que vão à lava-louças", igual à de liquidificador do mesmo site, e a rede tinha mais 5 pares assim.
 
 10. **Backup** ANTES de sobrescrever (paridade com handler `category-desc.ts:139-147`):
     ```bash
