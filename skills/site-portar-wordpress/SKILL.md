@@ -10,7 +10,7 @@ description: "Porta um site WordPress da rede (Hostinger) para Astro com o mesmo
 
 # Portar um WordPress para Astro
 
-Casos de referência: seis ports de 19 a 21/09/2026 (analistadeprodutos → melhoreseletro, cadeirasconfortaveis → melhorcadeiradeescritorio, melhorwifi → melhoresparacasa, melhorbeleza → melhorestetica, melhoreseletronicos → melhortech, melhordacozinha → cozinhaideal). O que cada um ensinou, com números, está em `docs/port-wordpress/relatorio-analistadeprodutos-melhoreseletro.md`. Cada port novo acrescenta uma seção lá.
+Casos de referência: seis ports de 19 a 21/09/2026 (analistadeprodutos → melhoreseletro, cadeirasconfortaveis → melhorcadeiradeescritorio, melhorwifi → melhoresparacasa, melhorbeleza → melhorestetica, melhoreseletronicos → melhortech, melhordacozinha → cozinhaideal). O que cada um ensinou, com números, está em `docs/port-wordpress/relatorio-ports.md`. Cada port novo acrescenta uma seção lá.
 
 ## O que esta skill É (e não é)
 
