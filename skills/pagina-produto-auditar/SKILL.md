@@ -615,12 +615,13 @@ conectividade, garantia). Conte as frases de cada `<p>`.
 - **"Por que gostamos" com 7 frases ou mais** → conserto que passa no teste da frase nova:
   **DIVIDIR** em dois `<p>` na fronteira entre features e specs gerais, sem trocar nenhuma palavra.
   A segunda metade fica sem rótulo; é a forma que a `pagina-produto-guardas` aceita
-  (`COM_SPLIT`). Nunca crie um 6º parágrafo nem divida outro rótulo.
+  (`COM_SPLIT`). Nunca crie um 6º parágrafo nem divida outro rótulo: se o "Por que gostamos"
+  já está dividido e uma das metades ainda tem 7 frases ou mais, só relatório.
 - **Outro parágrafo com 7 frases ou mais** → só relatório (a criação não autoriza dividir).
 Medido em 2026-10-05: 150 de 4.704 páginas da rede (3%) têm parágrafo de 7 frases ou mais, 119
 no "Por que gostamos". Caso que trouxe o critério: `melhorcadeiradeescritorio/anima-anm312-p`,
-7 frases no "Por que gostamos", passou pela auditoria em massa sem registro porque não havia
-critério.
+7 frases no "Pontos de atenção" (o "Por que gostamos" tinha 6 e já estava dividido), passou pela
+auditoria em massa sem registro porque não havia critério. Pela régua, fica só no relatório.
 
 ## Filtros editoriais — flag se aparecer nos campos curados
 

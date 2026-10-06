@@ -33,7 +33,7 @@ Pré-requisito: bíblia criada + dados brutos + imagem no editor-v2.
 |---|---|
 | `pagina-produto-criar` | preencher os 6 campos de UM stub |
 | `pagina-produto-criar-em-massa` | todos os stubs vazios de um site (ou subset por ASIN), paralelo; flag `--audit` |
-| `pagina-produto-auditar` | audit read-only de UMA página (26 categorias, cruza com bíblia) |
+| `pagina-produto-auditar` | audit read-only de UMA página (27 categorias, cruza com bíblia) |
 | `pagina-produto-auditar-em-massa` | VÁRIAS páginas, isoladas (≤10 por leva): mecânica na mãe (audit-editorial + guardas), sub-agents no julgamento; auto-aplica só conserto de FATO; descobre as pendentes sem `-last.md` |
 
 Pré-requisito: stub criado via "+ Nova página de produto" no site detail.
