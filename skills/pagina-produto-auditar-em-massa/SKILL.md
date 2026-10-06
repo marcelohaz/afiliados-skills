@@ -334,15 +334,18 @@ echo "local=$(git rev-parse --short=9 HEAD) remote=$(git ls-remote origin main |
 bash scripts/painel-vps-pull.sh
 ```
 
-### Etapa 4.5 — Pendência de bíblia: só reportar, não executar (canon Marcelo 2026-09-24)
+### Etapa 4.5 — Pendência de bíblia: só gravar na fila, sem perguntar (canon Marcelo 2026-09-24 e 2026-10-06)
 
-Esta skill NÃO roda a `biblia-auditar-em-massa` nem reaudita páginas de outros sites.
-A pendência gravada na Etapa 4 aparece no relatório como pergunta: "posso rodar
-`/biblia-auditar-em-massa pendentes` nestes N ASINs?". Só roda com o sim do Marcelo, e a
-reauditoria das páginas escritas antes do conserto (`bun scripts/biblia-pendencias.ts
-reauditar`) é outro pedido.
+Esta skill NÃO roda a `biblia-auditar-em-massa` nem reaudita páginas de outros sites, e
+**não pergunta** se pode. A pendência gravada na Etapa 4 aparece no relatório só como
+contagem (notas novas e em quantas bíblias), com a lista para consulta. A fila é o log:
+quem escreve a próxima página ou review do produto lê as notas abertas (passo 4 da
+`pagina-produto-criar` e da `artigo-review-criar`) e confere o ponto no dado bruto.
+Auditar bíblia ou reauditar páginas de outros sites é pedido à parte do Marcelo.
 
-Por quê: escopo é o pedido. Auditar bíblia e reauditar páginas de outros sites dispara sub-agents fora do lote, e isso precisa de sim explícito.
+Por quê: escopo é o pedido, e auditar bíblia a cada achado gasta tokens sem necessidade
+(Marcelo, 06/10/2026: "não faz sentido ficar auditando bíblia a cada coisinha nova que
+descobre, gastaria muitos tokens, melhor colocar num log").
 
 ⚠ **`--only` + pathspec nos DOIS, nunca `git commit` nu (canon 2026-09-02).**
 Commit sem pathspec leva **o índice inteiro**, e o índice é do REPOSITÓRIO: se
@@ -373,9 +376,8 @@ CORRIGIDO NA HORA ({F}) — passou no teste da frase nova:
 REPORTADO ({R}) — exige decisão sua:
   {slug} · {categoria} · {evidência curta}
 
-RAIZ NA BÍBLIA ({B}) — gravado na fila, NÃO executado:
+RAIZ NA BÍBLIA ({B}) — gravado na fila (log, sem pergunta):
   {ASIN} · {campo} · {o que contradiz}
-  → posso rodar /biblia-auditar-em-massa pendentes nestes {N} ASINs?
 
 📦 Commit (fixes): {hash}   📦 Commit (audits): {hash}
 🔄 VPS: {OK | bloqueado}

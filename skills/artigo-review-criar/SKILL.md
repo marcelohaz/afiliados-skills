@@ -131,6 +131,12 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 3. **Localizar o produto** no `products[]` do frontmatter pelo ASIN. Se não encontrado APÓS o pull, abortar com mensagem "Produto X não está no lineup do artigo; use '+ Adicionar produto' antes" — agora sim com confiança que o local está sincronizado.
 
 4. **Read bíblia**: `Read docs/biblias-v2/{ASIN}.json`. Se não existir, abortar.
+   - **Notas abertas da bíblia (canon Marcelo 2026-10-06):** rode `bun scripts/biblia-pendencias.ts list {ASIN}`.
+     São problemas que auditorias de página já acharam nesta bíblia e que ainda não foram corrigidos nela: a fila
+     é o log, e ninguém audita a bíblia a cada achado. Quem escreve é o sub-agent do 7.5 (ou o da clonagem): ele roda o comando e, ao escrever sobre o ponto
+     de uma nota, confere no dado bruto da própria bíblia (`sobreEsteItem`, `specsAmazon`, `conteudoBrutoFabricante`,
+     `opinioesCompradores`) e segue o bruto. A nota é alerta, não verdade: se o bruto não a confirma, siga a bíblia. Sem nota, o comando responde
+     "nenhuma pendência aberta". Não grave nada na fila nem na bíblia aqui.
 
 5. Não leia a página individual: o ângulo do review vem do badge e da posição no comparativo (invariante "Ângulo comparativo por natureza").
 
@@ -145,7 +151,8 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
    **O que o sub-agent recebe** (e só isso):
    - o caminho desta `SKILL.md`, com a ordem de LER inteira antes de escrever (régua = fonte única, mesmo
      mecanismo da `artigo-clonar-em-massa` v1.54.0);
-   - o caminho da bíblia `docs/biblias-v2/{ASIN}.json`;
+   - o caminho da bíblia `docs/biblias-v2/{ASIN}.json` e a ordem de rodar `bun scripts/biblia-pendencias.ts list {ASIN}`
+     (as notas abertas dela; ver o passo 4);
    - `keyword`, `keywordPlural`, `specLabels`, `affiliateTag`, e se o artigo é stub;
    - o bloco do PRÓPRIO produto: `name`, `asin`, `subtitle`, `badge`, `schemaPrice`, `image`;
    - dos irmãos, só os ESCALARES do frontmatter: `name`, `schemaPrice`, `subtitle`, `badge` e a tabela

@@ -595,13 +595,15 @@ Detecção:
     2. os `.md` de audit **+ `docs/biblias-v2/.audits/pendencias-biblia-{owner}.jsonl`** (se houve pendência)
     Lista específica em cada `git add`, nunca glob. Depois push + VPS pull.
 
-    **12d. Pendência de bíblia: só reportar, não executar (canon Marcelo 2026-09-24).**
+    **12d. Pendência de bíblia: só gravar na fila, sem perguntar (canon Marcelo 2026-09-24 e 2026-10-06).**
     Esta skill NÃO roda a `biblia-auditar-em-massa` nem reaudita páginas de outros
-    sites. O que voltou em `pendenciasBiblia` fica gravado na fila (12c) e aparece no
-    relatório como pergunta: "posso rodar `/biblia-auditar-em-massa pendentes` nestes
-    N ASINs?". Só roda com o sim do Marcelo. Depois da bíblia corrigida,
-    `bun scripts/biblia-pendencias.ts reauditar` lista as páginas escritas antes do
-    conserto, e reauditá-las também é pedido à parte.
+    sites, e **não pergunta** se pode. O que voltou em `pendenciasBiblia` fica gravado
+    na fila (12c), e o relatório diz só quantas notas entraram e em quantas bíblias.
+    A fila é o log: quem escreve a próxima página ou review do produto lê as notas
+    abertas no passo 4 da `pagina-produto-criar` e da `artigo-review-criar` e confere
+    o ponto no dado bruto. Auditar a bíblia é pedido à parte do Marcelo (Marcelo,
+    06/10/2026: "não faz sentido ficar auditando bíblia a cada coisinha nova que
+    descobre, gastaria muitos tokens, melhor colocar num log").
 
     Por quê: a primeira versão deste passo (24/09/2026) mandava encadear bíblia e
     reauditoria da rede no mesmo turno. Num lote de 10 páginas isso virou 9 auditorias
@@ -668,7 +670,7 @@ Detecção:
     📦 Commit (criação): {hash-1}
     📦 Commit (fixes):   {hash-2}   ← só se houve conserto
     📦 Commit (audits):  {hash-3}
-    📚 Bíblia (12d):     {N} pendências na fila ({ASINs}) → posso rodar /biblia-auditar-em-massa pendentes?
+    📚 Bíblia (12d):     {N} notas novas na fila, em {X} bíblias (sem pergunta: é log)
     🔄 VPS sincronizado: {OK | bloqueado}
     🔍 Audits: {ok} OK / {fix} corrigidos / {warn} warnings / {err} críticos abertos
     ```

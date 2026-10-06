@@ -762,6 +762,9 @@ leia os campos. O que conta é o campo afirmar o claim, não conter a palavra.
 **Reportar no relatório da página não basta: ninguém lê esse relatório de volta a partir da bíblia.**
 Todo achado cuja raiz é a bíblia vira uma pendência na fila `scripts/biblia-pendencias.ts`, que a
 `biblia-auditar` e a `biblia-auditar-em-massa` leem como entrada obrigatória e baixam item a item.
+A fila é o log (Marcelo, 06/10/2026): gravar não dispara auditoria de bíblia nem pergunta se pode.
+Quem escreve a próxima página ou review do produto lê as notas abertas (passo 4 da
+`pagina-produto-criar` e da `artigo-review-criar`) e confere o ponto no dado bruto.
 
 Entra na fila (sempre com evidência): a página contradiz a `decisaoEditorial` mas obedece outro campo
 (o caso acima), um campo curado perdeu o qualificador que o bruto tem ("se disponível", "até",
