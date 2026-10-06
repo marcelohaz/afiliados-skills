@@ -126,7 +126,9 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
      São problemas que auditorias de página já acharam nesta bíblia e que ainda não foram corrigidos nela: a fila
      é o log, e ninguém audita a bíblia a cada achado. Ao escrever sobre o ponto de uma nota, confira no dado bruto
      da própria bíblia (`sobreEsteItem`, `specsAmazon`, `conteudoBrutoFabricante`, `opinioesCompradores`) e siga o
-     bruto. A nota é alerta, não verdade: se o bruto não a confirma, siga a bíblia. Sem nota, o comando responde
+     bruto. A nota é alerta, não verdade: se o bruto não a confirma, siga a bíblia. A `decisaoEditorial` continua
+     valendo: nota que contesta uma decisão não autoriza contrariá-la; deixe o ponto em disputa de fora ou use a
+     forma mais estrita que as duas aceitam (o número com a condição que o bruto dá). Sem nota, o comando responde
      "nenhuma pendência aberta". Não grave nada na fila nem na bíblia aqui.
    - **Defesa em profundidade (canon 2026-07-26):** se a bíblia tem imagem em `conteudoBrutoFabricanteImagens`/`doFabricanteImagens` **e** o `conteudoBrutoFabricante` está fino ou é só um recado ("o texto está na imagem em anexo"), **avise no relatório e não finja que a base está completa** — a bíblia provavelmente ainda não teve as imagens lidas (`imagensVerificadasEm` ausente confirma). O certo é rodar `biblia-preencher` (ou `--enriquecer`) antes, em vez de escrever a página com base incompleta. Depois que a régua nova das skills de bíblia rodar, isso vira raro; a linha existe pro caso residual.
 

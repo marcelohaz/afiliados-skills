@@ -135,7 +135,9 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
      São problemas que auditorias de página já acharam nesta bíblia e que ainda não foram corrigidos nela: a fila
      é o log, e ninguém audita a bíblia a cada achado. Quem escreve é o sub-agent do 7.5 (ou o da clonagem): ele roda o comando e, ao escrever sobre o ponto
      de uma nota, confere no dado bruto da própria bíblia (`sobreEsteItem`, `specsAmazon`, `conteudoBrutoFabricante`,
-     `opinioesCompradores`) e segue o bruto. A nota é alerta, não verdade: se o bruto não a confirma, siga a bíblia. Sem nota, o comando responde
+     `opinioesCompradores`) e segue o bruto. A nota é alerta, não verdade: se o bruto não a confirma, siga a bíblia. A `decisaoEditorial` continua
+     valendo: nota que contesta uma decisão não autoriza contrariá-la; deixe o ponto em disputa de fora ou use a
+     forma mais estrita que as duas aceitam (o número com a condição que o bruto dá). Sem nota, o comando responde
      "nenhuma pendência aberta". Não grave nada na fila nem na bíblia aqui.
 
 5. Não leia a página individual: o ângulo do review vem do badge e da posição no comparativo (invariante "Ângulo comparativo por natureza").
