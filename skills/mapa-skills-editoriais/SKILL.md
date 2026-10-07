@@ -78,7 +78,7 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 | `site-portar-wordpress` | portar WordPress para Astro com o mesmo texto e virar a cadeia inteira para um herdeiro (decisão, conversão, dados de produto, virada, painel, medição de 8 semanas; domínio novo só com decisão do Marcelo) |
 | `leilao-garimpar` | analisar a lista mensal de liberação do Registro.br (read-only; registro é decisão do Marcelo) |
 | `amazon-lista-sites-auditar` | recomendar quem entra/sai da Lista de Sites do Associados (teto de 50 por conta; read-only na Amazon, quem aplica é o humano) |
-| `amazon-relatorios-analisar` | baixar os CSVs mensais do Associados da própria conta (Chrome, com o sim), guardar fora do repositório, consolidar nos nossos CSVs e analisar o que vende e o que caiu (`scripts/amazon-relatorios.ts`) |
+| `amazon-relatorios-analisar` | baixar os CSVs mensais do Associados da própria conta (Chrome, com o sim), guardar fora do repositório, consolidar num arquivo único e analisar o que vende e o que caiu (`scripts/amazon-relatorios.ts`) |
 
 Skills locais do repo (fora do marketplace): `backup-monorepo`,
 `painel-launchagent`, `site-criar-workflow` — procedimento de máquina, não editorial.

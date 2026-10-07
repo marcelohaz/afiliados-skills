@@ -1,6 +1,6 @@
 ---
 name: amazon-relatorios-analisar
-description: "Baixa os relatórios mensais (CSV) do Associados Amazon da própria conta pelo Claude in Chrome, guarda cada mês na máquina da pessoa, consolida tudo nos nossos CSVs (meses, produtos, IDs, categorias, tipos de produto) e analisa o que vende, o que caiu e desde quando. Use quando pedirem para baixar, atualizar, consolidar ou analisar os relatórios ou CSVs da Amazon, ou na rodada mensal (vazio, `baixar AAAA-MM...`, `consolidar` ou `analisar`). Baixa só com o sim da pessoa; ganho nunca vai para o repositório nem para recado."
+description: "Baixa os relatórios mensais (CSV) do Associados Amazon da própria conta pelo Claude in Chrome, guarda cada mês na máquina da pessoa, consolida tudo num arquivo único nosso (meses, produtos, IDs, categorias, tipos de produto) e analisa o que vende, o que caiu e desde quando. Use quando pedirem para baixar, atualizar, consolidar ou analisar os relatórios ou CSVs da Amazon, ou na rodada mensal (vazio, `baixar AAAA-MM...`, `consolidar` ou `analisar`). Baixa só com o sim da pessoa; ganho nunca vai para o repositório nem para recado."
 ---
 
 ## Parse de input
@@ -11,10 +11,10 @@ description: "Baixa os relatórios mensais (CSV) do Associados Amazon da própri
 
 # Relatórios da Amazon: baixar, consolidar e analisar
 
-O painel do Associados esconde o que tem pouco tráfego e só deixa baixar os relatórios de comissões **um mês por vez**. Esta skill guarda cada mês como veio, monta os nossos próprios CSVs consolidados e lê o conjunto. O programa é `scripts/amazon-relatorios.ts`; os dados ficam em `~/Backups/afiliados/amazon-relatorios/{StoreID}/` (ou `$AMAZON_RELATORIOS_DIR`), fora do repositório:
+O painel do Associados esconde o que tem pouco tráfego e só deixa baixar os relatórios de comissões **um mês por vez**. Esta skill guarda cada mês como veio, monta o nosso arquivo único consolidado e lê o conjunto. O programa é `scripts/amazon-relatorios.ts`; os dados ficam em `~/Backups/afiliados/amazon-relatorios/{StoreID}/` (ou `$AMAZON_RELATORIOS_DIR`), fora do repositório:
 
-- `brutos/AAAA-MM/`: `linked-product.csv`, `tracking-id.csv`, `category.csv`, `top-sellers.csv`, os `.zip` originais e `info.json` (quando baixou).
-- `consolidado/amazon-consolidado.csv`: o arquivo único, no padrão das planilhas em português (ponto e vírgula entre colunas, vírgula nas casas decimais). A coluna `nivel` diz o que é cada linha: `mês`, `tipo de produto`, `categoria`, `ID`, `produto` (mês × produto), `produto (período todo)` (pico, quanto tem hoje do pico, ganho total) e `mais vendido`. Célula vazia = não vale para o nível ou foi escondida pela Amazon (a coluna `ganho_escondido` diz qual). Gerado de novo a cada `consolidar`; não editar à mão. A pasta da conta tem um `LEIA-ME.md` com cada coluna.
+- `brutos/AAAA-MM/`: `linked-product.csv`, `tracking-id.csv`, `category.csv`, `top-sellers.csv`, os `.zip` originais e `info.json` (quando foi pedido e baixado).
+- `consolidado/amazon-consolidado.csv`: o arquivo único, no padrão das planilhas em português (ponto e vírgula entre colunas, vírgula nas casas decimais). A coluna `nivel` diz o que é cada linha: `mês`, `tipo de produto`, `categoria`, `ID`, `produto` (mês × produto), `produto (período todo)` (pico, quanto tem hoje do pico, ganho total) e `mais vendido`. Célula vazia = não vale para o nível ou foi escondida pela Amazon (a coluna `ganho_escondido` diz qual). Na linha de mês, `situacao_do_mes` e `dias` dizem se o mês está inteiro: o mais antigo pode começar no meio (a Amazon já tinha apagado o começo), e o baixado até o dia 10 do mês seguinte ainda muda. A análise só usa mês inteiro nas médias. Gerado de novo a cada `consolidar`; não editar à mão. A pasta da conta tem um `LEIA-ME.md` com cada coluna.
 - `analises/AAAA-MM-DD.md`: a análise de cada rodada.
 
 Caso-origem (07/10/2026): o Marcelo baixou 21 meses (jan/2025 a set/2026) e pediu "o nosso próprio csv, com tudo organizado e consolidado", para baixar de tempo em tempo e a Bárbara rodar na conta dela.
@@ -29,7 +29,7 @@ Caso-origem (07/10/2026): o Marcelo baixou 21 meses (jan/2025 a set/2026) e pedi
 
 ## Fase 0 — o que falta
 
-`bun scripts/amazon-relatorios.ts faltando --loja={StoreID}` lista os meses sem arquivo até o último mês completo e avisa quando o último mês foi baixado cedo (menos de 10 dias depois do fim: envios e devoluções ainda mudam o número). **A Amazon só guarda os últimos 2 anos**, na tela e no download (em 07/10/2026 a data mínima era 07/10/2024), e o dia mais antigo some a cada dia que passa. Por isso o que baixamos é o único histórico que fica. Na primeira vez da conta, baixe tudo desde a data mínima, começando pelo mês mais antigo: o período personalizado desse mês começa na data mínima, não no dia 1. `faltando` mostra a data mínima e, para conta nova, já começa nesse mês (`--desde=AAAA-MM` muda o começo). Mostre a lista e peça o sim.
+`bun scripts/amazon-relatorios.ts faltando --loja={StoreID}` lista, da data mínima até o último mês que já acabou, os meses sem arquivo e os baixados até o dia 10 do mês seguinte (envios e devoluções ainda mudam o número: baixar de novo). **A Amazon só guarda os últimos 2 anos**, na tela e no download (em 07/10/2026 a data mínima era 07/10/2024), e o dia mais antigo some a cada dia que passa. Por isso o que baixamos é o único histórico que fica. Na primeira vez da conta, baixe tudo desde a data mínima, começando pelo mês mais antigo: o período personalizado desse mês começa na data mínima, não no dia 1. `faltando` mostra a data mínima e começa nesse mês, também numa conta que já tem meses guardados (`--desde=AAAA-MM` começa depois). Mostre a lista e peça o sim.
 
 ## Fase 1 — baixar (Claude in Chrome)
 
@@ -49,11 +49,11 @@ Armadilhas vistas: o link às vezes abre uma aba "Opa! Desculpe..." em vez de ba
 
 ## Fase 3 — consolidar
 
-`bun scripts/amazon-relatorios.ts consolidar --loja={StoreID}`. Ele liga cada produto aos sites pelos artigos e páginas de produto do repositório e, quando existe, pelas cópias dos WordPress em `~/Backups/afiliados/wp-export`. O tipo do produto vem da subcategoria da bíblia e, sem bíblia, do nome. Confira a saída: meses, produtos, e a parte dos cliques com tipo conhecido e ligada a algum site.
+`bun scripts/amazon-relatorios.ts consolidar --loja={StoreID}`. Ele liga cada produto aos sites pelos artigos e páginas de produto do repositório e, quando existe, pelas cópias dos WordPress em `~/Backups/afiliados/wp-export`. O tipo do produto vem da subcategoria da bíblia e, sem bíblia, do nome, pela regra que casa mais cedo no texto (o nome do produto vem no começo do título: "Microfone de lapela para celular" é microfone). Confira a saída: meses, produtos, e a parte dos cliques com tipo conhecido e ligada a algum site. Se o tipo `outros` passar de uns 5% dos cliques, veja os maiores no nível `produto (período todo)` e acrescente a regra em `REGRAS_TIPO` do programa (07/10/2026: os Galaxy Book estavam em `outros` e as roçadeiras em `cadeira`, porque "rocadeira" tem "cadeira" dentro).
 
 ## Fase 4 — analisar e relatar
 
-`bun scripts/amazon-relatorios.ts analisar --loja={StoreID} [--meses=3]` grava `analises/AAAA-MM-DD.md` com: mês a mês; últimos meses contra os mesmos do ano anterior; tipos de produto (começo × agora); desde quando cada tipo ficou abaixo da metade sem voltar; o que vende agora; os que mais ganharam e quanto do pico têm hoje; produtos com muitos cliques e nenhuma venda visível (conferir preço e disponibilidade); IDs. Se houver análise anterior em `analises/`, compare e diga o que mudou desde ela.
+`bun scripts/amazon-relatorios.ts analisar --loja={StoreID} [--meses=3]` grava `analises/AAAA-MM-DD.md` com: mês a mês, com a situação de cada mês; últimos meses contra os mesmos do ano anterior; tipos de produto (começo × agora); desde quando cada tipo ficou abaixo da metade sem voltar; o que vende agora; os que mais ganharam e quanto do pico têm hoje; produtos com muitos cliques e nenhuma venda visível (conferir preço e disponibilidade); IDs. Se houver análise anterior em `analises/`, compare e diga o que mudou desde ela.
 
 O relatório no chat, em linguagem simples: o que aconteceu (3 ou 4 frases), os principais sinais com números e o que os dados não separam. Cuidados ao ler:
 
