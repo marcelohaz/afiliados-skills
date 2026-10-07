@@ -140,6 +140,10 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
 
 7. **Verificar se há reviews que citam o ASIN** (anti-duplicate): `Grep` por `asin:.*{ASIN}` em `sites/{site}/src/content/reviews/*.mdx`. Se houver, leia o `fullReview` daquele produto-no-artigo pra saber o ÂNGULO daquele texto — sua página individual tem que ter ângulo DIFERENTE.
 
+   **E o mesmo modelo com OUTRO ASIN (canon 07/10/2026):** rode `bun scripts/asins-equivalentes.ts {site} --slug={slug}`. Ele lista produto de artigo que é o mesmo modelo desta página com outro ASIN, quase sempre a outra voltagem (os artigos portados do WordPress usam um ASIN e a bíblia, muitas vezes, o da outra). Para cada candidato, confira pelo nome e pela bíblia que é o mesmo aparelho (o script compara código de modelo e erra: Tab A11 × A11+, robô S40 × S40C, caixa CM-1500 × CM-150 são produtos diferentes). Confirmado:
+   - leia o `fullReview` daquele produto no artigo, como acima;
+   - grave no frontmatter, logo abaixo de `asin:`, a linha `asinsEquivalentes: ["{ASIN do artigo}"]`. Sem ela o artigo não liga para esta página e o painel conta os dois lados como pendência. A página continua vendendo o próprio `asin`; não troque o ASIN de nenhum dos dois. Regra em `packages/ui/src/utils/pagina-de-produto.ts`.
+
 8. **Gerar 6 campos** seguindo as regras detalhadas em "Os 6 campos" abaixo.
 
 9. **Validar mentalmente** antes de salvar:
@@ -160,7 +164,7 @@ O `.mdx` da página já deve existir como **stub** com frontmatter mínimo (asin
     ```
 
 11. **Write `.mdx`**: monta o novo conteúdo:
-    - **Frontmatter**: preserva todos os campos base existentes (asin, name, image, imageAlt, category, categorySlug, publishDate, contentLocked se existir). **Adiciona** os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview).
+    - **Frontmatter**: preserva todos os campos base existentes (asin, asinsEquivalentes, name, image, imageAlt, category, categorySlug, publishDate, descontinuado, schemaPrice, rating e contentLocked, os que existirem). **Adiciona** os 6 campos editoriais (subtitle, shortDescription, pros, cons, specs, fullReview), e `asinsEquivalentes` quando o passo 7 confirmou par.
     - **Body**: remove o marker de stub (`{/* STUB GERADO POR ... [TODO: preencher] */}`). Body fica vazio ou com 1 linha em branco.
 
       **O texto vai no campo `fullReview:` do frontmatter, nunca no corpo do `.mdx`.** Corpo de página de produto não renderiza (o `SlugPage` só monta `<Content />` quando `type === 'review'`): resenha no corpo vira página no ar sem resenha, com build e painel sem acusar. Ao reescrever uma página que já existe, apague o corpo; não basta preencher o campo.
