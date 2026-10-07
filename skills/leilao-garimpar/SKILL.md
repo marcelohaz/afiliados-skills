@@ -15,10 +15,12 @@ description: "Analisa a lista \"processo de liberação\" do Registro.br e devol
    A lista **competitiva** (poucas centenas de domínios; o Registro.br chama de processo competitivo) vai com `'competitivo'` no lugar de `'liberacao'`, para `leiloes/competitivo/`. O cabeçalho das duas é igual: quem separa é o tamanho e o nome do arquivo.
 2. **Sem arquivo:** veja a lista mais recente guardada:
    ```bash
+   cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
    bun -e "import { listaGuardada } from '../shared-scripts/leiloes/lista.ts'; const l = listaGuardada('liberacao'); console.log(l ? l.de + ' a ' + l.ate + ' ' + l.caminho : 'nenhuma')"
    ```
    - Período que começou há 25 dias ou menos é a lista do mês (a janela do R&R já baixou): use esse caminho e rode a Fase 2.
-   - Senão, rode `bun scripts/refresh-leilao-afiliados.ts`: ele baixa a lista, guarda na pasta se o período for novo e já roda o processador (a Fase 2 fica feita). Use o caminho que ele imprime ("guardada em" ou "já estava guardada em"). Se o período devolvido já tem run no `historico-curado.json`, a lista nova ainda não saiu (o período começa na 2ª quarta-feira do mês): diga isso ao Marcelo em vez de refazer a análise.
+   - Senão, rode `bun scripts/refresh-leilao-afiliados.ts`: ele baixa a lista, guarda na pasta se o período for novo e já roda o processador (a Fase 2 fica feita). Use o caminho que ele imprime ("guardada em" ou "já estava guardada em").
+   - **Período já encerrado (`<ATE>` antes de hoje), venha a lista da pasta ou do download:** a janela dessa lista acabou, e o Registro.br continua servindo a anterior até publicar a nova (o período novo começa na 2ª quarta-feira do mês; o arquivo sai uns 2 dias antes). Diga isso ao Marcelo, com a data provável da próxima, e não refaça a análise de uma lista encerrada, a não ser que ele peça. Caso de 07/10/2026: o endereço ainda servia a lista de 09 a 16/09.
    - Não pare para pedir o arquivo (canon 2026-08-15).
 
 Guarde `<DE>` e `<ATE>` (as datas do período, `AAAA-MM-DD`): os arquivos de achados usam as duas.
@@ -132,7 +134,7 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
    git -C ../shared-scripts add leiloes/ && git -C ../shared-scripts commit -m "leiloes: <o que entrou> (<DE> a <ATE>)" -- leiloes/
    git -C ../shared-scripts pull --rebase && git -C ../shared-scripts push
    ```
-   Se o `pull --rebase` recusar por arquivo de outra janela em edição, não use `git stash`: espere a outra janela ou avise o Marcelo. Confira com `git -C ../shared-scripts log --oneline -1` e `git -C ../shared-scripts ls-remote origin HEAD`.
+   Sem nada novo em `leiloes/` (lista que já estava guardada e nenhum achado), o git responde que não há o que commitar, e está certo. Se o `pull --rebase` recusar por arquivo de outra janela em edição, não use `git stash`: espere a outra janela ou avise o Marcelo. Confira com `git -C ../shared-scripts log --oneline -1` e `git -C ../shared-scripts ls-remote origin HEAD`.
 
 ## Regras invioláveis
 - **NUNCA registrar/comprar** — só recomendar. Janela é curta: entregar no mesmo dia.
