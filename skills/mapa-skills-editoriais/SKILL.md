@@ -1,6 +1,6 @@
 ---
 name: mapa-skills-editoriais
-description: Índice COMPLETO das 27 skills do marketplace afiliados-skills — qual usar para cada objeto (bíblia, página de produto, artigo e suas partes, categoria, institucionais, linkagem, clone, lineup, migração, leilão, lista da Amazon), com pré-requisitos de painel e forma de invocação. Invoque quando estiver em dúvida sobre QUAL skill chamar. Não substitui as skills em si — é o índice delas.
+description: Índice COMPLETO das 28 skills do marketplace afiliados-skills — qual usar para cada objeto (bíblia, página de produto, artigo e suas partes, categoria, institucionais, linkagem, clone, lineup, migração, leilão, lista e relatórios da Amazon), com pré-requisitos de painel e forma de invocação. Invoque quando estiver em dúvida sobre QUAL skill chamar. Não substitui as skills em si — é o índice delas.
 ---
 
 # Mapa das skills editoriais
@@ -78,11 +78,13 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 | `site-portar-wordpress` | portar WordPress para Astro com o mesmo texto e virar a cadeia inteira para um herdeiro (decisão, conversão, dados de produto, virada, painel, medição de 8 semanas; domínio novo só com decisão do Marcelo) |
 | `leilao-garimpar` | analisar a lista mensal de liberação do Registro.br (read-only; registro é decisão do Marcelo) |
 | `amazon-lista-sites-auditar` | recomendar quem entra/sai da Lista de Sites do Associados (teto de 50 por conta; read-only na Amazon, quem aplica é o humano) |
+| `amazon-relatorios-analisar` | baixar os CSVs mensais do Associados da própria conta (Chrome, com o sim), guardar fora do repositório, consolidar nos nossos CSVs e analisar o que vende e o que caiu (`scripts/amazon-relatorios.ts`) |
 
 Skills locais do repo (fora do marketplace): `backup-monorepo`,
 `painel-launchagent`, `site-criar-workflow` — procedimento de máquina, não editorial.
 E `ahrefs-backlinks` (backlinks por endereço no Ahrefs grátis, para onde cada link
-chega hoje e o conserto dos que caem na home; usa o Ahrefs logado no Chrome do Marcelo).
+chega hoje e o conserto dos que caem na home; usa o Ahrefs logado no Chrome do Marcelo)
+e `amazon-relatorios-ler` (leitura rápida da tela de relatórios do Associados, no Chrome do Marcelo).
 
 ## Por que via Skill tool e não os botões do painel
 
