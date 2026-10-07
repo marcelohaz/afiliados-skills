@@ -14,7 +14,7 @@ description: "Baixa os relatórios mensais (CSV) do Associados Amazon da própri
 O painel do Associados esconde o que tem pouco tráfego e só deixa baixar os relatórios de comissões **um mês por vez**. Esta skill guarda cada mês como veio, monta os nossos próprios CSVs consolidados e lê o conjunto. O programa é `scripts/amazon-relatorios.ts`; os dados ficam em `~/Backups/afiliados/amazon-relatorios/{StoreID}/` (ou `$AMAZON_RELATORIOS_DIR`), fora do repositório:
 
 - `brutos/AAAA-MM/`: `linked-product.csv`, `tracking-id.csv`, `category.csv`, `top-sellers.csv`, os `.zip` originais e `info.json` (quando baixou).
-- `consolidado/`: `meses.csv`, `produtos.csv` (mês × produto), `produtos-resumo.csv` (um por produto: pico, hoje, ganho), `ids.csv`, `categorias.csv`, `tipos.csv` (mês × tipo de produto), `mais-vendidos.csv`. Célula vazia = escondida pela Amazon. Gerado de novo a cada `consolidar`; não editar à mão.
+- `consolidado/amazon-consolidado.csv`: o arquivo único, no padrão das planilhas em português (ponto e vírgula entre colunas, vírgula nas casas decimais). A coluna `nivel` diz o que é cada linha: `mês`, `tipo de produto`, `categoria`, `ID`, `produto` (mês × produto), `produto (período todo)` (pico, quanto tem hoje do pico, ganho total) e `mais vendido`. Célula vazia = não vale para o nível ou foi escondida pela Amazon (a coluna `ganho_escondido` diz qual). Gerado de novo a cada `consolidar`; não editar à mão. A pasta da conta tem um `LEIA-ME.md` com cada coluna.
 - `analises/AAAA-MM-DD.md`: a análise de cada rodada.
 
 Caso-origem (07/10/2026): o Marcelo baixou 21 meses (jan/2025 a set/2026) e pediu "o nosso próprio csv, com tudo organizado e consolidado", para baixar de tempo em tempo e a Bárbara rodar na conta dela.
