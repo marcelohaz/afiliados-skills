@@ -29,7 +29,7 @@ Caso-origem (07/10/2026): o Marcelo baixou 21 meses (jan/2025 a set/2026) e pedi
 
 ## Fase 0 — o que falta
 
-`bun scripts/amazon-relatorios.ts faltando --loja={StoreID}` lista os meses sem arquivo até o último mês completo e avisa quando o último mês foi baixado cedo (menos de 10 dias depois do fim: envios e devoluções ainda mudam o número). Primeira vez da conta: pergunte desde quando baixar e rode com `--desde=AAAA-MM`. Mostre a lista e peça o sim.
+`bun scripts/amazon-relatorios.ts faltando --loja={StoreID}` lista os meses sem arquivo até o último mês completo e avisa quando o último mês foi baixado cedo (menos de 10 dias depois do fim: envios e devoluções ainda mudam o número). **A Amazon só guarda os últimos 2 anos**, na tela e no download (em 07/10/2026 a data mínima era 07/10/2024), e o dia mais antigo some a cada dia que passa. Por isso o que baixamos é o único histórico que fica. Na primeira vez da conta, baixe tudo desde a data mínima, começando pelo mês mais antigo: o período personalizado desse mês começa na data mínima, não no dia 1. `faltando` mostra a data mínima e, para conta nova, já começa nesse mês (`--desde=AAAA-MM` muda o começo). Mostre a lista e peça o sim.
 
 ## Fase 1 — baixar (Claude in Chrome)
 
