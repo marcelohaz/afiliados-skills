@@ -118,17 +118,23 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 ## Fase 8 — Achados para o R&R e estado ao terminar
 
 1. **Grave os achados para o R&R** em `caminhoDosAchados('<DE>', '<ATE>', 'afiliados')` (`../shared-scripts/leiloes/achados/<DE>_a_<ATE>-do-afiliados-para-o-rr.md`; crie a pasta `achados/` se faltar): os domínios de **serviço local** que apareceram na análise e parecem bons para rank and rent, ou seja, serviço + cidade (chaveiro, guincho, encanador, vidraçaria, desentupidora, dedetização, eletricista, ar-condicionado, conserto de eletrodoméstico e parecidos). Uma linha cada: `- dominio.com.br — por quê`. **Sem análise a fundo:** o funil do R&R já cobre os nichos dele; anote o que chamar atenção (serviço e cidade claros, curto, sem número nem hífen). Nome de empresa (`chaveirogomes`) não entra. Sem nenhum, não grave o arquivo.
-   Passada rápida para achar o que olhar (não é funil; em 09/2026 deu 204 domínios, a maioria nome de empresa):
+   Passada rápida para achar o que olhar (não é funil). Os nichos vêm do `detectNicho` de `shared-scripts/domains/nicho-detect.ts`, a fonte única do R&R: a passada acompanha sozinha quando o R&R abre nicho novo. Não escreva lista de serviços à mão. Em 09/2026 deu 268 domínios em 27 nichos, a maioria nome de empresa:
    ```bash
-   python3 - <<'EOF'
-   import re
-   C='<CAMINHO>'
-   doms=[l.strip().lower() for l in open(C,'rb').read().decode('latin1').replace('\r','').split('\n') if l.strip() and not l.startswith('#')]
-   servicos=['chaveiro','guincho','reboque','encanador','desentupidora','desentupimento','vidracaria','vidraceiro','dedetizadora','dedetizacao','eletricista','arcondicionado','refrigeracao','conserto','assistenciatecnica','maridodealuguel','serralheria','cacamba']
-   achados=sorted((len(d),d) for d in doms if d.endswith('.com.br') and re.fullmatch(r'[a-z]+',d[:-7]) and len(d)<=35 and any(d.startswith(s) and len(d)-7-len(s)>=4 for s in servicos))
-   print(len(achados)); [print(d) for _,d in achados]
-   EOF
+   bun -e "
+   import { detectNicho } from '../shared-scripts/domains/nicho-detect.ts';
+   const doms = Buffer.from(await Bun.file('<CAMINHO>').arrayBuffer()).toString('latin1').replace(/\r/g, '').split('\n').map(l => l.trim().toLowerCase()).filter(l => l && !l.startsWith('#'));
+   const porNicho = new Map<string, string[]>();
+   for (const d of doms) {
+     const sld = d.endsWith('.com.br') ? d.slice(0, -7) : '';
+     if (!/^[a-z]+$/.test(sld) || sld.length > 28) continue;
+     const n = detectNicho(sld);
+     if (n.slug === 'outros' || sld.length - n.slug.length < 4) continue;
+     porNicho.set(n.label, [...(porNicho.get(n.label) ?? []), d]);
+   }
+   for (const [l, ds] of [...porNicho].sort((a, b) => b[1].length - a[1].length)) console.log(ds.length, l + ':', ds.sort((a, b) => a.length - b.length).join(' '));
+   "
    ```
+   Ruído conhecido: começo curto (`gas`, `grama`, `gesso`) pega palavra que não é o serviço (gastronomia, a cidade de Gramado); começo que também é produto (`geladeira`, `arcondicionado`, `maquinadelavar`) traz domínio de afiliado, como `geladeirasamsung`, que é candidato deste garimpo e não vai para o R&R.
 2. **Commit e push da `shared-scripts` só com os arquivos de `leiloes/`** (lista nova, lista competitiva guardada, achados), com `git pull --rebase` antes do push, porque as duas janelas gravam lá:
    ```bash
    git -C ../shared-scripts add leiloes/ && git -C ../shared-scripts commit -m "leiloes: <o que entrou> (<DE> a <ATE>)" -- leiloes/
