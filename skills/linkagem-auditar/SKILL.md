@@ -8,7 +8,7 @@ description: "Audita e melhora a linkagem interna de um site inteiro: roda os sc
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida — botão roxo "📋 Copiar skill" da página linkagem):
-- `https://painel.melhorserum.com.br/linkagem-melhorimpressora.html`
+- `https://painel.melhordrone.com.br/linkagem-melhorimpressora.html`
 - Extrai `site` via regex `linkagem-([a-z0-9-]+)\.html`
 
 **B) Slug do site direto**:

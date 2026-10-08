@@ -8,7 +8,7 @@ description: "Escreve a meta description SEO de um artigo (campo `description` n
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida — fluxo natural depois de abrir o editor do artigo):
-- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
+- `https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do query string
 
 **B) Args canônicos**:
@@ -263,7 +263,7 @@ Listas, regex e tetos vivem em `docs/painel/_data/chavoes-por-nicho.json`: cite 
 Exemplos válidos do user — modo padrão (sem instrução):
 - "escreve a meta description do melhor-impressora-custo-beneficio do melhorimpressora"
 - "meta description do artigo melhor-impressora-custo-beneficio"
-- "https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "meta description")
+- "https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "meta description")
 
 Exemplos válidos com instrução inline:
 - "escreve a meta description do melhor-impressora-custo-beneficio mais conciso"

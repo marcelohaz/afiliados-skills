@@ -10,7 +10,7 @@ Aceita 2 formatos no $ARGUMENTS:
 **`PIPELINE=yes`** (opcional, canon 2026-08-15): passado pela clone/fila. Efeito: aplica óbvio E julgamento (auto-fix, máx 3 rodadas), não espera aprovação, não encerra o turno para perguntar. Sem a flag, propor→aprovar normal.
 
 **A) URL do painel** (forma preferida):
-- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=impressora-barata`
+- `https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=impressora-barata`
 - Extrai `site` e `slug` do query string
 
 **B) Args canônicos**:

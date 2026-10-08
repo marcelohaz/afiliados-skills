@@ -8,7 +8,7 @@ description: Audita a página individual de produto de um site contra a bíblia,
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida):
-- `https://painel.melhorserum.com.br/editor-produto.html?site=melhorimpressora&slug=hp-laser-107w`
+- `https://painel.melhordrone.com.br/editor-produto.html?site=melhorimpressora&slug=hp-laser-107w`
 - Extrai `site` e `slug` do query string
 
 **B) Args canônicos**:

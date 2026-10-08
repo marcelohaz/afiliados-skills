@@ -996,9 +996,9 @@ nasce publicado.
 Mesmos endpoints dos botões do painel (`make-reviews-stub` chamado em `docs/painel/site-detail.js`, `add-products-stub` em `docs/painel/editor-artigo.js`). O resultado é indistinguível de ter feito na mão.
 
 ```bash
-# host + auth: os mesmos do scripts/painel-vps-pull.sh — PAINEL_URL (default https://painel.melhorserum.com.br)
+# host + auth: os mesmos do scripts/painel-vps-pull.sh — PAINEL_URL (default https://painel.melhordrone.com.br)
 # e Basic Auth com PAINEL_USER/PAINEL_PASS lidos de .env.painel-skills (gitignored, cada pessoa tem o seu)
-source .env.painel-skills; PAINEL_URL="${PAINEL_URL:-https://painel.melhorserum.com.br}"
+source .env.painel-skills; PAINEL_URL="${PAINEL_URL:-https://painel.melhordrone.com.br}"
 # ⚠ base64 à mão, NUNCA `curl -u` (canon 2026-09-05): o `-u` parte a credencial no
 # PRIMEIRO `:`, então senha com `:` autentica errado. O painel-vps-pull.sh já
 # documentava isso; este bloco tinha herdado o `-u` e era bug latente.

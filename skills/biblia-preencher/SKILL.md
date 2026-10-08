@@ -8,7 +8,7 @@ description: Preenche os 7 campos de curadoria da bíblia v2 de UM produto a par
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida — copia da barra de endereço):
-- `https://painel.melhorserum.com.br/editor-v2.html?asin=B07S61ZJCS`
+- `https://painel.melhordrone.com.br/editor-v2.html?asin=B07S61ZJCS`
 - Extrai ASIN do query string `?asin=...`
 
 **B) Args canônicos** (forma direta):

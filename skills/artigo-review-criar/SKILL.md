@@ -8,7 +8,7 @@ description: Cria o review editorial de UM produto dentro de um artigo comparati
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida — fluxo natural depois de adicionar produtos via "+ Adicionar produto"):
-- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
+- `https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do artigo
 
 **Comportamento quando URL é fornecida:**

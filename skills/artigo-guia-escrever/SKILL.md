@@ -8,7 +8,7 @@ description: Escreve do zero o guia "Como escolher" de um artigo comparativo (ca
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida — fluxo natural depois de abrir o editor):
-- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
+- `https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do query string
 
 **B) Args canônicos**:
@@ -918,7 +918,7 @@ Verificação antes de salvar: na seção Conclusão, nenhum `<a href="/{slug}/"
 Exemplos válidos do user — modo padrão:
 - "escreve o guia do melhor-impressora-custo-beneficio do melhorimpressora"
 - "gera o guideContent do artigo X do site Y"
-- "https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "guia")
+- "https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "guia")
 
 Exemplos com instrução inline:
 - "escreve o guia do X mais conciso"

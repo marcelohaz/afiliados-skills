@@ -10,7 +10,7 @@ Aceita 2 formatos no $ARGUMENTS:
 **`PIPELINE=yes`** (opcional, canon 2026-08-15): passado pela `artigo-clonar-em-massa`/`artigo-clonar-fila`. Efeito: modo full-auto — aplica os fixes **óbvios E de julgamento** (auto-fix, re-audita, máx 3 rodadas), não espera aprovação, não encerra o turno para perguntar; o que não convergir vai como "⚠ não convergiu" no relatório. Sem a flag, vale o propor→aprovar normal.
 
 **A) URL do painel** (forma preferida):
-- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
+- `https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do artigo
 
 **B) Args canônicos**:

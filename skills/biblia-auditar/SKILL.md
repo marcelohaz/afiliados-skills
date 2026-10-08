@@ -8,7 +8,7 @@ description: Audita e corrige a bíblia v2 de UM produto (docs/biblias-v2/<ASIN>
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida):
-- `https://painel.melhorserum.com.br/editor-v2.html?asin=B07S61ZJCS`
+- `https://painel.melhordrone.com.br/editor-v2.html?asin=B07S61ZJCS`
 - Extrai ASIN do query string
 
 **B) Args canônicos**:

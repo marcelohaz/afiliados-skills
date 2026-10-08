@@ -8,7 +8,7 @@ description: Escreve a descrição HTML (2 a 3 parágrafos <p>) do topo de uma p
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida — fluxo natural depois de abrir o editor):
-- `https://painel.melhorserum.com.br/editor-categoria.html?site=escritoriocasa&slug=impressoras`
+- `https://painel.melhordrone.com.br/editor-categoria.html?site=escritoriocasa&slug=impressoras`
 - Extrai `site` e `slug` (= categorySlug) do query string
 
 **B) Args canônicos**:
@@ -398,7 +398,7 @@ Schema do painel rejeita < 30 chars na sanitização, mas o canônico exige 100-
 Exemplos válidos do user — modo padrão:
 - "escreve a descrição da categoria impressoras do escritoriocasa"
 - "categoria impressoras do escritoriocasa"
-- "https://painel.melhorserum.com.br/editor-categoria.html?site=escritoriocasa&slug=impressoras" (com hint "descrição")
+- "https://painel.melhordrone.com.br/editor-categoria.html?site=escritoriocasa&slug=impressoras" (com hint "descrição")
 
 Exemplos com instrução inline:
 - "escreve a descrição da categoria impressoras mais conciso"

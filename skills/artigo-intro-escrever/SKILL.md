@@ -8,7 +8,7 @@ description: Escreve a introdução de um artigo comparativo (o markdown logo de
 Aceita 2 formatos no $ARGUMENTS:
 
 **A) URL do painel** (forma preferida — fluxo natural depois de abrir o editor):
-- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
+- `https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do query string
 
 **B) Args canônicos**:
@@ -556,7 +556,7 @@ Exemplo é régua de forma. Se a intro compartilha qualquer frase de 6 ou mais p
 Exemplos válidos do user — modo padrão:
 - "escreve a intro do artigo melhor-impressora-custo-beneficio do melhorimpressora"
 - "intro do artigo melhor-impressora-custo-beneficio"
-- "https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "intro")
+- "https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "intro")
 
 Exemplos com instrução inline:
 - "escreve a intro do melhor-impressora-custo-beneficio mais conciso"

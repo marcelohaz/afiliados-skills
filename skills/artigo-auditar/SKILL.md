@@ -10,7 +10,7 @@ Aceita 2 formatos no $ARGUMENTS:
 **`PIPELINE=yes`** (opcional, canon 2026-08-15): passado pela `artigo-clonar-em-massa`. Efeito: o relatório é entregue à clone (que faz o auto-fix dirigido e re-audita), sem esperar aprovação humana e sem encerrar o turno para perguntar. Fora de pipeline, comportamento normal (read-only + relatório).
 
 **A) URL do painel** (forma preferida):
-- `https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
+- `https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do query string
 
 **B) Args canônicos**:
@@ -906,7 +906,7 @@ A diferença chave dessa skill é o output FULL inline (não apenas summary + pa
 Exemplos válidos do user:
 - "audita o artigo melhor-impressora-custo-beneficio do melhorimpressora"
 - "audita pra travar o melhor-impressora-custo-beneficio"
-- "https://painel.melhorserum.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "audita")
+- "https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio" (com hint "audita")
 
 Args canônico: `Skill(skill="artigo-auditar", args="melhorimpressora/melhor-impressora-custo-beneficio")`
 
