@@ -1,18 +1,24 @@
 ---
 name: leilao-garimpar
-description: "Analisa a lista \"processo de liberação\" do Registro.br e devolve a shortlist de domínios bons para site afiliado de produto físico, mais o alerta de domínios nossos que estão sendo liberados. A lista é a mesma do Rank and Rent e fica guardada em shared-scripts/leiloes; a skill lê os achados que o R&R deixou para o afiliados e grava os de serviço local para o R&R. Use quando o Marcelo mandar a lista do leilão ou pedir o garimpo do leilão (sem arquivo, usa a lista guardada ou baixa e guarda). Só recomenda: registro e compra são do Marcelo. Não é o garimpo de keywords (garimpo-afiliados-loader)."
+description: "Analisa a lista \"processo de liberação\" do Registro.br e devolve a shortlist de domínios bons para site afiliado de produto físico, mais o alerta de domínios nossos que estão sendo liberados. A lista é a mesma do Rank and Rent e fica guardada em shared-scripts/leiloes (uma rotina diária no GitHub guarda as listas e o desfecho de cada janela); a skill mostra o que ficou livre da lista anterior, confere quantas vezes cada candidato já apareceu, lê os achados que o R&R deixou para o afiliados e grava os de serviço local para o R&R. Use quando o Marcelo mandar a lista do leilão ou pedir o garimpo do leilão (sem arquivo, usa a lista guardada ou baixa e guarda). Só recomenda: registro e compra são do Marcelo. Não é o garimpo de keywords (garimpo-afiliados-loader)."
 ---
 
 # Garimpo da lista de leilão afiliado (processo de liberação Registro.br)
 
 **Entrada: a lista mora em `../shared-scripts/leiloes/`** (pasta irmã do repositório, repo `marcelohaz/shared-scripts`), UMA cópia para o afiliados e o Rank and Rent (decisão do Marcelo, 07/10/2026; ver `shared-scripts/leiloes/LEIA-ME.md`). O Registro.br publica uma lista por mês no mesmo endereço, que é sobrescrito: a lista que não foi guardada lá não se baixa mais. As funções são as de `shared-scripts/leiloes/lista.ts`; não mude nome nem parâmetro delas (o R&R usa as mesmas).
 
+**Desde 13/10/2026 uma rotina diária no GitHub** (`shared-scripts/.github/workflows/leiloes-diario.yml`) guarda sozinha a lista principal e a competitiva e, depois de cada janela, grava o desfecho dos domínios acompanhados. Ela grava no GitHub, então o Mac só vê depois de puxar.
+
+0. **Puxe a pasta comum antes de tudo** (sem `git stash`: as duas janelas e a rotina gravam lá; se recusar por arquivo de outra janela em edição, avise o Marcelo e siga com o que há no disco):
+   ```bash
+   git -C ../shared-scripts pull --rebase -q && git -C ../shared-scripts log --oneline -1
+   ```
 1. **O Marcelo mandou um arquivo** ($ARGUMENTS): guarde antes de analisar, com os bytes como vieram, e use o caminho impresso como `<CAMINHO>`:
    ```bash
    cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
    bun -e "import { guardarLista } from '../shared-scripts/leiloes/lista.ts'; const r = guardarLista('liberacao', new Uint8Array(await Bun.file('<ARQUIVO>').arrayBuffer())); console.log(r.jaExistia ? 'já estava guardada:' : 'guardada:', r.caminho, r.de, r.ate)"
    ```
-   A lista **competitiva** (poucas centenas de domínios; o Registro.br chama de processo competitivo) vai com `'competitivo'` no lugar de `'liberacao'`, para `leiloes/competitivo/`. O cabeçalho das duas é igual: quem separa é o tamanho e o nome do arquivo.
+   A lista **competitiva** (poucas centenas de domínios; o Registro.br chama de processo competitivo) vai com `'competitivo'` no lugar de `'liberacao'`, para `leiloes/competitivo/`. O cabeçalho das duas é igual: quem separa é o tamanho e o nome do arquivo. Ela é um pedaço da principal: os domínios disputados, que voltam à lista mês após mês (em 10/2026, 151 dos 152 já estavam nas de julho e setembro; o arcondicionados.com.br é um deles). A rotina diária guarda as duas; à mão, `baixarListaCompetitiva()`.
 2. **Sem arquivo:** veja a lista mais recente guardada:
    ```bash
    cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
@@ -36,6 +42,24 @@ Garimpo (`garimpo-afiliados-loader`) = você define keyword, sistema checa via W
 - **Encoding Latin-1 (ISO-8859) + CRLF.** Ler em Python/bun com `latin1` e tirar `\r`. **NUNCA usar grep do macOS nesse arquivo** (BSD grep trata como binário e devolve vazio em SILÊNCIO — mordeu o R&R em 2026-06-10; aqui o CRLF também quebra `$` no grep). Os scripts já tratam isso; varredura ad-hoc = Python/bun.
 - Confirmar header `# Processo de liberação` + período + contagem plausível (~110-130k).
 - **Se NÃO tiver esse header** → é garimpo (lista de keywords), não leilão → PARA e avisa.
+
+### 1.0 — Desfecho da janela anterior (vai no TOPO do relatório)
+A rotina diária consulta no Registro.br, depois de cada janela, os domínios que os dois projetos acompanharam (os arquivos `candidatos/` e `achados/` daquele período) e grava em `leiloes/desfecho/{de}_a_{ate}.json`. Leia a última consulta da lista anterior:
+```bash
+bun -e "
+import { listaGuardada, desfechoGuardado } from '../shared-scripts/leiloes/lista.ts';
+import { readdirSync } from 'node:fs';
+const nomes = readdirSync('../shared-scripts/leiloes/liberacao').filter(n => n.endsWith('.txt')).sort();
+const ant = nomes.at(-2)?.match(/_(\d{4}-\d{2}-\d{2})_a_(\d{4}-\d{2}-\d{2})/);
+const d = ant && desfechoGuardado(ant[1], ant[2]);
+if (!d) { console.log('sem desfecho da lista anterior', ant?.slice(1)); process.exit(0); }
+const c = d.consultas.at(-1)!; const por = {};
+for (const [dom, r] of Object.entries(c.resultados)) (por[r.situacao] ??= []).push(dom + ' (' + r.origem.join(', ') + ')');
+console.log('desfecho de', d.periodo.de, 'a', d.periodo.ate, 'consultado em', c.em); for (const [s, l] of Object.entries(por)) console.log(s + ':', l.join(' '));"
+```
+- **"livre" (código 0) é o que importa:** ninguém pegou e dá para registrar agora, pelo preço normal. Liste no topo, com a origem (afiliados, achado do R&R...). Registro é decisão do Marcelo.
+- Código que não está em `SITUACAO_REGISTRO` vem gravado como "código N": diga qual apareceu e em quais domínios, para descobrir o que é.
+- Sem arquivo de desfecho com a lista anterior já encerrada há mais de 1 dia: a rotina não rodou ou não havia o que consultar. Se `dominiosAcompanhados('<DE_ANT>', '<ATE_ANT>').size` for 0 (nenhum arquivo de candidatos nem de achados daquele período; vale para as listas de antes de 10/2026), não há desfecho a registrar: diga isso e siga. Senão, rode à mão `bun -e "import { registrarDesfecho } from '../shared-scripts/leiloes/lista.ts'; console.log(await registrarDesfecho('<DE_ANT>', '<ATE_ANT>'))"` (uns 2 segundos por domínio) e envie na Fase 8.
 
 ### 1.1 — Achados que o R&R deixou para o afiliados
 ```bash
@@ -83,10 +107,20 @@ controle positivo conhecido na mesma rodada — o `remarks: truncated` aparece n
 Medido em 07/09/2026: **8 domínios nossos** (conta Ozéia, todos expirados em abril, sem site) estavam
 na lista e teriam passado batido. Dá pra renovar no Registro.br até a liberação.
 
-### 4.2 — Recorrência: cruzar também com run NÃO curada
-O flag `↩ recorrente` lê só o `historico-curado.json`. Run processada e **não curada** (havia uma de
-agosto/2026) fica invisível, e repetição vira "novo" no relatório. Antes de comparar, cruze também os
-`candidatos-{periodo}.json` de períodos anteriores — recorrência é sinal (ninguém pegou o domínio).
+### 4.2 — Recorrência: pelas listas guardadas, não só pelo que foi curado
+O flag `↩ recorrente` lê só o `historico-curado.json`, que não vê run não curada nem mês em que ninguém
+analisou. A fonte é a lista original: `historicoDosDominios()` diz, para cada candidato, em quais listas
+guardadas ele apareceu, na principal e na competitiva (uma chamada com todos os candidatos; ela lê as
+listas inteiras):
+```bash
+bun -e "import { historicoDosDominios } from '../shared-scripts/leiloes/lista.ts';
+const h = historicoDosDominios(process.argv.slice(1));
+for (const [d, x] of Object.entries(h)) if (x.liberacao.length > 1 || x.competitivo.length) console.log(d, 'principal:', x.liberacao.join(' '), '| competitiva:', x.competitivo.join(' ') || '-');" <dominio> <dominio> ...
+```
+Repetição é rara (em 10/2026: dos 765 mil domínios diferentes de 6 listas, 99,4% apareceram uma vez só), então é sinal:
+ninguém pegou o domínio. Na competitiva = disputado (há mais gente querendo). Guardadas: principais de
+01, 02 e 04 a 10/2026 (a de 03/2026 não existe em lugar nenhum) e 70 competitivas de 09/2017 a
+10/2026, com buracos (40 meses sem cópia, a maior parte de 2023 a 2025).
 
 ## Fase 5 — Curadoria (o julgamento — é seu, não do script)
 O helper dá recall; aqui entra a precisão. Para cada candidato:
@@ -135,7 +169,8 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
    "
    ```
    Ruído conhecido: começo curto (`gas`, `grama`, `gesso`) pega palavra que não é o serviço (gastronomia, a cidade de Gramado); começo que também é produto (`geladeira`, `arcondicionado`, `maquinadelavar`) traz domínio de afiliado, como `geladeirasamsung`, que é candidato deste garimpo e não vai para o R&R.
-2. **Commit e push da `shared-scripts` só com os arquivos de `leiloes/`** (lista nova, lista competitiva guardada, achados), com `git pull --rebase` antes do push, porque as duas janelas gravam lá:
+2. **Grave os candidatos do afiliados para o desfecho** em `caminhoDosCandidatos('<DE>', '<ATE>', 'afiliados')` (`../shared-scripts/leiloes/candidatos/<DE>_a_<ATE>-afiliados.txt`): um domínio por linha, os três tiers da shortlist e os domínios nossos da 4.1, com linhas `#` separando os grupos. Só os domínios: a escolha, os tiers e o porquê ficam no `historico-curado.json` do afiliados. É desta lista (mais os achados) que a rotina diária consulta o desfecho depois da janela.
+3. **Commit e push da `shared-scripts` só com os arquivos de `leiloes/`** (lista nova, lista competitiva guardada, achados, candidatos), com `git pull --rebase` antes do push, porque as duas janelas e a rotina diária gravam lá:
    ```bash
    git -C ../shared-scripts add leiloes/ && git -C ../shared-scripts commit -m "leiloes: <o que entrou> (<DE> a <ATE>)" -- leiloes/
    git -C ../shared-scripts pull --rebase && git -C ../shared-scripts push
