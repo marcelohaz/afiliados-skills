@@ -180,15 +180,15 @@ Além da intro, a skill **arruma o `title` do frontmatter** quando ele está stu
 
 **Regra (gatilho = COLISÃO, não "fora do padrão"):** antes de gravar o título, **leia os títulos dos artigos IRMÃOS** — mesmo `slug` em outros sites E mesma `keyword`: `Grep -n "^title:|^keyword:" sites/*/src/content/reviews/{slug}.mdx` (se o slug variar entre sites, procure pelo mesmo valor de `keyword`). Se o seu título sair igual a um irmão, **escolha um padrão/tag diferente**. Irmão `contentLocked` mantém o dele → você diverge dele. Na dúvida, mantenha o site estabelecido/forte e diverja o novo.
 
-**Todo título tem o ano atual (Marcelo, 14/10/2026: *"todos os titulos devem ter o ano atual. Nunca o ano errado"*).** Nenhum padrão sai sem ano, e ano velho é sempre stub. Se o título passar de 60 caracteres, o ano fica e a tag sem ano sai. Na virada do ano, os títulos da rede passam para o ano novo no começo de janeiro.
+**Ano errado nunca (Marcelo, 14/10/2026: *"nem todos os titulos tem o ano, esse de impressora barata é um deles. O problema é ano errado no conteudo ou no titulo (quando tiver)"*).** Título com ano usa o ano atual, e ano velho é sempre stub. Título sem ano (P3, gancho de preço) está certo e não ganha ano. Na virada do ano, o ano dos títulos que têm ano passa para o novo no começo de janeiro.
 
-**Pool de padrões** (todos: lead = campo `keyword`, número N obrigatório, ano atual obrigatório, **≤60 chars** quando couber):
+**Pool de padrões** (todos: lead = campo `keyword`, número N obrigatório, **≤60 chars**):
 - **P1** `{Keyword}: as {N} melhores (Atualizado {ano})` — fallback `({ano})` se passar de 60
 - **P2** `As {N} {KeywordPlural Title Case} (Guia {ano})`
-- **P3** `{Keyword}: {N} opções para comprar em {ano}` — ` (Guia Completo {ano})` no lugar do "em {ano}" só se couber ≤60 (até 14/10/2026 o P3 saía sem ano: 84 títulos da rede foram corrigidos nesse dia)
+- **P3** `{Keyword}: {N} opções para comprar` — ` (Guia Completo)` só se couber ≤60 (sem ano, de propósito)
 - **P4** `{Keyword}: as {N} melhores de {ano}`
 
-Tags (encaixe a que couber, **sem dobrar o ano**: título com "em/de {ano}" NÃO leva "({ano})/(Atualizado {ano})" junto, e **sem ficar sem ano**): `(Atualizado {ano})`, `(Guia {ano})`, `(Guia Completo {ano})`, `({ano})`, `de {ano}`, `em {ano}`. {ano} é o ano atual.
+Tags (encaixe a que couber, **sem dobrar o ano**: título com "em/de {ano}" NÃO leva "({ano})/(Atualizado {ano})" junto): `(Atualizado {ano})`, `(Guia {ano})`, `(Guia Completo)`, `({ano})`, `de {ano}`, `em {ano}`. {ano} é o ano atual.
 
 **Lead = campo `keyword`, NÃO forçar "Melhor":** se a keyword é "impressora barata" / "impressora para fotos" (sem "melhor"), o título começa "Impressora Barata" / "Impressora para Fotos", NUNCA "Melhor Impressora Barata". Conferir o campo `keyword` do frontmatter, jamais chutar pelo slug.
 
@@ -215,7 +215,7 @@ Componentes:
 ### Quando arrumar (gatilho = stub OU colisão — v1.39.0)
 
 Reescreve se: (a) o título está **stub/fraco**, OU (b) **colide com um irmão** (mesmo slug/keyword em outro site com título igual/quase-igual — ver "Divergência cross-site"), OU (c) a **contagem N envelheceu**. Detecção:
-- **Stub/fraco (arruma)**: minúsculo, sem ano, sem contagem, ou == keyword cru (ex: "Melhor impressora epson", "Melhor Impressora Custo Benefício").
+- **Stub/fraco (arruma)**: minúsculo, com ano velho, sem contagem, ou == keyword cru (ex: "Melhor impressora epson", "Melhor Impressora Custo Benefício").
 - **Sem contagem com N≥3 é sempre stub**: se o lineup tem 3+ produtos e N não aparece no título (teste `\bN\b`, auto-check #6), reescreva, mesmo com título bem formado (Title Case + ano) e mesmo que irmãos do site estejam iguais sem contagem: irmão sem contagem com N≥3 é stub não corrigido, não assinatura. Contagem só é dispensável com N<3 (ver Fallback).
 - **Colide com irmão (arruma p/ divergir)**: título idêntico/quase-igual a um irmão → aplica o padrão de assinatura deste site (pool P1-P4). Mesmo que já esteja "no padrão", se colide, troca.
 - **N mudou (atualiza)**: se o lineup cresceu/encolheu, atualiza o número (a contagem não pode envelhecer).
