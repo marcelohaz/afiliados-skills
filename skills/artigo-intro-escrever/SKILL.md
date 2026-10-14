@@ -180,13 +180,15 @@ Além da intro, a skill **arruma o `title` do frontmatter** quando ele está stu
 
 **Regra (gatilho = COLISÃO, não "fora do padrão"):** antes de gravar o título, **leia os títulos dos artigos IRMÃOS** — mesmo `slug` em outros sites E mesma `keyword`: `Grep -n "^title:|^keyword:" sites/*/src/content/reviews/{slug}.mdx` (se o slug variar entre sites, procure pelo mesmo valor de `keyword`). Se o seu título sair igual a um irmão, **escolha um padrão/tag diferente**. Irmão `contentLocked` mantém o dele → você diverge dele. Na dúvida, mantenha o site estabelecido/forte e diverja o novo.
 
-**Pool de padrões** (todos: lead = campo `keyword`, número N obrigatório, **≤60 chars**):
-- **P1** `{Keyword}: as {N} melhores (Atualizado 2026)` — fallback `(2026)` se passar de 60
-- **P2** `As {N} {KeywordPlural Title Case} (Guia 2026)`
-- **P3** `{Keyword}: {N} opções para comprar` — ` (Guia Completo)` só se couber ≤60
-- **P4** `{Keyword}: as {N} melhores de 2026`
+**Todo título tem o ano atual (Marcelo, 14/10/2026: *"todos os titulos devem ter o ano atual. Nunca o ano errado"*).** Nenhum padrão sai sem ano, e ano velho é sempre stub. Se o título passar de 60 caracteres, o ano fica e a tag sem ano sai. Na virada do ano, os títulos da rede passam para o ano novo no começo de janeiro.
 
-Tags (encaixe a que couber, **sem dobrar o ano** — título com "em/de 2026" NÃO leva "(2026)/(Atualizado 2026)" junto): `(Atualizado 2026)`, `(Guia 2026)`, `(Guia Completo)`, `(2026)`, `de 2026`, `em 2026`.
+**Pool de padrões** (todos: lead = campo `keyword`, número N obrigatório, ano atual obrigatório, **≤60 chars** quando couber):
+- **P1** `{Keyword}: as {N} melhores (Atualizado {ano})` — fallback `({ano})` se passar de 60
+- **P2** `As {N} {KeywordPlural Title Case} (Guia {ano})`
+- **P3** `{Keyword}: {N} opções para comprar em {ano}` — ` (Guia Completo {ano})` no lugar do "em {ano}" só se couber ≤60 (até 14/10/2026 o P3 saía sem ano: 84 títulos da rede foram corrigidos nesse dia)
+- **P4** `{Keyword}: as {N} melhores de {ano}`
+
+Tags (encaixe a que couber, **sem dobrar o ano**: título com "em/de {ano}" NÃO leva "({ano})/(Atualizado {ano})" junto, e **sem ficar sem ano**): `(Atualizado {ano})`, `(Guia {ano})`, `(Guia Completo {ano})`, `({ano})`, `de {ano}`, `em {ano}`. {ano} é o ano atual.
 
 **Lead = campo `keyword`, NÃO forçar "Melhor":** se a keyword é "impressora barata" / "impressora para fotos" (sem "melhor"), o título começa "Impressora Barata" / "Impressora para Fotos", NUNCA "Melhor Impressora Barata". Conferir o campo `keyword` do frontmatter, jamais chutar pelo slug.
 
