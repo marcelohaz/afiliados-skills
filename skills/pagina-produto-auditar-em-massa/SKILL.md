@@ -207,8 +207,13 @@ inteira como um argumento só e a guarda imprime "0 página(s) conferida(s)" —
 execução vazia parecendo sucesso. Aconteceu de verdade (cozinhaideal, 2026-08-21).
 
 **Achado mecânico:** conserte determinístico aqui (travessão→vírgula, `;`→`.`/`,`,
-parágrafo órfão fundido no "Por que gostamos", trim da última frase pra caber no
-cap) e re-rode. Só depois disso os sub-agents entram — e o prompt deles diz
+trim da última frase pra caber no cap) e re-rode. **O 5º `<p>` sem rótulo logo
+depois do "Por que gostamos" não é órfão:** é a divisão que a criação manda fazer e
+que a guarda aceita (critério 25 da `pagina-produto-auditar`). Não funda. Até
+15/10/2026 esta linha mandava fundir, e a fusão deixou no ar "Por que gostamos" de 7
+e 8 frases no guiabemavaliado (wvegan-bcaa-8-1-1, iridium-labs-kimera-thermo,
+hisense-janela-10-000-btus-aw-10cwbrvgu01; notas do skill-log de 02/09 a 19/09).
+Órfão de verdade é outra sequência, que a guarda reprova: aí, relatório. Só depois disso os sub-agents entram — e o prompt deles diz
 "a mecânica já passou, NÃO re-rode, gaste o contexto no julgamento".
 
 ### Etapa 2 — Fan-out do JULGAMENTO (sub-agents isolados, ≤10)
@@ -229,6 +234,7 @@ Contexto deste lote:
   `docs/painel/.painel-backups/{YYYY-MM-DD}/product-{site}-{slug}-{HHMMSS}.mdx`.
   Se você não vai consertar nada, não precisa. Se vai, o backup vem ANTES.
 - ⚠ `warn` de julgamento NUNCA aplica.
+- ⚠ O arquivo temporário (script, rascunho, JSON intermediário) vai em `{scratchpad}/{site}-{slug}/`, nunca na raiz do scratchpad nem em `/tmp` com nome fixo: os sub-agents da leva rodam ao mesmo tempo e dividem a pasta (notas do skill-log de 31/08 a 26/09/2026, uma com o auditor lendo o dado de outro produto como se fosse do seu).
 - ⚠ Página contradiz `decisaoEditorial` mas obedece outro campo da mesma bíblia
   → NÃO toque; o alvo é a bíblia e o relatório aponta pra lá.
 - ⚠ Achado cuja raiz é a BÍBLIA (seção "Registre a raiz como PENDÊNCIA DA BÍBLIA"
@@ -329,8 +335,9 @@ git commit --only -m "fix({site}): auditoria em massa corrige N páginas individ
 git add docs/biblias-v2/.audits/products/{site}-{slug}-last.md ...
 git commit --only --no-verify -m "audit-produto({site}): N páginas auditadas em massa" \
   -- docs/biblias-v2/.audits/products/{site}-{slug}-last.md ...
-git pull --rebase origin main && git push origin main
-echo "local=$(git rev-parse --short=9 HEAD) remote=$(git ls-remote origin main | cut -c1-9)"
+# puxa do canônico sem stash global; empurra para o canônico (origin no Marcelo, upstream na Bárbara)
+bash scripts/git-pull-seguro.sh "auditoria-{site}" && git push "$(bash scripts/git-pull-seguro.sh --canonico)" HEAD:main
+echo "local=$(git rev-parse --short=9 HEAD) remote=$(git ls-remote "$(bash scripts/git-pull-seguro.sh --canonico)" main | cut -c1-9)"
 bash scripts/painel-vps-pull.sh
 ```
 

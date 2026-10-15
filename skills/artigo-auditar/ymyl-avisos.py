@@ -41,8 +41,15 @@ import re, sys, json
 
 PROF = r'(?:m[ée]dic[oa]|pediatra|nutricionista|profissional de sa[úu]de|especialista de sa[úu]de)'
 # Aviso = manda/condiciona a procurar profissional, OU nega substituir profissional.
+# Verbo em qualquer forma que manda procurar o profissional: imperativo (consulte,
+# consultem), infinitivo (vale conversar com, deve consultar) e "combinar o uso com".
+# Até 15/10/2026 só o imperativo singular contava, e 236 avisos em 130 artigos ficavam
+# de fora ("vale conversar com um nutricionista", "deve conversar com médico ou
+# nutricionista", o "consultem o médico" do rótulo): a régua do "no máximo um" via 56
+# artigos acima do limite, e eram 125. O profissional continua obrigatório.
 AVISO = re.compile(
-    rf'(?:consulte|procure|converse com|fale com|orienta[çc][ãa]o d[eo]|acompanhamento d[eo]|'
+    rf'(?:consult(?:e|em|ar)|procur(?:e|em|ar)|convers(?:e|em|ar) com|fal(?:e|em|ar) com|'
+    rf'combin(?:e|em|ar) (?:o uso |a dose )?com|orienta[çc][ãa]o d[eo]|acompanhamento d[eo]|'
     rf'sob orienta[çc][ãa]o d[eo]|indica[çc][ãa]o d[eo]|supervis[ãa]o d[eo])\s+'
     # Artigo definido também: "converse com o médico que acompanha a gestação"
     # contava 0 e o clone de 26/09 trocou o texto para "seu médico" só para o

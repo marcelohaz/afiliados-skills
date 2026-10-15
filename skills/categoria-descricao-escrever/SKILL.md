@@ -115,6 +115,16 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
    ```
    Ele compara com as outras categorias do mesmo site, com as dos sites do mesmo nicho (suplemento conta como um nicho só) e com a mesma categoria nos outros sites da rede, e sai 1 se achar 6 palavras seguidas iguais. A última comparação entrou em 06/10/2026: a de monitores do melhoresmonitores repetia uma frase da de monitores do compraguia, que é de outro nicho. Reescreva o trecho e rode de novo até sair 0. Ler as irmãs antes de escrever não basta: em 28/09/2026 a descrição de air-fryers do cozinhaideal saiu com "peças que vão à lava-louças", igual à de liquidificador do mesmo site, e a rede tinha mais 5 pares assim.
 
+9.5. **Quem roda é a Bárbara? Grave pelo painel e pule os passos 10 a 13.** O `config.ts` é protegido: a Action `guard-editorial-paths` reverte o envio dela inteiro (18 notas no skill-log de 15/09 a 24/09/2026), e o commit do painel passa. Confira o dono e, se for ela, mande o HTML ao painel, que faz o backup, grava a entry e commita:
+    ```bash
+    bun -e "import { resolverDono } from './scripts/lib/dono.ts'; console.log(resolverDono(process.cwd()))"   # barbara?
+    python3 -c 'import json,sys; json.dump({"html": open(sys.argv[1]).read().strip()}, open(sys.argv[2], "w"), ensure_ascii=False)' <arquivo.html> <corpo.json>
+    bun scripts/painel-api.ts POST /category-desc/{site}/{categorySlug} <corpo.json>   # 200 com "ok": true
+    bash scripts/git-pull-seguro.sh "categoria-{site}"
+    grep -c "'{categorySlug}':" sites/{site}/src/config.ts   # a entry chegou (a resposta não traz o hash do commit)
+    ```
+    Depois siga no passo 14. Para o Marcelo, os passos 10 a 13 seguem como estão.
+
 10. **Backup** ANTES de sobrescrever (paridade com handler `category-desc.ts:139-147`):
     ```bash
     # raiz do repo — o cwd do Bash reseta pra ~/Documents/Claude em sessão continuada; sem isto o mkdir cria a árvore LÁ (medido 03/09/26)

@@ -55,7 +55,7 @@ O `TITLE=` de cada linha é HINT: a `artigo-clonar-em-massa` tem HARD GATE que D
 
 ### Etapa F0 — Parse + plano
 1. Parse do input (formato A ou B). Extrai a lista de itens `{target, source, slug, titleHint}` + delay do timer (se houver).
-2. `git pull --rebase origin main` (evita estado stale; painel/Bárbara commitam em paralelo).
+2. `bash scripts/git-pull-seguro.sh "clonar-fila"` (evita estado stale; painel/Bárbara commitam em paralelo). Saiu 1 → pare. Não use `git pull --rebase origin main`: na Bárbara o `origin` é o fork, e o rebase reaplica os commits locais sobre ele.
 3. Para cada item: **git-verdade** (`git log -- .../{slug}.mdx`). Classifica: `FAZER` / `PULAR (já commitado)` / `REGERAR (.mdx órfão)`.
    - **Fonte recuperada do WordPress** (`portadoDe:` no `.mdx` fonte) → `PULAR (fonte recuperada)`: não serve de fonte de clonagem (Marcelo, 29/09/2026), e a clone aborta no `clone-log init`. O item vai no relatório como assunto a escrever do zero.
    - **RETOMADA POR ETAPA (não por artigo):** pra todo item que NÃO for `PULAR`, leia também `docs/biblias-v2/.audits/clone-runs/{target}-{slug}-last.md`. Se ele já tem etapas marcadas, **retome da primeira etapa NÃO marcada** em vez de recomeçar do zero. A git-verdade sozinha tem granularidade de ARTIGO: um item que morreu depois de 8 de 10 reviews volta a `FAZER` e joga fora 8 sub-agents Opus. O clone-log já registra etapa por etapa — só precisa ser lido. Marque no plano como `RETOMAR (etapa X)`.

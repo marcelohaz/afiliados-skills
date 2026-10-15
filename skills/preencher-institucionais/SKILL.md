@@ -58,6 +58,14 @@ Molde de ouro: **melhoromega3** (sobre + autor). Skill-only (sem botão no paine
 8. **Backup** ambas em `.painel-backups/{dia}/`.
 9. **Escreve** sobre.html + author/{slug}.html (cria o dir `author/` se faltar). **A rota/dir da rede é `/author/` (com 'h'), NUNCA `/autor/`** — o `.mdx`/`.html` vive em `src/content/pages/author/{slug}.html`, a rota é `/author/{slug}/` e `config.author.href` aponta pra lá. Gravar em `autor/` = página órfã + link 404.
 10. **Alinha `config.author.bio`** pra voz vaga (sem "Testo"); mantém variado vs irmãs. **IGNORA `evaluationText`** (campo morto, não renderiza).
+    **Quem roda é a Bárbara? A bio vai pelo painel, não pelo Edit.** O `config.ts` é protegido: o guard-editorial-paths revertia o envio dela, e as bios dos sites dela não chegavam ao ar (7 notas no skill-log de 15/09 a 09/10/2026). Confira o dono (`bun -e "import { resolverDono } from './scripts/lib/dono.ts'; console.log(resolverDono(process.cwd()))"`); se for `barbara`:
+    ```bash
+    python3 -c 'import json,sys; json.dump({"authorBio": sys.argv[1]}, open(sys.argv[2], "w"), ensure_ascii=False)' "<bio nova, uma linha>" <corpo.json>
+    bun scripts/painel-api.ts POST /site-config/{site} <corpo.json>   # 200; a bio fica em sites/{site}/src/config.ts e o commit sai como painel
+    bash scripts/git-pull-seguro.sh "bio-{site}"
+    grep -n "^ *bio:" sites/{site}/src/config.ts   # a bio nova chegou
+    ```
+    O `sobre.html` e a página do autor (`src/content/pages/`) ela grava e envia normalmente, no passo 11, sem o `config.ts`.
 11. **Commit** (`--no-verify`) + **push** + `bash scripts/painel-vps-pull.sh`.
 12. **Reporta**: chars de cada página, autor citado, e lembrete de que vai ao ar no deploy.
 

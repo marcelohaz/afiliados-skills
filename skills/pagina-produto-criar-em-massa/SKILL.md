@@ -447,18 +447,24 @@ Detecção:
 
    Sem `--no-verify` (corrigido v1.33.0): o hook pre-commit só bloqueia `.mdx` de `reviews/` (e `.html` de guides/pages) — páginas individuais vivem em `products/` e passam limpo, igual na skill individual `pagina-produto-criar`.
 
-10. **Pull rebase + push**:
+10. **Pull + push, no canônico**:
     ```bash
-    git pull --rebase origin main 2>&1 | tail -2
-    git push origin main 2>&1 | tail -3
+    bash scripts/git-pull-seguro.sh "lote-{site}"   # saiu 1 → pare e resolva antes de empurrar
+    git push "$(bash scripts/git-pull-seguro.sh --canonico)" HEAD:main 2>&1 | tail -3
     ```
+    Até 15/10/2026 este passo era `git pull --rebase origin main`, que morria com a árvore
+    suja ("cannot pull with rebase: You have unstaged changes", 3 notas) e, na Bárbara
+    (`origin` = fork), reaplicava os commits do lote sobre o fork (87 commits em 25/08). O
+    `git-pull-seguro.sh` puxa do canônico sem stash global, e o `--canonico` diz o remote
+    certo para o push (`origin` no Marcelo, `upstream` na Bárbara).
 
     ⚠ **Push rejeitado com outra sessão escrevendo: NÃO resolva por stash.**
     O reflexo é `git stash -u` + rebase + push, e ele varre do disco o trabalho
     em voo da outra janela. Integre sem tocar na árvore suja:
     ```bash
-    git fetch origin && git merge origin/main --no-edit 2>&1 | tail -3
-    git push origin main 2>&1 | tail -3
+    C=$(bash scripts/git-pull-seguro.sh --canonico)
+    git fetch "$C" && git merge "$C/main" --no-edit 2>&1 | tail -3
+    git push "$C" HEAD:main 2>&1 | tail -3
     ```
     `git pull --rebase` recusa árvore suja por design, e `--autostash` tem o
     mesmo defeito do stash manual (janela em que os arquivos alheios somem).
@@ -509,12 +515,13 @@ Detecção:
       uma leitura de arquivo por agente, jogadas fora.)
     - Faça o audit completo (ler .mdx + bíblia, gerar relatório com
       errors/warnings/info)
+    - O arquivo temporário (script, rascunho, JSON intermediário) vai em `{scratchpad}/{site}-{slug}/`, nunca na raiz do scratchpad nem em `/tmp` com nome fixo: os sub-agents da leva rodam ao mesmo tempo e dividem a pasta (notas do skill-log de 31/08 a 26/09/2026, uma com o auditor lendo o dado de outro produto como se fosse do seu).
     - **CONSERTE o que passa no TESTE DA FRASE NOVA** (seção homônima da
       `pagina-produto-auditar`, canon Marcelo 2026-08-06). A pergunta é uma só:
       **dá pra consertar sem escrever nenhuma frase nova?** Apagar um termo que
       a bíblia não tem, trocar por como a bíblia chama, restaurar um qualificador
       que ela exige → **aplica**. Se o substituto for redação sua → **reporta**.
-      Backup antes, `Edit` cirúrgico, re-audita o que tocou, e **reverte do
+      Backup antes (`docs/painel/.painel-backups/{AAAA-MM-DD}/product-{site}-{slug}-{HHMMSS}.mdx`, o nome que o painel lista para restaurar), `Edit` cirúrgico, re-audita o que tocou, e **reverte do
       backup** se não convergir em ≤3 tentativas. `warn` de julgamento não se aplica,
       nem parecendo óbvio: frase colada na página irmã, coloquialismo acima do
       teto e redundância bullet↔parágrafo são só relatório. ⚠️ Se a página
@@ -715,7 +722,7 @@ def classify(frontmatter, body):
 
 ## Prompt do sub-agent
 
-**A régua editorial não é reescrita aqui: o sub-agent lê a `pagina-produto-criar/SKILL.md` e a executa à risca (fonte única).** Não resuma a régua no prompt: resumo fica para trás da individual e o lote passa a seguir a cópia velha. O sub-agent lê o arquivo em vez de invocar a Skill tool porque a individual tem passos de git (12-13) que N agentes paralelos não podem rodar (Armadilha 1).
+**A régua editorial não é reescrita aqui: o sub-agent lê a `pagina-produto-criar/SKILL.md` e a executa à risca (fonte única).** Não resuma a régua no prompt: resumo fica para trás da individual e o lote passa a seguir a cópia velha. **Também não acrescente fato do produto, nota de nicho nem regra que você não leu na fonte.** O sub-agent obedece ao prompt acima da bíblia, e o que a mãe inventa vira texto publicado: "descreva o MECANISMO (evaporação da água)" plantou "evaporação" em páginas de climatizador do oguiacompra cuja bíblia não fala disso (12/09/2026), e "não fale de tempo de recarga" tirou uma spec das bicicletas elétricas do melhoresdoesporte (09/09/2026). Para avisar de algo, aponte onde está (o campo da bíblia, a seção da régua) em vez de reescrever. O sub-agent lê o arquivo em vez de invocar a Skill tool porque a individual tem passos de git (12-13) que N agentes paralelos não podem rodar (Armadilha 1).
 
 ```
 Tarefa: gerar os 6 campos editoriais (subtitle, shortDescription, pros, cons,
@@ -747,6 +754,7 @@ OVERRIDES DO BATCH (sobrepõem o Fluxo da individual):
 - Isolamento: você vê SÓ este produto. Não compare com outros sites nem "divirja ângulo" de
   propósito (dedup cross-site é trabalho da auditoria).
 - Você MESMO escreve o `.mdx` (passos 10-11 da individual: backup + Write + fence check).
+- O arquivo temporário (script, rascunho, JSON intermediário) vai em `{scratchpad}/{{site}}-{{slug}}/`, nunca na raiz do scratchpad nem em `/tmp` com nome fixo: os sub-agents da leva rodam ao mesmo tempo e dividem a pasta (notas do skill-log de 31/08 a 26/09/2026, uma com o auditor lendo o dado de outro produto como se fosse do seu).
 
 SAÍDA — reporte curto:
 - Sucesso: { ok: true, slug: '{{slug}}', path: '...', summary: 'subtitle 67c / fullReview 1842c / 3 links' }

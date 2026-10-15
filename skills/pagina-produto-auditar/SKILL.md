@@ -798,7 +798,7 @@ realinhadas. Sem a fila, os achados teriam ficado só na mensagem do chat.
 
 Copie a mecânica da `biblia-auditar-em-massa`, não invente outra:
 
-1. **Backup antes de escrever**, em `docs/painel/.painel-backups/<dia>/`.
+1. **Backup antes de escrever**, com este nome exato: `docs/painel/.painel-backups/{AAAA-MM-DD}/product-{site}-{slug}-{HHMMSS}.mdx` (`mkdir -p` da pasta antes). O painel só lista para restaurar o arquivo que começa com `product-` e termina com a hora em 6 dígitos e `.mdx` (`docs/painel/_lib/handlers/backups.ts`); com outro nome o backup existe no disco e some da tela. Em 15/10/2026 eram 92 backups `.mdx` fora do formato (13 notas no skill-log, 12 da Bárbara).
 2. Aplique **só** o que passou no teste, com `Edit` cirúrgico. Nunca reescreva o campo inteiro.
 3. **Re-audite o que você tocou**: resolveu? não quebrou outra coisa? não mudou o sentido?
 4. Não convergiu em ≤3 tentativas → **reverte do backup** e vira item de relatório.

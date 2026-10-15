@@ -259,9 +259,9 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
 
 - **shortDescription** (50-250 chars): para quem é / o que faz de melhor em linguagem literal, depois 2-3 dados, fecho de fato. Sem molde ("Ideal pra quem… Você ganha…"). **HARD CAP 250 chars.** Drop "[Tipo] brasileiro/a da [marca]", drop "preço médio em torno", drop público verboso. Ver seção dedicada abaixo com 3 moldes + exemplos.
 
-9. **Validar antes de devolver** (é o sub-agent do 7.5 quem faz este passo). Tamanho e contagem de valores se medem com script, não a olho: grave os campos num JSON no scratchpad e rode
+9. **Validar antes de devolver** (é o sub-agent do 7.5 quem faz este passo). Tamanho e contagem de valores se medem com script, não a olho: grave os campos num JSON em `{scratchpad}/{site}-{slug}-{ASIN}/campos.json` (pasta por produto: com o nome fixo `campos.json` na raiz, um sub-agent sobrescrevia o do outro; notas de 02/09 a 26/09/2026) e rode
    ```bash
-   python3 - campos.json <<'EOF'
+   python3 - {scratchpad}/{site}-{slug}-{ASIN}/campos.json <<'EOF'
    import json, re, sys
    c = json.load(open(sys.argv[1])); puro = lambda s: re.sub(r'<[^>]+>', '', s)
    print('shortDescription', len(c['shortDescription']))

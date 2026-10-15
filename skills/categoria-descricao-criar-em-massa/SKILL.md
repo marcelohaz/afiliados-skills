@@ -69,7 +69,7 @@ O prompt de cada sub-agent leva **só os deltas** — a régua vem da skill indi
 
 1. **Leia `.claude/skills/categoria-descricao-escrever/SKILL.md` INTEIRA e aplique a régua dela.** Especialmente a seção "Régua ANTI-CLONE".
 2. Alvo: `{site}` / `{categorySlug}` ("{categoryName}").
-3. **Não escreva em arquivo nenhum. Não rode git.** Devolva só o HTML.
+3. **Não escreva em arquivo nenhum. Não rode git.** Devolva só o HTML. Rascunho ou script que você precisar vai em `{scratchpad}/{site}-{categorySlug}/`, nunca com nome fixo na raiz: os sub-agents dos grupos rodam juntos (o `cand.html` do termogênico foi sobrescrito por outro, 23/09/2026).
 4. Contexto de leitura: `sites/{site}/src/config.ts` (nome do site, voz), e os `.mdx` de `content/reviews/` cujo `categorySlug` bate — são os artigos que o §2 tem que refletir.
 4.5. Passe o nicho do site (`sites-meta.json`) no prompt. A régua de saúde é a da skill individual ("Health absolutes YMYL banidos"), igual para todas as categorias de suplemento do site; categoria de equipamento em site de suplemento segue sem ressalva de saúde.
 5. **Anti-clone — divergir de TODAS estas** (colar o HTML inteiro de cada):
@@ -137,6 +137,16 @@ Formato: `[{ "site": "...", "categorySlug": "...", "html": "<p>…</p>" }]`
 O aplicador refaz os checks de forma do gate (slug, backtick, `${`, tamanho, parágrafos, tags, travessão, comentário, placeholder), faz backup por site, encadeia `writeCategoryDescription` em memória com 1 gravação por site e roda o sanity pós-transformação. A sobreposição de 6+ palavras não está no aplicador: fica com a mãe nas Etapas 3 e 3.5, e com o controle depois de gravar (Etapa 5).
 
 Item reprovado não derruba os outros: sai no relatório e o resto grava. Exit 1 se algum site falhou.
+
+**Quem roda é a Bárbara? O aplicador só no `--dry`, e a gravação pelo painel.** O `config.ts` é protegido: a Action `guard-editorial-paths` reverte o envio dela inteiro, com os outros arquivos do commit (18 notas no skill-log de 15/09 a 24/09/2026), e o commit do painel passa. Confira o dono (`bun -e "import { resolverDono } from './scripts/lib/dono.ts'; console.log(resolverDono(process.cwd()))"`); se for `barbara`, rode o aplicador com `--dry` para os checks de forma e grave cada item aprovado pelo painel, que faz backup e commita:
+
+```bash
+python3 -c 'import json,sys; [json.dump({"html": r["html"]}, open(sys.argv[2] + "/" + r["site"] + "-" + r["categorySlug"] + ".json", "w"), ensure_ascii=False) for r in json.load(open(sys.argv[1]))]' <resultados.json> <pasta-temporária>
+bun scripts/painel-api.ts POST /category-desc/{site}/{categorySlug} <pasta-temporária>/{site}-{categorySlug}.json   # um por item, 200 com "ok": true
+bash scripts/git-pull-seguro.sh "categorias-lote"
+```
+
+Na Etapa 5, rode a sobreposição e o build depois desse pull e pule o `git add`/`commit`/`push` (o painel já commitou). Conferir que cada entry chegou ao `config.ts` (`grep -c "'{categorySlug}':" sites/{site}/src/config.ts`): a resposta do painel não traz o hash do commit.
 
 ### Etapa 5 — validar e commitar
 
