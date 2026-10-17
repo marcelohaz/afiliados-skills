@@ -170,7 +170,7 @@ Hipótese de 19/09, que motivou o port: o texto igual em domínio novo traz o tr
 - Sem página de produto: `productPages: false` no config (tira o sitemap de produtos do índice) e o `[slug].astro` só com artigos, com a divergência em `docs/painel/_lib/template-divergences.ts`. O t6 esconde os links de produto por essa opção; o t5 e o t7 precisam também de `productPagesOnlyWithMdx: true`. Referência: melhoreseletro (t6) e melhortech (t5, trocado do t6 em 26/09/2026, com o mesmo `[slug].astro`).
 - Trocar o modelo de um site portado só antes de ele rankear. Site que vai bem não troca de modelo (Marcelo, 26/09/2026): o modelo muda o HTML do site inteiro.
 - `config.ts`: H1 da home (o scaffold monta "O melhor {nome}" e quebra quando o nome não é substantivo simples), `contactMainTopic`, `knowsAbout`, e-mail do autor, bio sem "Testo" nem frase-sacada.
-- `/sobre/` do WordPress adaptado (marca e domínio novos, sem alegar teste, com o escopo real) e `/author/` pela `preencher-institucionais` (ela tem a exceção de site portado). Se o Sobre do WordPress não diz quem escreve, como o site avalia nem tem o aviso de afiliado, a `preencher-institucionais` faz as duas páginas (régua de 25/09/2026: os 5 primeiros sites criados pelo port saíram com Sobre de 470 a 1.390 caracteres).
+- `/sobre/` do WordPress adaptado (marca e domínio novos, com o escopo real; pode afirmar testes e uso real, como as páginas institucionais) e `/author/` pela `preencher-institucionais` (ela tem a exceção de site portado). Se o Sobre do WordPress não diz quem escreve, como o site avalia nem tem o aviso de afiliado, a `preencher-institucionais` faz as duas páginas (régua de 25/09/2026: os 5 primeiros sites criados pelo port saíram com Sobre de 470 a 1.390 caracteres).
 - Descrição de categoria pela `categoria-descricao-escrever` (ou `-criar-em-massa`): as do WordPress repetem o mesmo molde entre sites.
 
 **Cenário A (herdeiro):**
@@ -244,7 +244,7 @@ Seguir a **Fase 2 da `site-migrar-dominio`**: `cf-create-zone {site} --so-checar
 3. **Home que era o artigo.** A home do melhoresnotebooks2025 (2.383 cliques) era o próprio artigo "Melhores Notebooks"; o catch-all mandaria para a home do site novo.
 4. **Regra do herdeiro que esconde o artigo portado.** 20 no cozinhaideal; no worker, a regra vale antes da página.
 5. **Dados de produto do WordPress.** O card levava a outro produto em 24 lugares de 19 artigos nos 6 primeiros ports, publicados assim. A checagem de marca não vê erro dentro da mesma marca (Deco M5 com o ASIN do M4) nem ASIN sem bíblia. Card × texto e leitura na Amazon, na Fase 2.
-6. **Scaffold com texto de template:** `/sobre/` provisório, autor alegando teste presencial, H1 quebrado, e-mail `@dominio`, `knowsAbout` de outro nicho.
+6. **Scaffold com texto de template:** `/sobre/` provisório, H1 quebrado, e-mail `@dominio`, `knowsAbout` de outro nicho.
 7. **Descrição de categoria do WordPress** repete o mesmo molde entre os sites portados.
 8. **Sitemap de dono anterior** na propriedade nova do GSC (melhoreseletro, melhorestetica, melhortech).
 9. **DNSSEC:** domínio que usava o DNS do Registro.br tem DS, e DS órfão (NS na Cloudflare com o DS antigo no `.br`) derruba a resolução. O Registro.br tira o DS sozinho quando os NS são trocados no painel dele (5 casos até 29/09/2026): não peça ao Marcelo para mexer no DNSSEC, só confira com `conferir-delegacao.ts` antes e depois. Em 29/09/2026 a remoção à mão foi pedida por engano, com base na versão antiga desta frase.
