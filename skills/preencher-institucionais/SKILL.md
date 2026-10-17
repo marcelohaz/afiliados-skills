@@ -1,6 +1,6 @@
 ---
 name: preencher-institucionais
-description: Escreve as duas páginas institucionais editoriais de um site, /sobre/ (voz do site) e /author/ (voz da pessoa, em 1ª pessoa), distintas entre si e sem clonar as de outros sites da rede. Use quando pedirem para escrever, refazer ou revisar o Sobre ou a página de autor de um site (`site` ou URL do painel), inclusive depois de um port de WordPress. Não faz contato, termos nem privacidade (template + config).
+description: Escreve as duas páginas institucionais editoriais de um site, /sobre/ (voz do site) e /author/ (voz da pessoa, em 1ª pessoa), distintas entre si e sem clonar as de outros sites da rede, e os textos da home (subtítulo, selos, bloco "Como trabalhamos" e descrição para o Google). Use quando pedirem para escrever, refazer ou revisar o Sobre, a página de autor ou os textos da home de um site (`site` ou URL do painel), inclusive depois de um port de WordPress. Não faz contato, termos nem privacidade (template + config).
 ---
 
 # Escrever as páginas institucionais EDITORIAIS (/sobre/ + /author/) por nicho
@@ -66,6 +66,7 @@ Molde de ouro: **melhoromega3** (sobre + autor). Skill-only (sem botão no paine
     grep -n "^ *bio:" sites/{site}/src/config.ts   # a bio nova chegou
     ```
     O `sobre.html` e a página do autor (`src/content/pages/`) ela grava e envia normalmente, no passo 11, sem o `config.ts`.
+10b. **Home** (desde 17/10/2026): os textos da home no `config.ts`, pela seção "Home" abaixo. Antes, `bun scripts/gsc-home-buscas.ts {dominio}`. Quem roda é a Bárbara: o painel ainda não grava esses campos e o `config.ts` é protegido para ela; pule a home e avise no relatório.
 11. **Commit** (`--no-verify`) + **push** + `bash scripts/painel-vps-pull.sh`.
 12. **Reporta**: chars de cada página, autor citado, e lembrete de que vai ao ar no deploy.
 
@@ -95,6 +96,24 @@ Molde de ouro: **melhoromega3** (sobre + autor). Skill-only (sem botão no paine
 - A /author/ NÃO tem "Independência editorial" nem "Como avaliamos os produtos" (isso é do /sobre/). É sobre a PESSOA.
 - Credencial REAL do config.author (role/bio). Se a persona não é especialista no nicho exato, descrever honesto (redator/analista que pesquisa o nicho), NUNCA título falso.
 - A página é renderizada com o cabeçalho da persona (nome/foto/bio do config) por cima pelo `AutorPageEditable.astro` — o HTML aqui é só o corpo.
+
+## Home — textos (config.ts, desde 17/10/2026)
+
+Pedido do Marcelo: as homes eram básicas (título, uma frase, três selos iguais em toda a rede). Os campos ficam no `config.ts` do site e só aparecem quando preenchidos; sem eles, a home sai igual (chaves em `packages/ui/TEMPLATES.md`).
+
+**Antes de escrever:** `bun scripts/gsc-home-buscas.ts {dominio}`. **Home que já traz busca** (clique nos últimos 90 dias, ou posição média até 20 numa busca com impressões) **não troca o título principal** (`hero.titlePrefix`, `titleHighlight`, `titleSuffix`) **nem o título da aba** (vem do modelo). Caso real: a home do melhorcadeira na posição 8 para "melhor cadeira ergonômica 2026" (17/10/2026) ficou com o título que tinha.
+
+| Campo | O que escrever |
+|---|---|
+| `hero.titlePrefix` + `titleHighlight` + `titleSuffix` | Só se a home não traz busca ou o título está quebrado (o scaffold monta "O melhor {nome}" e quebra, como "O melhor da para você"). Sempre com a palavra-chave da home. |
+| `hero.subtitle` | 1 ou 2 frases, até uns 200 caracteres: os testes e o uso real, não errar na compra, os defeitos e para quem cada modelo serve, com o tipo de produto do nicho. |
+| `selos` | 3 selos curtos (até 4 palavras), próprios do site, com os conceitos (testes, sem patrocínio, defeitos sempre). Aparecem na home e no fim de todo artigo do site. |
+| `homeComoTrabalhamos` | `{ titulo, texto, link }`: de 50 a 90 palavras com `{autor}` (vira o nome com link para o perfil): quem faz as análises, os testes e o uso real, as normas do nicho, os defeitos e para quem serve, o preço perto das rivais e que nenhuma marca paga. Link para `/sobre/#como-avaliamos` quando o Sobre tem esse `id`, senão `/sobre/`. Fica depois da lista de guias. |
+| `description` | De 120 a 160 caracteres, com a palavra-chave da home e os conceitos. É a descrição da home no Google e a do `llms.txt`. |
+
+- Frase própria de cada site: o gate de 6 palavras roda contra a rede inteira (Sobre, perfis, bios e os campos da home de todos os sites), contra o Sobre e o perfil do próprio site, entre a descrição e o subtítulo do mesmo site e contra o texto de referência dos conceitos que o Marcelo mandou.
+- Sem número de protocolo inventado (tempo de uso, páginas) e sem "assina".
+- Título com palavra-chave em minúscula onde ela não é nome ("Comparamos impressoras", não "Comparamos Impressoras").
 
 ## Variação obrigatória por seção (anti-footprint) — POOLS
 
@@ -165,6 +184,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 - [ ] Variado vs irmãs da mesma persona (zero sequência ≥6 palavras igual). **GATE EM LOOP, não checagem única:** rode o check de 6-gramas vs CADA irmã; pra cada overlap que NÃO seja a citação Amazon ("Programa de Associados da Amazon Brasil") nem a credencial-fato do autor, **reescreva o trecho (rotacionando o pool da seção) e RODE DE NOVO**. Repita até sobrar só os grams permitidos. ⚠ Cuidado pra a reescrita não criar colisão NOVA com outra irmã (caso real 2026-06-27: reescrevi o contato e bati noutra irmã no "use a nossa página de contato"; só o re-run pegou) — por isso é loop, não passada única.
 - [ ] **O mesmo gate contra a REDE INTEIRA**, não só as irmãs: `sobre.html`, `author/*.html` e `config.author.bio` de todo site em `sites/`. As frases convergem entre personas também, porque as seções dizem a mesma coisa em todo site. Medido duas vezes: monitorparatrabalho (15/09/2026), 0 colisões com as irmãs e 27 arquivos de outras personas com frase igual; cozinhaideal (25/09/2026), 1 colisão com irmã e 36 com a rede (aviso de afiliado, abertura de seção logo depois do título, "concorrentes da mesma faixa de preço"). Conta o título da seção junto com a frase seguinte: "Quem está por trás. Quem escreve…" colidiu com 2 sites.
 - [ ] sobre↔autor do MESMO site: zero frase verbatim copiada (overlap de TÓPICO ok; o /author/ usa 3 prioridades pessoais, NÃO espelha a lista de critérios do /sobre/). **VERIFICAR PROGRAMÁTICO** com check de 6-gramas (set de tuplas de 6 palavras de cada página; interseção deve ser 0) — fácil escapar na leitura manual (caso real 06-12: o fecho "se um modelo imprime devagar, tem tinta cara..." foi copiado do /sobre/ no "Meu compromisso" do /author/ e só o check de 6-gramas pegou).
+- [ ] **Home:** buscas da home conferidas (`gsc-home-buscas.ts`); home com busca ficou com o título; subtítulo, 3 selos, `homeComoTrabalhamos` e `description` (120 a 160 caracteres) com frase própria e gate de 6 palavras zerado.
 - [ ] HTML só na allowlist; sem travessão; tamanhos OK.
 
 ## Armadilhas
