@@ -57,7 +57,7 @@ Molde de ouro: **melhoromega3** (sobre + autor). Skill-only (sem botão no paine
 7. **Valida** (checklist).
 8. **Backup** ambas em `.painel-backups/{dia}/`.
 9. **Escreve** sobre.html + author/{slug}.html (cria o dir `author/` se faltar). **A rota/dir da rede é `/author/` (com 'h'), NUNCA `/autor/`** — o `.mdx`/`.html` vive em `src/content/pages/author/{slug}.html`, a rota é `/author/{slug}/` e `config.author.href` aponta pra lá. Gravar em `autor/` = página órfã + link 404.
-10. **Alinha `config.author.bio`** pra voz vaga (sem "Testo"); mantém variado vs irmãs. **IGNORA `evaluationText`** (campo morto, não renderiza).
+10. **Alinha `config.author.bio`** com o Sobre e o perfil (pode afirmar testes e uso real, decisão do Marcelo de 17/10/2026); mantém variado vs irmãs. **IGNORA `evaluationText`** (campo morto, não renderiza).
     **Quem roda é a Bárbara? A bio vai pelo painel, não pelo Edit.** O `config.ts` é protegido: o guard-editorial-paths revertia o envio dela, e as bios dos sites dela não chegavam ao ar (7 notas no skill-log de 15/09 a 09/10/2026). Confira o dono (`bun -e "import { resolverDono } from './scripts/lib/dono.ts'; console.log(resolverDono(process.cwd()))"`); se for `barbara`:
     ```bash
     python3 -c 'import json,sys; json.dump({"authorBio": sys.argv[1]}, open(sys.argv[2], "w"), ensure_ascii=False)' "<bio nova, uma linha>" <corpo.json>
