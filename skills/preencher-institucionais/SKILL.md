@@ -114,7 +114,7 @@ Pedido do Marcelo: as homes eram básicas (título, uma frase, três selos iguai
 - Frase própria de cada site: o gate de 6 palavras roda contra a rede inteira (Sobre, perfis, bios e os campos da home de todos os sites), contra o Sobre e o perfil do próprio site, entre a descrição e o subtítulo do mesmo site e contra o texto de referência dos conceitos que o Marcelo mandou.
 - Sem número de protocolo inventado (tempo de uso, páginas) e sem "assina".
 - O tipo de produto vai em minúscula no meio da frase ("Comparamos impressoras", não "Comparamos Impressoras", que o scaffold deixou no melhordaimpressora).
-- A régua de voz natural (seção "Voz natural") vale para todos os campos da home: na primeira versão das homes (17/10/2026) saíram três "de verdade" e um "o anúncio não conta", e só a releitura pegou.
+- A régua de voz natural (seção "Voz natural") vale para todos os campos da home: na primeira versão das homes (17/10/2026) saíram três "de verdade" e um "o anúncio não conta", e só a releitura pegou. Também saiu "testadas no expediente", que ninguém fala (Marcelo): diga "em horas de trabalho" ou "no trabalho". "Passar o expediente sentado" pode, porque é como se fala.
 
 ## Variação obrigatória por seção (anti-footprint) — POOLS
 
