@@ -1,6 +1,6 @@
 ---
 name: preencher-institucionais
-description: Escreve as duas páginas institucionais editoriais de um site, /sobre/ (voz do site) e /author/ (voz da pessoa, em 1ª pessoa), distintas entre si e sem clonar as de outros sites da rede, e os textos da home (subtítulo, selos, bloco "Como trabalhamos" e descrição para o Google). Use quando pedirem para escrever, refazer ou revisar o Sobre, a página de autor ou os textos da home de um site (`site` ou URL do painel), inclusive depois de um port de WordPress. Não faz contato, termos nem privacidade (template + config).
+description: Escreve as duas páginas institucionais editoriais de um site, /sobre/ (voz do site) e /author/ (voz da pessoa, em 1ª pessoa), distintas entre si e sem clonar as de outros sites da rede, e os textos da home (subtítulo, selos, bloco "Como trabalhamos" e descrição para o Google), e liga o modelo novo do autor (cargo de especialista, caixa "Como escolhemos", Sobre novo) nos sites criados pelo port. Use quando pedirem para escrever, refazer ou revisar o Sobre, a página de autor ou os textos da home de um site (`site` ou URL do painel), inclusive depois de um port de WordPress. Não faz contato, termos nem privacidade (template + config).
 ---
 
 # Escrever as páginas institucionais EDITORIAIS (/sobre/ + /author/) por nicho
@@ -49,7 +49,7 @@ Molde de ouro: **melhoromega3** (sobre + autor). Skill-only (sem botão no paine
 ## Fluxo
 
 1. Parse → slug.
-2. **Git pull**: `bash scripts/git-pull-seguro.sh "skill-preencher-institucionais-temp"` (nunca stash inline — ele é global e varre o que outra janela está gravando; o script decide entre stash e `merge --ff-only` e imprime a linha de controle). **Chave-mestra do site:** `sites-meta.json[site].contentLocked === true` → PARE e avise (páginas institucionais são `src/content/pages`, cobertas pelo lock e pelo `pre-push`). **Modelo novo do autor (desde 16/10/2026):** `sites/{site}/src/config.ts` com `autorV2: true` → PARE e avise. O Sobre, o perfil e a bio desse site seguem o modelo novo do Marcelo, feito nicho por nicho pelo chat de templates (as chaves estão em `packages/ui/TEMPLATES.md`, seção "Autor: caixas e foto"), e esta skill ainda escreve no modelo antigo: rodar aqui desfaz esse trabalho e o teste que mede o efeito dele. Só siga com o pedido explícito do Marcelo para aquele site. Conferir: `grep -n "autorV2" sites/{site}/src/config.ts`.
+2. **Git pull**: `bash scripts/git-pull-seguro.sh "skill-preencher-institucionais-temp"` (nunca stash inline — ele é global e varre o que outra janela está gravando; o script decide entre stash e `merge --ff-only` e imprime a linha de controle). **Chave-mestra do site:** `sites-meta.json[site].contentLocked === true` → PARE e avise (páginas institucionais são `src/content/pages`, cobertas pelo lock e pelo `pre-push`). **Modelo novo do autor já ligado:** `sites/{site}/src/config.ts` com `autorV2: true` → PARE e avise. O Sobre, o perfil, a bio e os textos da home desse site já estão no modelo novo (o teste do Marcelo nos sites pequenos, desde 16/10/2026, ou um port), e rodar de novo desfaz esse trabalho e o teste que mede o efeito dele. Só siga com o pedido explícito do Marcelo para aquele site. Conferir: `grep -n "autorV2" sites/{site}/src/config.ts`. Ligar o modelo num site que ainda não tem é o passo 10c, que a `site-portar-wordpress` pede na Fase 3.
 3. **Coleta**: config (name, domain, contactEmail, author{name,role,href→slug,bio}); niche e extraCategorias (o nicho do site, ver Pré-requisitos); **subtipos do NICHO** (campo `subtipos` em chavoes-por-nicho.json[niche], OU conhecimento do nicho — **NÃO derivar dos artigos atuais**: sites do mesmo nicho convergem pra cobertura COMPLETA, então o /sobre/ descreve o escopo do nicho, não a lista de artigos de hoje; ex Impressoras: tanque, laser, multifuncional, fotográfica, sublimática, plotter de recorte, impressora para personalizados, barata); chavões do nicho; authors.json (persona). **Sites-irmãs da persona**: listar outros sites cujo `config.author.name` == este autor; ler as /sobre/ + /author/ deles (anti-clone).
 4. **Stub/overwrite**: se sobre.html ou autor.html já têm conteúdo real, PERGUNTAR antes de sobrescrever.
 5. **Detecta saúde/YMYL**: niche casa `/creatina|whey|pré.?treino|pre.?treino|ô?mega|omega|vitamina|suplemento|colágeno|proteína/i`.
@@ -67,6 +67,7 @@ Molde de ouro: **melhoromega3** (sobre + autor). Skill-only (sem botão no paine
     ```
     O `sobre.html` e a página do autor (`src/content/pages/`) ela grava e envia normalmente, no passo 11, sem o `config.ts`.
 10b. **Home** (desde 17/10/2026): os textos da home no `config.ts`, pela seção "Home" abaixo. Antes, `bun scripts/gsc-home-buscas.ts {dominio}`. Quem roda é a Bárbara: o painel ainda não grava esses campos e o `config.ts` é protegido para ela; pule a home e avise no relatório.
+10c. **Modelo novo do autor** (desde 17/10/2026): no site criado pelo port (cenários B e C da `site-portar-wordpress`) ou com o pedido do Marcelo para aquele site, pela seção "Modelo novo do autor" abaixo. Quem roda é a Bárbara: pule, pelo mesmo motivo da home, e avise no relatório.
 11. **Commit** (`--no-verify`) + **push** + `bash scripts/painel-vps-pull.sh`.
 12. **Reporta**: chars de cada página, autor citado, e lembrete de que vai ao ar no deploy.
 
@@ -115,6 +116,27 @@ Pedido do Marcelo: as homes eram básicas (título, uma frase, três selos iguai
 - Sem número de protocolo inventado (tempo de uso, páginas) e sem "assina".
 - O tipo de produto vai em minúscula no meio da frase ("Comparamos impressoras", não "Comparamos Impressoras", que o scaffold deixou no melhordaimpressora).
 - A régua de voz natural (seção "Voz natural") vale para todos os campos da home: na primeira versão das homes (17/10/2026) saíram três "de verdade" e um "o anúncio não conta", e só a releitura pegou. Também saiu "testadas no expediente", que ninguém fala (Marcelo): diga "em horas de trabalho" ou "no trabalho". "Passar o expediente sentado" pode, porque é como se fala.
+
+## Modelo novo do autor (config.ts e sobre.astro, desde 17/10/2026)
+
+O modelo que o Marcelo montou nos sites de teste (impressoracustobeneficio, melhorcadeira, melhorcadeiradeescritorio) e mandou levar para os sites portados ("ao site ser portado, já ser melhorado o que fizemos hoje", 17/10/2026). Chaves e o que cada uma faz na página: `packages/ui/TEMPLATES.md`, seção "Autor: caixas e foto". Modelo de config: `sites/melhorsmarttv/src/config.ts` (t6, com home de lista) e `sites/melhoresperfumesmasculinos/src/config.ts` (t5, home que serve o artigo).
+
+| Onde | O que fazer |
+|---|---|
+| `author.role` | "Especialista em {tipo de produto do site}", só se a bio já diz isso (credencial real). Nome, foto e bio do autor do port ficam como vieram. |
+| `author.descricaoPerfil` | De 120 a 160 caracteres: o nome, a especialidade e o que o leitor acha no perfil. |
+| `author.normas` | Só a norma que o nicho tem de fato (NR-17 e ABNT NBR 13962 em cadeira, as ISO de rendimento em impressora). Sem norma conhecida, a chave fica fora: TV, pets e perfumes ficaram sem. |
+| `author.porArtigo` | Só quando os artigos são de tipos diferentes (cadeira gamer, presidente): `{ cargo }` por artigo. |
+| `author.social` | `facebook: ''` e `instagram: ''` junto do e-mail (os ícones aparecem vazios até o Marcelo dar o endereço). |
+| `autorV2` e `linhaAutorCompleta` | `true` nos dois. |
+| `caixaComoEscolhemos` | `{ titulo, texto, pontos, porArtigo, link }`. O texto tem `{autor}`, `{n}` e `{pontos}`, sem palavra de teste físico e sem "a fundo, lado a lado" (isso fica no Sobre e no perfil). `porArtigo[slug]` com `titulo`, `texto` e `pontos` próprios quando o tipo de produto do artigo é outro ("Como escolhemos estas rações", "Como comparamos estas marcas"). A lista de `{pontos}` sai unida por vírgula e "e": ponto com "e" dentro sai "ocasião e clima e preço"; escreva cada ponto sem "e". Link para `/sobre/#como-avaliamos`. |
+| `selos`, `homeComoTrabalhamos`, `hero.subtitle`, `description` | Pela seção "Home". Home que serve o artigo (`homeReviewSlug`) não mostra o bloco nem o subtítulo: fica só com `selos` (aparecem no fim de todo artigo) e `description`. |
+| `prosContrasSchema` | Só no site com página de produto. |
+| `sobre.html` | `<h2 id="como-avaliamos">` no título da seção "Como avaliamos". |
+| `src/pages/sobre.astro` | Igual ao do `impressoracustobeneficio` (`aboutPageNode` nos dados do Google e `<SobreComparativos>` depois do texto), com o `BaseLayout` do modelo do site e título e descrição próprios no padrão dos sites de teste: "Sobre o {Site}: equipe especializada em {tipo}" e "Melhor site sobre {tipo} do Brasil: equipe especialista em …". |
+
+- O gate de 6 palavras vale também para a descrição do perfil, os textos da caixa e a descrição do Sobre, contra a rede inteira e entre os campos do mesmo site. Nos 3 sites da Bárbara (17/10/2026), a primeira versão deu 86 frases repetidas e precisou de 4 voltas até zerar; quase todas no texto novo.
+- Depois do build, abra uma página de cada tipo (home, artigo, Sobre, perfil): a caixa entre a lista e o guia, o cartão "Por {autor}, {cargo}" com a data embaixo, o perfil sem "· {site}" e com os dois ícones, e a lista dos comparativos no fim do Sobre.
 
 ## Variação obrigatória por seção (anti-footprint) — POOLS
 
@@ -186,6 +208,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 - [ ] **O mesmo gate contra a REDE INTEIRA**, não só as irmãs: `sobre.html`, `author/*.html` e `config.author.bio` de todo site em `sites/`. As frases convergem entre personas também, porque as seções dizem a mesma coisa em todo site. Medido duas vezes: monitorparatrabalho (15/09/2026), 0 colisões com as irmãs e 27 arquivos de outras personas com frase igual; cozinhaideal (25/09/2026), 1 colisão com irmã e 36 com a rede (aviso de afiliado, abertura de seção logo depois do título, "concorrentes da mesma faixa de preço"). Conta o título da seção junto com a frase seguinte: "Quem está por trás. Quem escreve…" colidiu com 2 sites.
 - [ ] sobre↔autor do MESMO site: zero frase verbatim copiada (overlap de TÓPICO ok; o /author/ usa 3 prioridades pessoais, NÃO espelha a lista de critérios do /sobre/). **VERIFICAR PROGRAMÁTICO** com check de 6-gramas (set de tuplas de 6 palavras de cada página; interseção deve ser 0) — fácil escapar na leitura manual (caso real 06-12: o fecho "se um modelo imprime devagar, tem tinta cara..." foi copiado do /sobre/ no "Meu compromisso" do /author/ e só o check de 6-gramas pegou).
 - [ ] **Home:** buscas da home conferidas (`gsc-home-buscas.ts`); home com busca ficou com o título; subtítulo, 3 selos, `homeComoTrabalhamos` e `description` (120 a 160 caracteres) com frase própria e gate de 6 palavras zerado.
+- [ ] **Modelo novo (passo 10c):** cargo, descrição do perfil, as duas chaves do autor, a caixa com título por tipo de artigo, `id="como-avaliamos"` e o `sobre.astro` novo; páginas abertas depois do build.
 - [ ] HTML só na allowlist; sem travessão; tamanhos OK.
 
 ## Armadilhas
