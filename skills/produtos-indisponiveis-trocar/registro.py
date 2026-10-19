@@ -16,7 +16,7 @@ for site in sites:
         elif tipo == 'pagina' or c['pagina']: pag.append(linha)
         else: sem.append(linha); SEM[o] = {'motivo': f'{site}: {mot}', 'em': HOJE}
     d = datetime.date.fromisoformat(HOJE).strftime('%d/%m/%Y')
-    L = [f'# Trocas de link no {site} ({d})', '', f'Só o link muda; texto, nome e foto do card ficam. Conferido na Amazon em {d}: todo substituto está à venda, não é seminovo, e tem a voltagem, o tamanho e o gênero que o card descreve.', '']
+    L = [f'# Trocas de link no {site} ({d})', '', f'Só o link muda; texto, nome e foto do card ficam. Conferido na Amazon em {d}: todo substituto está à venda, não é seminovo, tem a voltagem e o gênero que o card descreve, e o tamanho mais próximo à venda (quando é outro, o motivo diz).', '']
     for k, v in grupos.items():
         if v: L += [f'## {NOME[k]} ({len(v)})', '', '| Produto no artigo | Vai para | Artigos |', '|---|---|---|'] + sorted(v) + ['']
     if sem: L += [f'## Ficam sem troca ({len(sem)})', '', 'Não há produto da mesma marca e do mesmo tipo à venda que sirva. O card continua com o link antigo.', '', '| Produto no artigo | Por quê | Artigos |', '|---|---|---|'] + sorted(sem) + ['']
