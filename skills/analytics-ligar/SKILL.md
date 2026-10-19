@@ -18,7 +18,7 @@ Caso-origem: 19 e 20/10/2026, sessão do Marcelo. Só 2 dos 69 sites no ar tinha
 
 ## O que já está pronto no código (não refazer)
 
-- Os 12 modelos (`packages/ui/src/layouts/BaseLayout.astro` e `templates/t2` a `t12`) carregam o Analytics sozinhos quando `sites/{site}/src/analytics.json` tem `ga4`. Site sem identificador não muda nada.
+- Os 13 modelos (`packages/ui/src/layouts/BaseLayout.astro` e `templates/t2` a `t13`) carregam o Analytics sozinhos quando `sites/{site}/src/analytics.json` tem `ga4`. Site sem identificador não muda nada.
 - O script do Google (cerca de 190 quilobytes) só baixa depois que a página carregou (commit `d454b5b64`). Medido no PageSpeed, celular: o melhorhidratante foi de 78 (script junto da página) para 91 (script depois). Nos modelos Vidro (t9) e Pastel (t12) a simulação de celular lento do PageSpeed ainda pune o script. Mas nos tempos observados de verdade o script começa só depois do fim do carregamento (melhorairfryer.com: carregamento aos 0,52 segundo, script a partir daí, maior imagem aos 1,35 segundo).
 - O clique num link da Amazon vira o evento `amazon_click`, com `link_url` e `link_text`. O link abre em outra aba, então o evento sai mesmo que o script do Google ainda esteja chegando.
 - As 73 políticas de privacidade já dizem que o site usa o Google Analytics e cookies. Não há banner de cookies (decisão de sempre).
@@ -83,6 +83,7 @@ Pule esta fase se a pessoa já tem a propriedade e deu o identificador. Antes de
 6. **Fluxo de dados:** Web, com a URL de um dos sites e o nome "Sites de {pessoa}". A medição otimizada fica ligada, como vem. O identificador G-... aparece no trecho de código da tela "Configurar uma tag do Google". Ele não está no texto da página: leia pela imagem (zoom).
 7. Se aparecer "Meus comunicados por e-mail", use "Desmarcar tudo e salvar".
 8. **Guarda dos dados:** Administrador > Coleta e modificação de dados > Retenção de dados. Ponha 14 meses (o padrão do Google é 2 meses) e salve. Recarregue a página para conferir.
+9. **Clique na Amazon como evento principal, já na criação:** Administrador > Exibição de dados > Eventos > Criar evento. Nome `amazon_click`, ligue "Marcar como evento principal", escolha "Não definir um valor de evento principal padrão" (o formulário vem com 1 dólar por clique, número inventado) e "Uma vez por evento", e no fim "Criar com código" (o site já envia o evento). Clique em Criar e confira a estrela cheia na aba "Eventos principais". Assim não é preciso esperar o evento aparecer na lista, o que leva até 24 horas (Marcelo, 20/10/2026).
 
 ## Fase 3: gravar o identificador
 
@@ -131,14 +132,14 @@ O script faz build, deploy e limpeza do cache pelo painel, um site por vez. O pa
 
 ## Fase 6: depois de 24 horas
 
-- **Clique na Amazon como evento principal:** Administrador > Exibição de dados > Eventos, aba "Eventos recentes", estrela no `amazon_click`. O Analytics só lista o evento até 24 horas depois da primeira coleta.
+- **Clique na Amazon como evento principal**, se o passo 9 da Fase 2 ficou para trás: o mesmo caminho daquele passo, ou a estrela no `amazon_click` na aba "Eventos recentes", que só lista o evento até 24 horas depois da primeira coleta.
 - O Google conta o clique na Amazon duas vezes, como `click` (clique de saída da medição otimizada) e como `amazon_click`. Para a análise vale o `amazon_click`.
 
 ## Armadilhas (aconteceram)
 
 1. **O PageSpeed sem chave da API recusa por limite diário.** Pela página pagespeed.web.dev funciona. No navegador do app com o painel escondido, a página não desenha o resultado: rode no Chrome da pessoa (só leitura, sem conta, avisando antes).
 2. **Uma rodada do PageSpeed varia alguns pontos.** Compare com duas rodadas, ou com um site do mesmo modelo sem Analytics.
-3. **O checklist do painel mostra o retrato do Search Console guardado na memória** e só relê quando o painel reinicia.
+3. **O checklist do painel mostra o retrato do Search Console**, que a VPS tira às segundas. Até 20/10/2026 o painel só relia o arquivo ao reiniciar; agora relê quando o arquivo muda.
 4. **Lista mostrada à pessoa sem conferir:** em 19/10/2026 entrou na "primeira leva" um site que levava 17 arquivos de código pendente (melhorsecador). Monte a lista a partir da comparação da Fase 1, não de memória.
 5. **Disco cheio no meio da publicação:** um comando falhou com "no space left on device". Confira o espaço (`df -h /System/Volumes/Data`) antes de construir muitos sites.
 
