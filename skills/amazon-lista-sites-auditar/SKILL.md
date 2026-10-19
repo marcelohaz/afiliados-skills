@@ -1,15 +1,16 @@
 ---
 name: amazon-lista-sites-auditar
 description: >-
-  Audita a Lista de Sites do Associados Amazon (teto de 50 por conta) e RECOMENDA quem entra e quem sai. Recebe a lista colada do console da Amazon, mede o que está no ar por sonda HTTP, puxa tráfego do GSC das contas com token, cruza com sites-meta/tag/DR e devolve dois rankings lado a lado: declarados do pior pro melhor (candidatos a sair) e não declarados do melhor pro pior (candidatos a entrar). READ-ONLY na Amazon — quem aplica é o humano. No fim pede a lista já aplicada e sincroniza o espelho do painel (sites-amazon.html) via /admin/amazon-sites/import.
+  Audita a Lista de Sites do Associados Amazon (teto de 50 por conta) e RECOMENDA quem entra e quem sai. Lê a lista no Chrome da pessoa (ou recebe colada), mede o que está no ar por sonda HTTP, puxa tráfego do GSC das contas com token, confere a conta de cada tag e devolve dois rankings lado a lado: declarados do pior pro melhor (candidatos a sair) e não declarados do melhor pro pior (candidatos a entrar). Só aplica a troca na Amazon com o sim da pessoa para aquela troca. No fim sincroniza o espelho do painel (sites-amazon.html) via /admin/amazon-sites/import.
 ---
 
 # Auditar a Lista de Sites da Amazon
 
-> Skill de **recomendação**. Ela mede, ordena e explica. **Não altera nada na
-> Amazon** — não tem como, e não deveria. Quem aplica é o humano, no console.
-> O único write dela é o espelho do painel, no fim, e só com a lista que o
-> humano confirmar que aplicou.
+> Skill de **recomendação**. Ela mede, ordena e explica. **Na Amazon, só lê**,
+> até a pessoa dizer sim para a troca recomendada: mudar a lista é mudar a
+> conta, e isso pede o sim dela, a cada vez. Com o sim, a troca é feita no
+> Chrome dela (Etapa 6). O outro write é o espelho do painel, no fim, com a
+> lista que ficou gravada na Amazon.
 
 ## Parse de input
 
@@ -20,15 +21,18 @@ description: >-
 
 ## O que a skill NÃO faz, declarado
 
-**Não lê a conta da Amazon.** Exige login. A lista vem colada pelo humano, nas
-duas pontas.
+**Não lê a conta da Amazon sem o Chrome da pessoa.** A conta exige login, e o
+Claude nunca digita senha: lê pelo Claude in Chrome, na conta já logada,
+avisando antes o quê, o site (`associados.amazon.com.br`) e a conta. Sem o
+Chrome, a lista vem colada pela pessoa.
 
 **Não vê clique de afiliado por tag**, que é o sinal mais forte de risco: um
 site não declarado só manda referência pra Amazon quando alguém clica no link.
 Esse número está no relatório do Associados. A skill usa **tráfego de busca**
 como aproximação e precisa dizer isso no relatório.
 
-**Não altera a Amazon.** Só o espelho local.
+**Não altera a Amazon sem o sim.** A recomendação sai primeiro; a troca, só
+depois do sim da pessoa para ela.
 
 ## Os critérios, na ordem certa
 
@@ -74,8 +78,15 @@ fazer com os links".
 
 ### Etapa 1 — Receber a lista atual
 
-Pedir a lista colada do console (`/home/account/profile/sitelist`). Normalizar
-URL → domínio. **Sem ela a skill não roda**: não há de onde inferir o estado.
+Ler a lista em `https://associados.amazon.com.br/home/account/profile/sitelist`,
+no Chrome da pessoa (avisar antes, ver acima), ou pedir que ela cole. Conferir o
+StoreID no topo da página (a do Marcelo é `escritorioeca-20`): a lista é por
+conta. Cada site é um elemento `.ac-site-name`; leia todos por JavaScript e
+normalize URL → domínio (a resposta da ferramenta corta perto de 1.000
+caracteres: leia em duas metades). Compare com o espelho do painel
+(`GET /admin/amazon-sites`, campo `declared`): diferença entre os dois é a
+primeira coisa a relatar. **Sem a lista a skill não roda**: não há de onde
+inferir o estado.
 
 ### Etapa 2 — O que está no ar
 
@@ -110,7 +121,18 @@ Conta pela **tag** (`config.ts` → `amazon-ids.json`). Dono pelo
 ⚠️ **Se a tag não constar no espelho, não invente.** O `docs/painel/amazon-ids.json` é preenchido à mão
 e não tem os sites mais novos que ele. Nesse caso: reportar como
 "conta indeterminada", cair no `sites-meta` para dizer de QUEM é o site, e
-avisar que o espelho está velho.
+avisar que o espelho está velho. Duas fontes resolvem a conta de verdade: a
+página `https://associados.amazon.com.br/home/account/tag/manage` (os IDs de
+rastreamento da conta logada, lidos por JavaScript no Chrome) e os
+`tracking-id.csv` da `amazon-relatorios-analisar` (só os IDs com movimento).
+Em 19/10/2026, 5 tags ausentes do espelho estavam na conta do Marcelo.
+
+O `GET /admin/amazon-sites` já cruza tudo isso por site (campos `account`,
+`state`, `http`, `stack`, `declared`): comece por ele. Site fora do repositório
+(WordPress antigo) não aparece ali: liste os domínios que respondem em
+`docs/painel/_data/domains-status.json` (`estado` `wordpress` ou `astro`) e
+leia a tag nos posts pelo `wp-json` (`/wp-json/wp/v2/posts?per_page=5`; site
+de listagem costuma ter o conteúdo em `/pages`).
 
 ### Etapa 5 — Os dois rankings
 
@@ -121,9 +143,23 @@ plataforma, links, e o que fazer com eles.
 Mais três avisos: quem está **fora do GSC** (zero ali é ausência de dado), quem
 tem **tag de outra conta**, e quem é **redirect ou está fora do ar**.
 
-### Etapa 6 — Pedir a lista aplicada e sincronizar o espelho
+### Etapa 6 — Aplicar (só com o sim) e sincronizar o espelho
 
-Depois que o humano aplicar no console, pedir a lista final e mandar pro painel:
+**Aplicar, se a pessoa disser sim para a troca recomendada** (19/10/2026, 9
+trocas na conta do Marcelo), na mesma página da Etapa 1:
+- Remover: cada site tem um X (`.ac-site-icon-close`, dentro do mesmo bloco do
+  `.ac-site-name`); o `click()` por JavaScript funciona.
+- Pôr: preencher a caixa "Insira seu site" (placeholder
+  `https://www.example.com/myblog`) com `https://dominio`, disparando `input` e
+  `change`, e clicar no botão "Adicionar" ao lado. Tire antes de pôr: o teto é 50.
+- Remover e pôr só mudam a tela. **Nada fica gravado até o botão "Confirmar"**,
+  que aparece depois da primeira mudança. Antes de clicar nele, compare a lista
+  da tela, inteira, com a esperada (zero faltando, zero sobrando). Clique de
+  verdade em "Confirmar"; a página responde "Sites e Apps atualizados".
+- Recarregue a página e leia a lista de novo: é ela que vale.
+
+Sem o sim, a pessoa aplica no console e cola a lista final. Nos dois casos, a
+lista que ficou gravada vai para o painel:
 
 ```
 POST /admin/amazon-sites/import   { owner, text, replace: true }
@@ -134,7 +170,15 @@ O endpoint preserva `status`/`nota` de quem continua, faz backup em
 Ele devolve `removidos[]` com a anotação de quem saiu — **mostrar antes de
 descartar**: anotação humana não se reconstrói por medição.
 
-⚠️ **Se o humano NÃO colar a lista final, diga com todas as letras que o
+⚠️ **O import não faz commit** (19/10/2026): o handler grava
+`docs/painel/amazon-sites.json` na VPS, mas o arquivo não está na whitelist do
+commit automático. Até isso ser consertado, confira na VPS
+(`git status --short docs/painel/amazon-sites.json`) e, se estiver sujo, faça o
+commit lá mesmo e envie. Se o gancho de envio da VPS barrar por testes de
+outras rotas, confira que o commit só tem esse arquivo antes de usar
+`PULAR_TESTES_PAINEL=1`.
+
+⚠️ **Se a lista final não foi lida nem colada, diga com todas as letras que o
 espelho NÃO foi atualizado**, e desde quando está parado. Sem isso, a próxima
 execução apresenta inferência sobre dado velho como se fosse medição.
 
