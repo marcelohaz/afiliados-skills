@@ -36,10 +36,12 @@ Caso-origem: 19 e 20/10/2026, sessão do Marcelo. Só 2 dos 69 sites no ar tinha
 
 ```bash
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado"; exit 1; }
-bun -e "import { resolverDono } from './scripts/lib/dono.ts'; console.log(resolverDono(process.cwd()))"
-python3 - <<'EOF'
-import json, os
-dono = 'Marcelo'  # ou 'Bárbara', pelo comando acima
+bash scripts/git-pull-seguro.sh "analytics-ligar"
+DONO=$(bun -e "import { resolverDono } from './scripts/lib/dono.ts'; console.log(resolverDono(process.cwd()))")
+python3 - "$DONO" <<'EOF'
+import json, os, sys
+dono = {'marcelo': 'Marcelo', 'barbara': 'Bárbara'}.get(sys.argv[1])
+if not dono: sys.exit(f'dono não identificado ({sys.argv[1]}): pergunte à pessoa')
 m = json.load(open('docs/painel/sites-meta.json'))
 for s, v in sorted(m.items()):
     if not v.get('live') or v.get('owner') != dono or not os.path.isdir(f'sites/{s}'): continue
@@ -49,6 +51,8 @@ for s, v in sorted(m.items()):
     print(s, ga4 or 'sem Analytics', trava)
 EOF
 ```
+
+O pull vem antes de tudo: a comparação da Fase 1 constrói o site nesta máquina, e o painel publica o que está na VPS. Com o repositório daqui atrasado, a comparação não mostra o que a publicação leva. O script acha o repositório principal pelo endereço (na Bárbara, o `upstream`).
 
 Mostre a lista à pessoa: quantos sites, quais ficam de fora e por quê.
 
@@ -111,13 +115,13 @@ bun scripts/painel-publicar-sites.ts {site} [{site}...] --confirmar-erro-antigo
 
 O script faz build, deploy e limpeza do cache pelo painel, um site por vez. O painel escolhe a conta Cloudflare pela zona, então vale para os sites dos dois. Leva cerca de um minuto e meio por site. Para muitos sites, rode em segundo plano e avise a pessoa quanto deve levar.
 
-- `--confirmar-erro-antigo`: o painel recusa publicar quando um artigo tem erro de auditoria. O script só confirma quando nenhum arquivo de conteúdo do site mudou desde a última publicação, ou seja, quando o erro já estava no ar. Caso real: oguiacompra, 19/10/2026, com a pergunta da introdução de um artigo de 31/07 sem a palavra-chave. Com conteúdo mudado, o site é pulado e o motivo sai no resumo.
+- `--confirmar-erro-antigo`: o painel recusa publicar quando um artigo tem erro de auditoria. O script só confirma quando nenhum arquivo de conteúdo do site mudou desde a última publicação, ou seja, quando o erro já estava no ar. Caso real: oguiacompra, 19/10/2026, com a pergunta da introdução de um artigo de 31/07 sem a palavra-chave. A comparação é feita no commit que o painel construiu. Com conteúdo mudado, ou com o repositório desta máquina atrás do painel, o site é pulado e o motivo sai no resumo (no segundo caso, rode o pull e publique de novo só aquele site).
 - Publique primeiro um site e confira (Fase 5) antes de mandar o resto.
 - **Nunca edite o roteiro de publicação enquanto ele roda.** O terminal lê o arquivo durante a execução e pode rodar um pedaço errado.
 
 ## Fase 5: conferir no ar
 
-1. **Nas páginas:** o identificador e o carregamento leve (`carregarGtag`) na página inicial e num artigo de cada site, e nada do script antigo (`<script async src="https://www.googletagmanager`). Peça sem cache (`?cb=...`) e repita se um ponto da Cloudflare ainda mostrar a versão anterior: isso acontece por alguns segundos depois da limpeza.
+1. **Nas páginas:** o identificador e o carregamento leve (`carregarGtag`) na página inicial e num artigo de cada site, e nada do script antigo (`<script async src="https://www.googletagmanager`). Peça sem cache (`?cb=...`) e repita se um ponto da Cloudflare ainda mostrar a versão anterior: isso acontece por alguns segundos depois da limpeza. Site que já tinha Analytics e não foi publicado depois de 19/10/2026 ainda carrega o script do jeito antigo, junto da página (o melhorcreatina, conferido em 20/10/2026). O identificador está lá e a coleta funciona; publicar de novo passa para o carregamento leve.
 2. **No navegador do app**, abra um artigo e confira o envio:
    ```js
    performance.getEntriesByType('resource').filter(r => /\/g\/collect/.test(r.name)).map(r => decodeURIComponent(r.name).match(/tid=([^&]+)|en=([a-z_]+)/g))
