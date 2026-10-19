@@ -12,7 +12,7 @@ description: "Troca o link dos produtos que não se compram mais na Amazon (pág
 
 Regra do Marcelo (24/09, 02/10, 03/10 e 19/10/2026): produto que não dá para comprar ganha outro link, e o nome, o review e a foto do card ficam. O Google não avalia o link da Amazon (todo link tem nofollow e nenhum está nos dados estruturados), então a posição do artigo não muda. *"Enviar cliente pra produto inválido é ruim, ele vai achar que o artigo é ruim e sair"* (19/10/2026).
 
-A regra completa (o que troca, a ordem dos substitutos, qual anúncio escolher) está em `site-portar-wordpress`, item "Produtos da Amazon"; a ferramenta é `scripts/disponibilidade-amazon.ts` (o cabeçalho dela tem o laço de leitura). Esta skill é o procedimento de ponta a ponta, montado em 19/10/2026 quando 17 sites portados passaram pela troca (205 cards em 109 artigos).
+A regra completa (o que troca, a ordem dos substitutos, qual anúncio escolher) está em `site-portar-wordpress`, item "Produtos da Amazon"; a ferramenta é `scripts/disponibilidade-amazon.ts` (o cabeçalho dela tem o laço de leitura). Esta skill é o procedimento de ponta a ponta, montado em 19/10/2026 quando 17 sites portados passaram pela troca (206 cards em 109 artigos).
 
 Caso-origem (19/10/2026): nos ports antigos, "Não disponível" esperava uma 2ª leitura que atrasou; 535 dos 2.322 produtos estavam indisponíveis, 130 de 311 no compraguia. Desde então "Não disponível" troca já, na 1ª leitura.
 
@@ -20,7 +20,9 @@ Caso-origem (19/10/2026): nos ports antigos, "Não disponível" esperava uma 2ª
 
 - **Só o link muda.** Nada de texto, nome, foto, ordem ou produto novo no card. Troca de produto com texto novo é reescrita e é decisão do Marcelo.
 - **Ordem dos substitutos:** o mesmo modelo em outro anúncio; o sucessor da mesma marca e linha, na mesma faixa de preço; um parecido da mesma marca e do mesmo tipo, com a ficha e o preço que o card descreve. **Outra marca nunca.** Sem nenhum dos três, o produto fica e vai para `sem-substituto.json` com o motivo.
-- **Confira a página de cada substituto antes de gravar,** não o título da busca: à venda, não é seminovo (nem "Amazon Seminovos"), voltagem, tamanho, cor e gênero do card, quem vende. Mesmo modelo só em loja de terceiro e com preço alto indica que saiu de linha.
+- **Confira a página de cada substituto antes de gravar,** não o título da busca: à venda, não é seminovo (nem "Amazon Seminovos"), quem vende, voltagem, tamanho, cor e gênero. Voltagem, gênero e marca têm de bater. Tamanho e cor: fica a opção mais próxima do card; o mesmo modelo em outra cor vem antes de um parecido de outro tamanho (Midea RT468 de 347 L branca, e não a Slim de 463 L inox, 19/10/2026). Quando o tamanho está no nome do card ou no tema do artigo ("30 litros", "55 polegadas"), outro tamanho só sem opção mais próxima, e o motivo diz o tamanho. Mesmo modelo só em loja de terceiro e a várias vezes o preço do card indica que saiu de linha (Mondial CM-1500 a R$ 1.499).
+- **O substituto segue o card, não o link antigo.** Card cujo nome não bate com o produto do link ("55Q60D (55 Polegadas)" que abria a TV de 50", desde o WordPress): o substituto é o do card. Se o mesmo ASIN serve certo em outro artigo do site, troque à mão só no artigo errado (card e links do texto, motivo no `sucessorDe`) e acrescente a linha no `trocas.jsonl`.
+- **`sem-substituto.json` vale para a rede inteira** (a chave é o ASIN, e o relatório deixa de mandar trocar em todo site). Motivo de artigo ("o substituto já está no artigo", "passa do limite do título") não vale para outro site: antes de gravar um "sem" desse tipo, veja se o produto está em outros sites.
 - **Faixa de preço:** sucessor que custa o dobro ou mais do card não é sucessor (JBL Pulse 5 → Pulse 6 a R$ 3.434, 19/10/2026); procure o parecido no preço ou deixe sem troca.
 - **Artigo com teto de preço no título** (`notebook-ate-2500-reais`): substituto acima do teto é decisão do Marcelo. No compraguia, em 19/10/2026, ele escolheu trocar mesmo assim; liste os casos no relatório.
 - **Conflitos:** o substituto não pode já estar no artigo, e dois cards diferentes do mesmo artigo não vão para o mesmo produto. Link de texto do mesmo produto de um card segue o card.
@@ -97,7 +99,7 @@ window.__ler=async(nome,parte)=>{ window.__st[nome]='lendo'; for(const a of part
   }catch(err){ window.__conf[a]={e:'erro'} } } window.__st[nome]='fim' };
 ```
 
-Recuse e escolha outro quando: não está `venda`; `semi`; `alto` com só loja de terceiro; a voltagem (do título ou de `volt`) não bate com a do original; a cor, o tamanho (aro, litros, polegadas) ou o gênero não batem com o card; a marca é outra; o preço passa do dobro do original. O preço que a página indisponível ainda mostra pode estar velho ou ser de outro anúncio (o do Edifier G2000 dizia R$ 96): use como sinal, não como prova.
+Recuse e escolha outro quando: não está `venda`; `semi`; `alto` com só loja de terceiro; a voltagem (do título ou de `volt`) não bate com a do original; o gênero ou a marca são outros; o preço passa do dobro do original. Tamanho e cor seguem a regra das Invariantes (a opção mais próxima). O preço que a página indisponível ainda mostra pode estar velho ou ser de outro anúncio (o do Edifier G2000 dizia R$ 96): use como sinal, não como prova.
 
 Armadilhas de 19/10/2026, todas pegas só na conferência da página:
 - o título da busca não traz a voltagem; a ficha (`volt`) traz: o Panasonic NR-BB71GVFB era de 127V, e a escolha certa mudou;
@@ -114,7 +116,7 @@ bun scripts/disponibilidade-amazon.ts trocar {site} $W/{site}-aplicar.tsv --grav
 python3 .claude/skills/produtos-indisponiveis-trocar/validar.py $W {site}
 ```
 
-Todo CONFLITO do `gerar-tsv` se resolve antes de gravar (outro substituto ou "sem"). O `validar` tem de dizer `YAML quebrado 0` e `sobrou []`: em 19/10/2026 um motivo com aspas de polegada quebrou o frontmatter de 15 artigos antes do conserto do `trocar`.
+Todo CONFLITO do `gerar-tsv` se resolve antes de gravar (outro substituto ou "sem"). Grave as leituras dos substitutos (`importar`, item 1 da Fase 5) e rode `python3 .claude/skills/produtos-indisponiveis-trocar/conferir-medidas.py {site}...`: lista cada troca com medida diferente (litros, kg, polegadas, aro, BTUs) e cada card cujo link antigo já era de outro tamanho. Diferença pequena de sucessor (310 → 320 L) é normal; o resto se confere pela régua de tamanho. O `validar` tem de dizer `YAML quebrado 0` e `sobrou []`: em 19/10/2026 um motivo com aspas de polegada quebrou o frontmatter de 15 artigos antes do conserto do `trocar`.
 
 ## Fase 5 — registro, commit e publicação
 
@@ -123,6 +125,10 @@ Todo CONFLITO do `gerar-tsv` se resolve antes de gravar (outro substituto ou "se
 3. Commit só dos seus arquivos. No zsh, lista de arquivos numa variável não se divide em palavras: grave a lista num arquivo e use `git add --pathspec-from-file=`. O `.mdx` pede `git commit --no-verify`. Depois `git push origin main` e `bash scripts/painel-vps-pull.sh`.
 4. Publique os sites do Marcelo pelo painel da VPS, um por vez: `GET /deploy-precheck/{site}`, `POST /build/{site}` e `POST /deploy/{site}` com `bun scripts/painel-api.ts`, esperando cada job (`GET /job/{id} --completo` até `running` falso). A resposta do POST traz o id em `id` ou em `job.id`; um 409 diz que já há um build do site rodando e traz o id dele. Bloqueio anterior à troca (por exemplo "Falta shortDescription" em card que veio do WordPress) não é da troca: `POST /deploy/{site}?force=1`, dizendo no relatório.
 5. Confira no ar: `python3 .claude/skills/produtos-indisponiveis-trocar/conferir-no-ar.py {site} {dominio}` tem de dizer `com problema: []`.
+
+## Corrigir uma troca já feita
+
+O `trocar` com `asin_original` = o substituto atual e `asin_novo` = o certo funciona, com dois cuidados (revisão de 19/10/2026): se a 1ª troca foi "mesmo modelo" (sem `sucessorDe`) e a correção é "sucessor" ou "parecido", o bloco novo aponta para o substituto anterior, e não para o original: troque o `asin` do bloco pelo original; e o motivo vira "parecido: correção: …" no `trocas.jsonl`: escreva o motivo começando por "correção:" e confira as linhas no fim. Quando o card já tinha `sucessorDe`, o bloco fica e só o motivo dele precisa ser reescrito. Depois, `validar`, e o registro do site de novo (`registro.py`, com a decisão nova no `decisoes.py` e no `.tsv`).
 
 ## Relatório
 
