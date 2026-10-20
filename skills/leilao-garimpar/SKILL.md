@@ -9,10 +9,11 @@ description: "Analisa a lista \"processo de liberação\" do Registro.br e devol
 
 **Desde 13/10/2026 uma rotina diária no GitHub** (`shared-scripts/.github/workflows/leiloes-diario.yml`) guarda sozinha a lista principal e a competitiva e, depois de cada janela, grava o desfecho dos domínios acompanhados. Ela grava no GitHub, então o Mac só vê depois de puxar.
 
-0. **Puxe a pasta comum antes de tudo** (sem `git stash`: as duas janelas e a rotina gravam lá; se recusar por arquivo de outra janela em edição, avise o Marcelo e siga com o que há no disco):
+0. **Puxe a pasta comum antes de tudo** (sem `git stash`: as duas janelas e a rotina gravam lá):
    ```bash
    git -C ../shared-scripts pull --rebase -q && git -C ../shared-scripts log --oneline -1
    ```
+   Se recusar por arquivo de outra janela em edição, veja se o GitHub tem commit que o disco não tem: `git -C ../shared-scripts fetch -q && git -C ../shared-scripts rev-list --count HEAD..origin/main`. Com 0, o disco já está atual e você segue. Com mais que 0, avise o Marcelo e siga com o que há no disco.
 1. **O Marcelo mandou um arquivo** ($ARGUMENTS): guarde antes de analisar, com os bytes como vieram, e use o caminho impresso como `<CAMINHO>`:
    ```bash
    cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || { echo "⛔ cwd errado ($(pwd)): rode a partir da raiz do ProjetoAfiliados"; exit 1; }
@@ -105,7 +106,12 @@ ver [[feedback_dominio_expirado_csv_e_foto_nao_estado_atual]]): no RDAP do Regis
 liberação volta **sem campo `status`**, enquanto domínio ativo volta `status=['active']`. Use um
 controle positivo conhecido na mesma rodada — o `remarks: truncated` aparece nos DOIS e não separa nada.
 Medido em 07/09/2026: **8 domínios nossos** (conta Ozéia, todos expirados em abril, sem site) estavam
-na lista e teriam passado batido. Dá pra renovar no Registro.br até a liberação.
+na lista e teriam passado batido.
+
+**Domínio nosso na lista já foi cancelado e não renova mais.** O .br renova até uns 104 dias depois de
+vencer (congelado); depois disso é cancelado e vai para a lista do mês. Nessa hora o antigo dono não tem
+prioridade: o que resta é se candidatar na janela, como qualquer pessoa. O `domains.json` costuma trazer
+`perdidoEm`. Até 20/10/2026 esta seção dizia "dá pra renovar até a liberação", e estava errado.
 
 ### 4.2 — Recorrência: pelas listas guardadas, não só pelo que foi curado
 O flag `↩ recorrente` lê só o `historico-curado.json`, que não vê run não curada nem mês em que ninguém
@@ -141,7 +147,8 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 
 ## Fase 6 — Output
 - Shortlist em tiers (tabela: domínio · produto · flag). **Lembrete**: são domínios **expirando na janela do header** — entram pra registro quando liberados, não estão livres agora. Os que vieram do R&R levam a marca "veio do R&R".
-- No fim do relatório: quantos domínios ficaram para o R&R (Fase 8) e quantos achados do R&R foram avaliados (1.1).
+- **Pedidos, com a janela aberta:** consulte no Registro.br cada domínio da shortlist, os nossos da 4.1 e os achados para o R&R que passam nas regras da Fase 8 (`consultarRegistro` de `lista.ts`, um por vez, com 1 a 2 segundos de pausa). Códigos: 6 sem pedido, 7 já pedido, 9 na lista competitiva (disputa). O Registro.br mostra no máximo 10 números de pedido (`pedidosCortado`): 10 quer dizer 10 ou mais. Ponha os pedidos na tabela. O titular de cada pedido só aparece com login no Registro.br. Para o que o Marcelo for pegar, os backlinks saem do Ahrefs grátis pelo Chrome dele (passo 3b da skill `leilao-dr`): o ruído automático ("SEO Express", "Directory Pages Index") aparece em todo domínio, e o que conta são os links de verdade.
+- No fim do relatório: **a lista** dos achados para o R&R (Fase 8), com os pedidos, e quantos achados do R&R foram avaliados (1.1). Leia o arquivo de achados inteiro antes de resumir (`grep -c '^- '` dá o total): em 20/10/2026 só as 30 primeiras de 66 linhas foram mostradas ao Marcelo, e 3 dos domínios que ele reservou estavam na parte não lida.
 - **READ-ONLY no afiliados. Registro é decisão do Marcelo.** Commit e publicação do painel (JSONs, gen, VPS) só com "pode subir". A exceção é a pasta compartilhada de leilões (Fase 8): a lista e os achados vão sempre para o git, porque a janela do R&R lê de lá.
 
 ## Fase 7 — Histórico + pós-compra
@@ -151,8 +158,11 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 
 ## Fase 8 — Achados para o R&R e estado ao terminar
 
-1. **Grave os achados para o R&R** em `caminhoDosAchados('<DE>', '<ATE>', 'afiliados')` (`../shared-scripts/leiloes/achados/<DE>_a_<ATE>-do-afiliados-para-o-rr.md`; crie a pasta `achados/` se faltar): os domínios de **serviço local** que apareceram na análise e parecem bons para rank and rent, ou seja, serviço + cidade (chaveiro, guincho, encanador, vidraçaria, desentupidora, dedetização, eletricista, ar-condicionado, conserto de eletrodoméstico e parecidos). Uma linha cada: `- dominio.com.br — por quê`. **Sem análise a fundo:** o funil do R&R já cobre os nichos dele; anote o que chamar atenção (serviço e cidade claros, curto, sem número nem hífen). Nome de empresa (`chaveirogomes`) não entra. Sem nenhum, não grave o arquivo.
-   Passada rápida para achar o que olhar (não é funil). Os nichos vêm do `detectNicho` de `shared-scripts/domains/nicho-detect.ts`, a fonte única do R&R: a passada acompanha sozinha quando o R&R abre nicho novo. Não escreva lista de serviços à mão. Em 09/2026 deu 268 domínios em 27 nichos, a maioria nome de empresa:
+1. **Grave os achados para o R&R** em `caminhoDosAchados('<DE>', '<ATE>', 'afiliados')` (`../shared-scripts/leiloes/achados/<DE>_a_<ATE>-do-afiliados-para-o-rr.md`; crie a pasta `achados/` se faltar): os domínios de **serviço local** que apareceram na análise e parecem bons para rank and rent (chaveiro, guincho, encanador, vidraçaria, desentupidora, dedetização, eletricista, ar-condicionado, conserto de eletrodoméstico e parecidos). Uma linha cada: `- dominio.com.br — por quê`. **Sem análise a fundo:** quem garimpa serviço é a skill do R&R (`leilao-garimpar-rr`); anote o que chamar atenção, curto e sem hífen. Sem nenhum, não grave o arquivo. Regras do Marcelo (20/10/2026):
+   - **entram** serviço + cidade (`chaveiromaringa`), serviço + "perto de mim" ou "próximo a mim" (`encanadorpertodemim`, `eletricistaproximoamim`) e serviço + 24 horas com cidade (`chaveiro24horasvilavelha`);
+   - **vidraçaria entra sempre** que tiver cidade: é nicho bom e tem pagantes no R&R;
+   - **ficam de fora** bairro (`chaveironotatuape24horas`, `encanadormooca`, `guincho24horaszl`) e nome com ruído, ou seja, com um pedaço que não é serviço, cidade, "perto de mim" nem "24 horas": letras soltas (`guinchopertodemimjl`, `chaveiroemsantana24horaszn`), nome ou sigla de empresa (`chaveirogomes`, `desentupidorajatex`) e palavra de marca (`chaveiroexpresslondrina24h`, `telechaveiro24hportoalegre`).
+   Passada rápida para achar o que olhar (não é funil). Os nichos vêm do `detectNicho` de `shared-scripts/domains/nicho-detect.ts`, a fonte única do R&R: a passada acompanha sozinha quando o R&R abre nicho novo. Não escreva lista de serviços à mão. Em 09/2026 deu 268 domínios em 27 nichos, a maioria nome de empresa. O "24 horas" é o único número aceito: até 20/10/2026 a passada recusava qualquer número, e os 30 domínios de serviço com "24h" daquela lista ficavam de fora.
    ```bash
    bun -e "
    import { detectNicho } from '../shared-scripts/domains/nicho-detect.ts';
@@ -160,9 +170,10 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
    const porNicho = new Map<string, string[]>();
    for (const d of doms) {
      const sld = d.endsWith('.com.br') ? d.slice(0, -7) : '';
-     if (!/^[a-z]+$/.test(sld) || sld.length > 28) continue;
-     const n = detectNicho(sld);
-     if (n.slug === 'outros' || sld.length - n.slug.length < 4) continue;
+     const semHoras = sld.replace(/24(horas?|hrs?|hs|h)/g, '');   // o 24 horas é o único número aceito
+     if (!/^[a-z]+$/.test(semHoras) || sld.length > 32) continue;
+     const n = detectNicho(semHoras);
+     if (n.slug === 'outros' || semHoras.length - n.slug.length < 4) continue;
      porNicho.set(n.label, [...(porNicho.get(n.label) ?? []), d]);
    }
    for (const [l, ds] of [...porNicho].sort((a, b) => b[1].length - a[1].length)) console.log(ds.length, l + ':', ds.sort((a, b) => a.length - b.length).join(' '));
@@ -175,7 +186,7 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
    git -C ../shared-scripts add leiloes/ && git -C ../shared-scripts commit -m "leiloes: <o que entrou> (<DE> a <ATE>)" -- leiloes/
    git -C ../shared-scripts pull --rebase && git -C ../shared-scripts push
    ```
-   Sem nada novo em `leiloes/` (lista que já estava guardada e nenhum achado), o git responde que não há o que commitar, e está certo. Se o `pull --rebase` recusar por arquivo de outra janela em edição, não use `git stash`: espere a outra janela ou avise o Marcelo. Confira com `git -C ../shared-scripts log --oneline -1` e `git -C ../shared-scripts ls-remote origin HEAD`.
+   Sem nada novo em `leiloes/` (lista que já estava guardada e nenhum achado), o git responde que não há o que commitar, e está certo. Se o `pull --rebase` recusar por arquivo de outra janela em edição, não use `git stash`: veja se o GitHub tem commit que o disco não tem (`fetch` e `rev-list --count HEAD..origin/main`, como no passo 0). Com 0, o `push` passa direto; com mais que 0, espere a outra janela ou avise o Marcelo. Confira com `git -C ../shared-scripts log --oneline -1` e `git -C ../shared-scripts ls-remote origin HEAD`.
 
 ## Regras invioláveis
 - **NUNCA registrar/comprar** — só recomendar. Janela é curta: entregar no mesmo dia.
