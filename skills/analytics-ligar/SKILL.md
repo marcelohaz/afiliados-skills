@@ -28,9 +28,9 @@ Caso-origem: 19 e 20/10/2026, sessão do Marcelo. Só 2 dos 69 sites no ar tinha
 - **Uma propriedade por pessoa**, com um identificador só para todos os sites dela. Os relatórios se separam pelo domínio (dimensão "Nome do host"). Uma por site seria o mesmo trabalho repetido, sem ganho para a análise.
 - **Marcelo:** conta Google marcelo.ckx@gmail.com, conta do Analytics "Afiliados" (412569484), propriedade "Rede de afiliados (Marcelo)" (559669274), identificador **G-WJGPEJFWLS**. Sem administrador extra (*"nao precisas colocar escritorioecasa como administradora, nao vai mudar nada"*).
 - **Bárbara:** no e-mail dela, numa propriedade dela. Os sites só dela vão para a propriedade dela.
-- **Site de dono compartilhado** ("Marcelo e Bárbara", "Marcelo e Snizhana"): fica de fora até a pessoa dizer em qual propriedade entra.
+- **Site de dono compartilhado** ("Marcelo e Bárbara", "Marcelo e Snizhana"): entra na propriedade de quem é dono da tag da Amazon do site (`affiliateTag` no config e `docs/painel/amazon-ids.json`), que é quem recebe a comissão. O cozinhaideal (Marcelo e Snizhana, tag do Marcelo) entrou na do Marcelo em 20/10/2026.
 - **Site que já tinha Analytics fica com o dele:** oguiacompra (G-BJSMLJCHF8, com o `aw` do Google Ads) e melhorcreatina (G-4KDVP5L4P6, da Bárbara).
-- **Site travado** (`contentLocked` ou `deployBlocked` no sites-meta) fica de fora: publicar é o que liga o Analytics.
+- **Site travado** (`deployBlocked` no sites-meta) entra junto, como pede a regra do Marcelo de não deixar o travado para depois (18/10/2026): compare todas as páginas com o ar (`--todas` na Fase 1), libere só a publicação (`deployBlocked: false`, commit), publique e trave de novo no mesmo trabalho, contando no relatório. O `contentLocked` fica como está: o Analytics não mexe no conteúdo. A trava existe porque a publicação apaga do ar a página que não está no build; a comparação completa é o que mostra que nenhuma some. Em 20/10/2026 assim entraram o melhordaimpressora e o melhorimpressora.
 
 ## Fase 0: quem roda e quais sites
 
@@ -44,11 +44,12 @@ dono = {'marcelo': 'Marcelo', 'barbara': 'Bárbara'}.get(sys.argv[1])
 if not dono: sys.exit(f'dono não identificado ({sys.argv[1]}): pergunte à pessoa')
 m = json.load(open('docs/painel/sites-meta.json'))
 for s, v in sorted(m.items()):
-    if not v.get('live') or v.get('owner') != dono or not os.path.isdir(f'sites/{s}'): continue
+    if not v.get('live') or dono not in (v.get('owner') or '') or not os.path.isdir(f'sites/{s}'): continue
     p = f'sites/{s}/src/analytics.json'
     ga4 = (json.load(open(p)).get('ga4') or '').strip() if os.path.exists(p) else ''
-    trava = 'TRAVADO' if v.get('contentLocked') or v.get('deployBlocked') else ''
-    print(s, ga4 or 'sem Analytics', trava)
+    trava = 'publicação travada: comparar com --todas' if v.get('deployBlocked') else ''
+    junto = f"dono {v['owner']}: conferir de quem é a tag" if v.get('owner') != dono else ''
+    print(s, ga4 or 'sem Analytics', trava, junto)
 EOF
 ```
 
@@ -65,10 +66,11 @@ pnpm --filter {site} build          # um por site; sem node_modules: pnpm instal
 bun scripts/site-comparar-no-ar.ts {site} [{site}...]
 ```
 
-O comparador olha a lista de endereços dos sitemaps e, numa amostra de páginas (início, artigos, produto, Sobre, autor e categoria), o título, a descrição, o canonical, o texto, os links e os dados estruturados.
+O comparador olha a lista de endereços dos sitemaps e, numa amostra de páginas (início, artigos, produto, Sobre, autor e categoria), o título, a descrição, o canonical, o texto, os links e os dados estruturados. Em site com a publicação travada, use `--todas`, que compara todas as páginas. Endereço que saiu do sitemap mas continua no build (as páginas legais, que os modelos tiram do sitemap) aparece como "fora do sitemap novo" e não conta como diferença.
 
 - **Igual ao que está no ar:** a publicação leva só o Analytics. Pode seguir.
 - **Diferença só na página de categoria** (por exemplo, a descrição montada pelos artigos): pode seguir. Página de categoria pode mudar (regra do Marcelo).
+- **Diferença que vem de um conserto comum já publicado nos outros sites** (o cargo do autor do `f9ec15efe`, a data "Atualizado em" da página de produto): pode seguir, dizendo no relatório. Confira o commit que causou antes (`git log -S "{texto antigo}"`).
 - **Diferença em artigo, página de produto, Sobre ou na lista de endereços:** pare naquele site e mostre a diferença à pessoa. Página que existe só no ar seria apagada pela poda do deploy. Artigo no ar não muda sem o pedido dela.
 
 ## Fase 2: criar a conta e a propriedade no Analytics (Chrome da pessoa)
