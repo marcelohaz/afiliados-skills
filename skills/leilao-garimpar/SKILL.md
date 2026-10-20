@@ -142,6 +142,7 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 - **Falso-positivo tem forma fixa: `{produto}{qualificador-vazio}`** (celularcerto, geladeiracerta, mesaspremium, dronedigital, alarmesmart, fonteoficial). Se o par produto+adjetivo não é como alguém digita no Google, corta. Casar na regex não basta: confira se o par existe no mundo (`climatizadorultrasonico` casa, mas climatizador é evaporativo).
 - **Beleza/saúde consumível ou cosmético** (perfume, maquiagem, batom, sérum, protetor solar) fica fora: ROI baixo para comprar domínio novo (Marcelo, 23/07/2026). Devices de grooming ficam. Vale só para o garimpo, não para sites de beleza que já existem.
 - **Cortes recorrentes:** conteúdo (`receitasairfryer`), usados (`notebookusados`), B2B (`tabletindustrial`), prefixo não brasileiro (`reviewcadeiras`).
+- **"Guia" + produto fica de fora** (`guiadegeladeiras`, `guiadasbicicletas`, `guiadofornoeletrico`): o Marcelo não compra mais (20/10/2026). O helper ainda acha essa família (Fase 3); a curadoria corta e mostra no fim, entre os descartados.
 - **Onde o recall falha:** o exact-cru convergiu (varredura independente de 208 produtos em 09/2026 não achou nada novo). O que escapa é (a) a família `^(o|a|os|as)?(melhor|melhores|top)` com produto fora do dicionário, filtrando serviço e cidade por regex, e (b) `^produto+qualificador$` com lista fechada de qualificadores que formam termo real (eletrica, digital, inteligente, gamer, portatil, wifi, inox, vertical, embutir, externa, ip, kamado, passagem). `contains produto` sozinho é quase todo substring falsa.
 - **Blocklist vence a memória:** o que o helper pulou por blocklist fica fora, mesmo que pareça bom.
 
@@ -164,22 +165,35 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 
 ## Fase 8 — Achados para o R&R e estado ao terminar
 
-1. **Grave os achados para o R&R** em `caminhoDosAchados('<DE>', '<ATE>', 'afiliados')` (`../shared-scripts/leiloes/achados/<DE>_a_<ATE>-do-afiliados-para-o-rr.md`; crie a pasta `achados/` se faltar): os domínios de **serviço local** que apareceram na análise e parecem bons para rank and rent (chaveiro, guincho, encanador, vidraçaria, desentupidora, dedetização, eletricista, ar-condicionado, conserto de eletrodoméstico e parecidos). Uma linha cada: `- dominio.com.br — por quê`. **Sem análise a fundo:** quem garimpa serviço é a skill do R&R (`leilao-garimpar-rr`); anote o que chamar atenção, curto e sem hífen. Sem nenhum, não grave o arquivo. Regras do Marcelo (20/10/2026):
-   - **entram** serviço + cidade (`chaveiromaringa`), serviço + "perto de mim" ou "próximo a mim" (`encanadorpertodemim`, `eletricistaproximoamim`) e serviço + 24 horas com cidade (`chaveiro24horasvilavelha`);
-   - **vidraçaria entra sempre** que tiver cidade: é nicho bom e tem pagantes no R&R;
-   - **ficam de fora** bairro (`chaveironotatuape24horas`, `encanadormooca`, `guincho24horaszl`) e nome com ruído, ou seja, com um pedaço que não é serviço, cidade, "perto de mim" nem "24 horas": letras soltas (`guinchopertodemimjl`, `chaveiroemsantana24horaszn`), nome ou sigla de empresa (`chaveirogomes`, `desentupidorajatex`) e palavra de marca (`chaveiroexpresslondrina24h`, `telechaveiro24hportoalegre`).
-   Passada rápida para achar o que olhar (não é funil). Os nichos vêm do `detectNicho` de `shared-scripts/domains/nicho-detect.ts`, a fonte única do R&R: a passada acompanha sozinha quando o R&R abre nicho novo. Não escreva lista de serviços à mão. Em 09/2026 deu 268 domínios em 27 nichos, a maioria nome de empresa. O "24 horas" é o único número aceito: até 20/10/2026 a passada recusava qualquer número, e os 30 domínios de serviço com "24h" daquela lista ficavam de fora.
+1. **Grave os achados para o R&R** em `caminhoDosAchados('<DE>', '<ATE>', 'afiliados')` (`../shared-scripts/leiloes/achados/<DE>_a_<ATE>-do-afiliados-para-o-rr.md`; crie a pasta `achados/` se faltar): os domínios de **serviço local** que apareceram na análise e parecem bons para rank and rent (chaveiro, guincho, encanador, vidraçaria, desentupidora, dedetização, eletricista, ar-condicionado, conserto de eletrodoméstico e parecidos). Uma linha cada: `- dominio.com.br — por quê`. **Sem análise a fundo:** quem garimpa serviço é a skill do R&R (`leilao-garimpar-rr`); anote o que chamar atenção, curto e sem hífen. Sem nenhum, não grave o arquivo. O que o Marcelo costuma comprar (20/10/2026):
+   - **nicho + cidade** (`chaveiromaringa`) e **nicho + em + cidade** (`chaveiroemcuiaba`);
+   - **nicho no domínio da cidade** (`encanador.floripa.br`, `guincho.joinville.br`): o Registro.br tem 56 terminações de cidade (categoria "Localidades" em registro.br/dominio/categorias);
+   - **plural** das formas acima (`chaveiroscuritiba`, `chaveiros.curitiba.br`);
+   - **nicho + "perto de mim"**, normalmente no singular (`encanadorpertodemim`);
+   - **sub-nicho de serviço, sem cidade** (`fechaduradigital`, `boxparabanheiro`);
+   - **vidraçaria**, sempre que tiver cidade: é nicho bom e tem pagantes no R&R.
+
+   Ele dificilmente compra, e por isso **fica de fora**:
+   - "24h" ou "24horas" no nome;
+   - bairro (`encanadormooca`, `chaveirobarratijuca`);
+   - nome com ruído, ou seja, com um pedaço que não é nicho, cidade nem "perto de mim": letras soltas (`guinchopertodemimjl`), nome ou sigla de empresa (`chaveirogomes`, `desentupidorajatex`) e palavra de marca (`chaveiroexpress...`, `telechaveiro...`).
+
+   Passada rápida para achar o que olhar (não é funil). Os nichos vêm do `detectNicho` de `shared-scripts/domains/nicho-detect.ts`, a fonte única do R&R: a passada acompanha sozinha quando o R&R abre nicho novo. Não escreva lista de serviços à mão. Em 09/2026 deu 268 domínios em 27 nichos, a maioria nome de empresa. Ela lê o `.com.br` e as terminações de cidade, e aceita o nicho sozinho (sub-nicho, ou nicho no domínio da cidade). Em 20/10/2026 o `detectNicho` não conhecia `fechaduradigital` nem `boxdebanheiro` (conhecia `boxparabanheiro`): sub-nicho que ele não conhece só aparece olhando a lista. Avise a janela do R&R para incluir.
    ```bash
    bun -e "
    import { detectNicho } from '../shared-scripts/domains/nicho-detect.ts';
    const doms = Buffer.from(await Bun.file('<CAMINHO>').arrayBuffer()).toString('latin1').replace(/\r/g, '').split('\n').map(l => l.trim().toLowerCase()).filter(l => l && !l.startsWith('#'));
+   // Terminações de cidade do Registro.br (categoria Localidades, lida em 20/10/2026).
+   const CIDADES = new Set('9guacu abc aju anani aparecida barueri belem bhz boavista bsb campinagrande campinas caxias contagem cuiaba curitiba feira floripa fortal foz goiania gru jab jampa jdf joinville londrina macapa maceio manaus maringa morena natal niteroi osasco palmas poa pvh recife ribeirao rio riobranco riopreto salvador sampa santamaria santoandre saobernardo saogonca sjc slz sorocaba the udi vix'.split(' '));
    const porNicho = new Map<string, string[]>();
    for (const d of doms) {
-     const sld = d.endsWith('.com.br') ? d.slice(0, -7) : '';
-     const semHoras = sld.replace(/24(horas?|hrs?|hs|h)/g, '');   // o 24 horas é o único número aceito
-     if (!/^[a-z]+$/.test(semHoras) || sld.length > 32) continue;
-     const n = detectNicho(semHoras);
-     if (n.slug === 'outros' || semHoras.length - n.slug.length < 4) continue;
+     const p = d.split('.');
+     if (!(p.length === 3 && p[2] === 'br' && (p[1] === 'com' || CIDADES.has(p[1])))) continue;
+     const sld = p[0];
+     if (!/^[a-z]+$/.test(sld) || sld.length > 30) continue;   // sem número: 24h ele quase não compra
+     const n = detectNicho(sld);
+     const resto = sld.length - n.slug.length;   // 0 = o nicho sozinho (sub-nicho, ou nicho no domínio da cidade)
+     if (n.slug === 'outros' || (resto > 0 && resto < 4)) continue;
      porNicho.set(n.label, [...(porNicho.get(n.label) ?? []), d]);
    }
    for (const [l, ds] of [...porNicho].sort((a, b) => b[1].length - a[1].length)) console.log(ds.length, l + ':', ds.sort((a, b) => a.length - b.length).join(' '));
