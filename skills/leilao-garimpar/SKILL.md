@@ -154,8 +154,20 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
   for (const d of process.argv.slice(1)) { const r = await consultarRegistro(d); console.log(d, r.status, r.situacao, 'pedidos=' + (r.pedidos ?? 0) + (r.pedidosCortado ? ' ou mais' : '')); await new Promise(z => setTimeout(z, 1500)); }" <dominio> <dominio> ...
   ```
   Códigos: 6 sem pedido, 7 já pedido, 9 na lista competitiva (disputa). O Registro.br devolve no máximo 10 números de pedido, por isso "10 ou mais". Ponha os pedidos na tabela. O titular de cada pedido só aparece com login no Registro.br.
+- **População da cidade em todo domínio de serviço mostrado ao Marcelo** (pedido dele, 20/10/2026), em toda lista e toda resposta, não só no relatório: cidade, UF e população pela estimativa mais recente do IBGE. A cidade é leitura sua (`bhz` é Belo Horizonte, `riopreto` é São José do Rio Preto, `floripa` é Florianópolis, `poa` é Porto Alegre, `bsb` e `df` são Brasília); nome que existe em mais de um estado pede a UF certa. Domínio sem cidade (sub-nicho, "perto de mim") leva "sem cidade". O comando pega o ano mais recente sozinho (em 20/10/2026 já era a estimativa de 2026):
+  ```bash
+  bun -e "
+  const per = (await fetch('https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos').then(r => r.json())).at(-1).id;
+  const r = await fetch('https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/' + per + '/variaveis/9324?localidades=N6[all]').then(r => r.json());
+  const tira = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const pop = new Map(r[0].resultados[0].series.map((x) => [tira(x.localidade.nome), Number(x.serie[per])]));
+  console.log('estimativa do IBGE de', per);
+  for (const c of process.argv.slice(1)) console.log(c + ':', pop.get(tira(c))?.toLocaleString('pt-BR') ?? 'não achei');" 'Joinville - SC' 'Florianópolis - SC'
+  ```
+  "Não achei" é nome escrito diferente do IBGE (o acento não importa; hífen e apóstrofo importam): corrija o nome, não deixe o domínio sem número.
+- **No Mac do Marcelo, diga também o que o R&R tem no mesmo serviço e na mesma cidade** (pergunta dele, 20/10/2026: "algum em nicho e cidade com prestador?"): prestador ativo (pagante ou não) e site do R&R, com os leads de 30 dias. É o que separa o domínio que já tem para quem vender do que ainda espera prestador. Os dados são do painel do R&R, só leitura.
 - **Backlinks, só do que o Marcelo for pegar:** página pública `https://ahrefs.com/backlink-checker/?input=<dominio>&mode=subdomains` no Chrome dele (Claude in Chrome; avise antes: ahrefs.com, sem conta). No navegador do app, o "confirme que é humano" não passa. Vá de 2 a 3 por vez, espere uns 8 segundos depois de abrir e leia a tabela por JavaScript (`tr` com DR, página e âncora). O ruído automático ("SEO Express", "Directory Pages Index", listas de domínio à venda) aparece em todo domínio. O que conta são os links de verdade: guia local, notícia, fórum do assunto.
-- No fim do relatório: **a lista** dos achados para o R&R (Fase 8), com os pedidos, e quantos achados do R&R foram avaliados (1.1). Leia o arquivo de achados inteiro antes de resumir (`grep -c '^- '` dá o total): em 20/10/2026 só as 30 primeiras de 66 linhas foram mostradas ao Marcelo, e 3 dos domínios que ele reservou estavam na parte não lida.
+- No fim do relatório: **a lista** dos achados para o R&R (Fase 8), com os pedidos e a população de cada cidade, e quantos achados do R&R foram avaliados (1.1). Leia o arquivo de achados inteiro antes de resumir (`grep -c '^- '` dá o total): em 20/10/2026 só as 30 primeiras de 66 linhas foram mostradas ao Marcelo, e 3 dos domínios que ele reservou estavam na parte não lida.
 - **READ-ONLY no afiliados. Registro é decisão do Marcelo.** Commit e publicação do painel (JSONs, gen, VPS) só com "pode subir". A exceção é a pasta compartilhada de leilões (Fase 8): a lista e os achados vão sempre para o git, porque a janela do R&R lê de lá.
 
 ## Fase 7 — Histórico + pós-compra
