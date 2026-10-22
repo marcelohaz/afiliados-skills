@@ -124,7 +124,7 @@ O modelo que o Marcelo montou nos sites de teste (impressoracustobeneficio, melh
 
 | Onde | O que fazer |
 |---|---|
-| `author.role` | "Especialista em {tipo de produto do site}", só se a bio já diz isso (credencial real). Nome, foto e bio do autor do port ficam como vieram. |
+| `author.role` | "Especialista em {tipo de produto do site}", só se a bio já diz isso (credencial real). Nome, foto e bio do autor do port ficam como vieram, salvo a exceção da `site-portar-wordpress` (autor que passaria de 4 sites ou fora do nicho, trocado pela `autor-trocar`). |
 | `author.descricaoPerfil` | De 120 a 160 caracteres: o nome, a especialidade e o que o leitor acha no perfil. |
 | `author.normas` | Só a norma que o nicho tem de fato (NR-17 e ABNT NBR 13962 em cadeira, as ISO de rendimento em impressora). Sem norma conhecida, a chave fica fora: TV, pets e perfumes ficaram sem. |
 | `author.porArtigo` | Só quando os artigos são de tipos diferentes (cadeira gamer, presidente): `{ cargo }` por artigo. |
@@ -132,7 +132,7 @@ O modelo que o Marcelo montou nos sites de teste (impressoracustobeneficio, melh
 | `autorV2` e `linhaAutorCompleta` | `true` nos dois. |
 | `caixaComoEscolhemos` | `{ titulo, texto, pontos, porArtigo, link }`. O texto tem `{autor}`, `{n}` e `{pontos}`, sem palavra de teste físico e sem "a fundo, lado a lado" (isso fica no Sobre e no perfil). `porArtigo[slug]` com `titulo`, `texto` e `pontos` próprios quando o tipo de produto do artigo é outro ("Como escolhemos estas rações", "Como comparamos estas marcas"). A lista de `{pontos}` sai unida por vírgula e "e": ponto com "e" dentro sai "ocasião e clima e preço"; escreva cada ponto sem "e". Link para `/sobre/#como-avaliamos`. |
 | `selos`, `homeComoTrabalhamos`, `hero.subtitle`, `description` | Pela seção "Home". Home que serve o artigo (`homeReviewSlug`) não mostra o bloco nem o subtítulo: fica só com `selos` (aparecem no fim de todo artigo) e `description`. |
-| `prosContrasSchema` | Só no site com página de produto. |
+| `prosContrasSchema` | `true` no site com página de produto. Site sem estrela no produto já leva a avaliação do autor sem a chave (desde 19/10/2026). |
 | `sobre.html` | `<h2 id="como-avaliamos">` no título da seção "Como avaliamos". |
 | `src/pages/sobre.astro` | Igual ao do `impressoracustobeneficio` (`aboutPageNode` nos dados do Google e `<SobreComparativos>` depois do texto), com o `BaseLayout` do modelo do site e título e descrição próprios no padrão dos sites de teste: "Sobre o {Site}: equipe especializada em {tipo}" e "Melhor site sobre {tipo} do Brasil: equipe especialista em …". |
 
