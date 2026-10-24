@@ -19,6 +19,7 @@ Caso-origem: 19 e 20/10/2026, sessão do Marcelo. Só 2 dos 69 sites no ar tinha
 ## O que já está pronto no código (não refazer)
 
 - Os 13 modelos (`packages/ui/src/layouts/BaseLayout.astro` e `templates/t2` a `t13`) carregam o Analytics sozinhos quando `sites/{site}/src/analytics.json` tem `ga4`. Site sem identificador não muda nada.
+- O script do Google não baixa no site montado neste computador (`localhost`), para as conferências antes de publicar não entrarem na propriedade (24/10/2026; teste em `scripts/tests/ga-modelos.test.ts`). Por isso o teste do envio (Fase 5) é sempre no site publicado.
 - O script do Google (cerca de 190 quilobytes) só baixa depois que a página carregou (commit `d454b5b64`). Medido no PageSpeed, celular: o melhorhidratante foi de 78 (script junto da página) para 91 (script depois). Nos modelos Vidro (t9) e Pastel (t12) a simulação de celular lento do PageSpeed ainda pune o script. Mas nos tempos observados de verdade o script começa só depois do fim do carregamento (melhorairfryer.com: carregamento aos 0,52 segundo, script a partir daí, maior imagem aos 1,35 segundo).
 - O clique num link da Amazon vira o evento `amazon_click`, com `link_url` e `link_text`. O link abre em outra aba, então o evento sai mesmo que o script do Google ainda esteja chegando.
 - As 73 políticas de privacidade já dizem que o site usa o Google Analytics e cookies. Não há banner de cookies (decisão de sempre).
@@ -29,7 +30,7 @@ Caso-origem: 19 e 20/10/2026, sessão do Marcelo. Só 2 dos 69 sites no ar tinha
 - **Marcelo:** conta Google marcelo.ckx@gmail.com, conta do Analytics "Afiliados" (412569484), propriedade "Rede de afiliados (Marcelo)" (559669274), identificador **G-WJGPEJFWLS**. Sem administrador extra (*"nao precisas colocar escritorioecasa como administradora, nao vai mudar nada"*).
 - **Bárbara:** no e-mail dela, numa propriedade dela. Os sites só dela vão para a propriedade dela.
 - **Site de dono compartilhado** ("Marcelo e Bárbara", "Marcelo e Snizhana"): entra na propriedade de quem é dono da tag da Amazon do site (`affiliateTag` no config e `docs/painel/amazon-ids.json`), que é quem recebe a comissão. O cozinhaideal (Marcelo e Snizhana, tag do Marcelo) entrou na do Marcelo em 20/10/2026.
-- **Site que já tinha Analytics fica com o dele:** oguiacompra (G-BJSMLJCHF8, com o `aw` do Google Ads) e melhorcreatina (G-4KDVP5L4P6, da Bárbara).
+- **Site do Marcelo que já tinha Analytics passa para a propriedade dele** (Marcelo, 23/10/2026: *"Todos deveriam ficar na mesma propriedade, exceto os da barbara"*). O oguiacompra passou em 23/10/2026 e mantém o `aw` do Google Ads. A tag do Google Ads continua mandando as visitas também para a propriedade antiga (G-BJSMLJCHF8, conta escritorioecasa) pela configuração dela no Google, sem estar no código do site; o histórico antigo segue lá. O da Bárbara fica com o dela (melhorcreatina, G-4KDVP5L4P6).
 - **Site travado** (`deployBlocked` no sites-meta) entra junto, como pede a regra do Marcelo de não deixar o travado para depois (18/10/2026): compare todas as páginas com o ar (`--todas` na Fase 1), libere só a publicação (`deployBlocked: false`, commit), publique e trave de novo no mesmo trabalho, contando no relatório. O `contentLocked` fica como está: o Analytics não mexe no conteúdo. A trava existe porque a publicação apaga do ar a página que não está no build; a comparação completa é o que mostra que nenhuma some. Em 20/10/2026 assim entraram o melhordaimpressora e o melhorimpressora.
 
 ## Fase 0: quem roda e quais sites
@@ -62,9 +63,11 @@ Mostre a lista à pessoa: quantos sites, quais ficam de fora e por quê.
 Ligar o Analytics é publicar o site de novo, e a publicação leva junto tudo o que mudou no código desde a última vez. Em 19/10/2026, 13 dos 35 sites do Marcelo tinham código comum ainda não publicado. Construa e compare cada site com o que está no ar:
 
 ```bash
-pnpm --filter {site} build          # um por site; sem node_modules: pnpm install --frozen-lockfile --filter "./sites/{site}..."
+TZ=UTC pnpm --filter {site} build   # um por site; sem node_modules: pnpm install --frozen-lockfile --filter "./sites/{site}..."
 bun scripts/site-comparar-no-ar.ts {site} [{site}...]
 ```
+
+**Monte com `TZ=UTC`**, o horário do servidor que monta o que vai ao ar. A data dos artigos ("2026-10-20") é lida como meia-noite em Londres, e num computador com o horário de Brasília vira o dia anterior ("19 de outubro"): em 23/10/2026, no Mac da Bárbara, o comparador acusou diferença em quase todas as páginas por isso, sem nada mudado.
 
 O comparador olha a lista de endereços dos sitemaps e, numa amostra de páginas (início, artigos, produto, Sobre, autor e categoria), o título, a descrição, o canonical, o texto, os links e os dados estruturados. Em site com a publicação travada, use `--todas`, que compara todas as páginas. Endereço que saiu do sitemap mas continua no build (as páginas legais, que os modelos tiram do sitemap) aparece como "fora do sitemap novo" e não conta como diferença.
 
@@ -129,7 +132,7 @@ O script faz build, deploy e limpeza do cache pelo painel, um site por vez. O pa
    ```js
    performance.getEntriesByType('resource').filter(r => /\/g\/collect/.test(r.name)).map(r => decodeURIComponent(r.name).match(/tid=([^&]+)|en=([a-z_]+)/g))
    ```
-   Para testar o clique na Amazon sem gerar clique falso lá, impeça a navegação (`document.addEventListener('click', e => e.preventDefault())`) e dispare um clique num link da Amazon. Tem que sair `en=amazon_click`.
+   Para testar o clique na Amazon sem gerar clique falso lá, impeça a navegação (`document.addEventListener('click', e => e.preventDefault())`) e dispare um clique num link da Amazon. Tem que sair `en=amazon_click`. Em site com `aw` (oguiacompra), esse clique também conta uma conversão no Google Ads (`en=conversion`, 23/10/2026): teste o clique num site sem `aw` e, no oguiacompra, confira só o envio da página.
 3. **No Analytics**, em Relatórios > Tempo real: as visitas chegando. A tela do fluxo de dados mostra "A coleta de dados não está ativa" por até 48 horas mesmo com dados chegando. Quem prova é o tempo real.
 
 ## Fase 6: depois de 24 horas
