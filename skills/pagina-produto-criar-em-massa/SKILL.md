@@ -44,7 +44,7 @@ Detecção:
 - **Sub-agents NÃO fazem git operations.** Eles só fazem `Read` (bíblia/config/.mdx/artigos), `Edit/Write` no `.mdx` do produto e backup. **Skill mãe controla TUDO de git** (1 commit lote no fim, 1 push, 1 VPS pull).
 - **Detecção rigorosa de stub vazio.** Só processa stubs 100% vazios (marker no body + ausência de TODOS os 6 campos editoriais no frontmatter). Stub parcial NÃO entra no batch — protege trabalho manual em andamento.
 - **Pre-flight bíblias é obrigatório.** Skill aborta antes do paralelo se alguma bíblia faltar `pontosFortes` ou `angulosConversao` — senão sub-agent vai produzir página fraca em silêncio.
-- **Turno vivo (canon Marcelo 2026-08-15).** O lote só anda enquanto o turno está vivo. (1) Sub-agents SEMPRE com `run_in_background: false`, N chamadas `Agent(...)` no MESMO bloco (bloqueiam até voltar). (2) **O plano e a primeira leva de `Agent(...)` vão na MESMA mensagem** — imprimir o plano e parar foi o que travou o lote de 30/07 04:27 (o plano não pergunta nada, mas ser a última coisa da mensagem encerra o turno). (3) Heartbeat: `ScheduleWakeup(1800, prompt="/pagina-produto-criar-em-massa {os MESMOS args} RETOMAR=yes")` como passo 0 — **exceto com `ANINHADA=yes`** (ver Parse de input: o despertar pendente é o da skill-mãe); ao acordar, re-arme, re-rode o pré-flight (ele é idempotente: só stubs ainda vazios entram) e dispare só o que falta; `ScheduleWakeup(stop:true)` antes do relatório final e no aborto do pré-flight; circuit breaker: 3 despertares sem página nova → `stop` + relatório. (4) Pré-flight sem stub vazio = fim legítimo com relatório de 3 linhas, **não** lista de opções esperando resposta (30/07 05:01). (5) Sub-agent que morreu → refaz inline no mesmo turno.
+- **Turno vivo (canon Marcelo 2026-08-15).** O lote só anda enquanto o turno está vivo. (1) Sub-agents SEMPRE com `run_in_background: false`, N chamadas `Agent(...)` no MESMO bloco (bloqueiam até voltar). (2) **O plano e a primeira leva de `Agent(...)` vão na MESMA mensagem** — imprimir o plano e parar foi o que travou o lote de 30/07 04:27 (o plano não pergunta nada, mas ser a última coisa da mensagem encerra o turno). (3) Heartbeat: `ScheduleWakeup(1800, prompt="/pagina-produto-criar-em-massa {os MESMOS args} RETOMAR=yes")` como passo 0 — **exceto com `ANINHADA=yes`** (ver Parse de input: o despertar pendente é o da skill-mãe); ao acordar, re-arme, re-rode o pré-flight (ele é idempotente: só stubs ainda vazios entram) e dispare só o que falta; `ScheduleWakeup(stop:true)` antes do relatório final e no aborto do pré-flight; circuit breaker: 3 despertares sem página nova → `stop` + relatório. (4) Pré-flight sem stub vazio = fim legítimo com relatório de 3 linhas, **não** lista de opções esperando resposta (30/07 05:01). (5) Sub-agent que morreu → refaz inline no mesmo turno. **Quando não vale (01/11/2026; notas de 27/10, 28/10 e 29/10):** em sessão na nuvem (`CLAUDE_CODE_REMOTE=true`, regra 5 do CLAUDE.md) e quando o pedido diz que ninguém acompanha, não arme o heartbeat; e quando a ferramenta Agent da sessão não tem primeiro plano (os sub-agents voltam assíncronos mesmo com `run_in_background: false`), espere pelas notificações ou pelos arquivos de saída de cada sub-agent, sem polling em loop curto. Não é desvio: não registre nota por isso.
 - **Plano automático (SEM confirmação S/N).** Mostra lista de stubs encontrados + o que pula + tempo estimado, e **dispara direto** — não pergunta, não espera "S/N". A barreira de segurança é o pré-flight (aborta em site inexistente, zero stubs vazios, ou bíblia incompleta), não um beat humano. Decisão do Marcelo 2026-07-24: o pré-flight já protege qualidade; a confirmação era só atrito. O plano continua sendo IMPRESSO (transparência), mas é notificação, não pergunta.
 - **Limite de paralelismo: 10 sub-agents simultâneos.** Acima disso, batch é dividido em levas (10 + 10 + ...). Throttling do harness pode degradar acima de 10.
 - **Erro em 1 não quebra batch.** Sub-agent que falha retorna `{ok: false, error: ...}`. Skill mãe agrega e reporta no fim. Outros sub-agents continuam.
@@ -342,7 +342,7 @@ Detecção:
    # 1) ao receber cada {ok:true} do sub-agent:
    md5 -q "sites/$SITE/src/content/products/$S.mdx" > "$SCRATCH/$S.md5"
 
-   # 2) imediatamente antes do git add:
+   # 2) imediatamente antes do git add (SLUGS=(slug-1 slug-2 ...), array do zsh, nunca texto):
    for S in "${SLUGS[@]}"; do
      P="sites/$SITE/src/content/products/$S.mdx"
      [ "$(md5 -q "$P")" = "$(cat "$SCRATCH/$S.md5")" ] \
@@ -361,23 +361,10 @@ Detecção:
    **GUARDAS MECÂNICAS — RODAR OS DOIS SCRIPTS, não redigitar (canon 2026-07-30, corrigido 2026-07-31):**
 
    ```bash
-   # 1) audit-editorial, 1× por slug — AUTORITATIVO. ⚠ ele SEMPRE sai com exit 0,
-   #    mesmo com achado: o gate tem que ler o JSON, não o exit code.
-   SITE={site}; FAIL=0        # ⚠ {site} é o site DO BATCH, não um valor fixo
-   for S in {slug-1} {slug-2} ...; do
-     bun scripts/audit-editorial.ts "$SITE/$S" --json 2>/dev/null | python3 -c "
-   import json,sys
-   raw=sys.stdin.read().strip()
-   if not raw.startswith('{'):            # ex.: '404: <path>' quando o slug/site não casa
-       print('  ⛔ $S: audit-editorial não retornou JSON →', raw[:80]); sys.exit(1)
-   d=json.loads(raw); bad=[f for f in (d.get('findings') or []) if f.get('sev') in ('error','warn')]
-   if bad:
-       print('  ⛔ '+d['slug'])
-       for f in bad: print(f\"       {f['sev']:5} {f['rule']:22} {f.get('field','')} · {str(f.get('detail',''))[:60]}\")
-       sys.exit(1)
-   " || FAIL=1
-   done
-   [ "$FAIL" = "0" ] && echo "  ✅ audit-editorial limpo"
+   # 1) audit-editorial em lote — AUTORITATIVO. Sai 1 em error OU warn e em slug que
+   #    não existe. Os slugs vão escritos na linha: numa variável de texto, o zsh do Mac
+   #    não divide e o gate recebe um slug só (melhoresbicicletas, 01/11/2026).
+   bun scripts/audit-editorial.ts --gate {site} {slug-1} {slug-2} ...   # ⚠ {site} é o site DO BATCH
 
    # 2) guarda (cobre o mesmo núcleo + tem o modo --rede)
    bun scripts/pagina-produto-guardas.ts {site} {slug-1} {slug-2} ...
@@ -551,19 +538,7 @@ Detecção:
 
     ```bash
     # SÓ os slugs que voltaram com corrigidos[] não-vazio
-    SITE={site}; FAIL=0
-    for S in {slugs-corrigidos}; do
-      bun scripts/audit-editorial.ts "$SITE/$S" --json 2>/dev/null | python3 -c "
-    import json,sys
-    raw=sys.stdin.read().strip()
-    if not raw.startswith('{'): print('  ⛔ $S sem JSON →',raw[:80]); sys.exit(1)
-    d=json.loads(raw); bad=[f for f in (d.get('findings') or []) if f.get('sev') in ('error','warn')]
-    if bad:
-        print('  ⛔ '+d['slug'])
-        for f in bad: print(f\"       {f['sev']:5} {f['rule']:22} {str(f.get('detail',''))[:60]}\")
-        sys.exit(1)
-    " || FAIL=1
-    done
+    bun scripts/audit-editorial.ts --gate {site} {slugs-corrigidos}
     bun scripts/pagina-produto-guardas.ts {site} {slugs-corrigidos}
     ```
 
@@ -770,6 +745,9 @@ Se o ambiente impedir o sub-agent de ler `pagina-produto-criar/SKILL.md` (raro, 
 - Bíblia com `pontosFortes=[]` ou `angulosConversao=[]` → abortar batch, instrução:
   > "ASINs {X, Y, Z} têm bíblia mas curadoria incompleta. Rode `biblia-preencher`
   > nessas ASINs antes de criar páginas individuais em massa."
+
+### Esboço de um ASIN que sai do lote
+Produto tirado do lote depois de o esboço existir (indisponível na Amazon, bíblia barrada, decisão do Marcelo): **apague o esboço pelo painel** (`POST /product/{site}/{slug}/delete`, que guarda cópia de segurança) e diga no relatório. Esboço vazio que fica no site vai ao ar na próxima publicação, como página sem resenha e no sitemap: no cozinhaideal, em 20/10/2026, o lote de 8 rodou com 6 (Mondial BP-02P-B-TI e frigobar Midea MRV10P1 indisponíveis), a publicação seguinte pôs os 2 esboços no ar, e eles foram apagados e o site publicado de novo. Nada na publicação barra esboço vazio.
 
 ### Sub-agent falha individual
 - **Sub-agent morreu/deu timeout ou deixou página parcial → a skill mãe TERMINA aquela página inline, no mesmo turno** (canon 2026-08-15; a página parcial viraria "stub parcial", protegida, e a retomada pularia — nunca "roda a individual depois").

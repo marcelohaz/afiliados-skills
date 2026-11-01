@@ -37,7 +37,7 @@ Pasta de trabalho no scratchpad (`$W` abaixo). Para cada site:
 
 ```bash
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/sites-meta.json || exit 1
-bun scripts/disponibilidade-amazon.ts lista {site}        # ASINs a ler
+bun scripts/disponibilidade-amazon.ts lista {site} --todos   # ASINs a ler, de todos os artigos (sem --todos, só os portados)
 ```
 
 Leia na Amazon com o laço do cabeçalho do `disponibilidade-amazon.ts`, numa aba da amazon.com.br no navegador do app, e grave com `importar <arquivo.json> --data=AAAA-MM-DD`. Depois:
@@ -46,7 +46,7 @@ Leia na Amazon com o laço do cabeçalho do `disponibilidade-amazon.ts`, numa ab
 python3 .claude/skills/produtos-indisponiveis-trocar/montar-lista.py $W {site}
 ```
 
-Grava `$W/{site}-trocar.json` (produto, título da Amazon, nome do card, artigos, página própria) e imprime as buscas. Confira as buscas antes de rodar: o tipo vem do título da Amazon; se a busca não descreve o produto, corrija à mão.
+Grava `$W/{site}-trocar.json` (produto, título da Amazon, nome do card, artigos, página própria) e imprime as buscas. A lista e o relatório olham **todos os artigos** do site: sem `--todos`, o `disponibilidade-amazon.ts` vê só os portados, e no melhorimpressora (nenhum portado) a lista saiu vazia, e no compraguia a HP Ink Tank 416 e a Epson L18050 ficaram de fora (24/10/2026). A regra de disponibilidade vale para todo artigo no ar. Confira as buscas antes de rodar: o tipo vem do título da Amazon; se a busca não descreve o produto, corrija à mão.
 
 ## Fase 2 — buscar
 
@@ -105,6 +105,7 @@ Armadilhas de 19/10/2026, todas pegas só na conferência da página:
 - o título da busca não traz a voltagem; a ficha (`volt`) traz: o Panasonic NR-BB71GVFB era de 127V, e a escolha certa mudou;
 - o anúncio com o mesmo código pode custar várias vezes mais e ser outro produto ou um importado (LG 26WQ500 a R$ 2.603);
 - a marca no anúncio pode não ser a do card (a "Munique Big" do card era Conforsit; o anúncio, Qualiflex; o substituto, outra loja).
+- **card com nome diferente do anúncio do link** (Huggies Máxima Proteção abrindo a Supreme Care; Tripla Proteção abrindo a Rápida Absorção, gestacaobaby, 23/10/2026): antes de "corrigir" o link para o anúncio do nome, leia a página do link antigo (os tópicos e o título podem citar o outro nome: a Amazon trata as duas como a mesma linha) e o texto do card (pacote, tamanho). Se o texto descreve o produto do link, o link fica.
 
 ## Fase 4 — conflitos, ensaio e gravação
 
@@ -116,7 +117,7 @@ bun scripts/disponibilidade-amazon.ts trocar {site} $W/{site}-aplicar.tsv --grav
 python3 .claude/skills/produtos-indisponiveis-trocar/validar.py $W {site}
 ```
 
-Todo CONFLITO do `gerar-tsv` se resolve antes de gravar (outro substituto ou "sem"). Grave as leituras dos substitutos (`importar`, item 1 da Fase 5) e rode `python3 .claude/skills/produtos-indisponiveis-trocar/conferir-medidas.py {site}...`: lista cada troca com medida diferente (litros, kg, polegadas, aro, BTUs) e cada card cujo link antigo já era de outro tamanho. Diferença pequena de sucessor (310 → 320 L) é normal; o resto se confere pela régua de tamanho. O `validar` tem de dizer `YAML quebrado 0` e `sobrou []`: em 19/10/2026 um motivo com aspas de polegada quebrou o frontmatter de 15 artigos antes do conserto do `trocar`.
+Todo CONFLITO do `gerar-tsv` se resolve antes de gravar (outro substituto ou "sem"). Dois casos que o `trocar` ainda não faz e saem à mão, com cópia em `.painel-backups` e linha no `trocas.jsonl`: o link de texto que segue o card (ASIN do texto sem card próprio, como o Positivo de 8 GB citado dentro do card de 4 GB, que sai como CONFLITO porque o novo já é card) e o mesmo ASIN com substitutos diferentes em artigos diferentes (Asus X515 no compraguia, 24/10/2026): o `trocar` troca por site, não por artigo. Grave as leituras dos substitutos (`importar`, item 1 da Fase 5) e rode `python3 .claude/skills/produtos-indisponiveis-trocar/conferir-medidas.py {site}...`: lista cada troca com medida diferente (litros, kg, polegadas, aro, BTUs) e cada card cujo link antigo já era de outro tamanho. Diferença pequena de sucessor (310 → 320 L) é normal; o resto se confere pela régua de tamanho. O `validar` tem de dizer `YAML quebrado 0` e `sobrou []`: em 19/10/2026 um motivo com aspas de polegada quebrou o frontmatter de 15 artigos antes do conserto do `trocar`.
 
 ## Fase 5 — registro, commit e publicação
 

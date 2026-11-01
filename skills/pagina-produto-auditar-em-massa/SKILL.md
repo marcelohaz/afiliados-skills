@@ -179,32 +179,16 @@ Roda ANTES de gastar sub-agent. Motivo: a LLM erra ~1/3 dos checks contáveis
 batido), e defeito puramente mecânico não precisa de Opus.
 
 ```bash
-SITE={site}; FAIL=0        # ⚠ {site} é o site do lote, não um valor fixo
-set -- {slug-1} {slug-2} ...          # ⚠ zsh NÃO faz word-split em $VAR
-echo "CONTROLE \$# = $#  (esperado N)"
-for S in "$@"; do
-  bun scripts/audit-editorial.ts "$SITE/$S" --json 2>/dev/null | python3 -c "
-import json,sys
-raw=sys.stdin.read().strip()
-if not raw.startswith('{'):
-    print('  ⛔ $S: audit-editorial não retornou JSON →', raw[:80]); sys.exit(1)
-d=json.loads(raw); bad=[f for f in (d.get('findings') or []) if f.get('sev') in ('error','warn')]
-if bad:
-    print('  ⛔ '+d['slug'])
-    for f in bad: print(f\"       {f['sev']:5} {f['rule']:22} {f.get('field','')} · {str(f.get('detail',''))[:60]}\")
-    sys.exit(1)
-" || FAIL=1
-done
-[ "$FAIL" = "0" ] && echo "  ✅ audit-editorial limpo"
+# gate de lote: reprova (exit 1) em error E warn, e em slug que não existe
+bun scripts/audit-editorial.ts --gate {site} {slug-1} {slug-2} ...
 bun scripts/pagina-produto-guardas.ts {site} {slug-1} {slug-2} ...
 ```
 
-⚠ **`audit-editorial.ts` SEMPRE sai com exit 0**, mesmo com achado — o gate tem
-que ler o JSON, não o exit code.
-
-⚠ **A linha `$#` não é decoração.** Em zsh, `for S in $SLUGS` passa a string
-inteira como um argumento só e a guarda imprime "0 página(s) conferida(s)" — uma
-execução vazia parecendo sucesso. Aconteceu de verdade (cozinhaideal, 2026-08-21).
+⚠ **Os slugs vão escritos na linha, como argumentos**, nunca numa variável de texto:
+o zsh do Mac não divide `$SLUGS` e o comando recebe um slug só com espaços (cozinhaideal,
+2026-08-21; melhoresbicicletas, 01/11/2026). O `--gate` reprova slug que não existe, então
+esse erro aparece em vez de passar como sucesso. Desde 01/11/2026 o `--gate` substitui o
+bloco python que lia o JSON slug a slug (o modo `--json` continua saindo com exit 0).
 
 **Achado mecânico:** conserte determinístico aqui (travessão→vírgula, `;`→`.`/`,`,
 trim da última frase pra caber no cap) e re-rode. **O 5º `<p>` sem rótulo logo
@@ -306,8 +290,7 @@ O conserto entra depois da Etapa 1, ou seja, fora de qualquer guarda. Sem isto u
 canônica e ir pro commit sem ninguém olhar.
 
 ```bash
-SITE={site}; set -- {slugs-corrigidos}; echo "CONTROLE \$# = $#"
-for S in "$@"; do bun scripts/audit-editorial.ts "$SITE/$S" --json 2>/dev/null | python3 -c "..."; done
+bun scripts/audit-editorial.ts --gate {site} {slugs-corrigidos}
 bun scripts/pagina-produto-guardas.ts {site} {slugs-corrigidos}
 ```
 
@@ -401,8 +384,8 @@ poder discordar de uma troca sem abrir o diff do git.
 1. **`git log` como critério de "já auditou"** → falso "Auditado" em página com
    relatório deletado. Use existência no disco (Etapa 0.5).
 2. **zsh não faz word-split** em `for S in $VAR` → guarda roda vazia e imprime
-   sucesso. Use `set --` + a linha de controle `$#`.
-3. **`audit-editorial.ts` sai com exit 0 mesmo com achado** → o gate lê o JSON.
+   sucesso. Escreva os slugs na linha do comando.
+3. **`audit-editorial.ts --json` sai com exit 0 mesmo com achado** → use o `--gate`, que sai 1.
 4. **Sub-agent que morre depois do `Edit`** → edição órfã no `git status`. Termine
    inline; re-disparar faz o novo agente auditar um arquivo já mudado.
 5. **Não re-rodar as guardas no que foi corrigido** → o conserto entra sem

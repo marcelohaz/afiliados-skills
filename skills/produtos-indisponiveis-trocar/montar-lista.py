@@ -2,9 +2,14 @@
 # uso (na raiz do repo): python3 .claude/skills/produtos-indisponiveis-trocar/montar-lista.py <pasta-de-trabalho> <site>
 # grava <pasta>/<site>-trocar.json (um item por produto) e <pasta>/<site>-artigos.json (cards e links de cada artigo)
 # e imprime as buscas da Amazon em JSON ([asin, "tipo + nome do card"]), para o laço de busca da skill.
-import json, sys, glob, re, subprocess, yaml
+import json, sys, glob, re, subprocess, os
+# YAML pelo bun (scripts/lib/yaml_bun.py): o pyyaml não vem em todo python3 (o do Homebrew 3.15 deste
+# Mac não tem, desde 22/10/2026). Mesma interface do yaml.safe_load.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'scripts', 'lib'))
+import yaml_bun as yaml  # noqa: E402
 pasta, site = sys.argv[1], sys.argv[2]
-r = json.loads(subprocess.run(['bun', 'scripts/disponibilidade-amazon.ts', 'relatorio', site, '--json'], capture_output=True, text=True).stdout)
+# --todos: todos os artigos do site, não só os portados (24/10/2026: no melhorimpressora, sem portado, a lista saía vazia)
+r = json.loads(subprocess.run(['bun', 'scripts/disponibilidade-amazon.ts', 'relatorio', site, '--todos', '--json'], capture_output=True, text=True).stdout)
 alvo = [x for x in r if x['acao'].startswith('trocar')]
 cards, desc, artigos = {}, {}, {}
 for f in glob.glob(f'sites/{site}/src/content/reviews/*.mdx'):

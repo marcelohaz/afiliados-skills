@@ -133,7 +133,12 @@ O script faz build, deploy e limpeza do cache pelo painel, um site por vez. O pa
    performance.getEntriesByType('resource').filter(r => /\/g\/collect/.test(r.name)).map(r => decodeURIComponent(r.name).match(/tid=([^&]+)|en=([a-z_]+)/g))
    ```
    Para testar o clique na Amazon sem gerar clique falso lá, impeça a navegação (`document.addEventListener('click', e => e.preventDefault())`) e dispare um clique num link da Amazon. Tem que sair `en=amazon_click`. Em site com `aw` (oguiacompra), esse clique também conta uma conversão no Google Ads (`en=conversion`, 23/10/2026): teste o clique num site sem `aw` e, no oguiacompra, confira só o envio da página.
-3. **No Analytics**, em Relatórios > Tempo real: as visitas chegando. A tela do fluxo de dados mostra "A coleta de dados não está ativa" por até 48 horas mesmo com dados chegando. Quem prova é o tempo real.
+3. **No Analytics**, em Relatórios > Tempo real: as visitas chegando. A tela do fluxo de dados mostra "A coleta de dados não está ativa" por até 48 horas mesmo com dados chegando. Quem prova é o tempo real. Quando a propriedade já recebe de outros sites (a G-WJGPEJFWLS recebia dos 38 em 22/10/2026), o envio conferido no passo 2 basta e o Chrome não precisa ser aberto só para isto; diga no relatório que o tempo real ficou de fora.
+4. **Na conferência de sites que já estão no Analytics (`conferir`), pela API, sem Chrome** (27/10/2026: foi o que achou os defeitos que o passo 2 não via):
+   - visitas de busca do Analytics contra os cliques do Google de cada site, em dias inteiros desde a entrada do Analytics (`bun scripts/ga-ler.ts` e o snapshot do Search Console): site com clique no Google e sem visita no Analytics é defeito;
+   - `amazon_click` contra o clique de saída para a Amazon da medição otimizada (`click`), por site: muito menos `amazon_click` que `click` quer dizer evento que não sai;
+   - visitas com host `localhost`, por dia: tem de ser zero (o script não baixa no site montado neste computador desde 24/10/2026).
+   A propriedade da Bárbara (560568520) se lê com `GA_PROPRIEDADE=560568520`; sem a variável, o `ga-ler` lê as duas juntas.
 
 ## Fase 6: depois de 24 horas
 

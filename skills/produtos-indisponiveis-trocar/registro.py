@@ -23,4 +23,4 @@ for site in sites:
     if pag: L += [f'## Esperam o ajuste do modelo ({len(pag)})', '', 'Têm página própria no site; trocar só o ASIN tiraria o link do artigo para a página.', '', '| Produto no artigo | Substituto quando der | Artigos |', '|---|---|---|'] + sorted(pag) + ['']
     open(f'{R}/trocas-{site}-{HOJE}.md', 'w').write('\n'.join(L)); open(f'{R}/trocas-{site}-{HOJE}.tsv', 'w').write(tsv)
     print(site, {k: len(v) for k, v in grupos.items()}, 'sem', len(sem), 'página própria', len(pag))
-json.dump(SEM, open(f'{R}/sem-substituto.json', 'w'), ensure_ascii=False, indent=1)
+open(f'{R}/sem-substituto.json', 'w').write(json.dumps(SEM, ensure_ascii=False, indent=1) + '\n')  # com a quebra de linha final, como o arquivo tem

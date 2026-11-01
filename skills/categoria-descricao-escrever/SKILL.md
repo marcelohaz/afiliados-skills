@@ -161,7 +161,7 @@ Se ambos faltam (categoria não existe nos reviews E não tem entry no config), 
     
     Em caso de dúvida sobre o `old_string` ambíguo (ex: 2 entries têm HTML quase idêntico), incluir 1-2 linhas de contexto antes/depois.
 
-12. **Git add + commit + push**:
+12. **Git add + commit + push** (no port de WordPress, a descrição escrita para o site novo pode ir no commit do port, junto com o `config.ts` dele, e o painel-vps-pull do port vale pelo do passo 13; 17/10/2026):
     ```bash
     git add sites/{site}/src/config.ts
     git commit --only -m "chore({site}): atualiza descrição categoria {categorySlug} via skill" \

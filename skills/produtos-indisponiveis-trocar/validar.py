@@ -1,7 +1,11 @@
 # Confere, depois do `trocar --gravar`, os .mdx alterados de cada site: frontmatter lido como YAML,
 # nenhum card com o ASIN antigo e nenhum link /dp/ antigo no texto.
 # uso: python3 validar.py <pasta-de-trabalho> <site>...
-import sys, subprocess, yaml
+import sys, subprocess, os
+# YAML pelo bun (scripts/lib/yaml_bun.py): o pyyaml não vem em todo python3 (o do Homebrew 3.15 deste
+# Mac não tem, desde 22/10/2026). Mesma interface do yaml.safe_load.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'scripts', 'lib'))
+import yaml_bun as yaml  # noqa: E402
 pasta = sys.argv[1]
 for site in sys.argv[2:]:
     tro = {l.split('\t')[0]: l.split('\t')[1] for l in open(f'{pasta}/{site}-aplicar.tsv').read().strip().split('\n')[1:]}
