@@ -86,6 +86,7 @@ Nada muda no ar. O site antigo segue servindo normal.
 | 1.11 | trocar o slug em `_sites_aplicaveis` do nicho (é o GATE do bloco de chavões do nicho nas skills editoriais) | `docs/painel/_data/chavoes-por-nicho.json` |
 | 1.12 | renomear a chave do site (guarda a linhagem medida) | `docs/painel/_data/slugs-historicas.json` |
 | 1.13 | apagar `{antigo}.json` (cache gitignored), no Mac e na VPS | `docs/painel/.audit-cache/` |
+| 1.14 | Google Analytics: renomear a propriedade do site e o endereço do fluxo para o domínio novo, mantendo o código (o histórico continua na mesma propriedade). Depois do 1.2, que já trocou o `siteUrl`: `bun scripts/ga-criar-propriedades.ts --renomear={novo}`. O `analytics.json` não muda. Site da Bárbara: só quando a marcelo.ckx tiver o papel de Editor na conta dela | Analytics (uma propriedade por site desde 06/11/2026) |
 
 **Ache os resíduos medindo, não pela tabela:** `git grep -l '{antigo}' -- ':!sites/{novo}' ':!docs/biblias-v2/.audits'`.
 Os itens 1.10 a 1.13 ficaram de fora em 07/09/2026 (melhoremcasa, consertados depois no `59eed15f1`) e de novo em 02/10/2026 (melhorespretreinos). Os snapshots gerados por cron (`cf-accounts`, `domains-status`, `gsc-snapshot-*`, `ahrefs-*`, `linhagens`, `orfaos-dominios-cache`) se refazem sozinhos: não mexa.
