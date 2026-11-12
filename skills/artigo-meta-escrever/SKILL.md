@@ -14,7 +14,9 @@ Aceita 2 formatos no $ARGUMENTS:
 **B) Args canônicos**:
 - `melhorimpressora/melhor-impressora-custo-beneficio`
 
-Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B (split por `/`).
+Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B (split por `/`). Tire `PIPELINE=yes` dos args antes de separar.
+
+**`PIPELINE=yes`** (opcional, passado pela `artigo-clonar-em-massa` desde 12/11/2026): a description é gravada no `.mdx` como sempre (backup e Edit, passos 9 e 10) e os **passos 11 e 12 (commit, push e VPS pull) não rodam**: são da Etapa 6 da clone. O `.mdx` de um clone só entra no git inteiro, na Etapa 6.4 da clone: commitado antes, o artigo pela metade vai para a `main` e, se a run cair, a retomada e a fila leem o artigo como run concluída ("existe commitado e sem lock"). Vale igual, mesmo sem a flag, quando o `.mdx` ainda não está no git (`git ls-files --error-unmatch sites/{site}/src/content/reviews/{slug}.mdx` falha): é artigo de clone em montagem.
 
 # Escrever meta description do artigo
 
@@ -184,14 +186,17 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 ### Concordância PT-BR (bug-class real de substituições mecânicas)
 
+<!-- comum:concordancia-pt -->
 | Padrão | Fix |
 |---|---|
-| `composiçãos`, `combinaçãos`, `porçãos` | `composições`, `combinações`, `porções` (plural correto em -ões) |
-| `a produto`, `a formigamento`, `a ingrediente` | `o produto`, `o formigamento`, `o ingrediente` |
-| `o fórmula`, `o dose`, `o composição` | `a fórmula`, `a dose`, `a composição` |
+| `composiçãos`, `combinaçãos`, `porçãos`, `opçãos` | `composições`, `combinações`, `porções`, `opções` |
+| `a produto`, `a formigamento`, `a ingrediente`, `esta ativo` | `o produto`, `o formigamento`, `o ingrediente`, `este ativo` |
+| `o fórmula`, `o dose`, `o composição`, `este tolerância` | `a fórmula`, `a dose`, `a composição`, `esta tolerância` |
 | `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
 | `disponíveis no em 2026` | `disponíveis em 2026` |
-| `Pra a maioria/primeira` | `Para a maioria/primeira` |
+| `Pra a maioria/primeira/melhor` | `Para a maioria/primeira/melhor` |
+| `as produtos`, `os fórmulas`, `as ingredientes` | gênero certo |
+<!-- /comum:concordancia-pt -->
 
 ### Linguagem artificial banida (calques de inglês, jargão pseudo-técnico)
 

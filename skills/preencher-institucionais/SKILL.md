@@ -152,8 +152,9 @@ O modelo que o Marcelo montou nos sites de teste (impressoracustobeneficio, melh
 - **Disclosure (parte NÃO-Amazon):** o nome "Programa de Associados da Amazon Brasil" é fixo (citação), mas a prosa ao redor varia: "podemos ganhar uma pequena comissão, sem custo a mais para você" / "recebemos uma porcentagem da compra, e o preço para você não muda" / "ganhamos uma comissão da loja, nunca do seu bolso". A parte do "não aceito brinde/pagamento" idem: "não aceito aparelho cortesia em troca de resenha boa" / "nenhum fabricante paga para subir na lista" / "produto grátis não garante elogio aqui".
 - **Fecho ("Fale conosco"):** o e-mail é fixo, mas o convite e o link variam: "mande sua mensagem pela página de contato" / "fale com a gente pela página de contato" / "passe pela página de contato". NUNCA repetir "use a nossa página de contato" se uma irmã já usa.
 
-## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 5 skills de criação e nos prompts canônicos do painel)
+## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 6 skills de criação e nos prompts canônicos do painel)
 
+<!-- comum:voz-natural -->
 Especialista explicando a um amigo, cumprido com **simplicidade**, não com efeito. Pergunta-teste: *"um amigo que não entende disso entenderia e saberia o que fazer?"* Sem jargão corporativo, sem formalidade institucional, **sem sacada**.
 
 O que faz texto soar como IA não é gíria nem termo técnico: é **palavra comum usada fora do sentido do dicionário** ("resolver a casa", "dar conta da poeira", "transformar a limpeza numa produção", "o aparelho pede tomada", "a conta da potência vem no peso"), quase sempre frase feita do inglês vertida (*make a production, handle, delivers, covers, calls for, the math*). Cada palavra é comum, então lista de termo não pega; a régua é uma **classe**:
@@ -180,6 +181,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 | a creatina pede coqueteleira | a creatina dissolve melhor com coqueteleira |
 | Se não tem, ela é a que resolve. | Se não tem, ela é a melhor opção. |
 | O tanque não se cansa. | O tanque de tinta rende o mesmo até o fim. |
+<!-- /comum:voz-natural -->
 
 ⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela (ou nos exemplos de shortDescription), reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
 **Caso que disparou a régua nesta skill (2026-07-05, /author/ do tabletparatrabalho, REJEITADO):** "esse aparelho só parece firme na vitrine", "o que muda quando o aparelho **encara** e-mail", "como se isso, sozinho, **resolvesse a sua vida**", "aquele conhecido que já **garimpou tudo antes de você abrir a carteira**", "**tenho birra** de ficha". Reescrita aprovada: *"o que quero saber é direto: ele funciona bem num expediente inteiro? Não me prendo só ao número do processador ou à quantidade de memória, porque uma ficha técnica cheia nem sempre significa um bom aparelho no uso."* Vale nas DUAS páginas, com risco maior na /author/ (1ª pessoa tenta "dar personalidade" e escorrega pro personagem).

@@ -353,14 +353,17 @@ Antes de gravar, faça grep dos padrões abaixo. Se aparecer — corrija.
 
 ### Concordância PT-BR (bug-class real de substituições mecânicas)
 
+<!-- comum:concordancia-pt -->
 | Padrão | Fix |
 |---|---|
-| `composiçãos`, `combinaçãos`, `porçãos` | `composições`, `combinações`, `porções` |
-| `a produto`, `a formigamento`, `a ingrediente` | `o produto`, `o formigamento`, `o ingrediente` |
-| `o fórmula`, `o dose`, `o composição` | `a fórmula`, `a dose`, `a composição` |
+| `composiçãos`, `combinaçãos`, `porçãos`, `opçãos` | `composições`, `combinações`, `porções`, `opções` |
+| `a produto`, `a formigamento`, `a ingrediente`, `esta ativo` | `o produto`, `o formigamento`, `o ingrediente`, `este ativo` |
+| `o fórmula`, `o dose`, `o composição`, `este tolerância` | `a fórmula`, `a dose`, `a composição`, `esta tolerância` |
 | `produto ampla`, `produtos elaboradas`, `formula natural` | `fórmula ampla`, `produtos elaborados`, `fórmula natural` |
 | `disponíveis no em 2026` | `disponíveis em 2026` |
-| `Pra a maioria/primeira` | `Para a maioria/primeira` |
+| `Pra a maioria/primeira/melhor` | `Para a maioria/primeira/melhor` |
+| `as produtos`, `os fórmulas`, `as ingredientes` | gênero certo |
+<!-- /comum:concordancia-pt -->
 
 ### Linguagem artificial banida (nos campos que alimentam o review: `sentimentoCompradores`, `angulosConversao`, `pontosFortes`, `pontosFracos`, `dicasAcionaveis`; em `dadosInconsistentes`/`observacoesAgente`, nome de campo, ASIN e SKU são legítimos)
 

@@ -1,6 +1,6 @@
 ---
 name: mapa-skills-editoriais
-description: Índice COMPLETO das 29 skills do marketplace afiliados-skills — qual usar para cada objeto (bíblia, página de produto, artigo e suas partes, categoria, institucionais, linkagem, clone, lineup, migração, leilão, lista e relatórios da Amazon, troca de produtos indisponíveis), com pré-requisitos de painel e forma de invocação. Invoque quando estiver em dúvida sobre QUAL skill chamar. Não substitui as skills em si — é o índice delas.
+description: Índice COMPLETO das skills do ProjetoAfiliados (as do marketplace afiliados-skills e as que só existem no repositório) — qual usar para cada objeto (bíblia, página de produto, artigo e suas partes, categoria, institucionais, linkagem, clone, lineup, migração, port, leilão, lista e relatórios da Amazon, Analytics, troca de produtos indisponíveis), com pré-requisitos de painel e forma de invocação. Invoque quando estiver em dúvida sobre QUAL skill chamar. Não substitui as skills em si — é o índice delas.
 ---
 
 # Mapa das skills editoriais
@@ -24,8 +24,10 @@ Args: as skills de objeto (bíblia, página, artigo e partes, categoria, institu
 | `biblia-preencher-em-massa` | idem pra VÁRIAS em paralelo (≤10 sub-agents isolados); botão roxo "✨" do produtos.html |
 | `biblia-auditar` | auditar+corrigir UMA (propor→aprovar; carimba lastAuditedAt + push R2 sempre) |
 | `biblia-auditar-em-massa` | idem pra VÁRIAS, isoladas, auto-fix de direção conhecida; 2ª etapa do `--audit` ou sozinha |
+| `biblia-criar` | (piloto, só com o Marcelo, só no repo) criar os campos BRUTOS de produto sem bíblia, lendo a Amazon sem conta e o site do fabricante; rascunho por padrão, grava só com o sim dele |
+| `biblia-opinioes-revisar` | (piloto, só com o Marcelo, só no repo) revisar as opiniões dos compradores antes do preenchimento; só propõe o que tirar, não grava na bíblia |
 
-Pré-requisito: bíblia criada + dados brutos + imagem no editor-v2.
+Pré-requisito das quatro primeiras: bíblia criada + dados brutos + imagem no editor-v2.
 
 ## Página individual de produto
 
@@ -68,7 +70,7 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 | `linkagem-auditar` | linkagem interna do SITE inteiro (propor→aprovar; 2-4 peers/artigo, hub isento) + slug × histórico do GSC (`audit-slugs.ts`) |
 | `categoria-descricao-escrever` | descrição de UMA categoria (`/categoria/{slug}/`) |
 | `categoria-descricao-criar-em-massa` | várias categorias, agrupadas por categorySlug cross-site (anti-duplicata entre irmãs) |
-| `preencher-institucionais` | /sobre/ + /author/ de um site, distintas, E-E-A-T (não cobre contato/termos/privacidade) |
+| `preencher-institucionais` | /sobre/ + /author/ de um site, distintas, E-E-A-T, mais os textos da home (subtítulo, selos, "Como trabalhamos", descrição para o Google) e o modelo novo do autor nos sites criados pelo port (não cobre contato/termos/privacidade) |
 
 ## Operação / infra editorial
 
@@ -79,13 +81,16 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 | `produtos-indisponiveis-trocar` | trocar o link dos produtos que não se compram mais (página inexistente ou "Não disponível"), mantendo texto, nome e foto do card: leitura, busca, conferência da página, troca, registro, publicação e conferência no ar (leitura mensal dos sites no ar e depois de port) |
 | `leilao-garimpar` | analisar a lista mensal de liberação do Registro.br (read-only; registro é decisão do Marcelo) |
 | `amazon-lista-sites-auditar` | recomendar quem entra/sai da Lista de Sites do Associados (teto de 50 por conta; lê pelo Chrome da pessoa e só aplica a troca com o sim dela) |
+| `analytics-ligar` | ligar o Google Analytics, uma propriedade por site: cria pela API, grava o código no site, confere, publica pelo painel e confere no ar (`conferir` para o que já está ligado) |
 | `amazon-relatorios-analisar` | baixar os CSVs mensais do Associados da própria conta (Chrome, com o sim), guardar fora do repositório, consolidar num arquivo único e analisar o que vende e o que caiu (`scripts/amazon-relatorios.ts`) |
 
 Skills locais do repo (fora do marketplace): `backup-monorepo`,
 `painel-launchagent`, `site-criar-workflow` — procedimento de máquina, não editorial.
 E `ahrefs-backlinks` (backlinks por endereço no Ahrefs grátis, para onde cada link
 chega hoje e o conserto dos que caem na home; usa o Ahrefs logado no Chrome do Marcelo)
-e `amazon-relatorios-ler` (leitura rápida da tela de relatórios do Associados, no Chrome do Marcelo).
+`amazon-relatorios-ler` (leitura rápida da tela de relatórios do Associados, no Chrome do Marcelo),
+`gsc-pedir-indexacao` (pedido de indexação dos artigos fora do Google pela tela do Search Console, no Chrome do Marcelo, com registro e conferência)
+e `autor-trocar` (troca de autor nos sites pequenos: régua, textos sem repetir a rede e a troca mecânica; não publica).
 
 ## Por que via Skill tool e não os botões do painel
 

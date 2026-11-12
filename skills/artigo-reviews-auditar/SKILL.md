@@ -9,6 +9,8 @@ Aceita 2 formatos no $ARGUMENTS:
 
 **`PIPELINE=yes`** (opcional, canon 2026-08-15): passado pela `artigo-clonar-em-massa`/`artigo-clonar-fila`. Efeito: modo full-auto — aplica os fixes **óbvios E de julgamento** (auto-fix, re-audita, máx 3 rodadas), não espera aprovação, não encerra o turno para perguntar; o que não convergir vai como "⚠ não convergiu" no relatório. Sem a flag, vale o propor→aprovar normal.
 
+**Com `PIPELINE=yes`, o `.mdx` não é commitado aqui** (notas de execução de 01/11 e 10/11/2026): o marcador do passo 8.5 é gravado e commitado como sempre (é só o arquivo `-last.md`), o backup e os Edits dos passos 10 e 11 valem, e os **passos 12 (build) e 13 (commit, push e VPS pull do `.mdx`) não rodam**: são da Etapa 6 da clone. O `.mdx` de um clone só entra no git inteiro, na Etapa 6.4 da clone: commitado antes, o artigo pela metade vai para a `main` e, se a run cair, a retomada e a fila leem o artigo como run concluída ("existe commitado e sem lock").
+
 **A) URL do painel** (forma preferida):
 - `https://painel.melhordrone.com.br/editor-artigo.html?site=melhorimpressora&slug=melhor-impressora-custo-beneficio`
 - Extrai `site` e `slug` do artigo

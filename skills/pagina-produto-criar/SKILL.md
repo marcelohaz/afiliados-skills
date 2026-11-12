@@ -447,8 +447,9 @@ Os reviews têm voz de **quem analisou** o produto, sem alegar teste físico. To
 
 > **Sobre citar o fabricante**: regra diferente de citar comprador/Amazon. Spec factual (rendimento, velocidade, economia) vai afirmado direto, sem "segundo X". Atribuir só vale pra recomendação/calibração/política do fabricante (ex: "a HP recomenda 50-100 págs/mês"). Ver Armadilha 7 abaixo pra régua completa.
 
-## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 5 skills de criação e nos prompts canônicos do painel)
+## Voz natural (régua transversal, canon Marcelo 2026-08-15 — bloco IDÊNTICO nas 6 skills de criação e nos prompts canônicos do painel)
 
+<!-- comum:voz-natural -->
 Especialista explicando a um amigo, cumprido com **simplicidade**, não com efeito. Pergunta-teste: *"um amigo que não entende disso entenderia e saberia o que fazer?"* Sem jargão corporativo, sem formalidade institucional, **sem sacada**.
 
 O que faz texto soar como IA não é gíria nem termo técnico: é **palavra comum usada fora do sentido do dicionário** ("resolver a casa", "dar conta da poeira", "transformar a limpeza numa produção", "o aparelho pede tomada", "a conta da potência vem no peso"), quase sempre frase feita do inglês vertida (*make a production, handle, delivers, covers, calls for, the math*). Cada palavra é comum, então lista de termo não pega; a régua é uma **classe**:
@@ -475,6 +476,7 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 | a creatina pede coqueteleira | a creatina dissolve melhor com coqueteleira |
 | Se não tem, ela é a que resolve. | Se não tem, ela é a melhor opção. |
 | O tanque não se cansa. | O tanque de tinta rende o mesmo até o fim. |
+<!-- /comum:voz-natural -->
 
 ⚠️ **Os exemplos são de outra categoria de propósito e NÃO podem ser reusados.** Se a frase que você escreveu está nesta tabela (ou nos exemplos de shortDescription), reescreva com o fato do SEU produto. Caso real (melhoraspirador, 15/08): a linha "em casa grande você ainda troca de tomada algumas vezes", que era exemplo aqui, saiu copiada em 5 lugares do artigo — 11 sub-agents lendo o mesmo exemplo convergem nele.
 
@@ -675,6 +677,7 @@ Args canônico que invoco: `Skill(skill="pagina-produto-criar", args="melhorimpr
 
 **Bug-class real** (batch melhorpretreino v1.17-1.18): substituições mecânicas (BCAAs→aminoácidos, parestesia→formigamento, fórmula→composição) **NÃO reconcordaram** plural/gênero/artigo (11+ casos em 2 artigos). Antes de gravar, grep dos padrões abaixo em cada campo; achou → corrija antes de gravar.
 
+<!-- comum:concordancia-pt -->
 | Padrão | Fix |
 |---|---|
 | `composiçãos`, `combinaçãos`, `porçãos`, `opçãos` | `composições`, `combinações`, `porções`, `opções` |
@@ -684,6 +687,7 @@ Args canônico que invoco: `Skill(skill="pagina-produto-criar", args="melhorimpr
 | `disponíveis no em 2026` | `disponíveis em 2026` |
 | `Pra a maioria/primeira/melhor` | `Para a maioria/primeira/melhor` |
 | `as produtos`, `os fórmulas`, `as ingredientes` | gênero certo |
+<!-- /comum:concordancia-pt -->
 
 Regex de referência (se quiser rodar): `\b(composição|combinação|porção|opção|posição)s\b` · `\b(a|na|da|esta|nesta|essa) (produto|formigamento|ingrediente|ativo|estímulo|composto|atleta)\b` · `\b(o|no|do|este|neste|esse) (fórmula|dose|porção|composição|combinação|tolerância)\b` · `\bPra a \w+`.
 
