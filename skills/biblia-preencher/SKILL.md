@@ -150,6 +150,7 @@ A supersessão pode ser **parcial**: no Lavitan, o rótulo confirmou B6 e cromo 
 
 O que fazer:
 - Ler `opinioesCompradores` e identificar os **temas recorrentes** que aparecem nas opiniões
+- **Bloco de outra variação** ("[Opiniões da versão X do mesmo produto ...]", desde 12/11/2026): são opiniões do mesmo produto em outra cor ou voltagem. Contam para os temas do produto; o que for só daquela cor ou voltagem não entra em nenhum campo curado (regra "opiniões de outra variação" do `regras-biblia.md` §2).
 - Cada item = um tema destilado em 1-3 frases que capturam a essência do que múltiplos compradores dizem
 - `peso` = número de curtidas/votos do review mais representativo daquele tema (se disponível no texto). Se não houver dado de curtidas, usar `null`
 - Ordenar do tema mais relevante/recorrente para o menos
