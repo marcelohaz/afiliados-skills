@@ -16,7 +16,7 @@ Aceita 2 formatos no $ARGUMENTS:
 
 Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho B (split por `/`). Tire `PIPELINE=yes` dos args antes de separar.
 
-**`PIPELINE=yes`** (opcional, passado pela `artigo-clonar-em-massa` desde 12/11/2026): a description é gravada no `.mdx` como sempre (backup e Edit, passos 9 e 10) e os **passos 11 e 12 (commit, push e VPS pull) não rodam**: são da Etapa 6 da clone. O `.mdx` de um clone só entra no git inteiro, na Etapa 6.4 da clone: commitado antes, o artigo pela metade vai para a `main` e, se a run cair, a retomada e a fila leem o artigo como run concluída ("existe commitado e sem lock"). Vale igual, mesmo sem a flag, quando o `.mdx` ainda não está no git (`git ls-files --error-unmatch sites/{site}/src/content/reviews/{slug}.mdx` falha): é artigo de clone em montagem.
+**`PIPELINE=yes`** (opcional, passado pela `artigo-clonar-em-massa` desde 12/11/2026): a description é gravada no `.mdx` como sempre (backup e Edit, passos 9 e 10) e os **passos 11 e 12 (commit, push e VPS pull) não rodam**: são da Etapa 6 da clone. O `.mdx` de um clone só entra no git inteiro, na Etapa 6.4 da clone: commitado antes, o artigo pela metade vai para a `main` e, se a run cair, a retomada e a fila leem o artigo como run concluída ("existe commitado e sem lock"). Vale igual, mesmo sem a flag, quando o `.mdx` ainda não está no git (`git ls-files --error-unmatch sites/{site}/src/content/reviews/{slug}.mdx` falha): é artigo de clone em montagem. Nos dois casos, o relatório do passo 13 diz que o `.mdx` foi gravado e não commitado, e quem commita.
 
 # Escrever meta description do artigo
 

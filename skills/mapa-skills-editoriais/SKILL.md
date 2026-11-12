@@ -87,7 +87,7 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 Skills locais do repo (fora do marketplace): `backup-monorepo`,
 `painel-launchagent`, `site-criar-workflow` — procedimento de máquina, não editorial.
 E `ahrefs-backlinks` (backlinks por endereço no Ahrefs grátis, para onde cada link
-chega hoje e o conserto dos que caem na home; usa o Ahrefs logado no Chrome do Marcelo)
+chega hoje e o conserto dos que caem na home; usa o Ahrefs logado no Chrome do Marcelo),
 `amazon-relatorios-ler` (leitura rápida da tela de relatórios do Associados, no Chrome do Marcelo),
 `gsc-pedir-indexacao` (pedido de indexação dos artigos fora do Google pela tela do Search Console, no Chrome do Marcelo, com registro e conferência)
 e `autor-trocar` (troca de autor nos sites pequenos: régua, textos sem repetir a rede e a troca mecânica; não publica).
