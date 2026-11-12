@@ -17,6 +17,9 @@ Orquestrador leve. **O trabalho editorial é da `categoria-descricao-escrever`**
 
 ## Invariantes
 
+<!-- comum:lote-ajudantes -->
+- **Ajudante em primeiro plano; o que morre é refeito no mesmo turno.** Os sub-agents da leva vão com `run_in_background: false`, todos no mesmo bloco de chamadas `Agent(...)`. Se a ferramenta Agent da sessão devolver assíncrono mesmo assim, espere as notificações ou os arquivos de saída, sem polling em loop curto. Não encerre o turno para esperar ("te aviso quando voltar" é defeito: o lote só anda com o turno vivo). Sub-agent que morre (HTTP 429 ou 403, conexão perdida, timeout) ou devolve resultado incompleto: dispare outro para o mesmo item, no mesmo turno, isolado como o primeiro. Nunca pule o item nem o conte como feito. Se vários morrerem na mesma leva (em 23/08/2026, 8 de 10 numa leva de 10; com 5 por leva, nenhum), as próximas levas vão com 5.
+<!-- /comum:lote-ajudantes -->
 - **Só categoria com ≥1 artigo FINALIZADO.** `complete` do `loaders.ts`, não "tem artigo". O pré-flight já filtra; a skill não recalcula.
 - **Sub-agent NÃO escreve arquivo e NÃO faz git.** Devolve `{site, categorySlug, html}`. A mãe grava. Motivo técnico: as descrições de um site vivem TODAS no mesmo `config.ts` — N sub-agents escrevendo ali se sobrescrevem. Motivo de projeto: REGRA ZERO (sub-agent não faz git).
 - **Paralelismo por GRUPO, sequencial dentro dele.** Ver "Por que agrupar" abaixo.

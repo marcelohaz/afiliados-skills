@@ -36,6 +36,9 @@ Usar **a cada 3 produtos preenchidos** ou **no final do artigo antes de travar**
 
 ## Pré-requisitos
 
+<!-- comum:trava-do-site -->
+- **Site sem a edição travada (chave-mestra do `CLAUDE.md`).** Antes de gravar no site (`sites/{site}/src/content/`, ou o `config.ts` quando é ele que a skill edita), confira, com o site em que a skill vai gravar no lugar de `{site}`: `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"`. Saiu `True`: pare e avise que o site está com a edição travada (destrava-se no painel do site, controle "Proteção"). Não edite nem contorne. Sem esta conferência quem barra é o gancho de envio, só no fim, com o trabalho todo feito.
+<!-- /comum:trava-do-site -->
 - Artigo existe em `sites/{site}/src/content/reviews/{slug}.mdx`
 - **≥2 produtos com `fullReview` preenchido** (cross-product não faz sentido com 1)
 - Todas as bíblias dos produtos existem em `docs/biblias-v2/<ASIN>.json`

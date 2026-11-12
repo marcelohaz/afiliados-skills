@@ -32,6 +32,9 @@ A intro **CONTEXTUALIZA + sinaliza o que esperar do artigo**. Não ensina crité
 
 ## Pré-requisitos
 
+<!-- comum:trava-do-site -->
+- **Site sem a edição travada (chave-mestra do `CLAUDE.md`).** Antes de gravar no site (`sites/{site}/src/content/`, ou o `config.ts` quando é ele que a skill edita), confira, com o site em que a skill vai gravar no lugar de `{site}`: `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"`. Saiu `True`: pare e avise que o site está com a edição travada (destrava-se no painel do site, controle "Proteção"). Não edite nem contorne. Sem esta conferência quem barra é o gancho de envio, só no fim, com o trabalho todo feito.
+<!-- /comum:trava-do-site -->
 - O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx`. Se não, abortar com orientação pra criar via painel ("✨ Criar artigo" no site detail → `make-reviews-stub`).
 - O artigo tem **pelo menos 1 produto** no lineup (`products: []` vazio = abortar — intro sem ângulo concreto fica vaga).
 - Bíblias dos produtos do artigo estão em `docs/biblias-v2/{ASIN}.json`. Se alguma faltar, rodar `bun scripts/sync-biblias-r2.ts --apply` antes (skill avisa e aborta se faltar).
@@ -593,17 +596,11 @@ assert novo.count('**') == 4, f"{novo.count('**')//2} bolds (régua: exatos 2)"
 # 3) Fecho: pontuação + espaço + ✅
 assert re.search(r'[.!] ✅\s*$', novo.strip()), "fecho deve ser '. ✅' ou '! ✅'"
 
-# 4) ANTI-CLONE: nenhuma sequência de 6 palavras igual a intro irmã
-def frases6(t):
-    t = re.sub(r'\*\*|<[^>]+>', ' ', t).lower()
-    p = re.findall(r'[a-zà-ÿ0-9]+', t)
-    return {' '.join(p[i:i+6]) for i in range(max(0, len(p)-5))}
-minhas = frases6(novo)
-for f in glob.glob(f'sites/{SITE}/src/content/reviews/*.mdx'):
-    if f.endswith(f'{SLUG}.mdx'): continue
-    corpo = open(f).read().split('---', 2)[2]
-    rep = minhas & frases6(corpo)
-    assert not rep, f"CLONE com {f}: {sorted(rep)[:3]}"
+# 4) ANTI-CLONE: não redigite a comparação. Grave a intro nova num arquivo do scratchpad e rode
+#    (fora deste Python) o programa, que compara com as intros irmãs do site e com os exemplos
+#    desta skill, deixa a palavra-chave de fora e sai 1 mostrando cada trecho repetido e de onde vem:
+#       bun scripts/intro-seis-palavras.ts {site} {slug} {arquivo-da-intro-nova.md}
+#    Saiu 1: reescreva o trecho e rode de novo, até sair 0.
 
 # 5) Duplicação contígua (bug-class a72e7d9) + minúscula após ponto
 assert not re.search(r'([a-zA-ZÀ-ÿ\s]{8,40})\1', novo), "duplicação contígua"

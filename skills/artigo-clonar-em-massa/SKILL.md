@@ -46,6 +46,9 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 
 ## Invariantes
 
+<!-- comum:trava-do-site -->
+- **Site sem a edição travada (chave-mestra do `CLAUDE.md`).** Antes de gravar no site (`sites/{site}/src/content/`, ou o `config.ts` quando é ele que a skill edita), confira, com o site em que a skill vai gravar no lugar de `{site}`: `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"`. Saiu `True`: pare e avise que o site está com a edição travada (destrava-se no painel do site, controle "Proteção"). Não edite nem contorne. Sem esta conferência quem barra é o gancho de envio, só no fim, com o trabalho todo feito.
+<!-- /comum:trava-do-site -->
 - **Gates de auditoria: Etapa 1.4 (`artigo-reviews-auditar`, cross-produto) e Etapa 4 (`artigo-auditar`).** O pipeline só reporta pronto depois de rodar as duas e obter `readyToLock: SIM`; o gate de invocação do `verify-output` reprova o commit se alguma não foi invocada. Motivo: build e gates mecânicos não pegam erro factual. No primeiro clone sem as auditorias o artigo saiu com claims falsos de cafeína e specs de uma marca descritas em outra, e só as auditorias editoriais pegam isso.
 - **NÃO faz deploy.** Para em "commitado + buildado + preview pronto". Deploy exige aprovação humana explícita (régua do projeto).
 - **NÃO trava** (`contentLocked` fica false/ausente) — editável após revisão.
@@ -128,7 +131,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
    bun scripts/clone-log.ts check {target} {slug} <etapa> "<o que foi feito, com números>"
    ```
 1. Git pull no repo de trabalho (evita estado stale; painel/Bárbara commitam em paralelo).
-2. Parse args. Valida `targetSite`/`sourceSite` (`[a-z0-9-]+`).
+2. Parse args. Valida `targetSite`/`sourceSite` (`[a-z0-9-]+`). **Confere a trava do site de destino** (Invariantes, "Site sem a edição travada"): travado → ABORTA aqui, antes de gerar qualquer texto.
 3. **Fonte recuperada do WordPress (`portadoDe:` no frontmatter) → ABORTA** (Marcelo, 29/09/2026: "os recuperados não podem ser fonte de clonagem"). O texto veio do WordPress sem revisão, e o clone herdaria dele a lista de produtos, os selos, a palavra-chave e a estrutura do guia. O `clone-log.ts init` do passo 0b já recusa com exit 1, e o painel não recomenda mais esses artigos. Assunto que só existe como recuperado se escreve do zero (`artigo-lineup-montar` + skills de escrita), não se clona. Reescrito do zero, o artigo perde o `portadoDe` e volta a servir.
    Lê o `.mdx` fonte → extrai: produtos (ASIN, name, image, imageAlt, badge, **rating**, schemaPrice, store), keyword, keywordPlural, listHeading, category, e a estrutura de H2/H3 do `guideContent`. A estrutura sai deste comando, que imprime só os títulos; a saída dele, colada como está, é tudo o que o sub-agent do guia recebe do fonte (Etapa 2.1):
 

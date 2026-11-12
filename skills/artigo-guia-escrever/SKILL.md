@@ -36,6 +36,9 @@ Sua função é gerar **HTML educativo** que ajuda o leitor a entender CRITÉRIO
 
 ## Pré-requisitos
 
+<!-- comum:trava-do-site -->
+- **Site sem a edição travada (chave-mestra do `CLAUDE.md`).** Antes de gravar no site (`sites/{site}/src/content/`, ou o `config.ts` quando é ele que a skill edita), confira, com o site em que a skill vai gravar no lugar de `{site}`: `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"`. Saiu `True`: pare e avise que o site está com a edição travada (destrava-se no painel do site, controle "Proteção"). Não edite nem contorne. Sem esta conferência quem barra é o gancho de envio, só no fim, com o trabalho todo feito.
+<!-- /comum:trava-do-site -->
 - O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx`. Se não, abortar com orientação pra criar via painel ("✨ Criar artigo" no site detail → `make-reviews-stub`).
 - O artigo tem **pelo menos 1 produto** no lineup (`products: []` vazio = abortar — guide sem categoria concreta fica vago).
 - Bíblias dos produtos do artigo estão em `docs/biblias-v2/{ASIN}.json`. Se alguma faltar, rodar `bun scripts/sync-biblias-r2.ts --apply` antes (skill avisa e aborta se faltar).

@@ -54,7 +54,7 @@ Molde de ouro: **melhoromega3** (sobre + autor). Skill-only (sem botão no paine
 4. **Stub/overwrite**: se sobre.html ou autor.html já têm conteúdo real, PERGUNTAR antes de sobrescrever. **Exceção, sem perguntar:** o port trocou o autor do site (no port no mesmo domínio, o autor do WordPress entra no lugar do que estava no config) e as páginas já escritas citam o autor antigo. Elas ficaram erradas, então reescreva, com backup, e conte no relatório (melhorsmarttv e melhoresperfumesmasculinos, 17/10/2026).
 5. **Detecta saúde/YMYL**: niche casa `/creatina|whey|pré.?treino|pre.?treino|ô?mega|omega|vitamina|suplemento|colágeno|proteína/i`.
 6. **Gera /sobre/** (régua abaixo) + **/author/** (régua abaixo), distintas e variadas vs irmãs.
-7. **Valida** (checklist).
+7. **Valida** (checklist). O gate de 6 palavras roda pelo programa `scripts/institucionais-seis-palavras.ts`, com os rascunhos em arquivo (comando no começo do "Checklist de validação"), e de novo, sem arquivo, depois do passo 10 e antes do commit.
 8. **Backup** ambas em `docs/painel/.painel-backups/{dia}/` (a pasta das outras skills de escrita; não existe `.painel-backups/` na raiz).
 9. **Escreve** sobre.html + author/{slug}.html (cria o dir `author/` se faltar). **A rota/dir da rede é `/author/` (com 'h'), NUNCA `/autor/`** — o `.mdx`/`.html` vive em `src/content/pages/author/{slug}.html`, a rota é `/author/{slug}/` e `config.author.href` aponta pra lá. Gravar em `autor/` = página órfã + link 404.
 10. **Alinha `config.author.bio`** com o Sobre e o perfil (pode afirmar testes e uso real, decisão do Marcelo de 17/10/2026); mantém variado vs irmãs. **IGNORA `evaluationText`** (campo morto, não renderiza).
@@ -196,6 +196,17 @@ O que faz texto soar como IA não é gíria nem termo técnico: é **palavra com
 - E-mail do config.contactEmail; link `/contato/` no fecho do sobre; link `/author/{slug}/` no "Quem está por trás" do sobre.
 
 ## Checklist de validação
+
+**O gate de 6 palavras tem programa (desde 12/11/2026): não monte a conferência à mão.**
+
+```bash
+# antes de gravar: os rascunhos em arquivo (no scratchpad)
+bun scripts/institucionais-seis-palavras.ts {site} --sobre={rascunho-sobre.html} --autor={rascunho-autor.html} [--texto={arquivo com os textos da home e do config}]
+# depois de gravar tudo, antes do commit: o que está no site
+bun scripts/institucionais-seis-palavras.ts {site}
+```
+
+Ele compara o Sobre, o perfil e os campos de texto que esta skill escreve com o Sobre, o perfil e todo texto do `config.ts` de TODOS os sites (inclusive as descrições de categoria) e com as peças do próprio site entre si, mostra de qual site vem cada trecho repetido (e se é do mesmo autor) e sai 1 enquanto houver repetição. Já ficam de fora o nome do programa da Amazon, com a preposição ou o verbo colado, e, entre sites do mesmo autor, o cargo dele. Fato que repete de propósito (a credencial inteira do autor, os nomes das normas do nicho): `--permitir="a frase inteira"`. Texto de referência que não pode ser copiado: `--referencia=arquivo`. É o gate em loop dos itens abaixo: reescreveu um trecho, rode de novo, porque a reescrita pode bater em outro site.
 
 - [ ] /sobre/: H1 + Missão + Quem está por trás + Como avaliamos + Independência (+ YMYL se saúde) + Fale conosco.
 - [ ] /author/: Como eu trabalho + Como eu avalio + Meu compromisso (1ª pessoa).

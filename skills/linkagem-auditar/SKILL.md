@@ -34,6 +34,9 @@ Não reescreva extração de link nem grafo — os scripts já fazem. O valor da
 
 ## Pré-requisitos
 
+<!-- comum:trava-do-site -->
+- **Site sem a edição travada (chave-mestra do `CLAUDE.md`).** Antes de gravar no site (`sites/{site}/src/content/`, ou o `config.ts` quando é ele que a skill edita), confira, com o site em que a skill vai gravar no lugar de `{site}`: `python3 -c "import json;print(json.load(open('docs/painel/sites-meta.json'))['{site}'].get('contentLocked'))"`. Saiu `True`: pare e avise que o site está com a edição travada (destrava-se no painel do site, controle "Proteção"). Não edite nem contorne. Sem esta conferência quem barra é o gancho de envio, só no fim, com o trabalho todo feito.
+<!-- /comum:trava-do-site -->
 - Site existe em `sites/{site}/` com `src/content/reviews/*.mdx`.
 - `scripts/audit-linkagem.ts`, `scripts/audit-links.ts` e `scripts/audit-slugs.ts` existem (núcleo determinístico).
 - Pro `audit-slugs.ts`: `~/.gsc-token.json` + `.env.gsc` no `shared-scripts`. Sem credencial ele sai com `ok:false` e o motivo — **nunca com lista vazia**, que pareceria "está tudo certo".

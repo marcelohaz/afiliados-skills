@@ -55,6 +55,9 @@ Sub-agents com `model: opus` no Agent tool; o alias resolve para o Opus mais nov
 
 ## Invariantes
 
+<!-- comum:lote-ajudantes -->
+- **Ajudante em primeiro plano; o que morre é refeito no mesmo turno.** Os sub-agents da leva vão com `run_in_background: false`, todos no mesmo bloco de chamadas `Agent(...)`. Se a ferramenta Agent da sessão devolver assíncrono mesmo assim, espere as notificações ou os arquivos de saída, sem polling em loop curto. Não encerre o turno para esperar ("te aviso quando voltar" é defeito: o lote só anda com o turno vivo). Sub-agent que morre (HTTP 429 ou 403, conexão perdida, timeout) ou devolve resultado incompleto: dispare outro para o mesmo item, no mesmo turno, isolado como o primeiro. Nunca pule o item nem o conte como feito. Se vários morrerem na mesma leva (em 23/08/2026, 8 de 10 numa leva de 10; com 5 por leva, nenhum), as próximas levas vão com 5.
+<!-- /comum:lote-ajudantes -->
 - **AUTO-APLICA (A) e (B)**; **(C) é report-only** (não há o que aplicar sem dado novo). `--report-only` desliga todo auto-apply.
 - **Todo conserto passa por re-auditoria** (Etapa 3.5). Não convergiu em ≤3 tentativas → **reverte do backup** + vira (C) no relatório. Nada fica aplicado sem ter sido re-conferido.
 - **Backup ANTES de qualquer escrita** (`.painel-backups/<dia>/`). Tudo reversível.
