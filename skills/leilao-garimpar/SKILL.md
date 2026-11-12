@@ -9,6 +9,8 @@ description: "Analisa a lista \"processo de liberação\" do Registro.br e devol
 
 **Desde 13/10/2026 uma rotina diária no GitHub** (`shared-scripts/.github/workflows/leiloes-diario.yml`) guarda sozinha a lista principal e a competitiva e, depois de cada janela, grava o desfecho dos domínios acompanhados. Ela grava no GitHub, então o Mac só vê depois de puxar.
 
+**Sem a pasta `../shared-scripts` nesta máquina (`test -d ../shared-scripts` falha), pare e avise:** a lista do leilão e as funções que esta skill chama moram lá (repo `marcelohaz/shared-scripts`), e a skill não roda sem ela. Não baixe a lista por conta própria nem analise uma cópia solta.
+
 0. **Puxe a pasta comum antes de tudo** (sem `git stash`: as duas janelas e a rotina gravam lá):
    ```bash
    git -C ../shared-scripts pull --rebase -q && git -C ../shared-scripts log --oneline -1
