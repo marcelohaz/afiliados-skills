@@ -9,6 +9,7 @@ Args no `$ARGUMENTS`:
 - **Lista de ASINs** (forma do botão do painel): `B0CH5RSZTP,B01I78MAHW,B093Q7LLD6` (vírgula, sem espaço). Cada um `^[A-Z0-9]{10}$`.
 - **`todas` / `todas as pendentes`**: varre `docs/biblias-v2/*.json`, pega as `pend` preenchíveis (ver Etapa 0.4).
 - **Filtro** (opcional): `niche=Panela Elétrica` ou `sub=panela-eletrica` → restringe o "todas" àquela subcategoria.
+- **`--com-poucas-opinioes`** (opcional, só com o sim do Marcelo): deixa entrar as bíblias com poucas opiniões (Etapa 0.4). É a saída para quando o Mercado Livre também tem pouca opinião ou quando o Marcelo decide preencher assim mesmo.
 - **`RETOMAR=yes`** (opcional): invocação nascida do heartbeat; re-arme, re-rode a Etapa 0 (idempotente) e dispare só o que falta (ver Invariantes → Turno vivo).
 - **`--enriquecer`** (opcional; obrigatório quando o alvo já tem curadoria): liga o modo enriquecer da `biblia-preencher` em todos os sub-agents. Nesse modo nada da curadoria existente se perde (ver Reconciliação da `biblia-preencher`).
 - **Ordem do backfill de imagens:** por rendimento e custo medidos (cozinha rende mais itens por bíblia e concentra a maior parte das imagens), nunca por sensibilidade do nicho. A bíblia captura fato; aviso ao leitor é decisão da página/review.
@@ -63,6 +64,7 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
 
 0.4. **Classificar cada uma** (decide quem entra no lote):
    - **Já preenchida** (`angulosConversao` + `pontosFortes` + `pontosFracos` todos não-vazios = coreDone) → **PULA** (idempotência) — **EXCETO no modo `--enriquecer`**, cujo alvo são justamente as coreDone: aí a chave é `imagensVerificadasEm` — **ausente → ENTRA; presente → PULA** (a lista de imagens não tem timestamp próprio; se você sabe que ela mudou depois do carimbo, passe os ASINs explicitamente pra forçar).
+   - **Poucas opiniões** (bíblia ainda não preenchida com 1 a 999 letras em `opinioesCompradores`; no modo `--enriquecer` não se aplica, a régua `temPoucasOpinioes` de `docs/painel/_lib/obs-flags.ts`, a mesma do selo "poucas opiniões" do painel) → **PULA** + lista "poucas opiniões: espera a Bárbara colar as do Mercado Livre", nos dois modos (lista de ASINs e `todas`), salvo `--com-poucas-opinioes`. Caso de origem (12/11/2026): sem essa trava, o preenchimento pegou 33 bíblias criadas que esperavam o Mercado Livre (a `biblia-criar` avisa "poucas opiniões" abaixo de 1.000 letras), e as opiniões coladas depois pedem preencher de novo com `--enriquecer`. Conta: `python3 -c "import json;print(len((json.load(open('docs/biblias-v2/<ASIN>.json')).get('opinioesCompradores') or '').strip()))"`.
    - **Sem dados brutos** (todos vazios: `sobreEsteItem`/`doFabricante`/`specsAmazon`/`opinioesCompradores`/`descricaoProduto`) → **EXCLUI** + lista "sem matéria-prima, capturar antes".
    - **Contaminada** — roda `bun scripts/check-contamination.ts <ASIN>`; se `hasContamination: true` com hard issue (`cross-brand-mention`) → **EXCLUI** + lista "informações erradas, corrigir à mão (biblia-preencher individual)".
 
@@ -72,7 +74,7 @@ Preencher bíblia em massa é estruturalmente MAIS seguro que clonar artigo, por
    - **`asin-mismatch` vira soft** quando o modelo bate e não há ambiguidade de voltagem (`irmaoBenigno`): é relistagem, não produto trocado. Com voltagens conflitantes ou modelo diferente, continua hard e pede recaptura.
 
    Manter `hard` como bloqueio é a decisão certa: `brand-mismatch` PODE ser ficha capturada de outra marca, e admitir todas automaticamente deixaria spec errada ser curada como se fosse do produto.
-   - **Preenchível** (pend + tem dado bruto + não-hard-contaminada) → **ENTRA no lote**.
+   - **Preenchível** (pend + tem dado bruto + não-hard-contaminada + sem poucas opiniões, ou com `--com-poucas-opinioes`) → **ENTRA no lote**.
 
 0.5. **Imprimir o plano** (tabela ASIN, nome, ENTRA/PULA/EXCLUI + motivo, nº no lote, estimativa ~1-3 min/leva) **e disparar na mesma mensagem** — sem `S/N` (canon 24/07: o pré-flight é a barreira). Defina `RUN` = `<scratchpad>/biblia-lote-{YYYYMMDD-HHMM}` e crie `RUN/payloads/` e `RUN/antes/`.
 
