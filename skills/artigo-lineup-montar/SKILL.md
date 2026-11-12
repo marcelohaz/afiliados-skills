@@ -15,7 +15,7 @@ Detecção: se tem `/` seguido de kebab-case → artigo existente. Senão → ke
 
 **É a etapa ANTES do painel, para artigo que AINDA NÃO EXISTE.** Ela chega no "+ Criar artigo" com o dever de casa feito: quais produtos, em que ordem, por quê.
 
-⚠️ **Artigo que já existe é da `artigo-clonar-em-massa`, não desta skill** (canon Marcelo 2026-08-02). O modo `site/slug-do-artigo` daqui serve pra **completar** um artigo com produtos que faltam, nunca pra re-derivar o lineup de um artigo publicado. Recriar artigo existente é o trabalho da skill de clonar.
+**Artigo que já existe é da `artigo-clonar-em-massa`, não desta skill** (canon Marcelo 2026-08-02). O modo `site/slug-do-artigo` daqui serve pra **completar** um artigo com produtos que faltam, nunca pra re-derivar o lineup de um artigo publicado. Recriar artigo existente é o trabalho da skill de clonar.
 
 **NÃO escreve nada.** Nem review, nem intro, nem guia. Isso é da `artigo-review-criar` e família.
 
@@ -65,7 +65,7 @@ singular pega o que a plural cala.
 ChatGPT devolvem pra essa keyword, ou seja, quem a rede enfrenta na SERP de IA. Guarde as duas
 **literais** no relatório.
 
-⚠️ **O sub-agent NÃO é isolado do `CLAUDE.md`.** Ele não vê o catálogo, mas herda o contexto do
+**O sub-agent NÃO é isolado do `CLAUDE.md`.** Ele não vê o catálogo, mas herda o contexto do
 projeto e sabe que está ajudando a montar artigo de afiliado. Medido em 11/09/2026: a consulta B
 abriu com *"sem consultar bíblias, painel ou SERP"* e fechou oferecendo *"transformar isso num
 lineup de artigo comparativo com ASINs reais"* — vocabulário que só existe neste repo. O
@@ -94,7 +94,7 @@ A resposta vira **RUBRICA**, registrada no relatório final. É contra ela que a
 
 **Os de qualidade ORDENAM o top-3** (decisão do Marcelo). Os 71% em que a posição 1 publicada coincide com o mais vendido (Etapa 3) descrevem coincidência, não critério: o melhor tende a vender mais, e não o contrário.
 
-⚠️ **SALVAGUARDA — a rubrica diz QUAL número, o arquivo dá O NÚMERO.** Ordenar pela rubrica não
+**SALVAGUARDA — a rubrica diz QUAL número, o arquivo dá O NÚMERO.** Ordenar pela rubrica não
 a torna autoridade (ver o aviso logo abaixo, que continua valendo integralmente). A divisão é a
 mesma que já vale para eliminar:
 
@@ -107,7 +107,7 @@ A rubrica **nunca** nomeia qual produto é o melhor — ela não viu o catálogo
 vencedor, é ruído, igual a nome de modelo. E ordenar erra mais barato que eliminar: produto em
 posição errada continua no artigo, produto cortado some dele.
 
-⚠️ **O CRITÉRIO MESTRE tem que EMERGIR, nunca ser exigido.** As duas consultas peladas apontaram
+**O CRITÉRIO MESTRE tem que EMERGIR, nunca ser exigido.** As duas consultas peladas apontaram
 um número dominante sozinhas, sem ninguém pedir — *"vazão de ar (m³/h) é o número que define o
 ambiente atendido, mais do que os litros do tanque"* (A) e *"é o número que manda, mais que a
 potência em watts"* (B). **Quando as duas convergem no mesmo número, esse é o critério mestre.**
@@ -115,11 +115,11 @@ Quando divergem, ou quando nenhuma elege um, **a categoria não tem critério me
 tem ramo pra isso. Exigir que exista **fabrica** um: a única execução que pediu explicitamente
 recebeu um critério que só 33% do catálogo publicava.
 
-⚠️ **A rubrica é insumo, nunca autoridade.** Ela é memória de um modelo, sem acesso ao catálogo — acerta o que a categoria tem e erra o recorte do que "deveria" estar na mesma lista. Em 2026-08-02 ela me convenceu a cortar a `PartyBox Ultimate` de um artigo de caixa de som JBL porque "misturar caixa de festa com portátil é o erro mais comum". É juízo editorial sobre estrutura de artigo, e virou critério de admissão nas minhas mãos.
+**A rubrica é insumo, nunca autoridade.** Ela é memória de um modelo, sem acesso ao catálogo — acerta o que a categoria tem e erra o recorte do que "deveria" estar na mesma lista. Em 2026-08-02 ela me convenceu a cortar a `PartyBox Ultimate` de um artigo de caixa de som JBL porque "misturar caixa de festa com portátil é o erro mais comum". É juízo editorial sobre estrutura de artigo, e virou critério de admissão nas minhas mãos.
 
 **Nome de modelo que vier na resposta NÃO é candidato.** Medido em 2 execuções: zero decisões aproveitadas e um erro ativo (marcou `JBL Go 4` com confiança ALTA sem saber que a Go 5 existia, e a regra de sucessão teve que desfazer). A LLM envelhece **nome de modelo** e não envelhece **critério de compra**.
 
-⚠️ **Com a keyword pelada os nomes VÊM, e isso mudou o que fazer com eles** (2026-09-11). A régua antiga era "não pergunte quais modelos" — hoje não se pergunta nada, e eles aparecem de qualquer jeito. Eles seguem **proibidos como candidatos** e ganham um uso novo, em duas leituras:
+**Com a keyword pelada os nomes VÊM, e isso mudou o que fazer com eles** (2026-09-11). A régua antiga era "não pergunte quais modelos" — hoje não se pergunta nada, e eles aparecem de qualquer jeito. Eles seguem **proibidos como candidatos** e ganham um uso novo, em duas leituras:
 
 ```
 marca que as DUAS consultas citam    sinal de categoria: se o catálogo não tem, é buraco
@@ -148,7 +148,7 @@ Essa direção é obrigatória e foi aprendida errando: na 3ª execução o esco
 
 Um universo menor **não parece errado, parece um catálogo pequeno**. Por isso o erro é silencioso e por isso a direção importa.
 
-⚠️ **`categorySlug` VAZIO é o buraco do buraco — cheque SEMPRE.** A regra acima nasceu pra matar o universo silencioso e **tem a mesma falha** quando o site não preencheu categoria. Medido no oguiacompra (2026-08-02):
+**`categorySlug` VAZIO é o buraco do buraco — cheque SEMPRE.** A regra acima nasceu pra matar o universo silencioso e **tem a mesma falha** quando o site não preencheu categoria. Medido no oguiacompra (2026-08-02):
 
 ```
 categorySlug = "impressoras"      17 páginas
@@ -172,7 +172,7 @@ páginas na categoria: N
 
 **Classificar por relevância, não só por ausência.** Listar tudo que falta vira ruído: o microfone avulso "falta" e nunca vai entrar.
 
-⚠️ **Aqui você julga com evidência mais fraca, e precisa saber disso.** Todo o desenho manda julgar pelo conteúdo da página, e estes produtos **não têm página** — sobra a bíblia. Eles são avaliados por material mais pobre que os concorrentes deles.
+**Aqui você julga com evidência mais fraca, e precisa saber disso.** Todo o desenho manda julgar pelo conteúdo da página, e estes produtos **não têm página** — sobra a bíblia. Eles são avaliados por material mais pobre que os concorrentes deles.
 
 Aqui a única fonte é a bíblia, então você está no **2º degrau da escada da Etapa 3 sem ter passado pelo 1º**. Isso não impede eliminar — o bruto do fabricante é prova boa — mas cobra prudência, e a prudência agora é OUTRA: desde 04/09/2026 a 2b não bloqueia, ela MARCA — então o produto segue com evidência mais fraca até a Etapa 8, e é o marcador que carrega essa ressalva. Some o custo assimétrico: listar demais é uma linha no relatório, listar de menos é um produto que nunca entra em artigo nenhum. Conduta: **erre pro lado de listar** — incerto vira `✅ RELEVANTE` e quem decide é o usuário. Só fica de fora o que é obviamente outra coisa (o microfone avulso, o cabo, a capa).
 
@@ -181,7 +181,7 @@ universo com `⛔ SEM PÁGINA`, é julgado na Etapa 3 pela bíblia, disputa posi
 e carrega o marcador até a tabela final. **Quem decide é a Etapa 8**, que não cria artigo
 com produto sem página.
 
-⚠️ **O marcador não é decoração — ele muda o que o usuário decide.** Ao ver a posição, o
+**O marcador não é decoração — ele muda o que o usuário decide.** Ao ver a posição, o
 preço e a venda do produto sem página, ele sabe se vale criar a página ou se é mais barato
 tirar o produto. Sem a posição, essa decisão é no escuro. E o julgamento dele saiu de
 evidência mais fraca (só bíblia, sem página), então **o marcador carrega essa ressalva**.
@@ -196,13 +196,13 @@ SOBREPOSIÇÃO — quanto deste universo já está publicado
 
 Detalhe e consequência editorial ficam na Etapa 7. **Aqui é só o número, cedo.** Se 7 de 8 já estão num artigo só, isso muda a decisão de escrever o artigo — e saber depois de montar o lineup inteiro é tarde.
 
-⚠️ **O bloqueio e os avisos baratos vêm ANTES da leitura pesada de propósito.** Eles precisam só da rubrica, da lista de ASINs e do `products[]` dos artigos — nada do conteúdo das páginas. Rodar depois joga fora 176 KB toda vez que barra.
+**O bloqueio e os avisos baratos vêm ANTES da leitura pesada de propósito.** Eles precisam só da rubrica, da lista de ASINs e do `products[]` dos artigos — nada do conteúdo das páginas. Rodar depois joga fora 176 KB toda vez que barra.
 
-⚠️ **Cuidado com o medidor.** Ao varrer bíblia em massa, confira o TIPO do campo antes de concluir. `specsAmazon` é **string** em todas as bíblias medidas, não dicionário — um scan que assume `dict` devolve zero e parece um achado. Em 2026-08-01 isso quase virou uma acusação falsa contra esta própria régua.
+**Cuidado com o medidor.** Ao varrer bíblia em massa, confira o TIPO do campo antes de concluir. `specsAmazon` é **string** em todas as bíblias medidas, não dicionário — um scan que assume `dict` devolve zero e parece um achado. Em 2026-08-01 isso quase virou uma acusação falsa contra esta própria régua.
 
 **2c. Ler INTEIRO (caro), depois da 2b** (canon Marcelo 2026-08-01): `subtitle` · `shortDescription` · `pros` · `cons` · `specs` · `fullReview`.
 
-⚠️ **O marcado `⛔ SEM PÁGINA` não tem o que ler aqui — pule-o nesta etapa.** O dossiê
+**O marcado `⛔ SEM PÁGINA` não tem o que ler aqui — pule-o nesta etapa.** O dossiê
 dele é a bíblia (campos brutos), e é assim que ele chega na Etapa 3. Não invente leitura
 de página inexistente e não o deixe de fora do universo por causa disso.
 
@@ -218,7 +218,7 @@ Sete categorias empatam em 34-35 produtos e nenhuma passa de **176 KB**. "Ler to
 
 **Leia `pros`/`cons` para julgar, não como placar comparativo.** Cada página foi escrita por um sub-agent isolado, um produto por vez, então "6 prós contra 2 contras" mede o texto e não o produto.
 
-⚠️ **Modo artigo existente** (`site/slug-do-artigo`): o universo continua sendo a categoria, mas leia também o `products[]` do artigo. Quem já está lá **não é candidato**, é contexto — e o teste de LEAD da Etapa 5 tem que contar os qualificadores já tomados por eles, senão o produto novo repete um lead que já existe no artigo.
+**Modo artigo existente** (`site/slug-do-artigo`): o universo continua sendo a categoria, mas leia também o `products[]` do artigo. Quem já está lá **não é candidato**, é contexto — e o teste de LEAD da Etapa 5 tem que contar os qualificadores já tomados por eles, senão o produto novo repete um lead que já existe no artigo.
 
 ### Etapa 3 — julgamento contra a rubrica
 
@@ -231,19 +231,19 @@ qual spec prova     o campo lido que sustenta o julgamento
 
 **A prova é o que torna o julgamento auditável.** Sem ela isto é só opinião com passos extras, e opinião sem lastro é como um produto fora de faixa entra "porque é bom".
 
-⚠️ **NENHUM PRODUTO SAI SEM QUE A VENDA DELE TENHA SIDO OLHADA.** A Etapa 4 busca bíblia só dos sobreviventes, o que é barato — e cria uma cegueira: dá pra cortar um produto aqui sem nunca ver `comprasMesPassado`. Aconteceu em 2026-08-02: marquei a `HP DeskJet 2975` como limítrofe pelo insumo e **só depois** descobri que ela vende **1.000/mês**, empatada em segundo lugar do catálogo. **Antes de marcar `não` ou `limítrofe`, abra o `snapshot` daquele candidato.** É uma leitura por corte, e corte é decisão cara.
+**Nenhum produto sai sem que a venda dele tenha sido olhada.** A Etapa 4 busca bíblia só dos sobreviventes, o que é barato — e cria uma cegueira: dá pra cortar um produto aqui sem nunca ver `comprasMesPassado`. Aconteceu em 2026-08-02: marquei a `HP DeskJet 2975` como limítrofe pelo insumo e **só depois** descobri que ela vende **1.000/mês**, empatada em segundo lugar do catálogo. **Antes de marcar `não` ou `limítrofe`, abra o `snapshot` daquele candidato.** É uma leitura por corte, e corte é decisão cara.
 
-⚠️ **LEIA A RUBRICA INTEIRA, não só a lista de eliminatórios.** No mesmo caso, a rubrica dizia que cartucho é o eliminatório nº 1 da keyword **e**, três parágrafos abaixo, que cartucho *"faz sentido: volume muito baixo e esporádico, orçamento inicial travado, ou onde a cabeça integrada protege contra entupimento"*. Eu li a primeira metade. A seção "quando faz sentido" de cada tecnologia é **régua de admissão tanto quanto a lista de cortes** — ela diz para QUAL PERFIL aquele produto é a resposta certa, e perfil é papel no lineup.
+**Leia a rubrica inteira, não só a lista de eliminatórios.** No mesmo caso, a rubrica dizia que cartucho é o eliminatório nº 1 da keyword **e**, três parágrafos abaixo, que cartucho *"faz sentido: volume muito baixo e esporádico, orçamento inicial travado, ou onde a cabeça integrada protege contra entupimento"*. Eu li a primeira metade. A seção "quando faz sentido" de cada tecnologia é **régua de admissão tanto quanto a lista de cortes** — ela diz para QUAL PERFIL aquele produto é a resposta certa, e perfil é papel no lineup.
 
-⚠️ **PRO MARCADO `⛔ SEM PÁGINA`, QUEM ELIMINA É O BRUTO DA BÍBLIA** (`specsAmazon` ·
+**Pro marcado `⛔ SEM PÁGINA`, quem elimina é o bruto da bíblia** (`specsAmazon` ·
 `sobreEsteItem` · `doFabricante` · `conteudoBrutoFabricante`), com a mesma exigência de
 citação. Sem essa exceção a regra abaixo o tornaria **inelegível pra corte** — nenhuma
 página existe pra desqualificar, então ele entraria sempre, que é o oposto de prudente.
 A evidência dele é mais fraca, e é isso que o marcador comunica até a Etapa 8.
 
-⚠️ **A RUBRICA APONTA O QUE PROCURAR. QUEM ELIMINA É A PÁGINA.** Sem trecho da página que desqualifique, o produto **entra** — mesmo que a rubrica ache que ele é de outro segmento. A consulta cega é opinião de memória: ela sabe reconhecer o que existe na categoria, mas o recorte editorial de "isso não deveria estar na mesma lista" é juízo dela, não fato do produto.
+**A rubrica aponta o que procurar. Quem elimina é a página.** Sem trecho da página que desqualifique, o produto **entra** — mesmo que a rubrica ache que ele é de outro segmento. A consulta cega é opinião de memória: ela sabe reconhecer o que existe na categoria, mas o recorte editorial de "isso não deveria estar na mesma lista" é juízo dela, não fato do produto.
 
-⚠️ **MAS ELIMINATÓRIO TEM DUAS FORMAS, e a regra acima só cobre uma.** Descoberto em 2026-08-02 rodando `melhor tablet para desenho`: eu cortei 5 produtos por **silêncio** da página, que é justamente o que a linha acima proíbe — e cortar estava certo, porque tablet sem caneta ativa não pertence a um artigo de desenho. O defeito era da régua.
+**Mas eliminatório tem duas formas, e a regra acima só cobre uma.** Descoberto em 2026-08-02 rodando `melhor tablet para desenho`: eu cortei 5 produtos por **silêncio** da página, que é justamente o que a linha acima proíbe — e cortar estava certo, porque tablet sem caneta ativa não pertence a um artigo de desenho. O defeito era da régua.
 
 ```
 DESQUALIFICADOR   "é sublimação" · "é laser" · "uso restrito ao carro"
@@ -267,7 +267,7 @@ REQUISITO         "precisa ter caneta ativa com pressão"
 
 **O 2º degrau é o que mais rende.** Caso real: a página do `VAIO TL10` não dizia nada sobre caneta, e a bíblia dele **afirma** *"compatível com canetas modelo capacitivas passivas"* — silêncio virou prova positiva. E o `POCO Pad M1` tinha `Stylus support` no `conteudoBrutoFabricante`, confirmando a admissão.
 
-⚠️ **No 3º degrau, PERGUNTE SOBRE INTERPRETAÇÃO, NUNCA SOBRE O MODELO.** A LLM envelhece em fato de SKU (Armadilha 2) e não envelhece em convenção. Medido no mesmo dia, a mesma consulta:
+**No 3º degrau, PERGUNTE SOBRE INTERPRETAÇÃO, NUNCA SOBRE O MODELO.** A LLM envelhece em fato de SKU (Armadilha 2) e não envelhece em convenção. Medido no mesmo dia, a mesma consulta:
 
 | pergunta | confiança | serviu? |
 |---|---|---|
@@ -295,13 +295,13 @@ PartyBox Ultimate   página, cons: porte grande · funciona na tomada · Dolby s
 
 Eu tinha cortado a Ultimate por "caixa de festa é outro segmento", frase que veio da rubrica e não da página, e o Marcelo repôs: **ter cabo de energia não exclui ser caixa de som**. Diferença de formato dentro da categoria é **estrutura editorial do artigo**, e o artigo resolve isso segmentando o texto — não é critério de admissão do lineup.
 
-⚠️ **Este canon e a régua de CLASSES do passo 4 são a MESMA ideia em dois momentos — não os confunda.** Aqui, na admissão: formato diferente **não corta**. Lá, na ordenação: formato diferente **não é ranqueado no mesmo eixo**, é segmentado. As duas linhas dizem "segmente o artigo", e nenhuma delas autoriza excluir. O erro de 02/08 foi cortar por classe; o de 11/09 foi ranquear entre classes. São os dois lados do mesmo engano.
+**Este canon e a régua de CLASSES do passo 4 são a MESMA ideia em dois momentos — não os confunda.** Aqui, na admissão: formato diferente **não corta**. Lá, na ordenação: formato diferente **não é ranqueado no mesmo eixo**, é segmentado. As duas linhas dizem "segmente o artigo", e nenhuma delas autoriza excluir. O erro de 02/08 foi cortar por classe; o de 11/09 foi ranquear entre classes. São os dois lados do mesmo engano.
 
-⚠️ Note que "só elimina por fato, não por opinião" **não** resolveria isto: "caixa de festa é uma categoria diferente" se apresenta como fato. O que resolve é exigir o **trecho da página**.
+Note que "só elimina por fato, não por opinião" **não** resolveria isto: "caixa de festa é uma categoria diferente" se apresenta como fato. O que resolve é exigir o **trecho da página**.
 
-⚠️ **`limítrofe` tem regra, e é NÃO ENTRAR.** Ele sai do lineup e vira **bloco próprio no relatório**, com a prova e uma linha do que mudaria se entrasse. Sem isso a saída de três valores só tem tratamento pra dois, e o terceiro vira decisão minha no olho — foi o que aconteceu em 2026-08-01 com a `Britânia BAF11A` de **11 litros** num artigo de 12: eu escalei pro Marcelo por instinto, não por régua.
+**`limítrofe` tem regra, e é NÃO ENTRAR.** Ele sai do lineup e vira **bloco próprio no relatório**, com a prova e uma linha do que mudaria se entrasse. Sem isso a saída de três valores só tem tratamento pra dois, e o terceiro vira decisão minha no olho — foi o que aconteceu em 2026-08-01 com a `Britânia BAF11A` de **11 litros** num artigo de 12: eu escalei pro Marcelo por instinto, não por régua.
 
-⚠️ **Seja honesto sobre o que isso é: um DEFAULT, não "reportar em vez de arbitrar".** Excluir o limítrofe é uma decisão, e a skill está tomando ela. A diferença pro empate entre dois candidatos (que ela realmente reporta sem arbitrar) é que ali não existe lado barato — aqui existe. Incluir um produto fora do recorte contamina a keyword do artigo inteiro, enquanto deixá-lo no bloco de limítrofes custa três linhas e o usuário repõe com uma palavra. **O default vai pro lado barato e diz que fez isso.**
+**Seja honesto sobre o que isso é: um DEFAULT, não "reportar em vez de arbitrar".** Excluir o limítrofe é uma decisão, e a skill está tomando ela. A diferença pro empate entre dois candidatos (que ela realmente reporta sem arbitrar) é que ali não existe lado barato — aqui existe. Incluir um produto fora do recorte contamina a keyword do artigo inteiro, enquanto deixá-lo no bloco de limítrofes custa três linhas e o usuário repõe com uma palavra. **O default vai pro lado barato e diz que fez isso.**
 
 **A tabela `specs` é onde a classificação mora**, e o motivo NÃO é cobertura. Medido no melhorairfryer, recorte "12 litros": a capacidade aparece em **23 de 23** páginas e é citada em **20 de 23** bíblias. Três produtos de diferença não sustentariam regra nenhuma.
 
@@ -327,7 +327,7 @@ Só de quem passou pela Etapa 3, e só o que a página não tem:
 | **`pontosFracos`** | ver abaixo — é o motivo mais importante |
 | `angulosConversao` · `sentimentoCompradores` · `dadosInconsistentes` | não passam pra página |
 
-⚠️ **A página PERDE negativo, e por isso o julgamento de qualidade continua vindo da bíblia.** Caso real (melhorairfryer, 2026-08-01):
+**A página PERDE negativo, e por isso o julgamento de qualidade continua vindo da bíblia.** Caso real (melhorairfryer, 2026-08-01):
 
 ```
 Philco PFR2200P   bíblia: 3 pontosFracos, um deles ferrugem interna
@@ -352,7 +352,7 @@ HP DeskJet 2975        página R$   450   bíblia R$   450     0%
 
 ### Etapa 5 — seleção
 
-⚠️ **ORDEM DE APLICAÇÃO — não é lista de regras soltas, é sequência.** Aplicar fora de ordem dá resultado diferente. As seções abaixo seguem esta ordem.
+**Ordem de aplicação — não é lista de regras soltas, é sequência.** Aplicar fora de ordem dá resultado diferente. As seções abaixo seguem esta ordem.
 
 ```
 entram aqui já filtrados pela rubrica + página (Etapa 3), com o tipo lido da PÁGINA
@@ -378,7 +378,7 @@ B. geração seguinte da MESMA linha (Go 4 → Go 5)             →  a MAIS NOV
 C. mesmo produto sob DUAS MARCAS irmãs (rebadge)             →  a MAIS VENDIDA ganha, a outra SAI
 ```
 
-⚠️ **O passo 1 faz DUAS coisas, e só uma reduz a lista.** A e C tiram produto. B **não tira ninguém** — ele emite uma **restrição de ordem** que precisa sobreviver até o passo 5.
+**O passo 1 faz DUAS coisas, e só uma reduz a lista.** A e C tiram produto. B **não tira ninguém** — ele emite uma **restrição de ordem** que precisa sobreviver até o passo 5.
 
 ```
 passo 1 emite:   Go 5 fica ACIMA da Go 4
@@ -388,7 +388,7 @@ passo 5 aplica:  entram por venda decrescente  →  Go 4 (3.000) viria antes da 
 
 **Por que 1 vem antes de 5:** o teste de lead depende de quais qualificadores já foram tomados. A e C decidem QUEM está em jogo; B decide QUEM ESCOLHE PRIMEIRO entre duas gerações. Rodar o lead antes disso dá a uma geração um qualificador que pertence à outra.
 
-⚠️ **Carregue a restrição, não confie na memória.** Quando o passo 5 ordena por venda e a diferença é grande (Go 4 vende 6× a Go 5), a tentação de "corrigir" a ordem é forte. Anote a restrição ao sair do passo 1 e **reporte a tensão**, com os dois números visíveis.
+**Carregue a restrição, não confie na memória.** Quando o passo 5 ordena por venda e a diferença é grande (Go 4 vende 6× a Go 5), a tentação de "corrigir" a ordem é forte. Anote a restrição ao sair do passo 1 e **reporte a tensão**, com os dois números visíveis.
 
 **A fronteira do caso A: pacote que HABILITA USO não é variante.** Voltagem e cor não mudam o que o comprador consegue fazer. Um acessório incluído pode mudar. O teste: **sem o pacote, o comprador precisaria de outra compra pra fazer aquilo?** Se sim, são produtos distintos e os dois podem entrar.
 
@@ -422,13 +422,13 @@ marcas do mesmo grupo             Britânia e Philco
 
 **Um sinal só = investigue; três ou mais = trate como gêmeo.** Desempata por venda: Philco 500/mês contra 100/mês.
 
-⚠️ **"Specs iguais" só conta em campo que AS DUAS páginas declaram.** Rótulo ausente é **desconhecido, não igual** — as páginas são escritas por sub-agents independentes, que escolhem rótulos diferentes pro mesmo produto. Erro real: declarei `HP Smart Tank 581` e `584` gêmeas por baterem em 4 dimensões, mas a maioria dos campos **não existia nas duas** — comparei a sobreposição acidental e li o resto como igualdade. O Marcelo corrigiu: **são parecidas, não gêmeas.** Duas defesas: conte quantos campos as duas realmente compartilham antes de somar dimensões, e lembre que **sem sinal de ASIN a similaridade de specs sozinha não fecha o diagnóstico**.
+**"Specs iguais" só conta em campo que AS DUAS páginas declaram.** Rótulo ausente é **desconhecido, não igual** — as páginas são escritas por sub-agents independentes, que escolhem rótulos diferentes pro mesmo produto. Erro real: declarei `HP Smart Tank 581` e `584` gêmeas por baterem em 4 dimensões, mas a maioria dos campos **não existia nas duas** — comparei a sobreposição acidental e li o resto como igualdade. O Marcelo corrigiu: **são parecidas, não gêmeas.** Duas defesas: conte quantos campos as duas realmente compartilham antes de somar dimensões, e lembre que **sem sinal de ASIN a similaridade de specs sozinha não fecha o diagnóstico**.
 
 ---
 
 #### Passo 2 — dominação
 
-⚠️ **É o que faltava.** A régua tinha aviso de marca, de reuso e de sobreposição com outro artigo, e **nada que comparasse uma posição com as outras do próprio lineup**. Resultado (oguiacompra, tanque de tinta, 2026-08-02): montei 11 produtos com **três SKUs da mesma plataforma HP 580**, 27% da lista.
+**É o que faltava.** A régua tinha aviso de marca, de reuso e de sobreposição com outro artigo, e **nada que comparasse uma posição com as outras do próprio lineup**. Resultado (oguiacompra, tanque de tinta, 2026-08-02): montei 11 produtos com **três SKUs da mesma plataforma HP 580**, 27% da lista.
 
 ```
 teste:  A é pior-ou-igual a B em TODO campo que AS DUAS páginas declaram
@@ -448,7 +448,7 @@ R$60 a mais por metade da tinta, todo o resto idêntico. Vale a mesma cautela do
 
 #### ▶ CHECKPOINT DE EXCLUSÕES — entre o passo 2 e o 3
 
-⚠️ **Imprima o livro-razão de tudo que saiu, ANTES de escrever posição ou subtítulo** (canon Marcelo 2026-08-02). É o último momento barato de o usuário discordar: aqui já aconteceu tudo que tira produto **por um motivo**, e nada de caro foi produzido ainda.
+**Imprima o livro-razão de tudo que saiu, ANTES de escrever posição ou subtítulo** (canon Marcelo 2026-08-02). É o último momento barato de o usuário discordar: aqui já aconteceu tudo que tira produto **por um motivo**, e nada de caro foi produzido ainda.
 
 **Por que aqui e não no pré-flight:** o pré-flight da Etapa 2b só enxerga bíblia sem página. As exclusões acontecem em quatro momentos (Etapa 3 · passo 1 · passo 2 · passo 6), e depois do passo 2 três dos quatro já rodaram. O passo 6 fica de fora porque depende da ordenação e é transparente por natureza — ele entra no relatório final.
 
@@ -469,7 +469,7 @@ B091JCMN73    5400     0   passo 6     cauda · 0/mês · ÚNICA fotográfica 6 
 
 **Colunas obrigatórias:** ASIN · preço · `comprasMesPassado` · em que etapa saiu · o motivo **com a citação**. Preço e venda de quem saiu são o que faz o erro gritar — foi assim que a `DeskJet 2975` de 1.000/mês e o `Tab A11+` de 2.000/mês teriam aparecido na tela em vez de num audit horas depois.
 
-⚠️ **Marque `⛔` quem é ÚNICO representante de marca ou subtipo.** A regra de precedência da cauda (passo 6) já protege esses, mas ela opera em silêncio — o marcador faz o julgamento aparecer para quem lê.
+**Marque `⛔` quem é ÚNICO representante de marca ou subtipo.** A regra de precedência da cauda (passo 6) já protege esses, mas ela opera em silêncio — o marcador faz o julgamento aparecer para quem lê.
 
 **Quando parar e quando seguir:**
 
@@ -484,7 +484,7 @@ com --aplicar   imprime e PARA. Criar artigo é escrita — não crie sobre excl
 
 #### Passo 3 — posição 1
 
-**O MELHOR DO CONJUNTO pelo critério de qualidade da rubrica** — na prática, o **melhor
+**O melhor do conjunto pelo critério de qualidade da rubrica** — na prática, o **melhor
 custo-benefício geral** (canon Marcelo 2026-09-11). Normalmente **não é o mais barato**, e
 **pode não ser o mais vendido**.
 
@@ -495,7 +495,7 @@ custo-benefício geral** (canon Marcelo 2026-09-11). Normalmente **não é o mai
 3º  só então use venda e preço — como CONFIRMAÇÃO, nunca como escolha
 ```
 
-⚠️ **O 0º não é burocracia: sem ele o critério mestre mede DIVULGAÇÃO, não desempenho.** Medido em
+**O 0º não é burocracia: sem ele o critério mestre mede DIVULGAÇÃO, não desempenho.** Medido em
 11/09/2026 (`melhorclimatizador`, 21 candidatos): a rubrica elegeu vazão em m³/h, computável em
 **7 de 21 (33%)**. E quem tem o dado é explicado pela MARCA, não pelo produto:
 
@@ -510,7 +510,7 @@ não corta) e **não define na ordenação**, então o produto sem dado vai pro 
 mesmo efeito de eliminá-lo. **A régua recusa o eliminatório pela porta da frente e o aplica pela
 porta dos fundos.**
 
-⚠️ **ANTES DE CONTAR COBERTURA, LEIA `dadosInconsistentes` DE CADA CANDIDATO.** É ali que mora a
+**Antes de contar cobertura, leia `dadosInconsistentes` de cada candidato.** É ali que mora a
 `decisaoEditorial` que diz se aquele número pode ou não ser usado, e ignorá-la corrompe a medição
 nos DOIS sentidos. Medido em 11/09/2026, na mesma execução, os dois erros opostos:
 
@@ -534,7 +534,7 @@ sozinho**. Nomeie um segundo critério com cobertura ~100%, ordene pelos dois e 
 E se o pódio sair monomarca sendo essa a marca que mais declara o dado, o achado é de
 **divulgação**: reordene ou declare a ressalva no relatório.
 
-⚠️ **Meça ONDE está o buraco, não só o tamanho dele.** O número de cobertura esconde o pior caso,
+**Meça ONDE está o buraco, não só o tamanho dele.** O número de cobertura esconde o pior caso,
 que é a lacuna **concentrada numa faixa só**. No mesmo catálogo, distribuindo os 7 declarantes pelas
 faixas que a própria rubrica nomeou:
 
@@ -551,25 +551,25 @@ mudos não eram irrelevantes — os dois campeões de venda do catálogo (500/m�
 zero declarante e com venda relevante nos mudos = o critério mestre está cego justamente onde o
 artigo mora, e aí ele não ordena nem acompanhado.
 
-⚠️ **EMPATE DENTRO DA INCERTEZA DECLARADA É EMPATE.** Se a própria rubrica atribui faixa de erro ao
+**Empate dentro da incerteza declarada é empate.** Se a própria rubrica atribui faixa de erro ao
 número (*"a vazão declarada é medida com a colmeia SECA; molhada cai 20 a 40%"*), diferença MENOR
 que essa faixa não separa nada. Caso real: 4.500 × 4.000 m³/h são 12,5% de diferença dentro de um
 erro de 20-40%, e lido ao pé da letra o 1º "vence sem empate" e escolhe o de R$ 660 contra um de
 R$ 375. **Cai na régua de empate: registre e desça pro 2º, não arbitre.**
 
-⚠️ **2º CRITÉRIO MUDO tem ramo próprio.** Ele pode simplesmente não existir no catálogo: no mesmo
+**2º CRITÉRIO MUDO tem ramo próprio.** Ele pode simplesmente não existir no catálogo: no mesmo
 caso, o 2º critério eleito (eficiência de saturação e espessura da colmeia) era declarado por
 **0 de 21**. Quando isso acontecer, **não pule direto pra venda e preço** — desça pro critério
 SEGUINTE da rubrica que tenha cobertura, e registre qual foi e por quê. Ali o seguinte era
 coerência entre vazão e área anunciada, e desempatou limpo: um dos dois anunciava cobertura que a
 própria vazão não sustenta.
 
-⚠️ **CONFIRMAÇÃO QUE CONTRADIZ é sinal, não veto.** Se venda e preço apontarem o contrário do que o
+**Confirmação que contradiz é sinal, não veto.** Se venda e preço apontarem o contrário do que o
 critério mestre escolheu, isso **não** troca o #1 — mas obriga a reabrir o 1º e o 2º antes de
 fechar. Confirmação que bate é silenciosa; confirmação que contradiz está dizendo que a conta de
 cima pode ter ficado apertada demais pra sustentar sozinha.
 
-⚠️ **CRITÉRIO MESTRE ≠ EIXO. Não confunda, os dois existem nesta skill:**
+**CRITÉRIO MESTRE ≠ EIXO. Não confunda, os dois existem nesta skill:**
 
 ```
 CRITÉRIO MESTRE  o número que a RUBRICA elegeu como principal da CATEGORIA
@@ -585,18 +585,18 @@ Um produto pode vencer o critério mestre **e** ter eixo (costuma ser o #1). Out
 sem chegar perto do critério mestre (o mais leve de um lineup onde leveza não é o que decide) —
 esse sustenta vaga no passo 6, mas não disputa o topo.
 
-⚠️ **VENDA NÃO É O CRITÉRIO — ela confirma.** Medido na rede: a posição 1 publicada **coincide**
+**Venda não é o critério — ela confirma.** Medido na rede: a posição 1 publicada **coincide**
 com o mais vendido em **71%** dos 307 artigos, e **não é o extremo de preço em 79%**. Os dois
 números são **descritivos**: dizem o que a rede produziu, não o que decide a posição. Coincidem
 porque o melhor tende a vender mais. **Quando o mais vendido NÃO for o melhor pelo critério mestre,
 o melhor fica em #1** e a divergência entra como nota no relatório ("o mais vendido é X, ficou
 em #N porque Y vence no eixo Z").
 
-⚠️ **`comprasMesPassado` é degrau, não número.** A Amazon publica faixa, então `1000` pode ser
+**`comprasMesPassado` é degrau, não número.** A Amazon publica faixa, então `1000` pode ser
 1.000 ou 9.000 e empate é comum. Empate em venda **não precisa de desempate**: venda não estava
 escolhendo. Vá para o critério mestre, que é quem decide, e **registre o empate** no relatório.
 
-⚠️ **O extremo de preço é sinal, não veto.** Se o melhor pelo critério mestre for também o mais
+**O extremo de preço é sinal, não veto.** Se o melhor pelo critério mestre for também o mais
 barato do lineup, ele fica em #1 — e você **reporta a exceção** com os 79% ao lado. Não troque o
 melhor produto por um pior só para fugir do extremo.
 
@@ -615,7 +615,7 @@ melhor produto por um pior só para fugir do extremo.
                        como critério, e só aqui.
 ```
 
-⚠️ **Isto vinha só no passo 5, como formato de subtitle** (`pos 0 Melhor em Geral · pos 1 Custo
+**Isto vinha só no passo 5, como formato de subtitle** (`pos 0 Melhor em Geral · pos 1 Custo
 Benefício · pos 2 Boa e Barata`), e chegava **tarde demais**: quando o executor lia, o top-3 já
 tinha sido ordenado por venda e preço. A sequência é a lógica de SELEÇÃO; o passo 5 fica só com o
 formato do texto. **Tem nuance, não é regra dura** — um catálogo pode não ter os três papéis
@@ -646,7 +646,7 @@ compactos de 3 a 5 L, e a rubrica pelada dizia que a faixa doméstica **é** 4-8
 de 16 L. Não era o mercado comprando errado, era o lineup ranqueando a categoria inteira por uma
 régua de ambiente comercial.
 
-⚠️ **O #3 pode não ter ocupante legítimo.** Se o melhor pelo critério mestre for também quase o
+**O #3 pode não ter ocupante legítimo.** Se o melhor pelo critério mestre for também quase o
 mais barato, todo candidato a "bom e barato" abaixo dele é **dominado**. Caso real: o #3 proposto
 custava R$ 340 contra R$ 375 do #1 — 10% menos — e entregava metade da vazão, metade do tanque e um
 terço da venda. Chamar isso de "bom e barato" manda o leitor pro pior negócio. A régua já trata
@@ -663,11 +663,11 @@ decrescente, os papéis vencem** — reporte a escada e siga.
 
 💡 **RECOMENDAÇÃO, não regra: evite duas marcas iguais SEGUIDAS no top-3** (canon Marcelo 2026-08-02). As três primeiras posições são a vitrine, e `Epson · Epson · HP` lê como preferência de marca antes de ler como recomendação. Não trava nada.
 
-⚠️ **Isento quando a keyword nomeia a marca.** `melhor impressora HP`, `melhor caixa de som JBL` — ali a marca única é o recorte, e diversificar seria trair a keyword.
+**Isento quando a keyword nomeia a marca.** `melhor impressora HP`, `melhor caixa de som JBL` — ali a marca única é o recorte, e diversificar seria trair a keyword.
 
-⚠️ **Briga com a escada de preço, e não há precedência.** Caso real: o top-3 saiu `L3250 R$1060 · L1250 R$850 · Smart Tank 581 R$820`, com duas Epson seguidas. Trocar #2 e #3 resolve a marca e **quebra a escada** (1060 → 820 → 850). Quando colidem, **reporte as duas ordens**.
+**Briga com a escada de preço, e não há precedência.** Caso real: o top-3 saiu `L3250 R$1060 · L1250 R$850 · Smart Tank 581 R$820`, com duas Epson seguidas. Trocar #2 e #3 resolve a marca e **quebra a escada** (1060 → 820 → 850). Quando colidem, **reporte as duas ordens**.
 
-⚠️ **Mas nem a marca nem a escada movem produto entre PAPÉIS.** As duas são ajuste de vitrine e
+**Mas nem a marca nem a escada movem produto entre PAPÉIS.** As duas são ajuste de vitrine e
 operam **dentro** da ordem que os papéis definiram. Se resolver a marca exigir pôr o "bom e
 barato" em #1, não resolva: reporte.
 
@@ -679,7 +679,7 @@ barato" em #1, não resolva: reporte.
 
 **Teste de LEAD distinto.** Cada produto precisa suportar um LEAD de subtitle próprio, sem repetir o qualificador de outro.
 
-⚠️ **Separe o que é regra do crit. 22 do que é heurística DESTA skill.** Em 2026-08-01 esta seção citava o crit. 22 como fonte de um portão de exclusão, e a fonte não diz isso:
+**Separe o que é regra do crit. 22 do que é heurística DESTA skill.** Em 2026-08-01 esta seção citava o crit. 22 como fonte de um portão de exclusão, e a fonte não diz isso:
 
 | | status no crit. 22 |
 |---|---|
@@ -700,9 +700,9 @@ pos 2   {Categoria} Boa e Barata ...
 pos 3+  perfil / marca / feature
 ```
 
-⚠️ **Concordância de gênero pelo núcleo da keyword** (crit. 22, regra dura): `impressora → Boa e Barata` · `tablet → Bom e Barato` · `aspirador → Bom e Barato`. Nunca trocar.
+**Concordância de gênero pelo núcleo da keyword** (crit. 22, regra dura): `impressora → Boa e Barata` · `tablet → Bom e Barato` · `aspirador → Bom e Barato`. Nunca trocar.
 
-⚠️ **O GANCHO É ORAÇÃO COM VERBO, NÃO FICHA TÉCNICA** (canon Marcelo 2026-08-02). Empilhar spec responde *o que é* e não responde *e daí*:
+**O gancho é oração com verbo, não ficha técnica** (canon Marcelo 2026-08-02). Empilhar spec responde *o que é* e não responde *e daí*:
 
 ```
 ficha   Impressora de Tanque 4 em 1 com ADF de 30 folhas e Ethernet
@@ -711,7 +711,7 @@ frase   Impressora de Tanque 4 em 1 que digitaliza um maço de uma vez
 
 **O molde:** LEAD capitalizado + emenda (`que` · `com` · vírgula) + **o DIFERENCIAL deste produto dentro deste lineup**. O número entra dentro da oração, não como lista. Padrão pescado dos artigos publicados do oguiacompra — `"que vira a folha sozinha"`, `"que dispensa o scanner sem uso"`.
 
-⚠️ **DIFERENCIAL, não "o que o produto faz pelo leitor"** (canon Marcelo 2026-08-10, corrigindo a redação anterior desta seção). A régua dizia "oração que diz o que o produto FAZ pelo leitor", e isso empurra pro genérico: num comparativo, **quase todos fazem a mesma coisa**. Todo aspirador vertical aspira o chão, todo 2 em 1 vira de mão, toda impressora imprime. Quando o molde pede benefício e o benefício é comum, a saída vira frase de efeito pra soar distinta sem dizer nada.
+**DIFERENCIAL, não "o que o produto faz pelo leitor"** (canon Marcelo 2026-08-10, corrigindo a redação anterior desta seção). A régua dizia "oração que diz o que o produto FAZ pelo leitor", e isso empurra pro genérico: num comparativo, **quase todos fazem a mesma coisa**. Todo aspirador vertical aspira o chão, todo 2 em 1 vira de mão, toda impressora imprime. Quando o molde pede benefício e o benefício é comum, a saída vira frase de efeito pra soar distinta sem dizer nada.
 
 ```
 ❌ que encosta no armário e some          cena, não fato · vale pra qualquer compacto
@@ -723,11 +723,11 @@ frase   Impressora de Tanque 4 em 1 que digitaliza um maço de uma vez
 ✅ com 1,1 kg no modo de mão               o mais leve, com o qualificador que o torna verdadeiro
 ```
 
-⚠️ **O 4º ❌ é o erro mais fácil de não ver, e eu cometi ele escrevendo esta própria seção.** "com 1,65 kg e filtro HEPA removível" passa no teste de "não é frase de efeito" — é spec, é factual, tem lastro. E não diferencia nada: no lineup em que foi escrito, três produtos eram MAIS leves (1,1 · 1,5 · 1,6) e **8 dos 11 declaravam HEPA**. Spec verdadeira não é o mesmo que spec distintiva. **O teste não é "isso é fato?", é "ordenando os 11 por esse atributo, este fica em primeiro?"**
+**O 4º ❌ é o erro mais fácil de não ver, e eu cometi ele escrevendo esta própria seção.** "com 1,65 kg e filtro HEPA removível" passa no teste de "não é frase de efeito" — é spec, é factual, tem lastro. E não diferencia nada: no lineup em que foi escrito, três produtos eram MAIS leves (1,1 · 1,5 · 1,6) e **8 dos 11 declaravam HEPA**. Spec verdadeira não é o mesmo que spec distintiva. **O teste não é "isso é fato?", é "ordenando os 11 por esse atributo, este fica em primeiro?"**
 
-⚠️ **Se nenhum atributo coloca o produto em primeiro, ele pode não ter lead.** Isso não é falha de redação, é sinal do passo 5: *produto sem lead disponível é candidato a ficar de fora* — reporte, não force um gancho morno.
+**Se nenhum atributo coloca o produto em primeiro, ele pode não ter lead.** Isso não é falha de redação, é sinal do passo 5: *produto sem lead disponível é candidato a ficar de fora* — reporte, não force um gancho morno.
 
-⚠️ **LEAD e EIXO não são a mesma coisa, e a v1.94.2 os confundiu.** São dois testes, e o passo 6 consome o segundo:
+**LEAD e EIXO não são a mesma coisa, e a v1.94.2 os confundiu.** São dois testes, e o passo 6 consome o segundo:
 
 ```
 LEAD   teste LEXICAL     o qualificador repete o de outro produto?   ("para Apartamento" é livre?)
@@ -739,19 +739,19 @@ Um produto pode ter **lead livre e nenhum eixo**: "para Apartamento" não está 
 
 **O gancho responde: por que ESTE e não os outros dez?** O vocabulário natural disso é comparativo — mais leve, mais potente, mais barato, menos barulho, maior autonomia — ou de recorte de uso quando o produto é o único que atende: passa pano, para apartamento, com saco, sem fio.
 
-⚠️ **Consequência direta: o gancho não pode citar número em que o produto PERDE pra outro do mesmo lineup.** Deixou de ser aviso separado e virou o mesmo princípio — se o gancho é o diferencial, citar um número onde você perde é uma contradição, não um descuido. A `EcoTank L3250` estava no slot "Melhor em Geral" com o gancho *"até 4.500 páginas"*, e três produtos da mesma lista rendem **12.000 por R$ 240 a menos**. **Antes de fechar, ordene o lineup por cada número citado nos ganchos.**
+**Consequência direta: o gancho não pode citar número em que o produto PERDE pra outro do mesmo lineup.** Deixou de ser aviso separado e virou o mesmo princípio — se o gancho é o diferencial, citar um número onde você perde é uma contradição, não um descuido. A `EcoTank L3250` estava no slot "Melhor em Geral" com o gancho *"até 4.500 páginas"*, e três produtos da mesma lista rendem **12.000 por R$ 240 a menos**. **Antes de fechar, ordene o lineup por cada número citado nos ganchos.**
 
-⚠️ **E o diferencial precisa de LASTRO, não do nome do produto.** Caso real (2026-08-10, melhoraspirador-com): ia dar ao `WAP Silent Speed Max` o lead "Silencioso", que é o nome comercial dele. A bíblia declara **85 dB**, e o `Electrolux STK15` da posição 1 declara **84 dB** — o "silencioso" era o mais barulhento dos dois. Marca batiza produto por marketing; o diferencial se prova na ficha ou não existe.
+**E o diferencial precisa de LASTRO, não do nome do produto.** Caso real (2026-08-10, melhoraspirador-com): ia dar ao `WAP Silent Speed Max` o lead "Silencioso", que é o nome comercial dele. A bíblia declara **85 dB**, e o `Electrolux STK15` da posição 1 declara **84 dB** — o "silencioso" era o mais barulhento dos dois. Marca batiza produto por marketing; o diferencial se prova na ficha ou não existe.
 
-⚠️ **O resultado depende do que já foi atribuído**, por isso este teste é o passo 5 e não o 1. Caso real: a `Go 4` vende **3.000/mês** e a `Go 5` vende **500**. Por venda pura a Go 4 entraria primeiro e levaria o qualificador melhor; a restrição do passo 1 inverte, e a Go 5 fica em #3 com `Boa e Barata` enquanto a Go 4 entra em #4 com `Ultraportátil`.
+**O resultado depende do que já foi atribuído**, por isso este teste é o passo 5 e não o 1. Caso real: a `Go 4` vende **3.000/mês** e a `Go 5` vende **500**. Por venda pura a Go 4 entraria primeiro e levaria o qualificador melhor; a restrição do passo 1 inverte, e a Go 5 fica em #3 com `Boa e Barata` enquanto a Go 4 entra em #4 com `Ultraportátil`.
 
-⚠️ **O teste é lexical, não semântico.** Ele checa se o qualificador repete, não se os produtos são parecidos. Três caixas de bolso podem passar com "Custo Benefício", "Boa e Barata" e "Compacta". Se o lineup ficar com 3+ produtos do mesmo formato, olhe à mão.
+**O teste é lexical, não semântico.** Ele checa se o qualificador repete, não se os produtos são parecidos. Três caixas de bolso podem passar com "Custo Benefício", "Boa e Barata" e "Compacta". Se o lineup ficar com 3+ produtos do mesmo formato, olhe à mão.
 
 ---
 
 #### Passo 6 — tamanho
 
-**TETO 11, PISO 4** (canon Marcelo 2026-08-02). Não é faixa sugerida, é limite.
+**Teto 11, piso 4** (canon Marcelo 2026-08-02). Não é faixa sugerida, é limite.
 
 ```
 > 11   corta o excedente pela cauda, e REPORTE quem saiu
@@ -760,7 +760,7 @@ Um produto pode ter **lead livre e nenhum eixo**: "para Apartamento" não está 
 
 O piso de 4 é mais apertado que o gate da rede, que é 3 (`artigo-auditar`, `productCount >= 3`) — vale o mais apertado. A rede tem 42 artigos com exatamente 4 produtos, todos de recorte estreito.
 
-⚠️ **A CAUDA NÃO É SÓ ORDEM DE VENDA — REPRESENTANTE ÚNICO TEM PRECEDÊNCIA.** Corte primeiro quem **duplica** um eixo já coberto, mesmo que venda mais que outro da cauda.
+**A cauda não é só ordem de venda — representante único tem precedência.** Corte primeiro quem **duplica** um eixo já coberto, mesmo que venda mais que outro da cauda.
 
 ```
 ordem de corte, da cauda pra cima:
@@ -770,13 +770,13 @@ ordem de corte, da cauda pra cima:
   ⛔  representante ÚNICO de marca, subtipo OU PERFIL sai por último
 ```
 
-⚠️ **"Perfil" entrou nesse ⛔ em 2026-08-11 e é a adição que mais muda resultado.** Marca e subtipo saltam à vista na tabela; perfil só aparece se você levantar a cobertura (Etapa 7). Foi por não estar aqui que o `WAP High Speed Plus` — 1,25 kg, o mais leve do catálogo, e a única resposta do perfil "força reduzida" — foi cortado por "duplica eixo" sem que ninguém notasse o que ia junto.
+**"Perfil" entrou nesse ⛔ em 2026-08-11 e é a adição que mais muda resultado.** Marca e subtipo saltam à vista na tabela; perfil só aparece se você levantar a cobertura (Etapa 7). Foi por não estar aqui que o `WAP High Speed Plus` — 1,25 kg, o mais leve do catálogo, e a única resposta do perfil "força reduzida" — foi cortado por "duplica eixo" sem que ninguém notasse o que ia junto.
 
 Caso real (oguiacompra, tanque de tinta): meu lineup cortou a **única fotográfica** e a **única Brother** do catálogo e ficou com três SKUs da plataforma HP 580. O artigo publicado, com 7 posições, mantém as duas e usa um Smart Tank.
 
 Isso só funciona porque `comprasMesPassado = 0` deixou de eliminar (ver Invariantes) — enquanto ele filtrava, os representantes únicos saíam do pool **antes** de qualquer regra poder preferi-los.
 
-⚠️ **O TETO 11 É LIMITE, NÃO META** (canon Marcelo 2026-08-11). Preencher até 11 porque cabe é o erro. **O tamanho sai da COBERTURA**, e a pergunta por posição é: *este produto tem eixo próprio, OU cobre um perfil que ninguém mais cobre?* Uma das duas basta. Nenhuma das duas = ele não está sustentando a vaga.
+**O teto 11 é limite, não meta** (canon Marcelo 2026-08-11). Preencher até 11 porque cabe é o erro. **O tamanho sai da COBERTURA**, e a pergunta por posição é: *este produto tem eixo próprio, OU cobre um perfil que ninguém mais cobre?* Uma das duas basta. Nenhuma das duas = ele não está sustentando a vaga.
 
 ```
 tem eixo próprio (vence algum atributo no lineup)   →  fica
@@ -784,7 +784,7 @@ sem eixo, mas é o ÚNICO que atende um perfil        →  fica, e o perfil é o
 sem eixo e sem perfil exclusivo                     →  candidato a sair, com o motivo no relatório
 ```
 
-⚠️ **"Sem eixo próprio" NÃO é motivo suficiente pra cortar** — e essa distinção nasceu de um erro medido. Em 2026-08-11 (melhoraspirador-com, `melhor aspirador de pó vertical`) duas execuções da mesma keyword produziram 11 e 9 posições. A de 9 cortou tudo que não vencia um superlativo, e junto foi o **WAP High Speed Plus, 1,25 kg — o mais leve do catálogo inteiro em configuração completa**. O lineup ficou com 1,5 kg como piso e **o perfil "força reduzida" da rubrica descoberto**. Ele não vencia eixo nenhum e era a única resposta de um perfil.
+**"Sem eixo próprio" NÃO é motivo suficiente pra cortar** — e essa distinção nasceu de um erro medido. Em 2026-08-11 (melhoraspirador-com, `melhor aspirador de pó vertical`) duas execuções da mesma keyword produziram 11 e 9 posições. A de 9 cortou tudo que não vencia um superlativo, e junto foi o **WAP High Speed Plus, 1,25 kg — o mais leve do catálogo inteiro em configuração completa**. O lineup ficou com 1,5 kg como piso e **o perfil "força reduzida" da rubrica descoberto**. Ele não vencia eixo nenhum e era a única resposta de um perfil.
 
 **Por isso a cobertura de perfil é bloco obrigatório do relatório (Etapa 7):** sem esse dado, esta regra não tem como ser aplicada — você não sabe qual perfil ficou descoberto se ninguém for obrigado a olhar.
 
@@ -809,7 +809,7 @@ O número continua válido como referência **relativa** dentro do mesmo catálo
 
 **Roda ANTES do relatório, não depois.** Sem `--aplicar`, o relatório **é** a entrega — auditar depois dele é te mostrar algo que eu já sei que pode estar torto.
 
-⚠️ **Não pode ser você mesmo.** Quem acabou de montar o lineup passou a etapa inteira se convencendo de cada escolha e vai carimbar. É o mesmo motivo pelo qual a Etapa 1 é isolada.
+**Não pode ser você mesmo.** Quem acabou de montar o lineup passou a etapa inteira se convencendo de cada escolha e vai carimbar. É o mesmo motivo pelo qual a Etapa 1 é isolada.
 
 Roda com `run_in_background: false`: o relatório só sai depois que ele voltar, no mesmo turno. Sub-agent que não voltou = refazer inline, não "Etapa 6 não rodou, quer que eu dispare depois?" (02/08).
 
@@ -820,7 +820,7 @@ cobertura do 0º passo — em quantos dos N candidatos o critério mestre é com
 por marca** · acesso aos arquivos.
 **NÃO recebe:** o seu raciocínio, a sua narrativa, nem o relatório escrito. Lendo como você chegou ali, ele concorda com você.
 
-⚠️ **A régua de posicionamento entrou no briefing em 2026-09-11, e a falta dela custou caro.** Um
+**A régua de posicionamento entrou no briefing em 2026-09-11, e a falta dela custou caro.** Um
 auditor que recebe só a rubrica julga a posição 1 **pela qualidade do produto**, que é a pergunta
 que ele consegue responder — e recomenda inverter o top-3 sem saber que existe régua. Foi o que
 aconteceu no `melhorclimatizador`: o audit apontou (corretamente) que o #1 era dominado pelo #2,
@@ -873,7 +873,7 @@ passo 3. Auditor sem régua audita por gosto.
               descolado no outro (30,8 × 6,2 m³/h por watt) = são classes.
 ```
 
-⚠️ **A checagem 6 é a razão de o audit existir**, e o método é mecânico: **pegue cada problema que o lineup declara e teste re-inserindo os excluídos.**
+**A checagem 6 é a razão de o audit existir**, e o método é mecânico: **pegue cada problema que o lineup declara e teste re-inserindo os excluídos.**
 
 ```
 "a escada quebrou, não existe nada entre R$ 270 e R$ 550"
@@ -892,9 +892,9 @@ Os dois são casos reais de 2026-08-02, e os dois eu reportei como buraco da ré
 | **erro objetivo** | nome divergente do `.mdx` / preço divergente da bíblia sem reporte · >13 palavras · dois-pontos · gêmeo não resolvido · gancho sem lastro | **conserte antes de mostrar** |
 | **julgamento** | exclusão sem prova citável · problema que some ao desfazer exclusão · gancho que contradiz o lead | **vai pro relatório, o usuário decide** |
 
-⚠️ **Não abafe.** Os achados de julgamento entram no relatório **com o texto do sub-agent**, não com a sua paráfrase. Você é parte interessada.
+**Não abafe.** Os achados de julgamento entram no relatório **com o texto do sub-agent**, não com a sua paráfrase. Você é parte interessada.
 
-⚠️ **Não flagre o que já está declarado.** Se o relatório já diz "as posições 2 e 3 vendem 100/mês, o piso do lote", isso não é achado. Audit que repete o que já foi reconhecido vira ruído, e ruído treina você a ignorar.
+**Não flagre o que já está declarado.** Se o relatório já diz "as posições 2 e 3 vendem 100/mês, o piso do lote", isso não é achado. Audit que repete o que já foi reconhecido vira ruído, e ruído treina você a ignorar.
 
 **Por que SEMPRE e não opt-in** (o `--audit` da `pagina-produto-criar-em-massa` é opt-in): medido em 2026-08-02, as **4 execuções reais tiveram pelo menos uma falha de julgamento cada** — atribuição errada da sucessão · escada quebrada falsa · três exclusões por opinião da rubrica mais o conflito falso da posição 1 · gancho contradizendo o lead. Taxa de 4 em 4. Um sub-agent é barato perto de nove reviews escritos sobre lineup torto.
 
@@ -915,7 +915,7 @@ LIMÍTROFES        quem a Etapa 3 marcou assim, com a prova e o que mudaria se e
 SEM PÁGINA        o que a 2b listou, se algo foi criado no meio do caminho
 ```
 
-⚠️ **O livro-razão aparece DUAS vezes de propósito**, e não é redundância: no checkpoint ele é parcial e serve pra você discordar cedo; no relatório é completo e serve de registro do que foi decidido. Se o usuário mandou repor algo no checkpoint, o relatório mostra o produto **dentro** do lineup, não na lista de fora.
+**O livro-razão aparece DUAS vezes de propósito**, e não é redundância: no checkpoint ele é parcial e serve pra você discordar cedo; no relatório é completo e serve de registro do que foi decidido. Se o usuário mandou repor algo no checkpoint, o relatório mostra o produto **dentro** do lineup, não na lista de fora.
 
 Colunas obrigatórias, nesta ordem:
 
@@ -963,7 +963,7 @@ COBERTURA DE PERFIL (da rubrica da Etapa 1)
    ❌ pet                    nenhuma página declara escova anti-enrolamento — buraco do CATÁLOGO
 ```
 
-⚠️ **Separe buraco DE CORTE de buraco DE CATÁLOGO**, porque a ação é oposta. Descoberto por corte = candidato a repor (é o motivo válido de manter produto sem eixo, ver passo 6). Descoberto porque nenhum produto do catálogo atende = informação pro guia e pra próxima compra de bíblia, não erro do lineup.
+**Separe buraco DE CORTE de buraco DE CATÁLOGO**, porque a ação é oposta. Descoberto por corte = candidato a repor (é o motivo válido de manter produto sem eixo, ver passo 6). Descoberto porque nenhum produto do catálogo atende = informação pro guia e pra próxima compra de bíblia, não erro do lineup.
 
 Este bloco é o que **alimenta a regra de tamanho do passo 6**. Sem ele, "sem eixo mas cobre perfil exclusivo" é inaplicável, porque ninguém levantou os perfis.
 
@@ -975,9 +975,9 @@ Este bloco é o que **alimenta a regra de tamanho do passo 6**. Sem ele, "sem ei
 
 ### Etapa 8 — criação (só com `--aplicar`)
 
-⚠️ **Pré-condição 1: o CHECKPOINT DE EXCLUSÕES do passo 2 foi aprovado.** Com `--aplicar` ele **para e espera** — criar artigo é escrita, e escrever sobre uma exclusão que o usuário ainda não viu é o erro caro desta skill. Sem aprovação do checkpoint, não chame endpoint nenhum.
+**Pré-condição 1: o CHECKPOINT DE EXCLUSÕES do passo 2 foi aprovado.** Com `--aplicar` ele **para e espera** — criar artigo é escrita, e escrever sobre uma exclusão que o usuário ainda não viu é o erro caro desta skill. Sem aprovação do checkpoint, não chame endpoint nenhum.
 
-⚠️ **Pré-condição 2 — ESTE É O GATE DE PÁGINA (canon Marcelo 2026-09-04).** A 2b marca e
+**Pré-condição 2 — ESTE É O GATE DE PÁGINA (canon Marcelo 2026-09-04).** A 2b marca e
 segue; é **aqui** que a falta de página impede. Antes de chamar qualquer endpoint, confira
 o lineup final: **nenhum item pode estar com `⛔ SEM PÁGINA`.** Havendo, PARE e apresente
 as duas saídas, com a posição e a venda do produto na mão:
@@ -1014,7 +1014,7 @@ curl -sS -H "Authorization: Basic $AUTH_B64" -H 'content-type: application/json'
 
 `subtitle` é aceito pelos DOIS, apesar do comentário do código só documentar `{asin, badge?}` — conferido na implementação.
 
-⚠️ **Espere entre levas e valide o campo `added` da resposta.** O `add-products-stub` tem rate-limit por artigo — `checkCooldown({ cooldownMs: 5_000 })`, ou seja **5 segundos** entre chamadas no mesmo artigo. Quando estoura, devolve `ok:false` e **a leva some em silêncio**. Se a próxima entrar, a ordem quebra. Ver Armadilha 3.
+**Espere entre levas e valide o campo `added` da resposta.** O `add-products-stub` tem rate-limit por artigo — `checkCooldown({ cooldownMs: 5_000 })`, ou seja **5 segundos** entre chamadas no mesmo artigo. Quando estoura, devolve `ok:false` e **a leva some em silêncio**. Se a próxima entrar, a ordem quebra. Ver Armadilha 3.
 
 **DOIS campos nascem errados do endpoint, e você tem que avisar sobre OS DOIS.** Ele recebe só
 `{keyword, slug, products}` — o botão "+ Criar artigo" do painel manda exatamente o mesmo —, então o
@@ -1028,7 +1028,7 @@ keywordPlural  ed?.keywordPlural || (keyword já no plural ? keyword : '')  → 
 - **`title`**: proponha um no padrão-assinatura do site (lead = campo `keyword`, número N obrigatório, ≤60 chars, tag do site) e **destaque no relatório que precisa ser colado no editor**. Em site sem artigo nenhum não há padrão pra inferir, e a escolha define a assinatura dali em diante ([[afiliados.seo.titulos-artigo-3-padroes-anti-dup]]).
 - **`keywordPlural`**: proponha o plural correto e **destaque igual**. Ele alimenta o H2 `Comparativo técnico {dos|das} {keywordPlural}` (`packages/ui/src/utils/review-data.ts`); com o singular no campo, o H2 sai errado em número e gênero (*"Comparativo técnico dos melhor climatizador de ar"*).
 
-⚠️ **Não é defeito desta skill mandar o valor errado — ela não tem canal.** O endpoint não aceita
+**Não é defeito desta skill mandar o valor errado — ela não tem canal.** O endpoint não aceita
 `keywordPlural`, e o `frontmatterEditorial` do builder é omitido de propósito no `server.ts`. O que a
 skill pode fazer é **avisar**, e é isso que os dois itens acima cobram. Se um dia o endpoint passar a
 aceitar o campo, mande-o e apague este aviso.
@@ -1083,7 +1083,7 @@ karcher-vcl-1-stick   Tipo = "Vertical 2 em 1"  ·  Alimentação = "Elétrico c
 wap-robot-w90         Tipo = "Robô aspirador 3 em 1 (varre, aspira, passa pano)"
 ```
 
-⚠️ **MAS O `Tipo` É UMA AFIRMAÇÃO DA PÁGINA, NÃO UM FATO — e ele erra** (2026-08-11). A regra acima resolve o falso positivo do nome e cria um novo ponto cego: confiar cegamente no rótulo. Caso real: `britania-bas1430` declara `Tipo = "Aspirador de pó vertical com saco"` e o produto é **de arrasto**, o eliminatório literal da rubrica. Duas execuções independentes da keyword tiveram que subir pro 2º degrau pra pegar.
+**MAS O `Tipo` É UMA AFIRMAÇÃO DA PÁGINA, NÃO UM FATO — e ele erra** (2026-08-11). A regra acima resolve o falso positivo do nome e cria um novo ponto cego: confiar cegamente no rótulo. Caso real: `britania-bas1430` declara `Tipo = "Aspirador de pó vertical com saco"` e o produto é **de arrasto**, o eliminatório literal da rubrica. Duas execuções independentes da keyword tiveram que subir pro 2º degrau pra pegar.
 
 **Quando outro campo da MESMA página contradiz o `Tipo`, a contradição vence o rótulo.** O que denunciou, nas duas runs:
 

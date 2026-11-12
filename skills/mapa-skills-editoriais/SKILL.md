@@ -8,7 +8,7 @@ description: Índice COMPLETO das skills do ProjetoAfiliados (as do marketplace 
 **Regra nº 1:** quando o pedido casa com uma skill, invoque a Skill tool antes de qualquer outra ação. Se o usuário usou slash-command, a SKILL.md já veio carregada: siga-a etapa por etapa como está escrita, sem trocar etapa por execução de memória.
 Regra nº 2: curadoria e auditoria só com a SKILL.md correspondente carregada; cada uma documenta armadilhas que o improviso repete.
 
-**Namespace:** prefira a cópia do repo quando ela aparece na lista de skills (`Projects/ProjetoAfiliados:<nome>` ou `<nome>`, conforme a pasta em que a sessão abriu); `afiliados-skills:<nome>` é o cache do plugin, que fica atrás do repo até o `claude plugin update`. Nunca `{hash}:*` (cache fixo de uma máquina; fragmenta versão entre Marcelo e Bárbara). O gate de invocação do `clone-log.ts` aceita os três nomes.
+**Namespace:** prefira a cópia do repo quando ela aparece na lista de skills (o nome sem prefixo de plugin); `afiliados-skills:<nome>` é o cache do plugin, que fica atrás do repo até o `claude plugin update`. Nunca `{hash}:*` (cache fixo de uma máquina; fragmenta versão entre Marcelo e Bárbara). O gate de invocação do `clone-log.ts` aceita os três nomes.
 **Frescor:** trabalhando NO repo, a fonte da verdade é
 `.claude/skills/{nome}/SKILL.md` (regra completa no CLAUDE.md, seção
 "IA editorial"). Fallback pra "Unknown skill": `Read` do arquivo do repo.

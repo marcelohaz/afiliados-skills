@@ -60,7 +60,7 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 - **Português brasileiro editorial**, voz analítica.
 - **Idempotência defensiva:** artigo destino já existe e está `contentLocked: true` → ABORTAR (não sobrescrever trabalho travado). Existe **commitado e sem lock** → é run concluído: ABORTAR com "já concluído" (a fila classifica como PULAR). Existe **sem commit** (montagem de um run anterior) → **RETOMAR** pela primeira etapa não marcada no clone-log — nunca perguntar.
 
-## Turno vivo — primeiro plano + heartbeat + chat só no fim (canon Marcelo 2026-08-15)
+## Turno vivo — primeiro plano + heartbeat + relatório só no fim (canon Marcelo 2026-08-15)
 
 **Por que existe (medido):** em ~80 clone-runs, 9 pararam no meio sem que a skill mandasse parar. O turno terminou por um destes motivos, e a próxima etapa só começa com o turno vivo: (a) esperar sub-agent ou skill em background ("aguardo… te aviso"); (b) mensagem de progresso sem chamada de ferramenta; (c) ramo de exceção que virou pergunta; (d) cota estourada. As três regras abaixo atacam essa mecânica.
 
@@ -78,8 +78,8 @@ Edição roda onde os arquivos do projeto estão acessíveis. Se a sessão é VP
 - **Circuit breaker** (igual à fila): guarde em `<scratchpad>/clone-{target}-{slug}-heartbeat.json` `{etapasMarcadas, streakSemProgresso}`; despertar sem etapa nova = streak++; **streak ≥ 3 (~1h30 parado) → `ScheduleWakeup(stop:true)`** + relatório dizendo em que etapa travou e o erro visto. Não tente para sempre.
 - **Stop obrigatório (SÓ quando foi você que armou, ou seja, standalone)**: `ScheduleWakeup(stop:true)` **antes** do Relatório final (Etapa 6 concluída) e no aborto do pré-flight. Sem isso o despertar dispara depois do fim e reagenda à toa. Se o usuário mandar parar/pausar: `stop:true` na hora. **⚠️ Com `FILA=yes` esta skill NÃO chama `ScheduleWakeup` NUNCA — nem para armar, nem para parar.** O despertar pendente é o da fila; um `stop:true` seu aqui mataria a fila em silêncio no próximo fim de turno (é a fila que para o dela na F2).
 
-**Regra 3 — Chat só no fim; ramo de exceção tem fallback, não pergunta.**
-- Progresso = `clone-log check` (arquivo). Nenhuma etapa termina com "mensagem de estado" no chat. Uma linha curta por etapa **é permitida só se a mesma mensagem continua com chamadas de ferramenta** — o que encerra o turno não é a linha, é ela ser a última coisa. Antes da Etapa 6 + relatório, **não existe mensagem final**.
+**Regra 3 — O turno só termina no relatório; ramo de exceção tem fallback, não pergunta.**
+- O progresso fica no `clone-log check` (arquivo). Uma linha curta de progresso no chat é bem-vinda, desde que a mesma mensagem siga com chamadas de ferramenta: o que encerra o turno é uma mensagem sem chamada de ferramenta. Antes da Etapa 6 e do relatório, nenhuma mensagem termina sem chamada de ferramenta.
 - Pré-flight abortou → relatório de aborto (+ `stop:true` só se standalone; com `FILA=yes` a fila trata o item como "⚠ abortado" e segue). É o único fim antecipado legítimo. Sub-agent morreu/deu timeout → refaz **inline** no mesmo turno (nunca "pulei a etapa, quer que eu rode depois?"). Ambiguidade que a régua não resolve → decide pelo lado conservador, registra em skill-notes como `ambiguidade`, segue. Fix determinístico → aplica (canon 24/06). Decisão que a régua já resolveu (título pelo HARD GATE, desempate de peer) → vai no relatório final, não em turno próprio (incidente 12/08).
 
 ## Pipeline (full-auto, etapa por etapa)
@@ -421,7 +421,7 @@ bun scripts/clone-log.ts note {target} {slug} sugestao <etapa|geral> "o que na s
 
 ## Armadilhas (todas já mordidas neste projeto — embutir)
 
-0. **Encerrar o turno no meio** (9 casos medidos em ~80 runs, 15/07→15/08): esperar sub-agent em background com "te aviso", mensagem de progresso, ramo de exceção virando pergunta. Ver "## Turno vivo": primeiro plano + heartbeat quando standalone + chat só no fim.
+0. **Encerrar o turno no meio** (9 casos medidos em ~80 runs, 15/07→15/08): esperar sub-agent em background com "te aviso", mensagem de progresso sem chamada de ferramenta, ramo de exceção virando pergunta. Ver "## Turno vivo": primeiro plano + heartbeat quando standalone + relatório só no fim.
 
 1. **Dev server stale**: criar conteúdo com o dev rodando deixa `getStaticPaths` stale → rota nova dá 404 no preview. SEMPRE restart do dev do target no fim (Etapa 6.4). HMR/touch NÃO resolve (data-store cache).
 2. **gen.ts não auto-regenera** em commit cru de .mdx → painel mostra "0 artigos/páginas". SEMPRE `bun docs/painel/gen.ts` no fim.
