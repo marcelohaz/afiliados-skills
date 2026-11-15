@@ -100,8 +100,11 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `description` é placeholder se inclui `[descrição a definir`
    - `hasMetaDescription = description.length >= 50 && !isPlaceholder`
 
-   ### e) produto sem página individual (canon Marcelo 2026-09-01; mecânico desde 2026-09-02)
-   Pra cada item de `products[]`, `sites/{site}/src/content/products/{slugify(name)}.mdx` tem que existir — o template linka `/{slug}/` (specs, "Produtos testados", sitemap-produtos) sem conferir. O `scripts/audit-article.ts` (rule `produto`) já emite: **error** em artigo completo (bloqueia readyToLock e o gate de deploy), **warn** em stub. Fix = criar a página (`pagina-produto-criar`), nunca tirar o produto do artigo nem o link.
+   ### e) produto sem página individual (canon Marcelo 2026-09-01; mecânico desde 2026-09-02; revisto em 15/11/2026)
+   Mecânico, no `scripts/audit-article.ts` (rule `produto`), por tipo de site:
+   - site só de artigos (`productPages: false`): não confere;
+   - site com `productPagesOnlyWithMdx: true`: **info** (o cartão leva ao produto dentro do artigo; o sitemap só lista as páginas que existem). Até 15/11/2026 isso valia só para artigo portado;
+   - site que monta página para todo produto de artigo (os outros): **error** em artigo completo (bloqueia readyToLock e o gate de deploy), **warn** em stub, porque sem a página a publicação quebra. Página de produto nova parou em 15/11/2026: o relatório diz "tire o produto ou crie a página (só com o sim do Marcelo)", sem criar por conta própria.
 
 7. **Rodar auditoria IA** nas 40 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`

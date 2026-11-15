@@ -25,7 +25,8 @@ Detecção: se tem `/` seguido de kebab-case → artigo existente. Senão → ke
 
 ## Invariantes
 
-- **Produto sem página ENTRA marcado, e o gate é na Etapa 8** (canon Marcelo 2026-09-04). O universo natural é a lista de páginas do site, mas bíblia relevante sem página **atravessa o pipeline** com `⛔ SEM PÁGINA` visível, em vez de barrar na 2b. Motivo: a ausência de página só tem consequência na CRIAÇÃO — sem página o produto não recebe link interno hub-and-spoke e o guia cai pro `/dp/` da Amazon —, então bloquear antes de montar cobra uma rodada inteira sem saber se aquele produto sequer entra no lineup. Medido em 04/09/2026 (`compraguia`, `melhor monitor para trabalho`): a bíblia sem página entrou em 5º por venda e **não era ela que decidia o artigo** — os achados reais foram a posição 1 e dois buracos de cobertura, que só apareceram com o lineup montado.
+- **Página de produto nova não se cria (decisão do Marcelo, 15/11/2026: parar de criar páginas de produto e focar em artigos).** O que muda depende do site, e `bun scripts/produto-sem-pagina.ts {site} --so-checar` (só lê) responde: **site que não precisa de página** (`sitePrecisaDePagina: false`, 45 sites em 15/11/2026: os só de artigos e os com `productPagesOnlyWithMdx`) → bíblia relevante sem página entra com o marcador `sem página`, sem ⛔, e a Etapa 8 não barra (o cartão leva ao produto dentro do artigo, e o painel copia a foto da bíblia); **site que precisa de página** (`true`, 44 sites) → vale o `⛔ SEM PÁGINA` e a trava da Etapa 8 abaixo, porque sem a página a publicação do site quebra. Nos dois, o julgamento desse produto sai da bíblia, com a ressalva de evidência mais fraca da 2b.
+- **Produto sem página ENTRA marcado, e o gate é na Etapa 8** (canon Marcelo 2026-09-04; desde 15/11/2026 o gate só vale no site que precisa de página). O universo natural é a lista de páginas do site, mas bíblia relevante sem página **atravessa o pipeline** com `⛔ SEM PÁGINA` visível, em vez de barrar na 2b. Motivo: a ausência de página só tem consequência na CRIAÇÃO — sem página o produto não recebe link interno hub-and-spoke e o guia cai pro `/dp/` da Amazon —, então bloquear antes de montar cobra uma rodada inteira sem saber se aquele produto sequer entra no lineup. Medido em 04/09/2026 (`compraguia`, `melhor monitor para trabalho`): a bíblia sem página entrou em 5º por venda e **não era ela que decidia o artigo** — os achados reais foram a posição 1 e dois buracos de cobertura, que só apareceram com o lineup montado.
 - **Classificar tipo pela tabela `specs` da PÁGINA, nunca por regex no nome.** O campo `Tipo` responde direto. Ver Armadilha 1 — errei duas vezes no mesmo dia e a página tinha a resposta nas duas.
 - **Página é fonte principal, bíblia é apoio.** Fato e classificação saem da página; vendas, marca, disponibilidade e `pontosFracos` saem da bíblia, porque a página não tem os três primeiros e **pode perder o quarto**.
 - **`comprasMesPassado = 0` ordena, não elimina.** Não é "vendeu zero": é "a Amazon não exibe o widget", threshold estimado em **>50/mês** ([[afiliados.semantica.compras-mes-passado-0]]). Ausência de sinal não é sinal negativo: o `0` manda o produto pro **fim da fila**, e quem corta é o teto de tamanho.
@@ -179,7 +180,10 @@ Aqui a única fonte é a bíblia, então você está no **2º degrau da escada d
 **Havendo relevante, MARQUE E SIGA** (canon Marcelo 2026-09-04). O produto entra no
 universo com `⛔ SEM PÁGINA`, é julgado na Etapa 3 pela bíblia, disputa posição normalmente,
 e carrega o marcador até a tabela final. **Quem decide é a Etapa 8**, que não cria artigo
-com produto sem página.
+com produto sem página no site que precisa de página. No site que não precisa (Invariantes,
+15/11/2026), o marcador é só `sem página`: a ressalva de evidência fica, a trava não.
+Como página nova não se cria mais, nesse site a 2b é a porta de entrada do produto novo:
+procure nas bíblias da subcategoria com o mesmo cuidado que nas páginas.
 
 **O marcador não é decoração — ele muda o que o usuário decide.** Ao ver a posição, o
 preço e a venda do produto sem página, ele sabe se vale criar a página ou se é mais barato
@@ -977,21 +981,22 @@ Este bloco é o que **alimenta a regra de tamanho do passo 6**. Sem ele, "sem ei
 
 **Pré-condição 1: o CHECKPOINT DE EXCLUSÕES do passo 2 foi aprovado.** Com `--aplicar` ele **para e espera** — criar artigo é escrita, e escrever sobre uma exclusão que o usuário ainda não viu é o erro caro desta skill. Sem aprovação do checkpoint, não chame endpoint nenhum.
 
-**Pré-condição 2 — ESTE É O GATE DE PÁGINA (canon Marcelo 2026-09-04).** A 2b marca e
-segue; é **aqui** que a falta de página impede. Antes de chamar qualquer endpoint, confira
-o lineup final: **nenhum item pode estar com `⛔ SEM PÁGINA`.** Havendo, PARE e apresente
-as duas saídas, com a posição e a venda do produto na mão:
+**Pré-condição 2 — ESTE É O GATE DE PÁGINA (canon Marcelo 2026-09-04; desde 15/11/2026 só no site que precisa de página).** A 2b marca e
+segue; é **aqui** que a falta de página impede. No site que não precisa de página
+(`sitePrecisaDePagina: false`, ver Invariantes), produto `sem página` segue para a criação:
+o painel aceita e copia a foto da bíblia. No site que precisa, antes de chamar qualquer
+endpoint, confira o lineup final: **nenhum item pode estar com `⛔ SEM PÁGINA`.** Havendo,
+PARE e apresente as duas saídas, com a posição e a venda do produto na mão:
 
 ```
-1. criar a página no painel (+ Nova página de produto) e preencher com pagina-produto-criar,
-   depois rodar esta skill de novo  →  o produto entra
-2. tirar o produto do lineup        →  o artigo sai sem ele, e o relatório registra por quê
+1. tirar o produto do lineup        →  o artigo sai sem ele, e o relatório registra por quê
+2. criar a página no painel e preencher com pagina-produto-criar, depois rodar esta skill
+   de novo  →  o produto entra. Só com o sim do Marcelo: página nova parou em 15/11/2026.
 ```
 
-Por que aqui e não antes: sem página o produto **não recebe link interno hub-and-spoke** e
-o guia cai pro `/dp/` da Amazon — dano que só existe depois do artigo criado. Criar o
-artigo com o produto dentro e a página faltando é o pior dos três estados, porque o defeito
-nasce publicado.
+Por que aqui e não antes: nesse site, produto sem página quebra a publicação (o site monta
+uma página para cada produto de artigo e lê o texto dela). O painel também barra
+(`make-reviews-stub`, `add-products-stub`).
 
 Mesmos endpoints dos botões do painel (`make-reviews-stub` chamado em `docs/painel/site-detail.js`, `add-products-stub` em `docs/painel/editor-artigo.js`). O resultado é indistinguível de ter feito na mão.
 

@@ -154,7 +154,7 @@ No relatório, a linha **Rankeando** diz quantos artigos são (e de onde veio o 
    ```bash
    bun scripts/check-dist-links.ts {site} --json
    ```
-   Cada destino 404 vira **conserto proposto** no relatório. A causa quase sempre é **produto citado em artigo sem página individual**: o fix é criar a página (`pagina-produto-criar`), **nunca remover o link** (decisão Marcelo 2026-09-01: o template linka sem condicional; a página é que tem que existir). O `audit-article.ts` (rule `produto`) já acusa isso por artigo. Sem dist fresco: **diga no relatório que essa classe não foi verificada** — a pré-checagem de deploy do painel e o `cf-deploy-r2.ts` rodam o mesmo check antes de subir.
+   Cada destino 404 vira **conserto proposto** no relatório. A causa quase sempre é **produto citado em artigo sem página individual** num site que monta página para todo produto. Fix: **nunca remover o link** (decisão Marcelo 2026-09-01); página de produto nova parou em 15/11/2026, então o relatório propõe as duas saídas, criar a página (`pagina-produto-criar`, só com o sim dele) ou ligar no site a opção `productPagesOnlyWithMdx` (o cartão passa a levar ao produto dentro do artigo), e ele decide. O `audit-article.ts` (rule `produto`) já acusa isso por artigo. Sem dist fresco: **diga no relatório que essa classe não foi verificada** — a pré-checagem de deploy do painel e o `cf-deploy-r2.ts` rodam o mesmo check antes de subir.
 
 4.6. **Slug × histórico do GSC (canon Marcelo 2026-09-04)**:
    ```bash

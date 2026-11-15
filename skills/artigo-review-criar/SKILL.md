@@ -43,7 +43,7 @@ Você é o curador editorial que escreve o conteúdo do produto-no-artigo. O art
 
 O `.mdx` do artigo já existe em `sites/{site}/src/content/reviews/{slug}.mdx` com lineup de produtos (criado pelo make-reviews-stub) ou recém-adicionado (add-products-stub). Se não existir, abortar com mensagem clara apontando o botão "✨ Criar artigo" no site detail.
 
-A bíblia do ASIN está OK e a página individual existe (verificado pelo gate Fase 2 quando o stub foi criado).
+A bíblia do ASIN está OK (conferido pela trava do painel quando o stub foi criado). A página de produto pode não existir: desde 15/11/2026 o painel aceita produto sem página nos sites que não montam página para todo produto. A escrita lê só a bíblia, então nada muda aqui.
 
 ## Nota terminológica — "lineup"
 

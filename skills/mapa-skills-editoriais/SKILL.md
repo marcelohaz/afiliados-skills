@@ -39,6 +39,7 @@ Pré-requisito das quatro primeiras: bíblia criada + dados brutos + imagem no e
 | `pagina-produto-auditar-em-massa` | VÁRIAS páginas, isoladas (≤10 por leva): mecânica na mãe (audit-editorial + guardas), sub-agents no julgamento; auto-aplica só conserto de FATO; descobre as pendentes sem `-last.md` |
 
 Pré-requisito: stub criado via "+ Nova página de produto" no site detail.
+**Página nova parou em 15/11/2026 (decisão do Marcelo: focar em artigos):** estas skills seguem para as páginas que já existem; página nova só com pedido explícito dele.
 
 ## Artigo comparativo — partes
 
@@ -50,7 +51,7 @@ Pré-requisito: stub criado via "+ Nova página de produto" no site detail.
 | `artigo-guia-escrever` | guideContent (5 H2 + extras SERP) — EXIGE concorrentes da keyword EXATA |
 | `artigo-meta-escrever` | meta description (última coisa do artigo) |
 
-Pré-requisito: stub via "✦ Criar artigo" / produtos via "+ Adicionar produto".
+Pré-requisito: stub via "✦ Criar artigo" / produtos via "+ Adicionar produto". O produto precisa de bíblia pronta; página de produto só no site que monta página para todo produto (desde 15/11/2026; `bun scripts/produto-sem-pagina.ts {site} --so-checar` diz o tipo).
 Ordem típica: lineup → reviews → guia → intro → meta → audits.
 
 ## Artigo comparativo — auditorias

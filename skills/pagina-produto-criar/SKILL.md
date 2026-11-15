@@ -19,6 +19,8 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Preencher página individual de produto
 
+> ⚠ **Página de produto nova parou em 15/11/2026 (decisão do Marcelo: focar em artigos).** Não crie nem sugira página nova; preencher ou auditar página que já existe continua valendo. Página nova, só com pedido explícito dele. Artigo não precisa mais de página de produto nos sites que não montam página para todo produto (`bun scripts/produto-sem-pagina.ts {site} --so-checar`).
+
 > Versão executável local do prompt `docs/painel/_data/agent-prompts.json:create_product_page`.
 > O conteúdo essencial está duplicado abaixo pra autocontenção. **Esta SKILL.md é a fonte viva** desta execução (o `agent-prompts.json` é o espelho do path do painel/API e pode defasar — o projeto roda via Claude Code).
 

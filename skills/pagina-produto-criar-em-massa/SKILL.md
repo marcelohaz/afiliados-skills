@@ -31,6 +31,8 @@ Detecção:
 
 # Criar páginas individuais em massa (paralelo via sub-agents)
 
+> ⚠ **Página de produto nova parou em 15/11/2026 (decisão do Marcelo: focar em artigos).** Não crie nem sugira página nova; preencher ou auditar página que já existe continua valendo. Página nova, só com pedido explícito dele. Artigo não precisa mais de página de produto nos sites que não montam página para todo produto (`bun scripts/produto-sem-pagina.ts {site} --so-checar`). No modo com ASINs, a criação do stub que falta (passo 2) também só com esse pedido.
+
 > Esta skill é **orquestrador leve**. O trabalho editorial real (gerar os 6 campos) é feito por sub-agents independentes via Agent tool, cada um executando o equivalente da skill `pagina-produto-criar` numa conversa nova e isolada. Skill mãe coordena listagem, pre-flight, paralelismo, agregação e commit lote.
 
 ## Pré-requisitos
