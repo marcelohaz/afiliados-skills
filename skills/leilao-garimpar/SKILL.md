@@ -47,7 +47,7 @@ Garimpo (`garimpo-afiliados-loader`) = você define keyword, sistema checa via W
 - **Se NÃO tiver esse header** → é garimpo (lista de keywords), não leilão → PARA e avisa.
 
 ### 1.0 — Desfecho da janela anterior (vai no TOPO do relatório)
-A rotina diária consulta no Registro.br, depois de cada janela, os domínios que os dois projetos acompanharam (os arquivos `candidatos/` e `achados/` daquele período) e grava em `leiloes/desfecho/{de}_a_{ate}.json`. Leia a última consulta da lista anterior:
+A rotina diária consulta no Registro.br, depois de cada janela, os domínios que os dois projetos acompanharam (os arquivos `candidatos/` e `achados/` daquele período) e grava em `leiloes/desfecho/{de}_a_{ate}.json`. Desde a janela de 11 a 18/11/2026, a recomendação de cada projeto, as decisões do Marcelo e o desfecho aparecem juntos em `cd ../shared-scripts && bun leiloes/recomendacoes.ts mostrar --de <DE_ANT>`; use essa saída quando o arquivo da janela anterior existir. Leia a última consulta da lista anterior:
 ```bash
 bun -e "
 import { listaGuardada, desfechoGuardado } from '../shared-scripts/leiloes/lista.ts';
@@ -174,7 +174,7 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
 
 ## Fase 7 — Histórico + pós-compra
 - **Histórico curado** (`_data/leiloes-afiliados/historico-curado.json`, schema `{runs:[{periodo,curadoEm,totalLista,candidatos,exactCru[],melhorX[],tier2[],registrados[]}]}`): ao fechar a curadoria, **anexar a run deste período** (substituir se o período já existe). É o que dá o "novos × recorrentes" no próximo mês e o histórico dos leilões passados. (Os snapshots crus por período já ficam em `leilao-{periodo}.json`; este arquivo é a camada CURADA.)
-- **Pós-compra**: quando o Marcelo disser o que registrou, preencher `registrados[]` da run + cadastrar em `domains.json` (form normal, com expiresAt real) → o helper passa a ocultar automaticamente.
+- **Pós-compra**: quando o Marcelo disser o que registrou, `decidir <dominio> registrei` no arquivo comum (Fase 8, passo 2), preencher `registrados[]` da run + cadastrar em `domains.json` (form normal, com expiresAt real) → o helper passa a ocultar automaticamente.
 - **Publicar (só se pedido)**: a Fase 2 já escreveu `latest.json` (aba Leilão local). Pra subir no painel VPS: commit dos JSONs + `bun docs/painel/gen.ts` + `bash scripts/painel-vps-pull.sh`.
 
 ## Fase 8 — Achados para o R&R e estado ao terminar
@@ -214,8 +214,15 @@ O helper dá recall; aqui entra a precisão. Para cada candidato:
    "
    ```
    Ruído conhecido: começo curto (`gas`, `grama`, `gesso`) pega palavra que não é o serviço (gastronomia, a cidade de Gramado); começo que também é produto (`geladeira`, `arcondicionado`, `maquinadelavar`) traz domínio de afiliado, como `geladeirasamsung`, que é candidato deste garimpo e não vai para o R&R.
-2. **Grave os candidatos do afiliados para o desfecho** em `caminhoDosCandidatos('<DE>', '<ATE>', 'afiliados')` (`../shared-scripts/leiloes/candidatos/<DE>_a_<ATE>-afiliados.txt`): um domínio por linha, os três tiers da shortlist e os domínios nossos da 4.1, com linhas `#` separando os grupos. Só os domínios: a escolha, os tiers e o porquê ficam no `historico-curado.json` do afiliados. É desta lista (mais os achados) que a rotina diária consulta o desfecho depois da janela.
-3. **Commit e push da `shared-scripts` só com os arquivos de `leiloes/`** (lista nova, lista competitiva guardada, achados, candidatos), com `git pull --rebase` antes do push, porque as duas janelas e a rotina diária gravam lá:
+2. **Grave a recomendação do afiliados no arquivo comum da janela** (desde 17/11/2026, pedido do Marcelo: "o ideal é ter um arquivo canônico de recomendação, de cada leilão, assim não se perdem nas conversas, e os dois chats podem contribuir"). O arquivo é `../shared-scripts/leiloes/recomendacoes/<DE>_a_<ATE>.json`, e o programa é o `recomendacoes.ts` de lá (uso no topo dele). Monte um `itens.json` no rascunho da sessão, um item por domínio, com `grupo`, `ordem` e `motivo` curto e sem hífen, como no relatório:
+   - grupo `1. Lista curta`: a lista curta da Fase 6, na ordem mostrada ao Marcelo;
+   - grupo `2. Também na análise`: os outros tiers que valem acompanhar (os que voltaram sem dono, as variações do mesmo nome);
+   - grupo `3. Nossos na lista`: os domínios nossos da 4.1, com `"marcas": ["era nosso (conta <dono>, venceu em <mês>)"]`.
+   ```bash
+   cd ../shared-scripts && bun leiloes/recomendacoes.ts gravar afiliados <rascunho>/itens.json --de <DE> && bun leiloes/recomendacoes.ts mostrar --de <DE>; cd -
+   ```
+   O `gravar afiliados` troca só a parte do afiliados (a do R&R fica como está) e acrescenta os domínios ao `candidatos/<DE>_a_<ATE>-afiliados.txt`, que a rotina diária usa para o desfecho; não grave esse arquivo à mão. Com a janela aberta, `bun leiloes/recomendacoes.ts consultar --de <DE>` anota a situação de cada domínio no Registro.br, com a hora (um a cada 1,5 segundo; consulta também os do R&R). Quando o Marcelo decidir um domínio, `bun leiloes/recomendacoes.ts decidir <dominio> <quero|pedi|nao-quero|esperar-ficar-livre|registrei> ["nota"] --de <DE>`. O `historico-curado.json` do painel (Fase 7) continua; o porquê e a ordem da lista curta passam a morar no arquivo comum.
+3. **Commit e push da `shared-scripts` só com os arquivos de `leiloes/`** (lista nova, lista competitiva guardada, achados, recomendações e candidatos), com `git pull --rebase` antes do push, porque as duas janelas e a rotina diária gravam lá:
    ```bash
    git -C ../shared-scripts add leiloes/ && git -C ../shared-scripts commit -m "leiloes: <o que entrou> (<DE> a <ATE>)" -- leiloes/
    git -C ../shared-scripts pull --rebase && git -C ../shared-scripts push
