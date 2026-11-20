@@ -9,7 +9,15 @@ import sys, re, json, os
 
 # YAML pelo bun (scripts/lib/yaml_bun.py): o pyyaml não vem em todo python3 (o do Homebrew 3.15 deste
 # Mac não tem, desde 22/10/2026). Mesma interface do yaml.safe_load.
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'scripts', 'lib'))
+# Três pastas acima é a raiz do repositório quando a skill roda do repositório; a cópia do plugin
+# (~/.claude/plugins/cache/afiliados-skills/...) fica fora dele, e aí vale a pasta em que o comando roda
+# ou uma das de cima (v1.210.1; sem isto, "No module named 'yaml_bun'").
+_raizes = [os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'), os.getcwd()]
+while os.path.dirname(_raizes[-1]) != _raizes[-1]:
+    _raizes.append(os.path.dirname(_raizes[-1]))
+sys.path.insert(0, next((os.path.join(r, 'scripts', 'lib') for r in _raizes
+                         if os.path.exists(os.path.join(r, 'scripts', 'lib', 'yaml_bun.py'))),
+                        os.path.join(_raizes[0], 'scripts', 'lib')))
 import yaml_bun as yaml  # noqa: E402
 
 

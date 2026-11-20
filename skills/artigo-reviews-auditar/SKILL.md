@@ -353,7 +353,7 @@ guia.
 
 ### 7c. `afirmacao-sem-lastro-na-origem` — fato que só a curadoria sustenta (critério desde 2026-11-20, severidade: 🔴 Crítico)
 
-Irmão do 7b: o 7b confere números contra a bíblia inteira; este confere **cada afirmação de fato** (número ou não: benefício, recurso, compatibilidade, composição) contra os **dados de origem** da bíblia: `specsAmazon`, `sobreEsteItem`, `descricaoProduto`, `doFabricante`, `conteudoBrutoFabricante`, `opinioesCompradores` e as imagens já lidas (item com `fonte` "imagem" ou "rótulo", em bíblia com `imagensVerificadasEm`). A curadoria (`pontosFortes`, `pontosFracos`, `angulosConversao`, `sentimentoCompradores`, `dicasAcionaveis`) não prova o fato: afirmação que está nela e em nenhum dado de origem é sem lastro. Conversão de unidade e arredondamento contam como achado; fato que só um relato de comprador sustenta, não. A `decisaoEditorial` de `dadosInconsistentes` continua valendo. **Fix:** tirar a afirmação, nunca reescrever para caber.
+Irmão do 7b: o 7b confere números contra a bíblia inteira; este confere **cada afirmação de fato** (número ou não: benefício, recurso, compatibilidade, composição) contra os **dados de origem** da bíblia: `identidade` (nome, marca, modelo), `snapshot` (preço e disponibilidade), `specsAmazon`, `sobreEsteItem`, `descricaoProduto`, `doFabricante`, `conteudoBrutoFabricante`, `opinioesCompradores`, as imagens já lidas (item com `fonte` "imagem" ou "rótulo", em bíblia com `imagensVerificadasEm`) e a verificação externa com o endereço registrado no item. A curadoria (`pontosFortes`, `pontosFracos`, `angulosConversao`, `sentimentoCompradores`, `dicasAcionaveis`) não prova o fato: afirmação que está nela e em nenhum dado de origem é sem lastro. Conversão de unidade e arredondamento contam como achado; fato que só um relato de comprador sustenta, não. A `decisaoEditorial` de `dadosInconsistentes` continua valendo. **Fix:** tirar a afirmação, nunca reescrever para caber.
 
 **Por que existe (Marcelo, 20/11/2026):** 684 bíblias foram auditadas antes da régua de 04/09/2026, e numa amostra delas apareceram afirmações sem base ("ajuda a imunidade" num suplemento infantil sem o fabricante dizer, "fonte USB-C" num Kindle). Bíblia auditada uma vez não se audita de novo (são muitas), então a conferência acontece no texto que vai ao ar. Vale para toda bíblia, nova ou antiga.
 
@@ -362,7 +362,7 @@ Irmão do 7b: o 7b confere números contra a bíblia inteira; este confere **cad
 ```python
 import json
 b = json.load(open(f'docs/biblias-v2/{asin}.json'))
-ORIGEM = ['specsAmazon', 'sobreEsteItem', 'descricaoProduto', 'doFabricante', 'conteudoBrutoFabricante', 'opinioesCompradores']
+ORIGEM = ['identidade', 'snapshot', 'specsAmazon', 'sobreEsteItem', 'descricaoProduto', 'doFabricante', 'conteudoBrutoFabricante', 'opinioesCompradores']
 origem = ' '.join(json.dumps(b.get(k) or '', ensure_ascii=False) for k in ORIGEM).lower()
 tem_lastro = lambda termo: termo.lower() in origem   # ex.: tem_lastro('imunidade'), tem_lastro('USB-C')
 ```
