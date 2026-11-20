@@ -67,8 +67,8 @@ Se algum requisito falhar, abortar com mensagem clara.
 - **Sem superlativo sem evidência** (coberto como critério pela `artigo-auditar`, gate 4; aqui só se saltar aos olhos no cross-produto: "o mais X" contradito por outro produto do lineup = claim-vs-lineup-fato).
 - **Preservar estrutura do `fullReview`**: 4 parágrafos com prefixos exatos (`Para quem é:`, `Por que gostamos:`, `Pontos de atenção:`, `Resumo:`). `Por que gostamos` pode ter 2 parágrafos.
 - **Preservar formato pros/cons**: `<strong>Título</strong>: explicação`.
-- **Nunca inventar dados**: cada claim com origem rastreável na bíblia.
-- **Cobertura, não amostragem.** Percorra os 31 critérios e produza a Checklist de cobertura no relatório (passo 7): cada critério `✓ pass` / `⚠ flag` / `n/a`, com nota de 1 linha. Grep sozinho não basta: 22 (subtitle fora do formato) e 23 (badge ausente) são omissões, não texto errado, e não aparecem em busca de defeito.
+- **Nunca inventar dados**: cada claim com origem rastreável nos dados de origem da bíblia, não só na curadoria (critério 7c), e nenhum aviso ao agente contrariado (critério 7d).
+- **Cobertura, não amostragem.** Percorra os 33 critérios e produza a Checklist de cobertura no relatório (passo 7): cada critério `✓ pass` / `⚠ flag` / `n/a`, com nota de 1 linha. Grep sozinho não basta: 22 (subtitle fora do formato) e 23 (badge ausente) são omissões, não texto errado, e não aparecem em busca de defeito.
 
 ## Fluxo
 
@@ -86,7 +86,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 4. **Validar count**: se `productsWithReview.length < 2`, abortar — cross-product não faz sentido.
 
-5. **Read bíblias**: pra cada ASIN, `Read docs/biblias-v2/<ASIN>.json`. Se alguma faltar, abortar listando quais.
+5. **Read bíblias**: pra cada ASIN, `Read docs/biblias-v2/<ASIN>.json`. Se alguma faltar, abortar listando quais. Leia os `avisosAoAgente` de cada uma antes de analisar (critério 7d).
 
 6. **Read `affiliateTag`**: `sites/{site}/src/config.ts` via regex. Serve pra detectar tag **diferente** (`?tag=X` com X ≠ config, `AFFILIATE_TAG_AQUI`). URL crua `/dp/{ASIN}` é OK sempre: o build injeta a tag (`injectAffiliateTag`, canon 2026-08-15).
 
@@ -98,7 +98,7 @@ Se algum requisito falhar, abortar com mensagem clara.
    **Forma cross-produto**: títulos de pró/contra repetidos, Resumo abrindo com preço, claim de keyword — é o
    critério 29, e é o script quem conta). O número de verbos-curinga é a linha de base: depois de aplicar qualquer conserto, rode de novo e ele **não pode subir**.
 
-7. **Analisar cross-produto percorrendo os 31 critérios** (seção abaixo). Para cada um, decida `✓ pass` / `⚠ flag` / `n/a` e anote 1 linha: isso vira a Checklist de cobertura do relatório. Os que não aparecem em grep de defeito:
+7. **Analisar cross-produto percorrendo os 33 critérios** (seção abaixo). Para cada um, decida `✓ pass` / `⚠ flag` / `n/a` e anote 1 linha: isso vira a Checklist de cobertura do relatório. Os que não aparecem em grep de defeito:
    - **22 `subtitle-keyword-first`**: leia os N subtitles e avalie CADA um (lead keyword-first? gancho? ≤13 palavras? sem dois-pontos? lead distinto dos outros?). A `artigo-review-criar` escreve no formato híbrido (lead keyword-first + gancho); aqui você confere o conjunto (leads distintos, ≤13 palavras, sem dois-pontos) e normaliza o que veio fora do formato (produto antigo, edição manual).
    - **23 `badge-ausente`**: confira se TODO produto tem `badge`. Faltando → propor `newBadge`.
    - **24 `voltagem-citada`**: nenhum produto cita 110V/127V/220V nem tem row "Voltagem"; "bivolt" só com o `specsAmazon`, a `descricaoProduto` ou o `sobreEsteItem` do ASIN confirmando.
@@ -106,7 +106,7 @@ Se algum requisito falhar, abortar com mensagem clara.
    - **26 `peso-por-fonte`**: pró central/subtitle/shortDescription cuja única origem é o `specsAmazon` → mover pra tabela.
    Gerar `changes` (por produto com proposta) e `passed` (produtos OK).
 
-8. **Reportar em chat** no formato canônico (seção "Formato do relatório") — **incluindo a Checklist de cobertura dos 31 critérios** (sem ela o relatório é inválido).
+8. **Reportar em chat** no formato canônico (seção "Formato do relatório") — **incluindo a Checklist de cobertura dos 33 critérios** (sem ela o relatório é inválido).
 
 8.5. **Gravar marcador de auditoria** (registra QUANDO os reviews foram auditados — alimenta a barra "Reviews auditados" + o log de atividade do editor-artigo). Roda **SEMPRE**, logo após o relatório, mesmo que o user depois rejeite todas as mudanças (auditar é o evento; aplicar é outro):
    - `Write` em `docs/biblias-v2/.audits/reviews/{site}-{slug}-last.md` com: título (`# Auditoria de reviews: {site}/{slug}`), `- Produtos auditados: {N}`, `- Achados: {M}` (+ lista curta das rules disparadas, ou "nenhum"). A data é só pra leitura humana — **NÃO** invente timestamp pra sort (a fonte de tempo é o commit do git; e gerar `Date().toISOString()` cai no bug de timezone). Crie o diretório se não existir.
@@ -153,7 +153,7 @@ Se algum requisito falhar, abortar com mensagem clara.
 
 14. **Reportar resultado**: counts de produtos aplicados + path do backup.
 
-## Os 31 critérios da análise
+## Os 33 critérios da análise
 
 (Numeração: 1, 1b, 2-19 com 7b e 10b, 21-29, sem o 20. São 31 entradas, os sufixos `b` contam.)
 
@@ -350,6 +350,26 @@ Rodando aqui, custa um script e para na hora.
 velocidade, capacidade, peso, garantia). Fix = usar o número da bíblia, e
 conferir se o mesmo número errado não vazou pro `schemaPrice`, pras specs e pro
 guia.
+
+### 7c. `afirmacao-sem-lastro-na-origem` — fato que só a curadoria sustenta (critério desde 2026-11-20, severidade: 🔴 Crítico)
+
+Irmão do 7b: o 7b confere números contra a bíblia inteira; este confere **cada afirmação de fato** (número ou não: benefício, recurso, compatibilidade, composição) contra os **dados de origem** da bíblia: `specsAmazon`, `sobreEsteItem`, `descricaoProduto`, `doFabricante`, `conteudoBrutoFabricante`, `opinioesCompradores` e as imagens já lidas (item com `fonte` "imagem" ou "rótulo", em bíblia com `imagensVerificadasEm`). A curadoria (`pontosFortes`, `pontosFracos`, `angulosConversao`, `sentimentoCompradores`, `dicasAcionaveis`) não prova o fato: afirmação que está nela e em nenhum dado de origem é sem lastro. Conversão de unidade e arredondamento contam como achado; fato que só um relato de comprador sustenta, não. A `decisaoEditorial` de `dadosInconsistentes` continua valendo. **Fix:** tirar a afirmação, nunca reescrever para caber.
+
+**Por que existe (Marcelo, 20/11/2026):** 684 bíblias foram auditadas antes da régua de 04/09/2026, e numa amostra delas apareceram afirmações sem base ("ajuda a imunidade" num suplemento infantil sem o fabricante dizer, "fonte USB-C" num Kindle). Bíblia auditada uma vez não se audita de novo (são muitas), então a conferência acontece no texto que vai ao ar. Vale para toda bíblia, nova ou antiga.
+
+**Ajuda para achar candidatos** (a lista não é veredito: sinônimo e paráfrase escapam da busca, e quem decide é a leitura):
+
+```python
+import json
+b = json.load(open(f'docs/biblias-v2/{asin}.json'))
+ORIGEM = ['specsAmazon', 'sobreEsteItem', 'descricaoProduto', 'doFabricante', 'conteudoBrutoFabricante', 'opinioesCompradores']
+origem = ' '.join(json.dumps(b.get(k) or '', ensure_ascii=False) for k in ORIGEM).lower()
+tem_lastro = lambda termo: termo.lower() in origem   # ex.: tem_lastro('imunidade'), tem_lastro('USB-C')
+```
+
+### 7d. `aviso-ao-agente-desobedecido` (critério desde 2026-11-20, severidade: 🔴 Crítico)
+
+`avisosAoAgente` é o campo em que o Marcelo e a Bárbara mandam na bíblia ("Pack com 12 unidades", "produto descontinuado, sucessora é X", "não citar sabor"). Leia os de cada produto e confira, instrução por instrução, se o review obedece. Review que contraria um aviso é 🔴, e o fix é seguir o aviso. Aviso que pede ação fora do review (trocar o produto ou o link) vai no relatório como pendência, sem flag no review. Nota de captura ("depois do preenchimento entrou o X: use-o para conferir") se confere pelo 7c. Até 20/11/2026 nenhuma skill de artigo lia esse campo.
 
 ### 8. `voz-citacao-ficha-tecnica` — marcadores de procedência burocráticos
 
@@ -837,7 +857,7 @@ Apresentar em chat após análise:
 **Lineup**: {N} produtos analisados, {N-X} com fullReview preenchido (auditados)
 **Resultado**: {X} produtos com mudanças propostas, {Y} passaram limpos
 
-## Checklist de cobertura dos 31 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
+## Checklist de cobertura dos 33 critérios (OBRIGATÓRIA — sem ela o relatório é inválido)
 
 | # | Critério | Status | Nota |
 |---|---|---|---|
@@ -850,6 +870,8 @@ Apresentar em chat após análise:
 | 6 | links-incorretos | ✓/⚠/n.a. | ... |
 | 7 | claim-vs-lineup-fato | ✓/⚠/n.a. | ... |
 | 7b | **numero-sem-lastro-na-biblia** (RODAR o scan, não conferir a olho) | ✓/⚠/n.a. | ... |
+| 7c | **afirmacao-sem-lastro-na-origem** (fato só na curadoria, sem dado de origem) | ✓/⚠/n.a. | ... |
+| 7d | **aviso-ao-agente-desobedecido** (ler os `avisosAoAgente` de cada produto) | ✓/⚠/n.a. | ... |
 | 8 | voz-citacao-ficha-tecnica | ✓/⚠/n.a. | ... |
 | 9 | voz-comprador-implicita | ✓/⚠/n.a. | ... |
 | 10 | termos-tecnico-industriais | ✓/⚠/n.a. | ... |
@@ -958,7 +980,7 @@ Depois do Edit, rodar `pnpm --filter {site} build`. Se Zod do Astro falhar (rar�
 
 ### 0. Auditoria por amostragem
 
-Caçar defeito por grep e fechar com os achados que saltaram deixa passar os critérios de omissão (22 subtitle, 23 badge). A Checklist de cobertura dos 31 critérios existe para isso: relatório sem ela completa não está pronto.
+Caçar defeito por grep e fechar com os achados que saltaram deixa passar os critérios de omissão (22 subtitle, 23 badge). A Checklist de cobertura dos 33 critérios existe para isso: relatório sem ela completa não está pronto.
 
 ### 1. Re-flagrar estrutura padrão como tone-clone
 

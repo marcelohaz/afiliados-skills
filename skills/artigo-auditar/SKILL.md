@@ -20,7 +20,7 @@ Detecção: $ARGUMENTS começa com `https://` → caminho A. Senão → caminho 
 
 # Auditar artigo (skill única, read-only)
 
-> Esta SKILL.md é a fonte da verdade (canon 2026-08-15); o `agent-prompts.json:audit_article` do painel é espelho parcial (não tem ~30 das 40 categorias). Structural checks + readyToLock vivem aqui.
+> Esta SKILL.md é a fonte da verdade (canon 2026-08-15); o `agent-prompts.json:audit_article` do painel é espelho parcial (não tem ~30 das 41 categorias). Structural checks + readyToLock vivem aqui.
 
 Você é o auditor read-only do artigo. O usuário passa `{site}/{slug}` e quer um diagnóstico completo: claims cruzados com bíblia, tag de afiliado correta, travessão, voz analítica, **mais checks estruturais** (intro/guide/produtos/meta) **mais veredito readyToLock**.
 
@@ -61,7 +61,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - `contentLocked` — se `true`, avisa mas não bloqueia (útil pra reauditar pós-trava)
    - `guideContent` (block scalar) — extrai pra check estrutural + audit
 
-4. **Read bíblias** dos produtos. Se alguma faltar, abortar com instrução pra rodar sync R2.
+4. **Read bíblias** dos produtos. Se alguma faltar, abortar com instrução pra rodar sync R2. Leia os `avisosAoAgente` de cada uma antes de auditar (`aviso-ao-agente-desobedecido`), e confira as afirmações nos dados de origem, não na curadoria (`claim-vs-bible`).
 
 5. **Read `affiliateTag` + `live` status** (canon 2026-05-26):
    - `affiliateTag` de `sites/{site}/src/config.ts` via regex (pode ser `''`).
@@ -106,7 +106,7 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
    - site com `productPagesOnlyWithMdx: true`: **info** (o cartão leva ao produto dentro do artigo; o sitemap só lista as páginas que existem). Até 15/11/2026 isso valia só para artigo portado;
    - site que monta página para todo produto de artigo (os outros): **error** em artigo completo (bloqueia readyToLock e o gate de deploy), **warn** em stub, porque sem a página a publicação quebra. Página de produto nova parou em 15/11/2026: o relatório diz "tire o produto ou crie a página (só com o sim do Marcelo)", sem criar por conta própria.
 
-7. **Rodar auditoria IA** nas 40 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
+7. **Rodar auditoria IA** nas 41 categorias — ver seção "Critérios de auditoria" abaixo pra lista completa com `rule` exato de cada uma. Gerar:
    - `issues`: array de `{level, rule, message, product?, fix?, evidence?}`
    - `summary`: 1-3 frases sobre estado geral
    - `passed`: o que passou bem, uma linha por item
@@ -160,12 +160,14 @@ A skill é **read-only**: não toca no `.mdx`, não commita o `.mdx`. Só gera r
 
 13. **Imprimir relatório COMPLETO inline no chat** (não só summary). Mesmo conteúdo que vai pro `.md`. User vê tudo sem precisar abrir arquivo. Path do `.md` é mencionado no final pra quem quiser linkar.
 
-## Critérios de auditoria (40 categorias)
+## Critérios de auditoria (41 categorias)
 
 Use exatamente esses valores em `rule`:
 
 ### `claim-vs-bible` (level=`error`)
-Afirmação no review (subtitle, shortDescription, fullReview, pros, cons, specs) que NÃO tem origem rastreável na bíblia. Spec inventada, número errado, feature não confirmada. Inclui `evidence` com citação literal.
+Afirmação no review (subtitle, shortDescription, fullReview, pros, cons, specs) que NÃO tem origem rastreável nos **dados de origem** da bíblia. Spec inventada, número errado, feature não confirmada. Inclui `evidence` com citação literal.
+
+**Dados de origem, não a curadoria (Marcelo, 20/11/2026):** confira contra `specsAmazon`, `sobreEsteItem`, `descricaoProduto`, `doFabricante`, `conteudoBrutoFabricante`, `opinioesCompradores` e as imagens já lidas (item com `fonte` "imagem" ou "rótulo", em bíblia com `imagensVerificadasEm`). Afirmação que está só em `pontosFortes`, `pontosFracos`, `angulosConversao`, `sentimentoCompradores` ou `dicasAcionaveis` e em nenhum dado de origem também é `claim-vs-bible`. Conversão de unidade e arredondamento contam como origem; fato que só um relato de comprador sustenta, não. Por quê: 684 bíblias foram auditadas antes da régua de 04/09/2026, e numa amostra delas apareceram afirmações sem base ("ajuda a imunidade" num suplemento infantil, "fonte USB-C" num Kindle). Bíblia auditada uma vez não se audita de novo (são muitas), então a conferência acontece aqui, no texto que vai ao ar. Vale para toda bíblia.
 
 **Exemplo**: review diz "5.000 páginas por kit" mas bíblia diz "4.500 páginas".
 
@@ -221,6 +223,9 @@ Bíblia tem `dadosInconsistentes` com `decisaoEditorial`; review não respeita a
 
 ### `decisao-editorial-violada` (level=`warn`)
 Review contradiz `decisaoEditorial` registrada na bíblia (caso geral).
+
+### `aviso-ao-agente-desobedecido` (level=`error`, critério desde 2026-11-20)
+`avisosAoAgente` é o campo em que o Marcelo e a Bárbara mandam na bíblia ("Pack com 12 unidades", "produto descontinuado, sucessora é X", "não citar sabor"). Leia os de cada produto e confira, instrução por instrução, se o review obedece. Contrariou: `error`, com o aviso e o trecho do review como `evidence`. Aviso que pede ação fora do texto (trocar o produto ou o link) vai como `info`, sem bloquear. Até 20/11/2026 nenhuma skill de artigo lia esse campo.
 
 ### `voz-citacao-ficha-tecnica` (level=`warn`)
 Marcadores de procedência **burocráticos** no .mdx — quando o modelo copiou da bíblia sem destilar. Diferente de `atribuicao-comprador` (cita comprador) — esta cobre **cita fonte burocrática** ("alérgenos confirmam", "atributos declaram", "conforme tipo de dieta").

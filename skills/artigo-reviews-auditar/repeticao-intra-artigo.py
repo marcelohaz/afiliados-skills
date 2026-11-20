@@ -27,7 +27,11 @@ apagando a cópia quando o fato já está em pró/tabela/outra frase, ou reescre
 número vira sujeito / fundir na vizinha / mover pra pró-contra). Abertura igual em ≥4 produtos = FIX (varia
 as excedentes). Fecho de preço em >50% dos produtos = FIX (deixa em ≤ metade). 2-3 produtos = INFO.
 """
-import re, sys, json, collections, yaml
+import re, sys, json, collections, os
+# YAML pelo bun (scripts/lib/yaml_bun.py): o pyyaml não vem em todo python3 (o do Homebrew 3.15 deste
+# Mac não tem, desde 22/10/2026). Mesma interface do yaml.safe_load.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'scripts', 'lib'))
+import yaml_bun as yaml  # noqa: E402
 
 ROTULOS = ['para quem é', 'por que gostamos', 'pontos de atenção', 'resumo']
 # spec pura (número + unidade, nome de tecnologia): fato repetido, não frase-molde → INFO mesmo acima de 4

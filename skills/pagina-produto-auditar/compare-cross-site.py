@@ -51,10 +51,10 @@ acionavel: false" — a auditoria, que só lê o JSON, tratava como limpo. Agora
 """
 import sys, re, json, glob, os
 
-try:
-    import yaml
-except ImportError:
-    print("ERRO: pyyaml não instalado", file=sys.stderr); sys.exit(2)
+# YAML pelo bun (scripts/lib/yaml_bun.py): o pyyaml não vem em todo python3 (o do Homebrew 3.15 deste
+# Mac não tem, desde 22/10/2026). Mesma interface do yaml.safe_load.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'scripts', 'lib'))
+import yaml_bun as yaml  # noqa: E402
 
 
 def parse(path):
@@ -228,6 +228,10 @@ def discover_peers(target_path, target_fm):
         if os.path.abspath(p) == tgt_abs:
             continue
         try:
+            # Só lê o YAML de quem tem o asin no texto: a irmã sempre tem, e ler as 4.945 páginas da rede
+            # levava 35 segundos por auditoria (29/10/2026).
+            if asin not in open(p, encoding="utf-8").read():
+                continue
             fm, _ = parse(p)
         except Exception:
             continue

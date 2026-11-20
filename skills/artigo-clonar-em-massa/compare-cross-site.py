@@ -5,12 +5,12 @@ Uso: python3 compare-cross-site.py <target.mdx> <source.mdx>
 Saída: relatório de frases idênticas, near-dup (jaccard), overlap n-grama e specs.
 Companheiro da skill artigo-clonar-em-massa (Etapa 5 — QA de duplicata).
 """
-import sys, re, json
+import sys, re, json, os
 
-try:
-    import yaml
-except ImportError:
-    print("ERRO: pyyaml não instalado", file=sys.stderr); sys.exit(2)
+# YAML pelo bun (scripts/lib/yaml_bun.py): o pyyaml não vem em todo python3 (o do Homebrew 3.15 deste
+# Mac não tem, desde 22/10/2026). Mesma interface do yaml.safe_load.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'scripts', 'lib'))
+import yaml_bun as yaml  # noqa: E402
 
 
 def parse(path):

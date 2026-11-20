@@ -55,7 +55,9 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
 
 ## Invariantes
 
-- **Nunca invente.** Cada claim numérico tem origem rastreável na bíblia (`specsAmazon`, `doFabricante`, `pontosFortes`, etc).
+- **Nunca invente. Fato só com lastro nos dados de origem da bíblia (Marcelo, 20/11/2026).** Dados de origem: `specsAmazon`, `sobreEsteItem`, `descricaoProduto`, `doFabricante`, `conteudoBrutoFabricante`, `opinioesCompradores` e as imagens anexadas já lidas (item cuja `fonte` diz "imagem" ou "rótulo", em bíblia com `imagensVerificadasEm`). A curadoria (`pontosFortes`, `pontosFracos`, `angulosConversao`, `sentimentoCompradores`, `dicasAcionaveis`) diz o que escolher e em que ordem, mas não prova o fato: antes de usar uma afirmação dela, ache o mesmo fato num dado de origem (a `fonte` do item diz onde procurar, com o vocabulário de `docs/painel/_data/regras-biblia.md` §4). Não achou: a afirmação fica de fora, sem reescrever para caber. Conversão de unidade e arredondamento do valor de origem contam como achado. Fato que só um relato de comprador sustenta também fica de fora (ver "Peso por fonte"). A `decisaoEditorial` de `dadosInconsistentes` continua valendo.
+  Por que: 684 bíblias foram auditadas antes da régua de 04/09/2026, e numa amostra delas apareceram afirmações sem base ("ajuda a imunidade" num suplemento infantil sem o fabricante dizer, "fonte USB-C" num Kindle). Bíblia auditada uma vez não se audita de novo (decisão do Marcelo, 20/11/2026: são muitas), e quem escreve já tem os dados de origem abertos. Vale para toda bíblia, nova ou antiga.
+- **Avisos ao agente (`avisosAoAgente`) são ordem do humano: leia antes de escrever e obedeça (Marcelo, 20/11/2026).** É o campo em que o Marcelo e a Bárbara mandam na bíblia ("Pack com 12 unidades", "produto descontinuado, sucessora é X", "não citar sabor"). O aviso vence a curadoria. Aviso que pede ação fora do texto deste produto (trocar o produto ou o link) não se executa aqui: vai no relatório. Nota de captura ("depois do preenchimento entrou o X: use-o para conferir") manda conferir no dado de origem, como a regra acima. Até 20/11/2026 as skills de artigo não liam esse campo, só as de bíblia e as de página de produto.
 - **Conteúdo COMPARATIVO** (diferente da página individual): pode comparar com outros produtos do artigo, citar por nome, dizer "vs HP X" se houver dado na bíblia. Pode falar "neste comparativo", "entre os modelos analisados", "aqui". **Banido no output**: "lineup", "desta seleção", "do lineup". Ver ângulo comparativo no campo `fullReview` abaixo.
 - **O ÂNGULO SAI DA KEYWORD DO ARTIGO, NÃO DA ORDEM DOS `angulosConversao` (canon Marcelo 2026-09-04).**
   A bíblia lista ângulos de venda numa ordem que reflete o PRODUTO, não o artigo. Ângulo que não serve à
@@ -139,6 +141,8 @@ Na própria SKILL.md você verá "lineup" em contexto técnico (passos do fluxo,
      valendo: nota que contesta uma decisão não autoriza contrariá-la; deixe o ponto em disputa de fora ou use a
      forma mais estrita que as duas aceitam (o número com a condição que o bruto dá). Sem nota, o comando responde
      "nenhuma pendência aberta". Não grave nada na fila nem na bíblia aqui.
+
+   - **Avisos e lastro:** leia agora os `avisosAoAgente` e, ao escrever, confira cada afirmação tirada da curadoria nos dados de origem (as duas regras estão nas Invariantes).
 
 5. Não leia a página individual: o ângulo do review vem do badge e da posição no comparativo (invariante "Ângulo comparativo por natureza").
 
@@ -289,6 +293,7 @@ Aberturas variam (Se você prioriza X / Para quem busca X / Ideal para quem X / 
      mais alta desta lista" com 320 e 310 Hz em stubs vazios; "Melhor Brilho" com 400 cd/m² empatado em três;
      "Melhor Nitidez" com 109 ppp contra 110 do ultrawide; "o único sem conector de fone" sem ter conferido.
      Quem pegou o 1º foi o `audit-article`, por acaso — os outros três só porque eu fui olhar.
+   - **Lastro na origem (20/11/2026):** cada fato do texto aparece num dado de origem da bíblia, não só na curadoria, e nenhum `avisosAoAgente` foi contrariado. Sem lastro: tire a afirmação
    - HTML allowlist OK no fullReview
    - Sem travessão
    - Tag correta nos links (ou cruas se config vazia)
