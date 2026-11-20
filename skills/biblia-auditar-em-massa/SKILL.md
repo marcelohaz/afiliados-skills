@@ -164,7 +164,7 @@ Pra **cada** bíblia auditada (consertada ou não), pelo aplicador: `bun scripts
 
 ### Etapa 4 — Relatório (por bíblia + consolidado)
 
-4.1. **Por bíblia**: `docs/biblias-v2/.audits/<ASIN>-last.md` (formato `biblia-auditar`; painel lê). O auditor isolado pode escrever o rascunho dele junto do JSON (`{RUN}/audit/{ASIN}-last.md`); a mãe só acrescenta, sem redigir conteúdo do produto, a seção da re-auditoria tirada dos arquivos dos re-auditores e a linha dos `auditFlags`. Lista o que foi **auto-consertado** (A+B, com antes→depois) + os **report-only (C)** pendentes + as **`auditFlags`** gravadas (chip do painel).
+4.1. **Por bíblia**: `docs/biblias-v2/.audits/<ASIN>-last.md` (formato `biblia-auditar`; painel lê). O auditor isolado escreve o rascunho dele junto do JSON (`{RUN}/audit/{ASIN}-last.md`), e o `carimbar` da Etapa 3.6 grava o relatório sozinho (desde 20/11/2026): o rascunho, uma seção por arquivo `{ASIN}-reaudit-{N}.json` e as `auditFlags` gravadas. Sem rascunho, ele avisa e não grava; peça o rascunho ao auditor em vez de escrever. A mãe não redige conteúdo do produto. Lista o que foi **auto-consertado** (A+B, com antes→depois) + os **report-only (C)** pendentes + as **`auditFlags`** gravadas (chip do painel).
 4.2. **Consolidado no chat**: tabela por bíblia 🟢/🟡/🔴 + nº consertado + nº report-only. Resumo: X auto-consertadas, Y itens report-only (com o porquê de não dar pra aplicar).
 4.2.1. **Baixa na fila** (só depois da re-auditoria da 3.5 ter passado, porque conserto revertido não resolve nada):
    pra cada pendência, `bun scripts/biblia-pendencias.ts baixa <ASIN> <id> "<veredito>: <nota>"`. Pendência de

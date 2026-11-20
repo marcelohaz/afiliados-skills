@@ -209,7 +209,7 @@ Exemplo de saída:
 O que fazer:
 - Listar os **diferenciais reais e verificáveis** do produto com base nos dados
 - Cada ponto = um diferencial concreto, não vago ("impressão rápida" é vago; "velocidade de 10 ppm em preto declarada pela Epson" é concreto)
-- `fonte` = de onde vem o dado: `"specs"`, `"bullets"`, `"fabricante"`, `"opiniões"`, ou texto descritivo como `"opiniões, recorrente em 3+ reviews"`
+- `fonte` = de onde vem o dado: `"specs"`, `"bullets"`, `"fabricante"`, `"opiniões"`, `"descrição"` (o `descricaoProduto`) ou `"imagem"` (as imagens anexadas), ou texto descritivo que comece por uma dessas palavras, como `"opiniões, recorrente em 3+ reviews"`. Nunca o nome cru do campo ("descricaoProduto", "sobreEsteItem") nem "snapshot": a auditoria confere a origem por essas palavras (`regras-biblia.md` §4; 372 itens fora delas em 20/11/2026)
   ⚠️ **A `fonte` tem que ser o campo que REALMENTE contém o valor** (régua 2026-09-04). `fonte: "fabricante"`
   num dado que só existe no `specsAmazon`, ou em lugar nenhum, é carimbo de lastro sem lastro, e a
   `biblia-auditar` agora flagra como 🔴 (Categoria 1, direção curado × bruto). Dado vindo de verificação
