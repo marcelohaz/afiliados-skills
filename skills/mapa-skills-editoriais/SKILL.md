@@ -84,13 +84,15 @@ Ordem típica: lineup → reviews → guia → intro → meta → audits.
 | `amazon-lista-sites-auditar` | recomendar quem entra/sai da Lista de Sites do Associados (teto de 50 por conta; lê pelo Chrome da pessoa e só aplica a troca com o sim dela) |
 | `analytics-ligar` | ligar o Google Analytics, uma propriedade por site: cria pela API, grava o código no site, confere, publica pelo painel e confere no ar (`conferir` para o que já está ligado) |
 | `amazon-relatorios-analisar` | baixar os CSVs mensais do Associados da própria conta (Chrome, com o sim), guardar fora do repositório, consolidar num arquivo único e analisar o que vende e o que caiu (`scripts/amazon-relatorios.ts`) |
+| `rede-analisar` | analisar o desempenho da rede (Search Console, Analytics, vendas do Associados, quedas, atualizações do Google, nichos de época) com as regras e os erros já vistos, gravando em `docs/analises/` para os dois lados reverem; modo `conferir` para conferir uma análise só com os arquivos (`scripts/rede-ler.ts`, `scripts/analises-indice.ts`) |
 
 Skills locais do repo (fora do marketplace): `backup-monorepo`,
 `painel-launchagent`, `site-criar-workflow` — procedimento de máquina, não editorial.
 E `ahrefs-backlinks` (backlinks por endereço no Ahrefs grátis, para onde cada link
 chega hoje e o conserto dos que caem na home; usa o Ahrefs logado no Chrome do Marcelo),
 `amazon-relatorios-ler` (leitura rápida da tela de relatórios do Associados, no Chrome do Marcelo),
-`gsc-pedir-indexacao` (pedido de indexação dos artigos fora do Google pela tela do Search Console, no Chrome do Marcelo, com registro e conferência)
+`gsc-pedir-indexacao` (pedido de indexação dos artigos fora do Google pela tela do Search Console, no Chrome do Marcelo, com registro e conferência),
+`serp-rodada` (rodada de buscas no Google como no Brasil, com a VPN e o perfil do Chrome sem conta, guardada com data, a coleta dos concorrentes para a página Concorrentes do painel e o guia dos 5 primeiros blogs de uma busca para a `artigo-guia-escrever`, testado em 23/11/2026)
 e `autor-trocar` (troca de autor nos sites pequenos: régua, textos sem repetir a rede e a troca mecânica; não publica).
 
 ## Por que via Skill tool e não os botões do painel

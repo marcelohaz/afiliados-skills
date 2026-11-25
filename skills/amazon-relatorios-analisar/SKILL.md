@@ -1,6 +1,6 @@
 ---
 name: amazon-relatorios-analisar
-description: "Baixa os relatórios mensais (CSV) do Associados Amazon da própria conta pelo Claude in Chrome, guarda cada mês na máquina da pessoa, consolida tudo num arquivo único nosso (meses, produtos, IDs, categorias, tipos de produto) e analisa o que vende, o que caiu e desde quando. Use quando pedirem para baixar, atualizar, consolidar ou analisar os relatórios ou CSVs da Amazon, ou na rodada mensal (vazio, `baixar AAAA-MM...`, `consolidar` ou `analisar`). Baixa só com o sim da pessoa; ganho nunca vai para o repositório nem para recado."
+description: "Baixa os relatórios mensais (CSV) do Associados Amazon da própria conta pelo Claude in Chrome, guarda cada mês na máquina da pessoa, consolida tudo num arquivo único nosso (meses, produtos, IDs, categorias, tipos de produto) e analisa o que vende, o que caiu e desde quando. Use quando pedirem para baixar, atualizar, consolidar ou analisar os relatórios ou CSVs da Amazon, ou na rodada mensal (vazio, `baixar AAAA-MM...`, `consolidar` ou `analisar`). Baixa só com o sim da pessoa; ganho só vai para o repositório numa análise de docs/analises/, nunca para recado."
 ---
 
 ## Parse de input
@@ -22,7 +22,7 @@ Caso-origem (07/10/2026): o Marcelo baixou 21 meses (jan/2025 a set/2026), no me
 ## Invariantes
 
 - **Cada pessoa roda na própria conta**, a que está logada no Chrome dela. O StoreID aparece no topo do Associados ("StoreID: ..."); use-o em `--loja=`. Os sites de uma pessoa não aparecem na conta da outra.
-- **Ganho fica na máquina da pessoa.** Nunca no repositório, em recado, em commit ou em skill. O relatório vai no chat.
+- **Ganho fica na máquina da pessoa.** Os CSVs e o consolidado nunca vão para o repositório; recado, commit fora de `docs/analises/` e skill também não levam ganho. A análise escrita pode ir para `docs/analises/` com os valores (decisão do Marcelo, 25/11/2026; skill `rede-analisar`). O relatório vai no chat.
 - **Avisar antes de usar o Chrome**, numa linha: o quê, o site (`associados.amazon.com.br`) e a conta (a logada). Pedido de login: parar e pedir para a pessoa entrar; nunca digitar senha.
 - **Baixar só com o sim**, dizendo antes os meses e os relatórios. Na conta, só leitura e download: nada de configuração, lista de sites, IDs, pagamento ou termos.
 - **Análise é sinal, não regra** (Marcelo, 07/10/2026). Separar o fato (número) da hipótese ("pode ser", "combina com").
