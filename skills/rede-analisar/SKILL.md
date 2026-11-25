@@ -64,7 +64,7 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" && test -f docs/painel/
 bash scripts/git-pull-seguro.sh "rede-analisar"
 bun scripts/analises-indice.ts
 git add docs/analises/
-git commit -m "análise: {tema} ({data})" -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>"
+git commit -m "análise: {tema} ({data})" -m "Co-Authored-By: {modelo da sessão} <noreply@anthropic.com>" -- docs/analises/
 git push origin main
 ```
 - **Recado à outra pessoa** só quando a análise muda o trabalho dela (queda nos sites dela, robô no Associados): `bun scripts/recados.ts postar novidade "..." --fonte=docs/analises/{pasta}` com a conclusão em poucas linhas e o caminho; no máximo 600 caracteres; nada de Rank and Rent nem finanças.
