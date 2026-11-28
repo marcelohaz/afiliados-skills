@@ -34,6 +34,7 @@ Você é o curador editorial de produto. O usuário passa um ASIN (ou nome de pr
 - **Sem ponto-e-vírgula (;).** (régua 2026-06-20) Tem cara de IA na voz conversacional. Troque por "." (sentença nova), "," (pausa) ou "()". Vale em TODOS os campos. AUTO-CHECK antes de gravar: depois de remover entidades (&amp;, &#..;) e a querystring dos links de afiliado, não pode sobrar ";" no texto.
 - **Sem superlativos absolutos** sem evidência: "o melhor", "o mais vendido", "o único". Se for recorrente nas opiniões, registre como TEMA com contagem, sem sujeito humano e sem "da categoria" (Armadilhas 1b e 4): "custo-benefício é o tema mais recorrente (N relatos)".
 - **Português brasileiro, escrita editorial limpa.** Sem gírias, sem anglicismos desnecessários.
+- **Texto do fabricante em outra língua** (aviso "texto do fabricante em inglês" em `avisosCriacao`; Marcelo, 28/11/2026): o `conteudoBrutoFabricante` veio da página de Portugal ou da global em inglês e fica **como veio**, porque é a prova que a auditoria e os artigos conferem. Todo campo curado sai em português: traduza o sentido, não palavra por palavra; converta as unidades (oz e fl oz para g e ml, lb para kg, °F para °C, in para cm, menos polegadas de tela); não leve o que vale só para a versão de outro país (voltagem 120 V, preço em dólar ou outra moeda, garantia, suporte, brinde ou promoção de lá, certificação só de lá). Onde a página de fora e o anúncio da Amazon Brasil divergem, o anúncio manda no que é da versão vendida aqui e a divergência vai para `dadosInconsistentes`. Nome de tecnologia da marca fica como nome próprio ("Dolby Atmos", "ProMotion"). Régua completa: `regras-biblia.md` §2.
 - **Ao gravar, bumpe `lastModified` e `lastFilledAt` com `new Date().toISOString()`; nunca toque em `lastAuthor`.** A skill modifica só os 7 campos de curadoria, o `conteudoBrutoFabricante`, `lastModified` e `lastFilledAt`. `lastFilledAt` marca re-preenchimento: o painel compara `lastFilledAt > lastAuditedAt` para pedir nova auditoria, e é separado do `lastModified` porque edição manual não invalida a auditoria. O bump do `lastModified` é o que faz o push vencer: o `sync-biblias-r2.ts` compara o `lastModified` local com o `uploadedAt` do objeto no R2, e com timestamp antigo o pull sobrescreve o seu edit. Use só `toISOString()` (UTC real): montar o timestamp com `getHours()`/pad grava hora local com sufixo `Z`, fica horas no futuro e quebra o `auditStale`.
 
 ## Fluxo
@@ -329,6 +330,7 @@ O que fazer:
 **O que NUNCA alterar**:
 - Qualquer conteúdo substantivo: descrições, ingredientes, benefícios, instruções, certificações, claims nutricionais
 - A voz e redação do fabricante — não reescreva, não sintetize, não parafraseie
+- A língua do texto: página em inglês fica em inglês, e a limpeza não traduz (a tradução é dos campos curados)
 - Em caso de dúvida se é ruído ou conteúdo: **manter**
 
 **Confirmar dados**: se durante a limpeza perceber que algo no `conteudoBrutoFabricante` contradiz `doFabricante`, `specsAmazon` ou `descricaoProduto`, registrar em `dadosInconsistentes`. Não corrigir o campo — apenas flaggar.

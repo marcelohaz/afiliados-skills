@@ -109,6 +109,8 @@ Você é o auditor-editor de bíblias de produto. O usuário passa um ASIN (ou n
 
 ### 1. Consistência interna
 
+**Bíblia com o aviso "texto do fabricante em inglês"** (28/11/2026, `regras-biblia.md` §2): o `conteudoBrutoFabricante` fica em inglês, e não é achado. Confira a tradução nos campos curados contra o original: unidade convertida errada ou número trocado na conversão, palavra em inglês que sobrou, falso cognato ("actual" não é atual, "sensible" não é sensível) e afirmação que só vale para a versão de outro país (120 V, preço em dólar, garantia, brinde ou certificação de lá, recurso que o anúncio da Amazon Brasil não confirma). O conserto segue a direção conhecida: o original manda no sentido, o anúncio do Brasil manda no que é da versão vendida aqui.
+
 **Duas direções. A primeira sempre esteve aqui; a segunda é a que escapa.**
 
 **BRUTO × BRUTO** — mesmo fato afirmado em blocos diferentes com valores contraditórios:
